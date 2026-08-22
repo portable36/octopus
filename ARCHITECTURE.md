@@ -4,24 +4,24 @@
 
 Recommended bounded contexts:
 
-| Context | Owns |
-|---|---|
-| Auth & Identity | users, credentials, sessions, roles, permissions |
-| Vendor | vendors, vendor users, onboarding, vendor status |
-| Store | stores, store configuration, operating state |
-| Catalog | products, variants, attributes, categories, brands |
-| Inventory | stock, reservations, adjustments, warehouses |
-| Cart | carts, cart lines, pricing snapshot |
-| Checkout | checkout orchestration, address snapshot, totals |
-| Order | orders, order lines, state machine, fulfillment status |
-| Payment | payment intents, transactions, callbacks, refunds |
-| Payout | vendor balances, commissions, payout batches |
-| Promotion | coupons, campaigns, discounts |
-| Shipping | shipping methods, shipments, tracking |
-| Notification | email/SMS/push/in-app notifications |
-| Search | Meilisearch indexing and search read models |
-| Reporting | read-only analytical projections |
-| Audit | security and business audit trail |
+| Context         | Owns                                                   |
+| --------------- | ------------------------------------------------------ |
+| Auth & Identity | users, credentials, sessions, roles, permissions       |
+| Vendor          | vendors, vendor users, onboarding, vendor status       |
+| Store           | stores, store configuration, operating state           |
+| Catalog         | products, variants, attributes, categories, brands     |
+| Inventory       | stock, reservations, adjustments, warehouses           |
+| Cart            | carts, cart lines, pricing snapshot                    |
+| Checkout        | checkout orchestration, address snapshot, totals       |
+| Order           | orders, order lines, state machine, fulfillment status |
+| Payment         | payment intents, transactions, callbacks, refunds      |
+| Payout          | vendor balances, commissions, payout batches           |
+| Promotion       | coupons, campaigns, discounts                          |
+| Shipping        | shipping methods, shipments, tracking                  |
+| Notification    | email/SMS/push/in-app notifications                    |
+| Search          | Meilisearch indexing and search read models            |
+| Reporting       | read-only analytical projections                       |
+| Audit           | security and business audit trail                      |
 
 A bounded context owns its data model and business invariants. Shared tables are prohibited unless ownership is explicitly documented.
 

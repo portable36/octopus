@@ -1,9 +1,11 @@
 # Production Implementation Phases
 
 ## Project
+
 Multi-Vendor, Multi-Store E-Commerce Platform
 
 ### Architecture
+
 - Modular Monolith
 - Domain-Driven Design (DDD)
 - Clean Architecture
@@ -21,9 +23,11 @@ Multi-Vendor, Multi-Store E-Commerce Platform
 # Phase 00 — Foundation & Repository Setup
 
 ## Objective
+
 Establish a deterministic, reproducible development environment and unified repository workspace structures.
 
 ### Backend
+
 - [ ] NestJS application framework bootstrap.
 - [ ] Enable absolute TypeScript strict mode compilation.
 - [ ] Implement central typed AppConfig service.
@@ -38,6 +42,7 @@ Establish a deterministic, reproducible development environment and unified repo
 - [ ] Dockerize isolated backend development runtime configurations.
 
 ### Frontend
+
 - [ ] Scaffold Next.js enterprise directory layout using App Router.
 - [ ] Enable absolute strict TypeScript type checking targets.
 - [ ] Initialize Tailwind CSS config with modular styling themes.
@@ -49,6 +54,7 @@ Establish a deterministic, reproducible development environment and unified repo
 - [ ] Implement localized Error Boundary fallback components.
 
 ### Infrastructure
+
 - [ ] Deploy local PostgreSQL database container image configurations.
 - [ ] Spin up localized Redis cache layer broker containers.
 - [ ] Install local Meilisearch engines for development testing.
@@ -57,6 +63,7 @@ Establish a deterministic, reproducible development environment and unified repo
 - [ ] Document strict production-to-local environment configuration templates.
 
 ### Quality Gates
+
 - [ ] `npm run lint` — Zero syntax structural code style errors.
 - [ ] `npm run typecheck` — Total compilation error prevention checks.
 - [ ] `npm run architecture` — Rule dependency-cruiser design isolation checks.
@@ -68,9 +75,11 @@ Establish a deterministic, reproducible development environment and unified repo
 # Phase 01 — Identity, Authentication & Authorization
 
 ## Objective
+
 Build the complete system-wide secure identity boundary foundation prior to executing business core services.
 
 ### Identity
+
 - [ ] Design pure User domain Aggregate Root boundaries.
 - [ ] Implement secure time-ordered Unique ID value objects.
 - [ ] Create strict regex Email value objects.
@@ -79,6 +88,7 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 - [ ] Map explicit methods tracking domain account history mutations.
 
 ### Authentication
+
 - [ ] Write Registration use-case processing pipelines.
 - [ ] Build standard secure login controller route structures.
 - [ ] Code Session Logout token invalidation routines.
@@ -94,6 +104,7 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 - [ ] Construct validated transactional token Account Reset operations.
 
 ### Optional Authentication
+
 - [ ] Build Google OAuth OpenID Connect registration endpoints.
 - [ ] Integrate Facebook OAuth secure login credential parsers.
 - [ ] Create dedicated local mobile carrier transactional OTP login layers.
@@ -101,6 +112,7 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 - [ ] Configure optional Multi-Factor Authentication TOTP generator apps.
 
 ### Authorization
+
 - [ ] Construct base security Access Role definitions.
 - [ ] Map discrete contextual feature granular Permissions lists.
 - [ ] Build static Role-Permission lookup mapping structures.
@@ -109,6 +121,7 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 - [ ] Enforce automated runtime resource tenant Ownership validation criteria.
 
 ### Roles
+
 ```text
 PLATFORM_ADMIN
 VENDOR_OWNER
@@ -119,6 +132,7 @@ CUSTOMER
 ```
 
 ### Security Tests
+
 - [ ] Invalid credentials
 - [ ] Expired access token
 - [ ] Expired refresh token
@@ -143,6 +157,7 @@ Authentication and authorization are usable by every future bounded context.
 Establish hard tenant/vendor/store isolation before exposing business data.
 
 ### Tenant Context
+
 - [ ] AsyncLocalStorage request context
 - [ ] Authenticated principal
 - [ ] Vendor context
@@ -151,6 +166,7 @@ Establish hard tenant/vendor/store isolation before exposing business data.
 - [ ] Request ID
 
 ### PostgreSQL
+
 - [ ] RLS foundation
 - [ ] Tenant policies
 - [ ] Vendor policies
@@ -171,6 +187,7 @@ Store resources
 ```
 
 ### Security Tests
+
 - [ ] Vendor A cannot read Vendor B
 - [ ] Vendor A cannot modify Vendor B
 - [ ] Store A cannot access Store B
@@ -192,6 +209,7 @@ Cross-tenant data access is impossible through normal application paths.
 Implement vendor onboarding and vendor lifecycle.
 
 ### Vendor Aggregate
+
 - [ ] Vendor entity
 - [ ] Vendor ID
 - [ ] Vendor status
@@ -215,6 +233,7 @@ SUSPENDED
 ```
 
 ### Features
+
 - [ ] Vendor registration
 - [ ] Vendor onboarding
 - [ ] Admin approval
@@ -235,6 +254,7 @@ VendorActivated
 ```
 
 ### Tests
+
 - [ ] Vendor ownership
 - [ ] Admin authorization
 - [ ] Staff permissions
@@ -249,6 +269,7 @@ VendorActivated
 Allow each vendor to operate multiple stores.
 
 ### Store
+
 - [ ] Store aggregate
 - [ ] Store ID
 - [ ] Vendor ownership
@@ -273,6 +294,7 @@ CLOSED
 ```
 
 ### Features
+
 - [ ] Create store
 - [ ] Update store
 - [ ] Activate store
@@ -281,6 +303,7 @@ CLOSED
 - [ ] Store permissions
 
 ### Tests
+
 - [ ] Vendor isolation
 - [ ] Store ownership
 - [ ] Staff access
@@ -295,6 +318,7 @@ CLOSED
 Build a scalable product/catalog domain.
 
 ### Product
+
 - [ ] Product aggregate
 - [ ] Product ID
 - [ ] SKU
@@ -307,6 +331,7 @@ Build a scalable product/catalog domain.
 - [ ] Status
 
 ### Product Variants
+
 - [ ] Variant
 - [ ] Variant SKU
 - [ ] Attributes
@@ -329,12 +354,14 @@ Price / Inventory / Availability
 This allows one vendor product to be offered differently by different stores.
 
 ### Categories
+
 - [ ] Category tree
 - [ ] Parent/child categories
 - [ ] Slugs
 - [ ] SEO metadata
 
 ### Media
+
 - [ ] S3/R2 integration
 - [ ] Signed URLs
 - [ ] Image metadata
@@ -342,6 +369,7 @@ This allows one vendor product to be offered differently by different stores.
 - [ ] Image ordering
 
 ### Tests
+
 - [ ] Vendor ownership
 - [ ] Store ownership
 - [ ] SKU uniqueness
@@ -357,6 +385,7 @@ This allows one vendor product to be offered differently by different stores.
 Implement concurrency-safe inventory management.
 
 ### Inventory
+
 - [ ] Inventory item
 - [ ] Warehouse
 - [ ] Stock quantity
@@ -365,6 +394,7 @@ Implement concurrency-safe inventory management.
 - [ ] Low-stock threshold
 
 ### Operations
+
 - [ ] Stock receive
 - [ ] Stock adjustment
 - [ ] Stock transfer
@@ -395,6 +425,7 @@ InventoryDepleted
 ```
 
 ### Tests
+
 - [ ] Concurrent reservation
 - [ ] Overselling prevention
 - [ ] Reservation expiry
@@ -410,6 +441,7 @@ InventoryDepleted
 Create one authoritative pricing engine.
 
 ### Pricing
+
 - [ ] Base price
 - [ ] Sale price
 - [ ] Currency
@@ -419,6 +451,7 @@ Create one authoritative pricing engine.
 - [ ] Commission
 
 ### Promotions
+
 - [ ] Coupons
 - [ ] Percentage discount
 - [ ] Fixed discount
@@ -440,6 +473,7 @@ Backend price  = authoritative
 ```
 
 ### Tests
+
 - [ ] Discount calculation
 - [ ] Coupon validation
 - [ ] Expiration
@@ -457,6 +491,7 @@ Backend price  = authoritative
 Support unified multi-vendor shopping carts.
 
 ### Cart
+
 - [ ] Cart aggregate
 - [ ] Cart item
 - [ ] Quantity
@@ -467,6 +502,7 @@ Support unified multi-vendor shopping carts.
 - [ ] Price snapshot
 
 ### Cart Operations
+
 - [ ] Add item
 - [ ] Remove item
 - [ ] Update quantity
@@ -491,6 +527,7 @@ Cart
 ```
 
 ### Tests
+
 - [ ] Quantity validation
 - [ ] Product availability
 - [ ] Price changes
@@ -507,6 +544,7 @@ Cart
 Create an atomic and authoritative checkout pipeline.
 
 ### Checkout
+
 - [ ] Address
 - [ ] Shipping method
 - [ ] Tax
@@ -539,6 +577,7 @@ Checkout submission must support `Idempotency-Key`.
 Repeated requests must not create duplicate orders.
 
 ### Tests
+
 - [ ] Price change
 - [ ] Stock change
 - [ ] Coupon failure
@@ -555,6 +594,7 @@ Repeated requests must not create duplicate orders.
 Build the central order domain.
 
 ### Order
+
 - [ ] Order aggregate
 - [ ] Order number
 - [ ] Customer
@@ -596,6 +636,7 @@ FULFILLED       → RETURN_REQUESTED
 No arbitrary status mutation.
 
 ### Tests
+
 - [ ] Valid transitions
 - [ ] Invalid transitions
 - [ ] Cancellation
@@ -622,11 +663,13 @@ PaymentProvider
 ```
 
 ### Providers
+
 - [ ] SSLCommerz
 - [ ] bKash
 - [ ] Nagad
 
 ### Payment
+
 - [ ] Payment intent
 - [ ] Payment transaction
 - [ ] Provider reference
@@ -637,6 +680,7 @@ PaymentProvider
 - [ ] Refund
 
 ### Security
+
 - [ ] Signature validation
 - [ ] Replay protection
 - [ ] Idempotency
@@ -672,6 +716,7 @@ provider callback
 Make asynchronous processing durable.
 
 ### Outbox
+
 - [ ] Outbox table
 - [ ] Aggregate ID
 - [ ] Event type
@@ -696,6 +741,7 @@ Consumer
 ```
 
 ### Queues
+
 - [ ] Email
 - [ ] Notification
 - [ ] Search indexing
@@ -705,6 +751,7 @@ Consumer
 - [ ] Analytics
 
 ### Reliability
+
 - [ ] Retry policy
 - [ ] Exponential backoff
 - [ ] Dead-letter handling
@@ -720,6 +767,7 @@ Consumer
 Support vendor/store fulfillment.
 
 ### Shipment
+
 - [ ] Shipment
 - [ ] Shipment items
 - [ ] Carrier
@@ -740,6 +788,7 @@ RETURNED
 ```
 
 ### Features
+
 - [ ] Vendor fulfillment
 - [ ] Partial fulfillment
 - [ ] Shipment tracking
@@ -755,6 +804,7 @@ RETURNED
 Implement complete post-purchase lifecycle.
 
 ### Returns
+
 - [ ] Return request
 - [ ] Return reason
 - [ ] Return items
@@ -764,6 +814,7 @@ Implement complete post-purchase lifecycle.
 - [ ] Refund
 
 ### Refund Rules
+
 - [ ] Maximum refundable amount
 - [ ] Partial refund
 - [ ] Full refund
@@ -772,6 +823,7 @@ Implement complete post-purchase lifecycle.
 - [ ] Financial ledger entry
 
 ### Tests
+
 - [ ] Duplicate refund
 - [ ] Over-refund
 - [ ] Invalid order state
@@ -797,6 +849,7 @@ DEBIT   Payout
 ```
 
 ### Features
+
 - [ ] Vendor ledger
 - [ ] Commission calculation
 - [ ] Available balance
@@ -823,6 +876,7 @@ Use immutable ledger entries as the source of financial history.
 Build an asynchronous search read model.
 
 ### Meilisearch
+
 - [ ] Product index
 - [ ] Category filters
 - [ ] Brand filters
@@ -858,12 +912,14 @@ Meilisearch is never the source of truth.
 Create centralized notification infrastructure.
 
 ### Channels
+
 - [ ] Email
 - [ ] SMS
 - [ ] Push
 - [ ] In-app
 
 ### Events
+
 - [ ] Account created
 - [ ] Password changed
 - [ ] Order placed
@@ -876,6 +932,7 @@ Create centralized notification infrastructure.
 - [ ] Payout completed
 
 ### Reliability
+
 - [ ] Queue-based delivery
 - [ ] Retry
 - [ ] Idempotency
@@ -892,6 +949,7 @@ Create centralized notification infrastructure.
 Complete customer-facing commerce functionality.
 
 ### Storefront
+
 - [ ] Homepage
 - [ ] Store pages
 - [ ] Product listing
@@ -905,6 +963,7 @@ Complete customer-facing commerce functionality.
 - [ ] Order tracking
 
 ### Customer Account
+
 - [ ] Profile
 - [ ] Addresses
 - [ ] Orders
@@ -915,6 +974,7 @@ Complete customer-facing commerce functionality.
 - [ ] Notifications
 
 ### SEO
+
 - [ ] Metadata
 - [ ] Canonical URLs
 - [ ] Sitemap
@@ -932,6 +992,7 @@ Complete customer-facing commerce functionality.
 Build complete vendor operations.
 
 ### Dashboard
+
 - [ ] Sales
 - [ ] Orders
 - [ ] Revenue
@@ -940,6 +1001,7 @@ Build complete vendor operations.
 - [ ] Payouts
 
 ### Catalog
+
 - [ ] Products
 - [ ] Variants
 - [ ] Categories
@@ -947,12 +1009,14 @@ Build complete vendor operations.
 - [ ] Pricing
 
 ### Inventory
+
 - [ ] Stock
 - [ ] Adjustments
 - [ ] Transfers
 - [ ] Low-stock alerts
 
 ### Orders
+
 - [ ] Pending
 - [ ] Processing
 - [ ] Fulfillment
@@ -960,12 +1024,14 @@ Build complete vendor operations.
 - [ ] Returns
 
 ### Finance
+
 - [ ] Ledger
 - [ ] Commission
 - [ ] Statements
 - [ ] Payouts
 
 ### Multi-Store
+
 - [ ] Store switcher
 - [ ] Store permissions
 - [ ] Store-specific catalog
@@ -981,6 +1047,7 @@ Build complete vendor operations.
 Build platform-wide administration.
 
 ### Vendor Management
+
 - [ ] Vendor onboarding
 - [ ] Approval
 - [ ] Suspension
@@ -988,6 +1055,7 @@ Build platform-wide administration.
 - [ ] Vendor staff
 
 ### Platform Configuration
+
 - [ ] Commission rules
 - [ ] Tax settings
 - [ ] Payment providers
@@ -995,6 +1063,7 @@ Build platform-wide administration.
 - [ ] Global settings
 
 ### Operations
+
 - [ ] Orders
 - [ ] Payments
 - [ ] Refunds
@@ -1003,6 +1072,7 @@ Build platform-wide administration.
 - [ ] Users
 
 ### Security
+
 - [ ] Admin RBAC
 - [ ] Audit logs
 - [ ] Login history
@@ -1017,6 +1087,7 @@ Build platform-wide administration.
 Build read-optimized reporting.
 
 ### Reports
+
 - [ ] Sales
 - [ ] Orders
 - [ ] Revenue
@@ -1052,6 +1123,7 @@ Analytics
 Make sensitive business operations traceable.
 
 ### Audit Events
+
 - [ ] Login
 - [ ] Logout
 - [ ] Failed login
@@ -1094,6 +1166,7 @@ Never store secrets in audit records.
 Make the production system diagnosable.
 
 ### Logging
+
 - [ ] Pino
 - [ ] JSON logs
 - [ ] Request ID
@@ -1106,6 +1179,7 @@ Make the production system diagnosable.
 - [ ] Error code
 
 ### OpenTelemetry
+
 - [ ] HTTP traces
 - [ ] PostgreSQL traces
 - [ ] Redis traces
@@ -1114,6 +1188,7 @@ Make the production system diagnosable.
 - [ ] Search traces
 
 ### Metrics
+
 - [ ] Request latency
 - [ ] Error rate
 - [ ] DB latency
@@ -1127,6 +1202,7 @@ Make the production system diagnosable.
 - [ ] Payout failures
 
 ### Sentry
+
 - [ ] Backend errors
 - [ ] Frontend errors
 - [ ] Release tracking
@@ -1141,6 +1217,7 @@ Make the production system diagnosable.
 Optimize based on real measurements.
 
 ### Database
+
 - [ ] Query analysis
 - [ ] Index review
 - [ ] N+1 elimination
@@ -1149,6 +1226,7 @@ Optimize based on real measurements.
 - [ ] Lock analysis
 
 ### Redis
+
 - [ ] Cache strategy
 - [ ] Cache invalidation
 - [ ] TTL policy
@@ -1156,6 +1234,7 @@ Optimize based on real measurements.
 - [ ] Queue optimization
 
 ### API
+
 - [ ] Response compression
 - [ ] Pagination
 - [ ] Request limits
@@ -1163,6 +1242,7 @@ Optimize based on real measurements.
 - [ ] Slow query detection
 
 ### Next.js
+
 - [ ] Server Components
 - [ ] Streaming
 - [ ] Image optimization
@@ -1182,6 +1262,7 @@ Never optimize by weakening correctness.
 Perform a dedicated security pass.
 
 ### Application Security
+
 - [ ] Helmet
 - [ ] CORS
 - [ ] CSRF strategy
@@ -1192,6 +1273,7 @@ Perform a dedicated security pass.
 - [ ] File upload security
 
 ### Authentication
+
 - [ ] Token rotation
 - [ ] Session revocation
 - [ ] Password policy
@@ -1199,6 +1281,7 @@ Perform a dedicated security pass.
 - [ ] Brute-force protection
 
 ### Authorization
+
 - [ ] RBAC
 - [ ] Permission checks
 - [ ] Ownership checks
@@ -1206,6 +1289,7 @@ Perform a dedicated security pass.
 - [ ] RLS
 
 ### Payments
+
 - [ ] Webhook signature verification
 - [ ] Replay protection
 - [ ] Idempotency
@@ -1213,6 +1297,7 @@ Perform a dedicated security pass.
 - [ ] Currency verification
 
 ### Secrets
+
 - [ ] Secret manager
 - [ ] Key rotation
 - [ ] No secrets in Git
@@ -1227,6 +1312,7 @@ Perform a dedicated security pass.
 Reach production-grade test coverage.
 
 ### Domain
+
 - [ ] Aggregates
 - [ ] Value objects
 - [ ] Policies
@@ -1236,6 +1322,7 @@ Reach production-grade test coverage.
 - [ ] Inventory
 
 ### Application
+
 - [ ] Authorization
 - [ ] Transactions
 - [ ] Idempotency
@@ -1243,6 +1330,7 @@ Reach production-grade test coverage.
 - [ ] Error handling
 
 ### Integration
+
 - [ ] PostgreSQL
 - [ ] RLS
 - [ ] Redis
@@ -1251,6 +1339,7 @@ Reach production-grade test coverage.
 - [ ] Payment adapters
 
 ### API
+
 - [ ] Authentication
 - [ ] Authorization
 - [ ] Validation
@@ -1258,6 +1347,7 @@ Reach production-grade test coverage.
 - [ ] Error contracts
 
 ### E2E
+
 - [ ] Registration
 - [ ] Login
 - [ ] Browse
@@ -1321,6 +1411,7 @@ monitor
 ```
 
 ### Deployment Strategies
+
 - [ ] Rolling deployment
 - [ ] Blue/green where appropriate
 - [ ] Canary where appropriate
@@ -1336,6 +1427,7 @@ monitor
 Make production infrastructure reproducible.
 
 ### Infrastructure
+
 - [ ] VPC/network
 - [ ] PostgreSQL
 - [ ] Redis
@@ -1374,6 +1466,7 @@ Never share production secrets with development.
 Prove the system can recover.
 
 ### Database
+
 - [ ] Automated backups
 - [ ] Point-in-time recovery
 - [ ] Backup encryption
@@ -1387,11 +1480,13 @@ Define what data is reconstructable and what is not.
 Redis must not contain the only copy of financial/business truth.
 
 ### Object Storage
+
 - [ ] Versioning
 - [ ] Lifecycle policy
 - [ ] Backup strategy
 
 ### Recovery
+
 - [ ] RTO defined
 - [ ] RPO defined
 - [ ] Disaster recovery runbook
@@ -1402,6 +1497,7 @@ Redis must not contain the only copy of financial/business truth.
 # Phase 30 — Production Readiness Review
 
 ### Architecture
+
 - [ ] No forbidden cross-module imports
 - [ ] Domain has no infrastructure dependencies
 - [ ] Application layer has no ORM dependencies
@@ -1410,6 +1506,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] Cross-module communication is explicit
 
 ### Security
+
 - [ ] RLS tested
 - [ ] RBAC tested
 - [ ] Permissions tested
@@ -1419,6 +1516,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] CORS restricted
 
 ### Financial
+
 - [ ] Money uses integer minor units
 - [ ] Payment callbacks idempotent
 - [ ] Refunds idempotent
@@ -1427,12 +1525,14 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] Financial history auditable
 
 ### Inventory
+
 - [ ] Reservation transactional
 - [ ] Overselling prevented
 - [ ] Concurrency tested
 - [ ] Reservation expiration implemented
 
 ### Reliability
+
 - [ ] Outbox enabled
 - [ ] Queue retry policy
 - [ ] Dead-letter handling
@@ -1441,6 +1541,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] Health checks
 
 ### Observability
+
 - [ ] Logs
 - [ ] Metrics
 - [ ] Traces
@@ -1449,6 +1550,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] Dashboards
 
 ### Testing
+
 - [ ] Unit
 - [ ] Integration
 - [ ] API
@@ -1458,6 +1560,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] Migration
 
 ### Operations
+
 - [ ] Backups
 - [ ] Restore tested
 - [ ] Deployment tested

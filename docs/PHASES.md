@@ -118,101 +118,1412 @@ STORE_STAFF
 CUSTOMER
 ```
 
----
+### Security Tests
+- [ ] Invalid credentials
+- [ ] Expired access token
+- [ ] Expired refresh token
+- [ ] Refresh token reuse
+- [ ] Revoked token
+- [ ] Wrong role
+- [ ] Missing permission
+- [ ] Privilege escalation attempt
+- [ ] Rate limiting
+- [ ] Brute-force protection
 
-# Phase 02 — Vendor, Store & Dynamic Tenant Isolation
+### Exit Criteria
 
-## Objective
-Establish multi-tenant execution boundaries to completely isolate merchant data across operational systems.
-
-### Vendor Domain
-- [ ] Code main Vendor aggregate boundaries containing corporate invariants.
-- [ ] Build dynamic Bangladeshi Trade License value validation rule parsers.
-- [ ] Implement legal KYC profile state-machines for on-boarding merchants.
-- [ ] Code platform Commission structure data models per vendor context.
-- [ ] Track global individual Vendor balance records within core logic.
-
-### Store Domain
-- [ ] Build localized Store child entity tracking abstractions under vendors.
-- [ ] Construct granular branch operating schedule value object structures.
-- [ ] Define physical coordinate geo-location delivery tracking boundaries.
-- [ ] Code localized branch store configuration schema layout matrices.
-
-### Database Row Level Security (RLS)
-- [ ] Write database migrations initializing PostgreSQL Row Level Security mechanisms.
-- [ ] Create explicit database connection session context isolation policies.
-- [ ] Build MikroORM hook managers intercepting context data streams automatically.
-- [ ] Tie runtime user context storage directly into active RLS sessions.
-- [ ] Write automated data leakage verification integration test patterns.
+Authentication and authorization are usable by every future bounded context.
 
 ---
 
-# Phase 03 — Catalog, Dynamic Inventory & Meilisearch Indexing
+# Phase 02 — Multi-Tenancy & Security Isolation
 
 ## Objective
-Implement dynamic product attribute modeling, item stock controls, and high-performance search systems.
 
-### Product Catalog Domain
-- [ ] Define main Product aggregate roots containing global pricing controls.
-- [ ] Design structural dynamic schema attributes using PostgreSQL JSONB types.
-- [ ] Build structural Category node management tree logic engines.
-- [ ] Code custom product variation matrix option processing algorithms.
-- [ ] Implement media asset mapping structures via Cloudflare R2 storage.
+Establish hard tenant/vendor/store isolation before exposing business data.
 
-### Inventory Context
-- [ ] Map localized Stock tracking balances per individual Store context.
-- [ ] Build pessimistic database row locking inventory allocation use cases.
-- [ ] Code temporary cart-level Stock Reservation expiry time management workflows.
-- [ ] Automate dynamic out-of-stock backorder alert trigger evaluations.
+### Tenant Context
+- [ ] AsyncLocalStorage request context
+- [ ] Authenticated principal
+- [ ] Vendor context
+- [ ] Store context
+- [ ] Platform context
+- [ ] Request ID
 
-### Meilisearch Synchronization Engine
-- [ ] Orchestrate asynchronous domain event workers using internal Event Emitter modules.
-- [ ] Deploy background data indexing workers driven by BullMQ systems.
-- [ ] Code transactional product batch document compilation index engines.
-- [ ] Setup faceted product listing filtering rule parameters in search.
-- [ ] Build localized typo-tolerant query optimization algorithms.
+### PostgreSQL
+- [ ] RLS foundation
+- [ ] Tenant policies
+- [ ] Vendor policies
+- [ ] Store policies
+- [ ] Transaction-local context
+- [ ] RLS helper functions
+
+### Authorization Hierarchy
+
+```text
+Platform
+   ↓
+Vendor
+   ↓
+Store
+   ↓
+Store resources
+```
+
+### Security Tests
+- [ ] Vendor A cannot read Vendor B
+- [ ] Vendor A cannot modify Vendor B
+- [ ] Store A cannot access Store B
+- [ ] Store manager cannot escape assigned store
+- [ ] Customer cannot access vendor resources
+- [ ] Platform admin explicit access
+- [ ] RLS bypass attempts fail
+
+### Exit Criteria
+
+Cross-tenant data access is impossible through normal application paths.
 
 ---
 
-# Phase 04 — Shopping Cart, Unified Ordering & Checkout
+# Phase 03 — Vendor Management
 
 ## Objective
-Build transactional shopping systems that calculate multi-store orders across distinct checkout lanes.
 
-### Cart Layer
-- [ ] Build high-performance stateless client Zustand cart operations tracking data.
-- [ ] Code automated catalog engine current server pricing sync handlers.
-- [ ] Implement multi-vendor split cart structural classification visuals.
+Implement vendor onboarding and vendor lifecycle.
 
-### Ordering Context
-- [ ] Define complete parent Order aggregate tracking root architectures.
-- [ ] Build child SubOrder entity records bound directly to individual vendors.
-- [ ] Program precision financial Paisa currency price calculation units.
-- [ ] Isolate multi-merchant transactional Platform Commission payout split splits.
-- [ ] Implement state management trackers for complete localized Order Status flows.
+### Vendor Aggregate
+- [ ] Vendor entity
+- [ ] Vendor ID
+- [ ] Vendor status
+- [ ] Vendor profile
+- [ ] Business information
+- [ ] Contact information
+- [ ] Vendor settings
 
-### Checkout Validation Pipeline
-- [ ] Implement atomic structural checkout data confirmation request workflows.
-- [ ] Enforce automated continuous multi-store stock reserve state evaluations.
-- [ ] Apply individual dynamic voucher coupon value deduction calculation layers.
+### Lifecycle
+
+```text
+PENDING
+   ↓
+UNDER_REVIEW
+   ↓
+APPROVED
+   ↓
+ACTIVE
+   ↓
+SUSPENDED
+```
+
+### Features
+- [ ] Vendor registration
+- [ ] Vendor onboarding
+- [ ] Admin approval
+- [ ] Vendor rejection
+- [ ] Vendor suspension
+- [ ] Vendor activation
+- [ ] Vendor staff
+- [ ] Vendor roles
+- [ ] Vendor permissions
+
+### Events
+
+```text
+VendorCreated
+VendorApproved
+VendorSuspended
+VendorActivated
+```
+
+### Tests
+- [ ] Vendor ownership
+- [ ] Admin authorization
+- [ ] Staff permissions
+- [ ] Lifecycle transitions
 
 ---
 
-# Phase 05 — Regional Payment Gateways (Bangladesh Context)
+# Phase 04 — Store Management
 
 ## Objective
-Integrate local mobile financial services (MFS) and credit card networks with robust transaction safety.
 
-### Payment Core
-- [ ] Design central unified Transaction state management payment tracking tables.
-- [ ] Enforce absolute strict API Idempotency Key validation request criteria.
-- [ ] Code background task ledger status verification loops using BullMQ.
-- [ ] Build structural payment provider secure webhook signature check decoders.
+Allow each vendor to operate multiple stores.
 
-### Integration Gateways
-- [ ] Integrate local SSLCommerz checkout session API redirection routing.
-- [ ] Code native bKash Merchant Wallet direct tokenized payment capture APIs.
-- [ ] Integrate Nagad payment gateway execution endpoints and verify data.
+### Store
+- [ ] Store aggregate
+- [ ] Store ID
+- [ ] Vendor ownership
+- [ ] Store slug
+- [ ] Store status
+- [ ] Store settings
+- [ ] Store timezone
+- [ ] Store currency
+- [ ] Store address
+- [ ] Store staff
 
-### Reconciliation
-- [ ] Code automated transaction tracking reconciliation event log loops.
+### Store Lifecycle
+
+```text
+DRAFT
+  ↓
+ACTIVE
+  ↓
+SUSPENDED
+  ↓
+CLOSED
+```
+
+### Features
+- [ ] Create store
+- [ ] Update store
+- [ ] Activate store
+- [ ] Suspend store
+- [ ] Store staff assignment
+- [ ] Store permissions
+
+### Tests
+- [ ] Vendor isolation
+- [ ] Store ownership
+- [ ] Staff access
+- [ ] Store lifecycle
+
+---
+
+# Phase 05 — Catalog
+
+## Objective
+
+Build a scalable product/catalog domain.
+
+### Product
+- [ ] Product aggregate
+- [ ] Product ID
+- [ ] SKU
+- [ ] Product name
+- [ ] Description
+- [ ] Brand
+- [ ] Category
+- [ ] Attributes
+- [ ] Media
+- [ ] Status
+
+### Product Variants
+- [ ] Variant
+- [ ] Variant SKU
+- [ ] Attributes
+- [ ] Barcode
+- [ ] Weight
+- [ ] Dimensions
+
+### Store Offers
+
+Separate:
+
+```text
+Product
+     ↓
+Store Offer
+     ↓
+Price / Inventory / Availability
+```
+
+This allows one vendor product to be offered differently by different stores.
+
+### Categories
+- [ ] Category tree
+- [ ] Parent/child categories
+- [ ] Slugs
+- [ ] SEO metadata
+
+### Media
+- [ ] S3/R2 integration
+- [ ] Signed URLs
+- [ ] Image metadata
+- [ ] Upload validation
+- [ ] Image ordering
+
+### Tests
+- [ ] Vendor ownership
+- [ ] Store ownership
+- [ ] SKU uniqueness
+- [ ] Variant uniqueness
+- [ ] Product lifecycle
+
+---
+
+# Phase 06 — Inventory
+
+## Objective
+
+Implement concurrency-safe inventory management.
+
+### Inventory
+- [ ] Inventory item
+- [ ] Warehouse
+- [ ] Stock quantity
+- [ ] Reserved quantity
+- [ ] Available quantity
+- [ ] Low-stock threshold
+
+### Operations
+- [ ] Stock receive
+- [ ] Stock adjustment
+- [ ] Stock transfer
+- [ ] Stock reservation
+- [ ] Reservation release
+- [ ] Reservation expiration
+- [ ] Stock deduction
+
+### Concurrency
+
+Use:
+
+```text
+database transaction
++ row lock / optimistic concurrency
++ constraint validation
+```
+
+Redis must not be the source of inventory truth.
+
+### Events
+
+```text
+InventoryAdjusted
+InventoryReserved
+InventoryReleased
+InventoryDepleted
+```
+
+### Tests
+- [ ] Concurrent reservation
+- [ ] Overselling prevention
+- [ ] Reservation expiry
+- [ ] Wrong vendor
+- [ ] Wrong store
+
+---
+
+# Phase 07 — Pricing & Promotion
+
+## Objective
+
+Create one authoritative pricing engine.
+
+### Pricing
+- [ ] Base price
+- [ ] Sale price
+- [ ] Currency
+- [ ] Tax
+- [ ] Shipping
+- [ ] Discount
+- [ ] Commission
+
+### Promotions
+- [ ] Coupons
+- [ ] Percentage discount
+- [ ] Fixed discount
+- [ ] Minimum order amount
+- [ ] Product-specific promotion
+- [ ] Category promotion
+- [ ] Vendor promotion
+- [ ] Store promotion
+- [ ] Usage limits
+- [ ] Expiration
+
+### Rule
+
+The browser never determines the final price.
+
+```text
+Frontend price = display hint
+Backend price  = authoritative
+```
+
+### Tests
+- [ ] Discount calculation
+- [ ] Coupon validation
+- [ ] Expiration
+- [ ] Usage limits
+- [ ] Vendor restrictions
+- [ ] Store restrictions
+- [ ] Currency handling
+
+---
+
+# Phase 08 — Cart
+
+## Objective
+
+Support unified multi-vendor shopping carts.
+
+### Cart
+- [ ] Cart aggregate
+- [ ] Cart item
+- [ ] Quantity
+- [ ] Store
+- [ ] Vendor
+- [ ] Product
+- [ ] Variant
+- [ ] Price snapshot
+
+### Cart Operations
+- [ ] Add item
+- [ ] Remove item
+- [ ] Update quantity
+- [ ] Clear cart
+- [ ] Validate cart
+- [ ] Recalculate cart
+
+### Multi-Vendor
+
+Example:
+
+```text
+Cart
+ ├── Vendor A
+ │    └── Store A
+ │         ├── Product 1
+ │         └── Product 2
+ │
+ └── Vendor B
+      └── Store B
+           └── Product 3
+```
+
+### Tests
+- [ ] Quantity validation
+- [ ] Product availability
+- [ ] Price changes
+- [ ] Inventory changes
+- [ ] Multi-vendor cart
+- [ ] Vendor isolation
+
+---
+
+# Phase 09 — Checkout
+
+## Objective
+
+Create an atomic and authoritative checkout pipeline.
+
+### Checkout
+- [ ] Address
+- [ ] Shipping method
+- [ ] Tax
+- [ ] Discounts
+- [ ] Shipping fee
+- [ ] Commission
+- [ ] Grand total
+
+### Validation
+
+At checkout:
+
+```text
+validate user
+→ validate cart
+→ validate products
+→ validate prices
+→ validate inventory
+→ validate promotions
+→ calculate totals
+→ reserve inventory
+→ create order
+→ create payment intent
+```
+
+### Idempotency
+
+Checkout submission must support `Idempotency-Key`.
+
+Repeated requests must not create duplicate orders.
+
+### Tests
+- [ ] Price change
+- [ ] Stock change
+- [ ] Coupon failure
+- [ ] Duplicate request
+- [ ] Concurrent checkout
+- [ ] Multi-vendor checkout
+
+---
+
+# Phase 10 — Orders
+
+## Objective
+
+Build the central order domain.
+
+### Order
+- [ ] Order aggregate
+- [ ] Order number
+- [ ] Customer
+- [ ] Vendor
+- [ ] Store
+- [ ] Order lines
+- [ ] Price snapshots
+- [ ] Tax snapshot
+- [ ] Shipping snapshot
+- [ ] Address snapshot
+- [ ] Payment status
+- [ ] Fulfillment status
+
+### State Machine
+
+```text
+PENDING_PAYMENT
+       ↓
+PAID
+       ↓
+PROCESSING
+       ↓
+PARTIALLY_FULFILLED
+       ↓
+FULFILLED
+       ↓
+COMPLETED
+```
+
+Failure paths:
+
+```text
+PENDING_PAYMENT → PAYMENT_FAILED
+PAID            → CANCELLED
+PAID            → REFUND_REQUESTED
+FULFILLED       → RETURN_REQUESTED
+```
+
+No arbitrary status mutation.
+
+### Tests
+- [ ] Valid transitions
+- [ ] Invalid transitions
+- [ ] Cancellation
+- [ ] Partial fulfillment
+- [ ] Refund
+- [ ] Return
+
+---
+
+# Phase 11 — Payment
+
+## Objective
+
+Create provider-independent payment infrastructure.
+
+### Provider Port
+
+```text
+PaymentProvider
+  ├── createPayment()
+  ├── verifyPayment()
+  ├── refund()
+  └── parseWebhook()
+```
+
+### Providers
+- [ ] SSLCommerz
+- [ ] bKash
+- [ ] Nagad
+
+### Payment
+- [ ] Payment intent
+- [ ] Payment transaction
+- [ ] Provider reference
+- [ ] Amount
+- [ ] Currency
+- [ ] Status
+- [ ] Callback
+- [ ] Refund
+
+### Security
+- [ ] Signature validation
+- [ ] Replay protection
+- [ ] Idempotency
+- [ ] Amount verification
+- [ ] Currency verification
+- [ ] Order verification
+
+### Critical Rule
+
+Never:
+
+```text
+frontend success redirect → order PAID
+```
+
+Instead:
+
+```text
+provider callback
+→ verify
+→ transaction
+→ mark payment
+→ mark order
+→ outbox
+```
+
+---
+
+# Phase 12 — Transactional Outbox & BullMQ
+
+## Objective
+
+Make asynchronous processing durable.
+
+### Outbox
+- [ ] Outbox table
+- [ ] Aggregate ID
+- [ ] Event type
+- [ ] Payload
+- [ ] Event version
+- [ ] Created timestamp
+- [ ] Published timestamp
+- [ ] Retry count
+
+### Dispatcher
+
+```text
+DB transaction
+    ↓
+Outbox
+    ↓
+Dispatcher
+    ↓
+BullMQ
+    ↓
+Consumer
+```
+
+### Queues
+- [ ] Email
+- [ ] Notification
+- [ ] Search indexing
+- [ ] Payment processing
+- [ ] Webhooks
+- [ ] Payout
+- [ ] Analytics
+
+### Reliability
+- [ ] Retry policy
+- [ ] Exponential backoff
+- [ ] Dead-letter handling
+- [ ] Idempotent consumers
+- [ ] Queue metrics
+
+---
+
+# Phase 13 — Shipping & Fulfillment
+
+## Objective
+
+Support vendor/store fulfillment.
+
+### Shipment
+- [ ] Shipment
+- [ ] Shipment items
+- [ ] Carrier
+- [ ] Tracking number
+- [ ] Shipping status
+
+### Status
+
+```text
+PENDING
+PROCESSING
+SHIPPED
+IN_TRANSIT
+OUT_FOR_DELIVERY
+DELIVERED
+FAILED
+RETURNED
+```
+
+### Features
+- [ ] Vendor fulfillment
+- [ ] Partial fulfillment
+- [ ] Shipment tracking
+- [ ] Delivery confirmation
+- [ ] Return shipment
+
+---
+
+# Phase 14 — Refunds & Returns
+
+## Objective
+
+Implement complete post-purchase lifecycle.
+
+### Returns
+- [ ] Return request
+- [ ] Return reason
+- [ ] Return items
+- [ ] Approval
+- [ ] Rejection
+- [ ] Inspection
+- [ ] Refund
+
+### Refund Rules
+- [ ] Maximum refundable amount
+- [ ] Partial refund
+- [ ] Full refund
+- [ ] Payment-provider refund
+- [ ] Inventory restoration
+- [ ] Financial ledger entry
+
+### Tests
+- [ ] Duplicate refund
+- [ ] Over-refund
+- [ ] Invalid order state
+- [ ] Partial return
+- [ ] Vendor isolation
+
+---
+
+# Phase 15 — Vendor Financial Ledger & Payouts
+
+## Objective
+
+Build auditable vendor accounting.
+
+### Ledger
+
+```text
+CREDIT  Sale
+DEBIT   Commission
+DEBIT   Refund
+CREDIT  Adjustment
+DEBIT   Payout
+```
+
+### Features
+- [ ] Vendor ledger
+- [ ] Commission calculation
+- [ ] Available balance
+- [ ] Pending balance
+- [ ] Payout request
+- [ ] Payout approval
+- [ ] Payout processing
+- [ ] Payout failure
+- [ ] Payout history
+- [ ] Financial statements
+
+### Rules
+
+Never rely solely on `vendor.balance`.
+
+Use immutable ledger entries as the source of financial history.
+
+---
+
+# Phase 16 — Search
+
+## Objective
+
+Build an asynchronous search read model.
+
+### Meilisearch
+- [ ] Product index
+- [ ] Category filters
+- [ ] Brand filters
+- [ ] Vendor filters
+- [ ] Store filters
+- [ ] Price filters
+- [ ] Availability
+- [ ] Facets
+- [ ] Typo tolerance
+- [ ] Ranking
+
+### Index Pipeline
+
+```text
+Catalog mutation
+→ Domain event
+→ Outbox
+→ BullMQ
+→ Search consumer
+→ Meilisearch
+```
+
+### Rule
+
+Meilisearch is never the source of truth.
+
+---
+
+# Phase 17 — Notifications
+
+## Objective
+
+Create centralized notification infrastructure.
+
+### Channels
+- [ ] Email
+- [ ] SMS
+- [ ] Push
+- [ ] In-app
+
+### Events
+- [ ] Account created
+- [ ] Password changed
+- [ ] Order placed
+- [ ] Payment completed
+- [ ] Payment failed
+- [ ] Order shipped
+- [ ] Order delivered
+- [ ] Refund processed
+- [ ] Vendor approved
+- [ ] Payout completed
+
+### Reliability
+- [ ] Queue-based delivery
+- [ ] Retry
+- [ ] Idempotency
+- [ ] Templates
+- [ ] Preferences
+- [ ] Delivery status
+
+---
+
+# Phase 18 — Customer Experience
+
+## Objective
+
+Complete customer-facing commerce functionality.
+
+### Storefront
+- [ ] Homepage
+- [ ] Store pages
+- [ ] Product listing
+- [ ] Product detail
+- [ ] Search
+- [ ] Filtering
+- [ ] Sorting
+- [ ] Category navigation
+- [ ] Cart
+- [ ] Checkout
+- [ ] Order tracking
+
+### Customer Account
+- [ ] Profile
+- [ ] Addresses
+- [ ] Orders
+- [ ] Returns
+- [ ] Refunds
+- [ ] Wishlist
+- [ ] Reviews
+- [ ] Notifications
+
+### SEO
+- [ ] Metadata
+- [ ] Canonical URLs
+- [ ] Sitemap
+- [ ] Robots
+- [ ] Product structured data
+- [ ] Category structured data
+- [ ] SSR/streaming
+
+---
+
+# Phase 19 — Vendor Portal
+
+## Objective
+
+Build complete vendor operations.
+
+### Dashboard
+- [ ] Sales
+- [ ] Orders
+- [ ] Revenue
+- [ ] Customers
+- [ ] Inventory
+- [ ] Payouts
+
+### Catalog
+- [ ] Products
+- [ ] Variants
+- [ ] Categories
+- [ ] Media
+- [ ] Pricing
+
+### Inventory
+- [ ] Stock
+- [ ] Adjustments
+- [ ] Transfers
+- [ ] Low-stock alerts
+
+### Orders
+- [ ] Pending
+- [ ] Processing
+- [ ] Fulfillment
+- [ ] Shipping
+- [ ] Returns
+
+### Finance
+- [ ] Ledger
+- [ ] Commission
+- [ ] Statements
+- [ ] Payouts
+
+### Multi-Store
+- [ ] Store switcher
+- [ ] Store permissions
+- [ ] Store-specific catalog
+- [ ] Store inventory
+- [ ] Store reports
+
+---
+
+# Phase 20 — Platform Admin
+
+## Objective
+
+Build platform-wide administration.
+
+### Vendor Management
+- [ ] Vendor onboarding
+- [ ] Approval
+- [ ] Suspension
+- [ ] Verification
+- [ ] Vendor staff
+
+### Platform Configuration
+- [ ] Commission rules
+- [ ] Tax settings
+- [ ] Payment providers
+- [ ] Shipping configuration
+- [ ] Global settings
+
+### Operations
+- [ ] Orders
+- [ ] Payments
+- [ ] Refunds
+- [ ] Payouts
+- [ ] Inventory
+- [ ] Users
+
+### Security
+- [ ] Admin RBAC
+- [ ] Audit logs
+- [ ] Login history
+- [ ] Security events
+
+---
+
+# Phase 21 — Reporting & Analytics
+
+## Objective
+
+Build read-optimized reporting.
+
+### Reports
+- [ ] Sales
+- [ ] Orders
+- [ ] Revenue
+- [ ] Commission
+- [ ] Vendor performance
+- [ ] Store performance
+- [ ] Product performance
+- [ ] Inventory
+- [ ] Customer
+- [ ] Refund
+- [ ] Payout
+
+### Architecture
+
+Do not execute expensive analytical queries against transactional endpoints.
+
+```text
+Transactional DB
+      ↓
+Events
+      ↓
+Read models / reporting tables
+      ↓
+Analytics
+```
+
+---
+
+# Phase 22 — Audit & Compliance
+
+## Objective
+
+Make sensitive business operations traceable.
+
+### Audit Events
+- [ ] Login
+- [ ] Logout
+- [ ] Failed login
+- [ ] Password change
+- [ ] Vendor approval
+- [ ] Vendor suspension
+- [ ] Product changes
+- [ ] Inventory adjustments
+- [ ] Order cancellation
+- [ ] Refund
+- [ ] Payout
+- [ ] Permission changes
+- [ ] Admin actions
+
+### Audit Record
+
+```text
+actor
+action
+resource
+resourceId
+tenant
+vendor
+store
+timestamp
+requestId
+before
+after
+metadata
+```
+
+Never store secrets in audit records.
+
+---
+
+# Phase 23 — Observability
+
+## Objective
+
+Make the production system diagnosable.
+
+### Logging
+- [ ] Pino
+- [ ] JSON logs
+- [ ] Request ID
+- [ ] Trace ID
+- [ ] Actor ID
+- [ ] Vendor ID
+- [ ] Store ID
+- [ ] Operation
+- [ ] Duration
+- [ ] Error code
+
+### OpenTelemetry
+- [ ] HTTP traces
+- [ ] PostgreSQL traces
+- [ ] Redis traces
+- [ ] BullMQ traces
+- [ ] Payment provider traces
+- [ ] Search traces
+
+### Metrics
+- [ ] Request latency
+- [ ] Error rate
+- [ ] DB latency
+- [ ] Redis latency
+- [ ] Queue depth
+- [ ] Queue lag
+- [ ] Checkout success
+- [ ] Payment failures
+- [ ] Inventory conflicts
+- [ ] Search indexing lag
+- [ ] Payout failures
+
+### Sentry
+- [ ] Backend errors
+- [ ] Frontend errors
+- [ ] Release tracking
+- [ ] Sensitive data filtering
+
+---
+
+# Phase 24 — Performance & Scalability
+
+## Objective
+
+Optimize based on real measurements.
+
+### Database
+- [ ] Query analysis
+- [ ] Index review
+- [ ] N+1 elimination
+- [ ] Connection pool tuning
+- [ ] Pagination
+- [ ] Lock analysis
+
+### Redis
+- [ ] Cache strategy
+- [ ] Cache invalidation
+- [ ] TTL policy
+- [ ] Rate limiting
+- [ ] Queue optimization
+
+### API
+- [ ] Response compression
+- [ ] Pagination
+- [ ] Request limits
+- [ ] Query limits
+- [ ] Slow query detection
+
+### Next.js
+- [ ] Server Components
+- [ ] Streaming
+- [ ] Image optimization
+- [ ] Route caching
+- [ ] Client bundle analysis
+
+### Rule
+
+Never optimize by weakening correctness.
+
+---
+
+# Phase 25 — Security Hardening
+
+## Objective
+
+Perform a dedicated security pass.
+
+### Application Security
+- [ ] Helmet
+- [ ] CORS
+- [ ] CSRF strategy
+- [ ] Rate limiting
+- [ ] Input validation
+- [ ] Output encoding
+- [ ] SSRF protection
+- [ ] File upload security
+
+### Authentication
+- [ ] Token rotation
+- [ ] Session revocation
+- [ ] Password policy
+- [ ] MFA
+- [ ] Brute-force protection
+
+### Authorization
+- [ ] RBAC
+- [ ] Permission checks
+- [ ] Ownership checks
+- [ ] Tenant isolation
+- [ ] RLS
+
+### Payments
+- [ ] Webhook signature verification
+- [ ] Replay protection
+- [ ] Idempotency
+- [ ] Amount verification
+- [ ] Currency verification
+
+### Secrets
+- [ ] Secret manager
+- [ ] Key rotation
+- [ ] No secrets in Git
+- [ ] No secrets in logs
+
+---
+
+# Phase 26 — Automated Testing
+
+## Objective
+
+Reach production-grade test coverage.
+
+### Domain
+- [ ] Aggregates
+- [ ] Value objects
+- [ ] Policies
+- [ ] State machines
+- [ ] Pricing
+- [ ] Commission
+- [ ] Inventory
+
+### Application
+- [ ] Authorization
+- [ ] Transactions
+- [ ] Idempotency
+- [ ] Outbox
+- [ ] Error handling
+
+### Integration
+- [ ] PostgreSQL
+- [ ] RLS
+- [ ] Redis
+- [ ] BullMQ
+- [ ] MikroORM
+- [ ] Payment adapters
+
+### API
+- [ ] Authentication
+- [ ] Authorization
+- [ ] Validation
+- [ ] Pagination
+- [ ] Error contracts
+
+### E2E
+- [ ] Registration
+- [ ] Login
+- [ ] Browse
+- [ ] Search
+- [ ] Cart
+- [ ] Multi-vendor checkout
+- [ ] Payment
+- [ ] Order tracking
+- [ ] Vendor fulfillment
+- [ ] Refund
+- [ ] Payout
+
+---
+
+# Phase 27 — CI/CD
+
+## Objective
+
+Prevent defective code from reaching production.
+
+### Pull Request
+
+```text
+format
+↓
+lint
+↓
+typecheck
+↓
+architecture checks
+↓
+unit tests
+↓
+integration tests
+↓
+security audit
+↓
+migration validation
+↓
+build
+```
+
+### Deployment
+
+```text
+build image
+↓
+security scan
+↓
+push image
+↓
+database migration
+↓
+deploy
+↓
+readiness check
+↓
+smoke tests
+↓
+monitor
+```
+
+### Deployment Strategies
+- [ ] Rolling deployment
+- [ ] Blue/green where appropriate
+- [ ] Canary where appropriate
+- [ ] Automatic rollback
+- [ ] Forward recovery
+
+---
+
+# Phase 28 — Infrastructure as Code
+
+## Objective
+
+Make production infrastructure reproducible.
+
+### Infrastructure
+- [ ] VPC/network
+- [ ] PostgreSQL
+- [ ] Redis
+- [ ] Object storage
+- [ ] Application runtime
+- [ ] Load balancer
+- [ ] DNS
+- [ ] TLS
+- [ ] Secrets
+- [ ] Monitoring
+- [ ] Backups
+
+### IaC
+
+Choose one:
+
+- Terraform
+- Pulumi
+
+### Environments
+
+```text
+development
+staging
+production
+```
+
+Never share production secrets with development.
+
+---
+
+# Phase 29 — Backup & Disaster Recovery
+
+## Objective
+
+Prove the system can recover.
+
+### Database
+- [ ] Automated backups
+- [ ] Point-in-time recovery
+- [ ] Backup encryption
+- [ ] Retention policy
+- [ ] Restore testing
+
+### Redis
+
+Define what data is reconstructable and what is not.
+
+Redis must not contain the only copy of financial/business truth.
+
+### Object Storage
+- [ ] Versioning
+- [ ] Lifecycle policy
+- [ ] Backup strategy
+
+### Recovery
+- [ ] RTO defined
+- [ ] RPO defined
+- [ ] Disaster recovery runbook
+- [ ] Restore drill
+
+---
+
+# Phase 30 — Production Readiness Review
+
+### Architecture
+- [ ] No forbidden cross-module imports
+- [ ] Domain has no infrastructure dependencies
+- [ ] Application layer has no ORM dependencies
+- [ ] Infrastructure implements ports
+- [ ] Modules own their data
+- [ ] Cross-module communication is explicit
+
+### Security
+- [ ] RLS tested
+- [ ] RBAC tested
+- [ ] Permissions tested
+- [ ] Secrets protected
+- [ ] Webhooks secured
+- [ ] Rate limiting enabled
+- [ ] CORS restricted
+
+### Financial
+- [ ] Money uses integer minor units
+- [ ] Payment callbacks idempotent
+- [ ] Refunds idempotent
+- [ ] Commission deterministic
+- [ ] Payout ledger immutable
+- [ ] Financial history auditable
+
+### Inventory
+- [ ] Reservation transactional
+- [ ] Overselling prevented
+- [ ] Concurrency tested
+- [ ] Reservation expiration implemented
+
+### Reliability
+- [ ] Outbox enabled
+- [ ] Queue retry policy
+- [ ] Dead-letter handling
+- [ ] Idempotent consumers
+- [ ] Graceful shutdown
+- [ ] Health checks
+
+### Observability
+- [ ] Logs
+- [ ] Metrics
+- [ ] Traces
+- [ ] Error monitoring
+- [ ] Alerts
+- [ ] Dashboards
+
+### Testing
+- [ ] Unit
+- [ ] Integration
+- [ ] API
+- [ ] E2E
+- [ ] Security
+- [ ] Concurrency
+- [ ] Migration
+
+### Operations
+- [ ] Backups
+- [ ] Restore tested
+- [ ] Deployment tested
+- [ ] Rollback tested
+- [ ] Incident runbooks
+- [ ] Monitoring alerts
+
+## Definition of Production Ready
+
+The platform is considered production-ready only when:
+
+```text
+Architecture
++ Security
++ Tenant Isolation
++ Business Correctness
++ Financial Correctness
++ Inventory Correctness
++ Testing
++ Observability
++ Operational Recovery
++ CI/CD
+= Production Readiness
+```
+
+Passing a build is NOT sufficient.
+
+A feature is complete only when its:
+
+```text
+Domain
++ Application
++ Infrastructure
++ API
++ Authorization
++ Persistence
++ Events
++ Tests
++ Observability
++ Documentation
+```
+
+are complete.
+
+---
+
+# Appendix — Cursor Execution Rule
+
+When implementing any phase:
+
+1. Read the applicable `.cursor/rules/*.mdc`.
+2. Inspect existing module boundaries.
+3. Do not rewrite unrelated modules.
+4. Implement domain behavior first.
+5. Define application ports.
+6. Implement infrastructure adapters.
+7. Add presentation/API layer.
+8. Add authorization.
+9. Add database migration.
+10. Add unit tests.
+11. Add integration tests where required.
+12. Add API tests.
+13. Update documentation.
+14. Run architecture validation.
+15. Run typecheck.
+16. Run lint.
+17. Run tests.
+18. Run build.
+19. Fix failures before moving to the next phase.

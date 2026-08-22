@@ -1,0 +1,688 @@
+---
+description: Production rules for the POS bounded context
+globs:
+  - src/modules/pos/**/*
+  - apps/web/src/**/*pos*
+  - apps/web/src/**/*checkout*
+alwaysApply: false
+---
+
+# POS Bounded Context Rules
+
+## 1. Architectural Boundary
+
+POS is a bounded context.
+
+POS must not directly access another bounded context's:
+
+- ORM entities
+- repositories
+- database tables through infrastructure code
+- internal services
+- private domain objects
+
+Use explicit application ports or integration events.
+
+## 2. Layering
+
+The dependency direction is:
+
+```text
+Presentation
+     ↓
+Application
+     ↓
+Domain
+
+Infrastructure
+     ↓
+Application / Domain ports
+```
+
+Domain must never import:
+
+- NestJS
+- MikroORM
+- PostgreSQL
+- Redis
+- BullMQ
+- HTTP
+- controllers
+- infrastructure adapters
+
+## 3. Domain First
+
+Business rules belong in `domain/`.
+
+Do not put business rules in:
+
+- Controllers
+- DTOs
+- MikroORM entities
+- React components
+- Zustand stores
+- database repositories
+
+## 4. Aggregate Rules
+
+The following are POS aggregates:
+
+- Register
+- Shift
+- Sale
+- Refund
+- CashSession where applicable
+
+Do not create arbitrary aggregate boundaries.
+
+An aggregate must protect its invariants.
+
+## 5. Sale Invariants
+
+A sale must guarantee:
+
+```text
+subtotal >= 0
+discount >= 0
+tax >= 0
+total >= 0
+paidAmount >= 0
+```
+
+Payment allocation must never exceed permitted limits.
+
+A completed sale cannot be mutated.
+
+Use commands such as:
+
+```text
+CompleteSale
+CancelSale
+RefundSale
+```
+
+instead of directly modifying status.
+
+## 6. Money
+
+NEVER use floating point for money.
+
+Bad:
+
+```ts
+const total = 10.5;
+```
+
+Good:
+
+```ts
+const totalMinor = 1050;
+```
+
+Use a Money value object.
+
+Currency must always be explicit.
+
+## 7. Inventory
+
+POS does not own inventory truth.
+
+Never implement:
+
+```ts
+product.stock--;
+```
+
+inside POS.
+
+Use an Inventory application port.
+
+Example:
+
+```ts
+interface InventoryPort {
+  reserve(input: ReserveInventoryInput): Promise<ReservationResult>;
+  release(input: ReleaseInventoryInput): Promise<void>;
+  commit(input: CommitInventoryInput): Promise<void>;
+}
+```
+
+## 8. Product Data
+
+POS may read product information through an application port.
+
+Do not inject `ProductRepository` from Catalog directly into POS.
+
+Prefer `ProductLookupPort`.
+
+## 9. Pricing
+
+POS must not calculate authoritative product prices from frontend values.
+
+Frontend prices are display values only.
+
+Final pricing must be calculated or verified server-side.
+
+## 10. Client Trust
+
+Never trust from the client:
+
+```text
+price
+discount
+tax
+total
+inventory
+vendorId
+storeId
+registerId
+cashierId
+```
+
+Resolve and verify them server-side.
+
+## 11. Tenant Isolation
+
+Every POS request must have a validated context:
+
+```text
+tenantId
+vendorId
+storeId
+```
+
+Register and shift resources must be checked against the authenticated principal.
+
+Never allow `body.vendorId` / `body.storeId` to bypass authorization.
+
+## 12. Register Authorization
+
+Before using a register:
+
+```text
+register exists
+AND
+register active
+AND
+register belongs to store
+AND
+store belongs to vendor
+AND
+actor authorized
+```
+
+## 13. Shift Authorization
+
+A cashier may operate only an authorized shift.
+
+Never allow cashier A to close cashier B's shift unless the actor has explicit manager/admin permission.
+
+## 14. Sale Completion
+
+Sale completion must be transactional.
+
+Required conceptual sequence:
+
+```text
+Validate Sale
+     ↓
+Validate Pricing
+     ↓
+Validate Inventory
+     ↓
+Reserve/Deduct Inventory
+     ↓
+Capture/Confirm Payment
+     ↓
+Complete Sale
+     ↓
+Write Outbox Event
+```
+
+Do not mark a sale completed before required payment and inventory conditions are satisfied.
+
+## 15. Idempotency
+
+The following operations MUST be idempotent:
+
+- Sale completion
+- Payment capture
+- Refund
+- Offline sync
+- Shift close
+- Cash movement where retries are possible
+
+Use an idempotency key or command ID.
+
+Never create duplicate financial transactions because of an HTTP retry.
+
+## 16. Payment
+
+Payment-provider code belongs in `infrastructure/payment/`.
+
+Never place provider-specific logic in Sale, CompleteSaleHandler, or SaleController.
+
+Use a `PaymentProvider` abstraction.
+
+## 17. Payment Callback
+
+Never trust `/payment/success` from the browser as proof of payment.
+
+Payment status must be confirmed through the provider/server integration.
+
+Validate:
+
+- Signature
+- Amount
+- Currency
+- Order/sale reference
+- Provider transaction ID
+- Idempotency
+
+## 18. Split Payments
+
+For split payment, `sum(payment allocations)` must be validated against the sale amount.
+
+Do not allow negative allocations.
+
+Do not allow the same external transaction to be allocated twice.
+
+## 19. Cash
+
+Cash calculations must be deterministic.
+
+```text
+change = cashReceived - amountDue
+```
+
+Never trust client-calculated change.
+
+All cash movements require:
+
+```text
+actor
+store
+register
+shift
+amount
+reason
+timestamp
+```
+
+## 20. Refunds
+
+Refunds must reference the original sale/payment.
+
+Never allow `refundAmount > refundableAmount`.
+
+Refund commands must be idempotent.
+
+Refund permissions must be enforced separately from normal sale permissions.
+
+## 21. Suspended Sales
+
+Suspended sales must preserve:
+
+- Product references
+- Quantities
+- Pricing snapshot where required
+- Customer reference
+- Register
+- Store
+- Cashier
+- Timestamp
+
+Resuming a sale must revalidate current product availability and pricing according to business rules.
+
+## 22. Offline POS
+
+Offline mode must never silently bypass server validation.
+
+Every offline transaction must have a unique `clientTransactionId`.
+
+Server synchronization must be idempotent.
+
+Offline transactions must be rejected or flagged when:
+
+- Product is no longer sellable
+- Price changed beyond allowed policy
+- Inventory cannot be confirmed
+- Store is suspended
+- Register is invalid
+- Transaction is duplicated
+
+## 23. Receipt Printing
+
+Receipt printing is not part of transaction correctness.
+
+This is valid:
+
+```text
+Sale COMPLETED
+Receipt PRINT FAILED
+```
+
+The print failure must not roll back the completed sale.
+
+Use asynchronous jobs where appropriate.
+
+## 24. Domain Events
+
+Use domain events for meaningful state changes:
+
+- SaleCompleted
+- PaymentCaptured
+- RefundCompleted
+- ShiftClosed
+
+Do not emit events for every getter or trivial mutation.
+
+Events must contain stable identifiers rather than huge ORM objects.
+
+## 25. Outbox
+
+Financial/business events that must survive process failure must use the transactional outbox.
+
+Do not rely solely on `eventEmitter.emit(...)` for durable events.
+
+## 26. Redis
+
+Redis may be used for:
+
+- Caching
+- Rate limiting
+- Queue infrastructure
+- Temporary data
+
+Redis is NOT the source of truth for:
+
+- Sales
+- Payments
+- Refunds
+- Cash
+- Inventory
+- Financial balances
+
+## 27. Database Transactions
+
+Use database transactions around critical operations.
+
+Examples:
+
+- CompleteSale
+- RefundSale
+- CloseShift
+- CashAdjustment
+- InventoryReservation
+- PaymentStateTransition
+
+Avoid long-running transactions involving external HTTP requests.
+
+## 28. External Providers
+
+Never hold a database transaction open while waiting for bKash, Nagad, or SSLCommerz.
+
+Use:
+
+```text
+transaction
+→ create pending state
+→ commit
+→ external request
+→ callback/webhook
+→ transaction
+→ finalize state
+```
+
+## 29. Controllers
+
+Controllers must be thin.
+
+Controllers may:
+
+- Parse HTTP input
+- Validate DTO
+- Resolve authenticated user
+- Call application use case
+- Map result to HTTP response
+
+Controllers must not:
+
+- Calculate totals
+- Modify inventory
+- Process payments
+- Apply business rules
+- Access MikroORM repositories directly
+
+## 30. DTOs
+
+DTOs are transport models.
+
+Do not use DTOs as domain entities.
+
+Do not pass HTTP DTOs deep into the domain.
+
+Map:
+
+```text
+HTTP DTO → Command → Domain
+```
+
+## 31. ORM
+
+MikroORM entities belong to infrastructure/persistence.
+
+Never expose ORM entities from controllers.
+
+Never use ORM entities as domain aggregates.
+
+## 32. API Errors
+
+Use stable application error codes.
+
+Examples:
+
+```text
+POS_REGISTER_NOT_FOUND
+POS_REGISTER_INACTIVE
+POS_SHIFT_NOT_FOUND
+POS_SHIFT_ALREADY_OPEN
+POS_UNAUTHORIZED_REGISTER
+POS_SALE_NOT_FOUND
+POS_SALE_ALREADY_COMPLETED
+POS_INSUFFICIENT_PAYMENT
+POS_PAYMENT_FAILED
+POS_REFUND_EXCEEDS_LIMIT
+POS_INVENTORY_UNAVAILABLE
+POS_DUPLICATE_TRANSACTION
+POS_IDEMPOTENCY_CONFLICT
+```
+
+Do not expose database errors to clients.
+
+## 33. Logging
+
+Never log:
+
+- Card numbers
+- CVV
+- Payment secrets
+- Passwords
+- Refresh tokens
+- Full authentication headers
+
+Log safe identifiers:
+
+```text
+requestId
+saleId
+registerId
+shiftId
+storeId
+vendorId
+paymentId
+```
+
+## 34. Audit
+
+Audit sensitive actions:
+
+- Discount override
+- Refund
+- Cash adjustment
+- Shift close
+- Manual price override
+- Register changes
+
+Audit records must be append-only.
+
+## 35. Testing
+
+Every POS use case must have tests for:
+
+- Happy path
+- Invalid input
+- Unauthorized actor
+- Wrong tenant
+- Wrong store
+- Concurrent operation where relevant
+- Retry/idempotency
+- Domain invariant violation
+
+Critical financial and inventory operations require integration tests.
+
+## 36. E2E Minimum Flow
+
+The POS E2E suite must cover:
+
+```text
+Login
+→ Select Store
+→ Select Register
+→ Open Shift
+→ Search Product
+→ Add Product
+→ Add Customer
+→ Apply Discount
+→ Split Payment
+→ Complete Sale
+→ Verify Inventory
+→ Verify Sale
+→ Generate Receipt
+→ Close Shift
+→ Reconcile Cash
+```
+
+## 37. Architecture Validation
+
+POS must pass:
+
+- lint
+- typecheck
+- unit tests
+- integration tests
+- architecture tests
+- build
+
+No POS implementation is complete if architecture checks fail.
+
+## 38. Forbidden Patterns
+
+```ts
+// BAD
+sale.total = req.body.total;
+
+// BAD
+product.stock--;
+
+// BAD
+await paymentProvider.charge();
+sale.status = 'COMPLETED';
+// ...without proper transaction/state handling
+
+// BAD
+this.catalogProductRepository.find(...)
+// from POS infrastructure
+
+// BAD
+if (user.role === 'ADMIN') {
+  // business authorization everywhere
+}
+```
+
+Use centralized authorization policies.
+
+## 39. Required Structure
+
+```text
+pos/
+├── domain/
+│   ├── aggregates/
+│   │   ├── register/
+│   │   ├── shift/
+│   │   └── sale/
+│   ├── entities/
+│   ├── value-objects/
+│   ├── events/
+│   ├── services/
+│   └── ports/
+│
+├── application/
+│   ├── commands/
+│   ├── queries/
+│   ├── use-cases/
+│   ├── dto/
+│   └── ports/
+│
+├── infrastructure/
+│   ├── persistence/
+│   ├── payment/
+│   ├── receipt/
+│   ├── barcode/
+│   └── messaging/
+│
+└── presentation/
+    └── http/
+        ├── controllers/
+        └── dto/
+```
+
+## 40. Cursor Implementation Policy
+
+When modifying POS:
+
+1. Read this rule.
+2. Read the POS documentation.
+3. Inspect existing bounded contexts.
+4. Preserve module boundaries.
+5. Implement domain behavior first.
+6. Define application ports.
+7. Implement infrastructure adapters.
+8. Add API endpoints.
+9. Add authorization.
+10. Add migrations.
+11. Add tests.
+12. Run architecture checks.
+13. Run typecheck.
+14. Run lint.
+15. Run tests.
+16. Run production build.
+
+Do not mark work complete while any required check is failing.
+
+## 41. Priority
+
+When requirements conflict, prioritize:
+
+1. Financial correctness
+2. Security
+3. Tenant isolation
+4. Inventory correctness
+5. Data integrity
+6. Idempotency
+7. Reliability
+8. Maintainability
+9. Performance
+10. Convenience
+
+Never sacrifice correctness for UI speed or implementation convenience.

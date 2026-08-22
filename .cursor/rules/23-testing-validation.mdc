@@ -1,0 +1,15 @@
+---
+description: Required validation workflow for changes in this repository
+alwaysApply: true
+---
+# Testing And Validation
+
+- Before editing, identify the owning module and inspect nearby tests or call sites.
+- After a behavior change, add the smallest regression test that proves the invariant or failure mode.
+- Prefer pure domain tests first, then application tests, integration tests, API tests, and E2E tests according to risk.
+- Run the narrowest relevant check after each edit, then run `npm.cmd run validate` before declaring the work complete.
+- The validation order is formatting, lint, typecheck, architecture, tests, environment contract, dependency audit, and build.
+- Use `npm.cmd run validate` on Windows and `npm run validate` on Unix from the repository root.
+- Report exact test-file and test totals instead of treating a current test count as a permanent contract.
+- Do not hide failures with `any`, disabled lint rules, skipped tests, broad snapshots, or weakened architecture checks.
+- When a check cannot run because dependencies or external services are unavailable, report the exact blocker and run every other available check.

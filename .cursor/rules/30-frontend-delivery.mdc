@@ -1,0 +1,17 @@
+---
+description: Frontend delivery, accessibility, and resilient UX rules
+globs:
+- frontend/src/**/*.ts
+- frontend/src/**/*.tsx
+alwaysApply: false
+---
+# Frontend Delivery
+
+- Follow the existing frontend framework and dependency choices; inspect package metadata before adding APIs or libraries.
+- Keep business authorization and authoritative calculations on the backend.
+- Use semantic HTML, keyboard-accessible controls, visible focus states, labels, and useful error announcements.
+- Keep loading, empty, error, unauthorized, stale, offline, and retry states explicit for asynchronous workflows.
+- Prevent duplicate submissions with client state, while relying on server idempotency for correctness.
+- Do not render untrusted HTML or interpolate unescaped user/provider content into markup.
+- Avoid exposing private environment variables, internal IDs, tokens, or sensitive payment data to the browser.
+- Test critical flows at mobile and desktop sizes without relying only on visual snapshots.

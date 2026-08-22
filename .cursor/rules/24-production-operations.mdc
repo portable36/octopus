@@ -1,0 +1,14 @@
+---
+description: Production readiness, migrations, deployment, and observability rules
+alwaysApply: true
+---
+# Production Operations
+
+- Every externally visible operation needs a timeout, structured outcome logging, and an explicit retry or no-retry policy.
+- Use correlation/request IDs across HTTP, database, Redis, queues, and provider calls.
+- Redact secrets, tokens, payment credentials, and sensitive personal data before logging or sending telemetry.
+- Database migrations must be additive where possible, reviewed as SQL, tested on a clean database, and paired with a rollback or forward-recovery plan.
+- Never perform network calls inside a database transaction unless the design explicitly handles timeout, retry, and partial failure semantics.
+- Health checks must distinguish process liveness from dependency readiness.
+- Deployments must be observable, reversible, and compatible with the expand/contract migration sequence.
+- Document operational assumptions, alerts, runbooks, and ownership when introducing a new dependency or background worker.

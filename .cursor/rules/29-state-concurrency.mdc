@@ -1,0 +1,17 @@
+---
+description: State machines, concurrency, and idempotent mutation rules
+globs:
+- backend/src/**/domain/**/*.ts
+- backend/src/**/application/**/*.ts
+- backend/src/**/infrastructure/persistence/**/*.ts
+alwaysApply: false
+---
+# State And Concurrency
+
+- Model lifecycle transitions explicitly; reject invalid transitions with domain-specific errors.
+- Do not accept arbitrary status strings from clients or generic status update operations.
+- Define the concurrency strategy for every shared mutable resource: optimistic version, row lock, atomic update, or serialized worker.
+- Check the expected version or ownership inside the same transaction that applies the mutation.
+- Make retries return the original result when the same idempotency key represents the same operation.
+- Ensure concurrent requests cannot oversell inventory, double-charge money, duplicate payouts, or close the same shift twice.
+- Test interleavings, stale versions, duplicate commands, and transaction rollback behavior at the lowest practical layer.

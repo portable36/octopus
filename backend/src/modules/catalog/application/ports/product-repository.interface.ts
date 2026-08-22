@@ -1,8 +1,8 @@
-// apps/backend/src/modules/catalog/application/ports/product-repository.interface.ts
-import { ProductAggregate } from '../../domain/aggregates/product.aggregate';
+import type { Product } from '../../domain/aggregates/product.aggregate';
 
-export interface IProductRepository {
-  save(product: ProductAggregate): Promise<void>;
-  findById(id: string): Promise<ProductAggregate | null>;
+export interface ProductRepository {
+  save(product: Product): Promise<void>;
+  findById(id: string): Promise<Product | null>;
 }
-export const IProductRepository = Symbol('IProductRepository');
+
+export const PRODUCT_REPOSITORY = Symbol('PRODUCT_REPOSITORY');

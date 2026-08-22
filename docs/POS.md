@@ -265,6 +265,45 @@ The cashier must submit an actual cash count.
 
 Never allow the client to directly set expected cash.
 
+## 8.1 Cash Carry-Forward and Loss Adjustments
+
+The register and cash drawer own the physical cash balance. A shift close must
+persist retained cash explicitly so the next shift does not infer its opening
+balance from a report.
+
+Example, using USD minor units internally:
+
+```text
+Completed cash sales       1,000
+Cash sent to bank            800
+Cash retained in drawer      200
+Next shift opening balance   200
+```
+
+Cash sent to a bank is an immutable `BANK_DEPOSIT`/`CASH_OUT` movement. It must
+include the actor, reason, destination, reference, timestamp, and idempotency
+key. It may be recorded during an open shift or as part of closing.
+
+Reports must show total completed sales separately from cash sales, non-cash
+sales, refunds, deposits, expected cash, actual cash, variance, and explicit
+carry-forward cash.
+
+An administrator may record a loss before the next shift opens. This is an
+audited `LOSS_ADJUSTMENT` movement containing the reason, actor, approval, and
+before/after amounts. It must not modify the previous shift's closed snapshot.
+
+```text
+Previous retained cash       200
+Approved loss adjustment      20
+Next shift opening balance   180
+```
+
+The next opening command references the previous closed shift and persists the
+effective opening balance. A loss adjustment cannot exceed the carried cash.
+
+`Shift` owns cash accountability. `POS Session` represents terminal or login
+state and must not replace the shift's financial record.
+
 ---
 
 # 9. Sale
@@ -808,6 +847,8 @@ RegisterDeactivated
 
 ShiftOpened
 ShiftClosed
+CashMovementRecorded
+SaleRecorded
 
 SaleCreated
 SaleSuspended
@@ -908,6 +949,7 @@ Cash:
 POST /cash/in
 POST /cash/out
 POST /cash/adjust
+POST /cash/deposit
 ```
 
 Reports:
@@ -948,6 +990,8 @@ pos.return.create
 
 pos.cash.read
 pos.cash.manage
+pos.cash.deposit
+pos.cash.adjust
 
 pos.report.read
 ```
@@ -1001,11 +1045,13 @@ Audit:
 - Register changes
 - Shift opening
 - Shift closing
+- Bank deposits and cash removals
 - Discount overrides
 - Price overrides
 - Refunds
 - Returns
 - Cash adjustments
+- Opening balance loss adjustments
 - Manual inventory adjustments
 - Permission changes
 
@@ -1037,6 +1083,12 @@ register.code + store_id
 idempotency_key
 client_transaction_id
 ```
+
+Cash movement records must be append-only and include ownership scope, shift,
+actor, movement kind, amount in integer minor units, currency, reason, and
+idempotency key. Bank deposits additionally include destination, reference,
+and confirmation status. Opening balance adjustments retain before and after
+values and audit metadata.
 
 ---
 

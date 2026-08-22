@@ -1,0 +1,36 @@
+{
+  "name": "octopus",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "build:backend": "npm run build -w backend",
+    "build": "npm run build:backend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint backend/src frontend/src --no-error-on-unmatched-pattern",
+    "typecheck": "tsc --noEmit -p backend && tsc --noEmit -p frontend",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "architecture": "node scripts/check-architecture.mjs",
+    "env:check": "node scripts/check-env.mjs",
+    "security": "npm audit --omit=dev",
+    "deps:outdated": "npm outdated || true",
+    "validate": "node scripts/validate.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "eslint": "^9.36.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.44.0",
+    "vitest": "^3.2.4"
+  }
+}

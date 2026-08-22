@@ -1,8 +1,8 @@
 ---
 description: Next.js App Router frontend architecture rules
 globs:
-- apps/web/**/*.ts
-- apps/web/**/*.tsx
+- frontend/src/**/*.ts
+- frontend/src/**/*.tsx
 alwaysApply: false
 ---
 

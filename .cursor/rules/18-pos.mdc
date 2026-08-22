@@ -1,9 +1,9 @@
 ---
 description: Production rules for the POS bounded context
 globs:
-  - src/modules/pos/**/*
-  - apps/web/src/**/*pos*
-  - apps/web/src/**/*checkout*
+     - backend/src/modules/pos/**/*
+     - frontend/src/**/*pos*
+     - frontend/src/**/*checkout*
 alwaysApply: false
 ---
 

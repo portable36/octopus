@@ -1,0 +1,19 @@
+---
+description: Catalog Variant, SKU, identifier, and ownership rules
+globs:
+- backend/src/modules/catalog/**/*.ts
+- backend/src/modules/catalog/**/*.tsx
+alwaysApply: false
+---
+# Catalog Variants
+
+- Variant ID is the canonical opaque internal identifier. Inventory, Order, Fulfillment, POS, and integration modules reference Variant ID.
+- SKU is a normalized, non-empty, unique business/external identifier and lookup key. Never use product names or SKU as the canonical foreign key.
+- Treat SKU as stable after creation. A supported SKU change requires uniqueness validation, an audit record where required, and a domain event; external references may make it immutable.
+- Preserve leading zeroes in barcode, GTIN, EAN, UPC, and ISBN values. Store identifiers as validated strings, never numbers.
+- Enforce identifier uniqueness at the application boundary and database constraint level within an explicit tenant/vendor/store scope.
+- Variant attributes must be typed and normalized. Variant-defining attribute combinations must be unique within a Product.
+- Catalog may store variant cost, base, and compare-at price metadata in integer minor units with currency; Pricing remains authoritative for final customer prices.
+- Catalog must not own inventory quantities, reservations, order history, fulfillment state, payment state, tax calculation, or shipping execution.
+- Variant media stores provider-independent metadata and references. Binary storage, upload scanning, and signed URLs belong to infrastructure adapters.
+- Keep created/updated timestamps in UTC and expose explicit DTOs rather than ORM models.

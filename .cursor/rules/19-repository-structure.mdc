@@ -1,0 +1,14 @@
+---
+description: Repository-specific paths, ownership, and toolchain conventions
+alwaysApply: true
+---
+# Repository Structure
+
+- Backend source lives under `backend/src`; frontend source lives under `frontend/src`.
+- Backend bounded contexts live under `backend/src/modules/<context>`.
+- Cross-cutting backend code belongs under `backend/src/common` or `backend/src/shared-kernel` only when it is genuinely cross-cutting.
+- Keep domain, application, infrastructure, and presentation responsibilities in their owning layer.
+- Do not create `apps/web`, `src/modules`, or other paths from generic examples in this repository.
+- Root scripts are the canonical developer checks. Prefer `npm.cmd run <script>` on Windows when the PowerShell npm shim is blocked.
+- Do not add generated output, credentials, local environment files, or dependency directories to source control.
+- Check existing files and git status before editing; preserve unrelated user changes.

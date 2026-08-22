@@ -1,0 +1,16 @@
+---
+description: Frontend rules for the current frontend source tree and planned Next.js adoption
+globs:
+- frontend/src/**/*.ts
+- frontend/src/**/*.tsx
+alwaysApply: false
+---
+# Frontend Implementation
+
+- Treat `frontend/src` as the current frontend root; do not use the obsolete `apps/web` path.
+- Confirm the installed frontend framework and dependencies before introducing framework-specific APIs. The current package is intentionally minimal.
+- Keep authentication and authorization decisions server-side; client route guards are UX, not security.
+- Treat all prices, stock, discounts, taxes, shipping, totals, and payment states from the browser as display data until verified by the backend.
+- Keep remote server state separate from local UI state and avoid duplicating the same source of truth.
+- Every async interaction needs explicit loading, success, validation-error, authorization-error, network-error, and stale-data behavior where applicable.
+- Do not expose non-public environment variables in browser bundles.

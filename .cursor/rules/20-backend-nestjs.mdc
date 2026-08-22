@@ -1,0 +1,16 @@
+---
+description: Backend NestJS implementation rules for the current source tree
+globs:
+- backend/src/**/*.ts
+alwaysApply: false
+---
+# Backend Implementation
+
+- Keep `backend/src/main.ts` limited to application bootstrap and process-level configuration.
+- Configure global validation, versioning, security headers, CORS, and exception handling centrally; do not reimplement them in individual controllers.
+- Use dependency injection at infrastructure boundaries and keep application services framework-light.
+- Controllers accept DTOs, resolve request context, invoke one application operation, and map the result to a response DTO.
+- Keep domain objects free of NestJS decorators, transport types, configuration access, and persistence models.
+- Validate configuration at startup with explicit schemas. Missing or unsafe production configuration must fail closed.
+- Use `unknown` at untrusted boundaries and narrow it with schemas or type guards; do not use `any`.
+- Preserve error causes when translating errors and avoid exposing stack traces or secrets to clients.

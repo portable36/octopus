@@ -1,7 +1,7 @@
 ---
 description: NestJS DDD Clean Architecture and Modular Monolith rules
 globs:
-- src/**/*.ts
+- backend/src/**/*.ts
 alwaysApply: false
 ---
 

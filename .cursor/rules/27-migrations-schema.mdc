@@ -1,0 +1,19 @@
+---
+description: Database schema and migration safety rules
+globs:
+- backend/src/**/infrastructure/persistence/**/*.ts
+- backend/src/**/infrastructure/**/*.sql
+- migrations/**/*.ts
+- migrations/**/*.sql
+alwaysApply: false
+---
+# Database Changes
+
+- Treat database schema as a production contract owned by the relevant bounded context.
+- Never edit an applied migration; create a new migration for every correction.
+- Prefer expand, deploy, backfill, contract for breaking schema changes.
+- Add tenant, vendor, and store scope to keys, constraints, indexes, and queries where ownership requires it.
+- Use database constraints for uniqueness, non-negative quantities, valid states, and other critical invariants.
+- Review generated SQL, lock behavior, table-scan risk, rollback or forward-recovery steps, and zero-downtime compatibility.
+- Test migrations against a clean database and a representative existing database before release.
+- Do not put credentials or production data in migrations, fixtures, logs, or examples.

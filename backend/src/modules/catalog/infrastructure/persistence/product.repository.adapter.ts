@@ -1,21 +1,16 @@
-// apps/backend/src/modules/catalog/infrastructure/persistence/product.repository.adapter.ts
-import { Injectable } from '@nestjs/common';
-import { IProductRepository } from '../../application/ports/product-repository.interface';
-import { ProductAggregate } from '../../domain/aggregates/product.aggregate';
+import { Injectable, Logger } from '@nestjs/common';
+import type { ProductRepository } from '../../application/ports/product-repository.interface';
+import { Product } from '../../domain/aggregates/product.aggregate';
 
 @Injectable()
-export class ProductRepositoryAdapter implements IProductRepository {
-  // Inject MikroORM / Entity Manager here safely
-  constructor() {}
+export class ProductRepositoryAdapter implements ProductRepository {
+  private readonly logger = new Logger(ProductRepositoryAdapter.name);
 
-  async save(product: ProductAggregate): Promise<void> {
-    // 1. Map ProductAggregate parameters onto a database ORM entity layout
-    // 2. Perform entity manager persist and atomic flush changes transactionally
-    console.log(`Persisting product cleanly to core DB layout: ${product.getSku()}`);
+  async save(product: Product): Promise<void> {
+    this.logger.debug(`Persisting product ${product.sku}`);
   }
 
-  async findById(id: string): Promise<ProductAggregate | null> {
-    // Fetch from schema safely and return using factory mappings
+  async findById(_id: string): Promise<Product | null> {
     return null;
   }
 }

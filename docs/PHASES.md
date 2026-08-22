@@ -18,6 +18,30 @@ Multi-Vendor, Multi-Store E-Commerce Platform
 - NestJS (Enterprise Modular Framework)
 - TypeScript Strict Mode
 
+> This roadmap contains 31 numbered delivery phases: Phase 00 plus Phases 01-30.
+> Phase numbers are identifiers, not a promise that every phase is completed in one release.
+
+## Required sequencing
+
+The following dependencies override the numeric order when a phase requires a contract from a later phase:
+
+```text
+Foundation
+-> Identity and authentication
+-> Tenant/vendor/store authorization
+-> Persistence, migrations, and transaction helpers
+-> Vendor and store management
+-> Catalog
+-> Inventory
+-> Pricing and promotions
+-> Cart
+-> Order and payment contracts
+-> Checkout orchestration
+-> Outbox and workers
+```
+
+Checkout must not be implemented against an undeclared Order or Payment contract. Define those contracts and their state machines before implementing the checkout use case, even though the roadmap keeps the capability sections grouped separately.
+
 ---
 
 # Phase 00 — Foundation & Repository Setup
@@ -64,11 +88,16 @@ Establish a deterministic, reproducible development environment and unified repo
 
 ### Quality Gates
 
-- [ ] `npm run lint` — Zero syntax structural code style errors.
-- [ ] `npm run typecheck` — Total compilation error prevention checks.
-- [ ] `npm run architecture` — Rule dependency-cruiser design isolation checks.
-- [ ] `npm run test` — Executing initial unit assertions cleanly.
-- [ ] `npm run build` — Successful native application deployment compilations.
+- [ ] `npm.cmd run format:check` — All tracked source and documentation uses repository formatting.
+- [ ] `npm.cmd run lint` — No ESLint errors.
+- [ ] `npm.cmd run typecheck` — Backend and frontend strict compilation checks pass.
+- [ ] `npm.cmd run architecture` — Layer and module boundary checks pass.
+- [ ] `npm.cmd run test` — Relevant unit, integration, API, and E2E tests pass.
+- [ ] `npm.cmd run security` — Dependency audit has no unresolved production vulnerabilities.
+- [ ] `npm.cmd run build` — Successful deployable application compilation.
+- [ ] Migration checks pass against a clean database and a representative upgrade database.
+
+Every later phase must repeat the relevant gates and add measurable exit criteria for authorization, persistence, failure behavior, observability, and rollback. A checked feature list alone does not complete a phase.
 
 ---
 
@@ -332,12 +361,15 @@ Build a scalable product/catalog domain.
 
 ### Product Variants
 
-- [ ] Variant
-- [ ] Variant SKU
-- [ ] Attributes
-- [ ] Barcode
-- [ ] Weight
-- [ ] Dimensions
+- [ ] Canonical Variant ID and Product ID relationship
+- [ ] Variant name and status
+- [ ] Normalized, stable, unique Variant SKU
+- [ ] Barcode, GTIN, EAN, UPC, MPN, and manufacturer reference
+- [ ] Catalog price metadata with integer minor units and currency
+- [ ] Typed variant attributes and unique combinations
+- [ ] Variant media and thumbnail fallback
+- [ ] Tax/shipping classification references and external references
+- [ ] UTC created/updated timestamps
 
 ### Store Offers
 

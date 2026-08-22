@@ -1,0 +1,18 @@
+---
+description: API contract design and compatibility rules
+globs:
+- backend/src/modules/**/presentation/**/*.ts
+- backend/src/modules/**/application/**/*.ts
+- frontend/src/**/*.ts
+- frontend/src/**/*.tsx
+alwaysApply: false
+---
+# API Contract Design
+
+- Design the request, response, error, authentication, authorization, pagination, and idempotency contract before implementation.
+- Use explicit versioned routes and response DTOs; never expose domain or persistence objects directly.
+- Treat API fields as compatibility commitments. Prefer additive changes and deprecate before removal.
+- Validate every external value at the boundary, including headers, query parameters, path parameters, body fields, and provider callbacks.
+- Use stable machine-readable error codes and safe human messages. Do not return stack traces, SQL, provider secrets, or internal identifiers unnecessarily.
+- Define nullability, defaults, ordering, limits, and empty-result behavior explicitly.
+- Update API tests and documentation whenever a public contract changes.

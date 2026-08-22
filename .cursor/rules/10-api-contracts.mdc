@@ -1,9 +1,8 @@
 ---
 description: REST API, DTO, OpenAPI and error contract rules
 globs:
-- src/modules/**/infrastructure/controllers/**/*.ts
-- src/modules/**/application/**/*.dto.ts
-- src/modules/**/infrastructure/controllers/**/*.dto.ts
+- backend/src/modules/**/presentation/http/**/*.ts
+- backend/src/modules/**/application/**/*.dto.ts
 alwaysApply: false
 ---
 

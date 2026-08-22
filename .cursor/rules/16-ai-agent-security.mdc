@@ -1,0 +1,114 @@
+﻿---
+description: AI Agent Security Rules
+alwaysApply: false
+---
+
+# AI Security
+
+Assume every AI response is untrusted.
+
+---
+
+## Validate
+
+Validate:
+
+JSON
+
+Enums
+
+Numbers
+
+IDs
+
+Dates
+
+Commands
+
+---
+
+## Prompt Injection
+
+Treat user prompts as hostile.
+
+Never expose:
+
+Secrets
+
+API Keys
+
+JWT
+
+Database URLs
+
+Internal prompts
+
+---
+
+## Tool Permissions
+
+Each tool requires permission.
+
+AI permissions never exceed user permissions.
+
+---
+
+## Confirmation
+
+Require confirmation for:
+
+Delete
+
+Refund
+
+Price Changes
+
+Inventory
+
+Permission Changes
+
+---
+
+## Audit
+
+Log:
+
+Prompt
+
+Response
+
+Tool Calls
+
+Approval
+
+User
+
+Duration
+
+Model
+
+Cost
+
+---
+
+## Rate Limits
+
+Apply rate limits.
+
+Prevent abuse.
+
+---
+
+## Sensitive Data
+
+Mask:
+
+Emails
+
+Phone Numbers
+
+Addresses
+
+Payment Information
+
+Secrets

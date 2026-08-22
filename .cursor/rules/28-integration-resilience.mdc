@@ -1,0 +1,19 @@
+---
+description: External provider, queue, timeout, retry, and resilience rules
+globs:
+- backend/src/**/infrastructure/integrations/**/*.ts
+- backend/src/**/infrastructure/external-services/**/*.ts
+- backend/src/**/infrastructure/messaging/**/*.ts
+- backend/src/**/application/**/*.ts
+alwaysApply: false
+---
+# Integration Resilience
+
+- Hide provider SDKs behind ports and translate provider errors into stable internal categories.
+- Every network call defines a timeout, cancellation behavior, retry policy, and maximum attempt budget.
+- Retry only transient failures; never retry validation, authorization, duplicate, or permanent business failures.
+- Use idempotency keys and durable deduplication for payment, webhook, inventory, notification, and queue operations.
+- Do not hold database transactions open during external calls unless the design explicitly handles partial failure.
+- Persist enough provider reference and status data to reconcile safely without storing secrets or unnecessary payloads.
+- Use circuit breaking, rate limits, dead-letter handling, and alerting where failure volume can harm the system.
+- Test timeout, malformed response, duplicate delivery, partial success, and provider outage behavior.

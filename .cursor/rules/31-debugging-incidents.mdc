@@ -1,0 +1,14 @@
+---
+description: Debugging, incident response, and regression prevention rules
+alwaysApply: true
+---
+# Debugging And Incidents
+
+- Reproduce the failure with the smallest deterministic input before changing code.
+- Identify the first incorrect state, not only the final error message.
+- Separate symptom, root cause, contributing condition, and detection gap.
+- Add a regression test that fails before the fix and passes after it.
+- Preserve evidence safely: redact credentials, tokens, personal data, payment data, and full request bodies.
+- Prefer reversible mitigations during incidents and document follow-up work separately from emergency repair.
+- Check retries, duplicate delivery, clock/time-zone assumptions, tenant scope, transaction boundaries, and stale caches for production-only failures.
+- Record operational impact, affected scope, timeline, remediation, and prevention without blaming individuals.

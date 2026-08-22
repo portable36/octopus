@@ -1,0 +1,18 @@
+---
+description: Secure HTTP boundary and CORS rules
+globs:
+- backend/src/**/*.ts
+- frontend/src/**/*.ts
+- frontend/src/**/*.tsx
+alwaysApply: false
+---
+# HTTP Security Boundary
+
+- CORS must use an explicit production allowlist from validated configuration; never use `*` with credentials.
+- Allow only required methods and headers, and keep preflight behavior observable.
+- Authenticate before authorization, and authorize against server-derived tenant, vendor, store, and actor context.
+- Validate body, query, params, headers, and uploaded metadata at the boundary. Reject unknown fields unless the contract explicitly permits them.
+- Apply body-size limits, rate limits, timeout budgets, and request correlation IDs appropriate to the endpoint.
+- Use secure cookies for refresh tokens and never place credentials or tokens in logs, URLs, analytics, or error messages.
+- Return stable, user-safe error contracts. Do not disclose whether another tenant's protected resource exists when resource hiding is required.
+- Add negative tests for unauthenticated, wrong-role, wrong-tenant, malformed, replayed, and over-limit requests where relevant.

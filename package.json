@@ -29,7 +29,7 @@
   "devDependencies": {
     "concurrently": "^9.0.0",
     "prettier": "^3.0.0",
-    "vitest": "^3.0.0",
+    "vitest": "^4.1.11",
     "@playwright/test": "^1.0.0"
   }
 }

@@ -1,0 +1,19 @@
+---
+description: Vendor and store lifecycle, staff scope, and offer ownership rules
+globs:
+- backend/src/modules/vendor/**/*.ts
+- backend/src/modules/store/**/*.ts
+alwaysApply: false
+---
+
+# Vendor and Store Rules
+
+- Vendor and Store are separate bounded contexts under `backend/src/modules/`.
+- Store always belongs to exactly one vendor; validate ownership on every mutation.
+- Never trust `vendorId` or `storeId` from request bodies without matching authenticated scope.
+- Vendor lifecycle: `PENDING -> UNDER_REVIEW -> APPROVED -> ACTIVE -> SUSPENDED`.
+- Store lifecycle: `DRAFT -> ACTIVE -> SUSPENDED -> CLOSED`.
+- Store offers bind catalog products to store-specific price/availability; do not duplicate catalog identity inside offers.
+- Cross-module catalog access uses Catalog application ports only.
+- Emit lifecycle events through the transactional outbox for downstream indexing and notifications.
+- Admin-only actions (vendor approval, platform suspension) require explicit platform permissions and audit logging.

@@ -1,6 +1,8 @@
 ---
 description: Enforce strict token rotation, password cryptographic hashing rules, and role-permission evaluation pipelines.
-globs: src/modules/auth/**/*, src/modules/identity/**/*, **/*guard*.ts
+globs:
+- backend/src/modules/identity/**/*
+- backend/src/**/*guard*.ts
 ---
 # Security-First Cryptographic & Authorization Rules
 

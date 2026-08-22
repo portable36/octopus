@@ -1,0 +1,10 @@
+# Generated / dependency trees — keep the graph on source and docs
+backend/dist/
+frontend/.next/
+coverage/
+playwright-report/
+test-results/
+agent-transcripts/
+**/node_modules/
+**/*.map
+**/*.js.map

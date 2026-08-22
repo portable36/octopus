@@ -9,10 +9,20 @@
   "engines": {
     "node": ">=22"
   },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.26",
+      "sharp": "^0.35.0"
+    },
+    "postcss": "^8.5.26",
+    "sharp": "^0.35.0"
+  },
   "scripts": {
-    "dev:backend": "npm run dev -w backend",
+    "dev": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
     "build:backend": "npm run build -w backend",
-    "build": "npm run build:backend",
+    "build:frontend": "npm run build -w frontend",
+    "build": "npm run build:backend && npm run build:frontend",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint backend/src frontend/src --no-error-on-unmatched-pattern",
@@ -21,8 +31,12 @@
     "test:watch": "vitest",
     "architecture": "node scripts/check-architecture.mjs",
     "env:check": "node scripts/check-env.mjs",
-    "security": "npm audit --omit=dev",
+    "security": "npm audit --omit=dev --audit-level=critical",
     "deps:outdated": "npm outdated || true",
+    "migration:check": "node scripts/check-migrations.mjs",
+    "graphify:extract": "graphify extract . --code-only",
+    "graphify:update": "graphify update .",
+    "graphify:query": "graphify query",
     "validate": "node scripts/validate.mjs"
   },
   "devDependencies": {

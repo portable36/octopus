@@ -1,0 +1,17 @@
+---
+description: Inventory reservation, concurrency, and availability port rules
+globs:
+- backend/src/modules/inventory/**/*.ts
+alwaysApply: false
+---
+
+# Inventory Rules
+
+- Inventory truth lives in PostgreSQL; Redis is not the source of truth for stock levels.
+- Reservations use database transactions with row locks or optimistic concurrency.
+- Sequence: lock row -> verify available -> reserve -> outbox event -> commit.
+- `available = onHand - reserved` must hold after every operation.
+- Expose `InventoryPort` for Checkout, Order, POS, and Fulfillment; no direct table access from other modules.
+- Reservation expiry must release stock via background job with idempotent processing.
+- Never decrement stock from frontend-triggered logic without server command and authorization.
+- Test concurrent reservation scenarios with integration tests against real PostgreSQL.

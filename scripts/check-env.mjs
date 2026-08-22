@@ -32,6 +32,9 @@ const requiredVars = [
   'S3_ACCESS_KEY',
   'S3_SECRET_KEY',
   'S3_BUCKET',
+  'CORS_ORIGINS',
+  'LOG_LEVEL',
+  'SHUTDOWN_TIMEOUT_MS',
 ];
 
 const missing = requiredVars.filter((v) => !exampleKeys.has(v));

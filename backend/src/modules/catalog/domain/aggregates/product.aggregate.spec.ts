@@ -34,7 +34,9 @@ describe('Product', () => {
   it('rejects invalid rename names and trims the value', () => {
     const product = Product.create('abc-def-1234', 'Wireless Mouse');
 
-    expect(() => product.rename('  x  ')).toThrow('Product name must contain at least 3 characters.');
+    expect(() => product.rename('  x  ')).toThrow(
+      'Product name must contain at least 3 characters.',
+    );
     product.rename('  Gaming mouse  ');
     expect(product.name).toBe('Gaming mouse');
   });

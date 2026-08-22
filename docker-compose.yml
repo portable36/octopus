@@ -46,6 +46,35 @@ services:
     volumes:
       - miniodata:/data
 
+  backend:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://octopus:octopus@postgres:5432/octopus
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-dev-secret-with-at-least-32-characters
+      JWT_EXPIRES_IN: 15m
+      MEILISEARCH_HOST: http://meilisearch:7700
+      MEILISEARCH_API_KEY: masterKey
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: octopus-media
+      CORS_ORIGINS: http://localhost:3001
+      LOG_LEVEL: info
+      SHUTDOWN_TIMEOUT_MS: 10000
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   meilidata:

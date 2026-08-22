@@ -11,3 +11,10 @@ coverage/
 .turbo/
 playwright-report/
 test-results/
+
+frontend/tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Graphify (commit graph.json / GRAPH_REPORT.md / graph.html for team map)
+graphify-out/cost.json
+graphify-out/cache/

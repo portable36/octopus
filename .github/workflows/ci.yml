@@ -13,6 +13,47 @@ jobs:
   validate:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: octopus
+          POSTGRES_PASSWORD: octopus
+          POSTGRES_DB: octopus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U octopus"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://octopus:octopus@localhost:5432/octopus
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret-with-at-least-32-characters
+      JWT_EXPIRES_IN: 15m
+      MEILISEARCH_HOST: http://localhost:7700
+      MEILISEARCH_API_KEY: masterKey
+      S3_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: octopus-media
+      CORS_ORIGINS: http://localhost:3001
+      LOG_LEVEL: warn
+      SHUTDOWN_TIMEOUT_MS: 10000
+
     steps:
       - uses: actions/checkout@v4
 

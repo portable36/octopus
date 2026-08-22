@@ -1,6 +1,7 @@
 ---
 description: Enforce idempotency protection, signature decoder verifications, and financial calculation safety rules for local MFS/Gateways.
-globs: src/modules/payment/**/*
+globs:
+- backend/src/modules/payment/**/*
 ---
 # Regional MFS & Card Network Compliance Rules (Bangladesh)
 

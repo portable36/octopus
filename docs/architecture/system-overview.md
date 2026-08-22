@@ -32,7 +32,7 @@ Dependencies flow inward only:
 `Infrastructure (Web/DB) -> Application (Use Cases/Commands) -> Domain (Aggregates/Value Objects)`
 
 ```text
-src/
+backend/src/
 ├── shared-kernel/            # Pure, zero-dependency DDD base primitives
 │   ├── domain/               # Base Entity, ValueObject, AggregateRoot, UniqueID
 │   └── infrastructure/       # Cross-cutting concerns (AsyncLocalStorage, Logger)
@@ -62,7 +62,7 @@ Constraints:
 Context tracking uses NestJS interceptors over Node.js native execution tracking:
 
 ```typescript
-// Location: src/shared-kernel/infrastructure/context/tenant-context.storage.ts
+// Location: backend/src/shared-kernel/infrastructure/context/tenant-context.storage.ts
 import { AsyncLocalStorage } from 'async_hooks';
 
 export interface TenantContext {

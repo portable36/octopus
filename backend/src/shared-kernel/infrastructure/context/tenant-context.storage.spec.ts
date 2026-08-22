@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
-  getCurrentTenantId,
+  createRequestContext,
   getTenantContext,
   runWithTenantContext,
+  setAuthenticatedPrincipal,
+  setPlatformScope,
+  setStoreScope,
+  setVendorScope,
   tryGetTenantContext,
 } from './tenant-context.storage';
 
 describe('tenant context storage', () => {
   it('exposes the context inside the run scope', () => {
-    const result = runWithTenantContext({ tenantId: 't-1', requestId: 'r-1' }, () =>
-      getTenantContext(),
-    );
-    expect(result.tenantId).toBe('t-1');
+    const result = runWithTenantContext(createRequestContext('r-1'), () => getTenantContext());
     expect(result.requestId).toBe('r-1');
   });
 
@@ -20,9 +21,25 @@ describe('tenant context storage', () => {
     expect(() => getTenantContext()).toThrow('not available');
   });
 
-  it('fails closed when a request has no authenticated tenant', () => {
-    expect(() => runWithTenantContext({ requestId: 'r-1' }, () => getCurrentTenantId())).toThrow(
-      'Authenticated tenant context is not available',
-    );
+  it('tracks principal, vendor, store, and platform scope', () => {
+    runWithTenantContext(createRequestContext('r-1'), () => {
+      setAuthenticatedPrincipal({
+        userId: 'user-1',
+        email: 'a@b.co',
+        roles: ['VENDOR_OWNER'],
+      });
+      setVendorScope('vendor-a', 'tenant-a');
+      setStoreScope('store-a');
+
+      const context = getTenantContext();
+      expect(context.userId).toBe('user-1');
+      expect(context.vendorId).toBe('vendor-a');
+      expect(context.storeId).toBe('store-a');
+      expect(context.tenantId).toBe('tenant-a');
+
+      setPlatformScope(true);
+      expect(getTenantContext().platformScope).toBe(true);
+      expect(getTenantContext().vendorId).toBeUndefined();
+    });
   });
 });

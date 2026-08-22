@@ -1,6 +1,8 @@
 ---
 description: Enforce Row-Level Security (RLS), multi-tenant isolation data mapping, and MikroORM configuration requirements.
-globs: src/modules/**/infrastructure/persistence/**/*, src/shared-kernel/infrastructure/persistence/**/*
+globs:
+- backend/src/modules/**/infrastructure/persistence/**/*
+- backend/src/shared-kernel/infrastructure/persistence/**/*
 ---
 # Multi-Tenant Database Isolation Rules
 

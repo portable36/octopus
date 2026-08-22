@@ -11,8 +11,9 @@ const steps = [
   ['architecture', 'Architecture boundaries'],
   ['test', 'Unit tests'],
   ['env:check', 'Environment contract'],
-  ['security', 'Dependency audit'],
   ['build', 'Application build'],
+  ['migration:check', 'Database migrations'],
+  ['security', 'Dependency audit'],
 ];
 
 for (const [script, label] of steps) {

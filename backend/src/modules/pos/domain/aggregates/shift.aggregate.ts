@@ -55,9 +55,7 @@ export class Shift extends AggregateRoot<UniqueID> {
       }
     }
 
-    const effectiveOpeningCash = adjustment
-      ? openingCash.subtract(adjustment.amount)
-      : openingCash;
+    const effectiveOpeningCash = adjustment ? openingCash.subtract(adjustment.amount) : openingCash;
     const shift = new Shift(UniqueID.create(), {
       registerId: registerId.trim(),
       cashierId: cashierId.trim(),
@@ -152,8 +150,10 @@ export class Shift extends AggregateRoot<UniqueID> {
   }
 
   get isShort(): boolean {
-    return this.props.actualCash !== undefined
-      && this.props.actualCash.amountMinorUnits < this.expectedCash.amountMinorUnits;
+    return (
+      this.props.actualCash !== undefined &&
+      this.props.actualCash.amountMinorUnits < this.expectedCash.amountMinorUnits
+    );
   }
 
   get carryForwardCash(): Money | undefined {

@@ -3,6 +3,12 @@ description: Documentation rules for architecture and operations
 globs:
 - docs/**/*.md
 - README.md
+- ARCHITECTURE.md
+- DATABASE.md
+- SECURITY.md
+- TESTING.md
+- OPERATIONS.md
+- .cursor/rules/**/*.mdc
 alwaysApply: false
 ---
 
@@ -10,21 +16,43 @@ alwaysApply: false
 
 When changing a significant architectural decision, update documentation.
 
-Document:
+## Required doc locations
 
-- bounded contexts
-- ownership
-- module contracts
-- event contracts
-- database migrations
-- security assumptions
-- deployment dependencies
-- operational runbooks
+| Area            | Path                                      |
+| --------------- | ----------------------------------------- |
+| Module specs    | `docs/module/<context>.md`                |
+| Domain concepts | `docs/domains/<topic>.md`                 |
+| Architecture    | `docs/architecture/*.md`, `ARCHITECTURE.md`|
+| Engineering     | `docs/engineering/*.md`                   |
+| ADRs            | `docs/adr/ADR-*.md`                       |
+| Cursor rules    | `.cursor/rules/*.mdc`                       |
+| Commands        | `.cursor/commands/*.md`                     |
 
-Architecture Decision Records should explain:
+## Module doc minimum sections
+
+- Responsibility (owns / does not own)
+- Architecture and module path
+- Key aggregates or workflows
+- Public contracts and events
+- Testing requirements and exit criteria
+
+## ADR format
 
 1. Context
 2. Decision
 3. Alternatives
 4. Consequences
 5. Rollout/rollback considerations
+
+## Rule numbering
+
+Use two-digit prefixes in `.cursor/rules/` (`00-core.mdc`, `37-order-payment.mdc`). Do not duplicate numbers.
+
+Also document:
+
+- bounded contexts and ownership
+- module contracts and event contracts
+- database migrations
+- security assumptions
+- deployment dependencies
+- operational runbooks

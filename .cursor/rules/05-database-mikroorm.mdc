@@ -1,8 +1,8 @@
 ---
 description: PostgreSQL and MikroORM persistence rules
 globs:
-- src/modules/**/infrastructure/persistence/**/*.ts
-- src/shared-kernel/infrastructure/persistence/**/*.ts
+- backend/src/modules/**/infrastructure/persistence/**/*.ts
+- backend/src/shared-kernel/infrastructure/persistence/**/*.ts
 alwaysApply: false
 ---
 

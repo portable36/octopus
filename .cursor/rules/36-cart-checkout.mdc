@@ -1,0 +1,18 @@
+---
+description: Cart and checkout authority, idempotency, and total calculation rules
+globs:
+- backend/src/modules/cart/**/*.ts
+- backend/src/modules/checkout/**/*.ts
+alwaysApply: false
+---
+
+# Cart and Checkout Rules
+
+- Cart display prices are hints; Checkout recalculates authoritative totals server-side.
+- Checkout submission requires `Idempotency-Key`; retries must not create duplicate orders or reservations.
+- Pipeline order: validate cart -> validate offers -> price/tax/shipping/promotions -> reserve inventory -> create order(s) -> create payment intent(s).
+- Multi-vendor carts may produce multiple orders; never merge vendor financial state in one aggregate mutation.
+- Failed checkout must release inventory reservations per compensating policy.
+- Never trust browser-calculated discounts, tax, shipping, or grand totals.
+- Checkout orchestrates Order and Payment through application ports only.
+- Persist immutable snapshots on orders at creation time.

@@ -1,6 +1,8 @@
 ---
 description: Enforce Domain-Driven Design (DDD), Clean Architecture, and Modular Monolith boundaries for all backend code modifications.
-globs: src/modules/**/*, src/shared-kernel/**/*
+globs:
+- backend/src/modules/**/*
+- backend/src/shared-kernel/**/*
 ---
 # Modular Monolith & DDD Architectural Guardrails
 
@@ -14,7 +16,7 @@ Dependencies must exclusively flow inward. Outer layers can import from inner la
 - **Infrastructure Layer (`/infrastructure`)**: Framework-specific code. Houses NestJS Controllers, Modules, and MikroORM database schemas/repository implementations.
 
 ## 2. Cross-Module Isolation Boundaries
-- Explicitly enforce structural separation: Code inside `src/modules/catalog/` must NEVER import anything directly from `src/modules/order/`.
+- Explicitly enforce structural separation: Code inside `backend/src/modules/catalog/` must NEVER import anything directly from `backend/src/modules/order/`.
 - Cross-module communication must happen through asymmetric asynchronous **Domain Events** via the in-memory `EventEmitter2` bus, or by implementing a highly restrictive application-layer shared API contract interface.
 - Run `npm run architecture` to dynamically evaluate boundary leak violations.
 

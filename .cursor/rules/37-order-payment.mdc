@@ -1,0 +1,20 @@
+---
+description: Order state machine, payment coordination, and financial transition rules
+globs:
+- backend/src/modules/order/**/*.ts
+- backend/src/modules/payment/**/*.ts
+- backend/src/modules/refunds/**/*.ts
+alwaysApply: false
+---
+
+# Order and Payment Rules
+
+- Order status changes use explicit domain methods; no arbitrary string assignment.
+- Valid path: `PENDING_PAYMENT -> PAID -> PROCESSING -> PARTIALLY_FULFILLED -> FULFILLED -> COMPLETED`.
+- Payment callbacks are untrusted: verify signature, amount, currency, references, and idempotency before marking paid.
+- Never set order to PAID from frontend redirect alone.
+- Provider SDKs stay in infrastructure adapters implementing `PaymentProvider`.
+- Refunds cannot exceed refundable amount; refund commands must be idempotent.
+- Coordinate inventory commit/release with payment and fulfillment through documented ports/events.
+- Financial side effects emit outbox events for Payout ledger projectors.
+- Hold DB transactions open only for internal state changes, not external provider HTTP calls.

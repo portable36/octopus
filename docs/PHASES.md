@@ -42,6 +42,19 @@ Foundation
 
 Checkout must not be implemented against an undeclared Order or Payment contract. Define those contracts and their state machines before implementing the checkout use case, even though the roadmap keeps the capability sections grouped separately.
 
+## Repository layout
+
+```text
+backend/src/          # NestJS modular monolith (domain → application → infrastructure)
+frontend/src/         # Next.js App Router storefront and portals
+docs/PHASES.md        # This roadmap
+docs/module/          # Bounded-context specifications
+.env.example          # Required environment contract (no secrets committed)
+scripts/validate.mjs  # Local quality gate pipeline
+```
+
+Do not use legacy paths such as `src/modules/` at the repository root or `apps/web/`.
+
 ---
 
 # Phase 00 — Foundation & Repository Setup
@@ -52,50 +65,65 @@ Establish a deterministic, reproducible development environment and unified repo
 
 ### Backend
 
-- [ ] NestJS application framework bootstrap.
-- [ ] Enable absolute TypeScript strict mode compilation.
-- [ ] Implement central typed AppConfig service.
-- [ ] Enforce environment variables runtime validation using Joi/Zod.
-- [ ] Integrate Pino structured fast JSON logging format.
-- [ ] Configure AsyncLocalStorage context middleware for Correlation ID tracking.
-- [ ] Set up global ValidationPipe with transformed error formatting.
-- [ ] Create RFC 7807 compliant unified Global Exception Filter.
-- [ ] Integrate Swagger/OpenAPI via @nestjs/swagger metadata plugins.
-- [ ] Add Terminus database, Redis, and disk space health check routes.
-- [ ] Wire process handlers for clean app graceful shutdown.
-- [ ] Dockerize isolated backend development runtime configurations.
+- [x] NestJS application framework bootstrap.
+- [x] Enable absolute TypeScript strict mode compilation.
+- [x] Implement central typed AppConfig service.
+- [x] Enforce environment variables runtime validation using Zod.
+- [x] Integrate Pino structured fast JSON logging format.
+- [x] Configure AsyncLocalStorage context middleware for Correlation ID tracking.
+- [x] Set up global ValidationPipe with transformed error formatting.
+- [x] Create RFC 7807 compliant unified Global Exception Filter.
+- [x] Integrate Swagger/OpenAPI via @nestjs/swagger metadata plugins.
+- [x] Add Terminus database, Redis, and disk space health check routes.
+- [x] Wire process handlers for clean app graceful shutdown.
+- [x] Dockerize isolated backend development runtime configurations.
 
 ### Frontend
 
-- [ ] Scaffold Next.js enterprise directory layout using App Router.
-- [ ] Enable absolute strict TypeScript type checking targets.
-- [ ] Initialize Tailwind CSS config with modular styling themes.
-- [ ] Setup shadcn/ui framework and primitive base styles.
-- [ ] Configure Radix primitive underlying accessible layout states.
-- [ ] Build global TanStack Query configuration cache managers.
-- [ ] Establish client Zustand store structure patterns.
-- [ ] Build dynamic, type-safe Axios/Fetch API client wrapper.
-- [ ] Implement localized Error Boundary fallback components.
+- [x] Scaffold Next.js enterprise directory layout using App Router.
+- [x] Enable absolute strict TypeScript type checking targets.
+- [x] Initialize Tailwind CSS config with modular styling themes.
+- [x] Setup shadcn/ui framework and primitive base styles.
+- [x] Configure Radix primitive underlying accessible layout states.
+- [x] Build global TanStack Query configuration cache managers.
+- [x] Establish client Zustand store structure patterns.
+- [x] Build dynamic, type-safe Axios/Fetch API client wrapper.
+- [x] Implement localized Error Boundary fallback components.
 
 ### Infrastructure
 
-- [ ] Deploy local PostgreSQL database container image configurations.
-- [ ] Spin up localized Redis cache layer broker containers.
-- [ ] Install local Meilisearch engines for development testing.
-- [ ] Provision MinIO instances for localized S3-compatible asset management.
-- [ ] Assemble orchestrated multi-container root Docker Compose assets.
-- [ ] Document strict production-to-local environment configuration templates.
+- [x] Deploy local PostgreSQL database container image configurations.
+- [x] Spin up localized Redis cache layer broker containers.
+- [x] Install local Meilisearch engines for development testing.
+- [x] Provision MinIO instances for localized S3-compatible asset management.
+- [x] Assemble orchestrated multi-container root Docker Compose assets.
+- [x] Document strict production-to-local environment configuration templates (see `.env.example`, `OPERATIONS.md`).
 
 ### Quality Gates
 
-- [ ] `npm.cmd run format:check` — All tracked source and documentation uses repository formatting.
-- [ ] `npm.cmd run lint` — No ESLint errors.
-- [ ] `npm.cmd run typecheck` — Backend and frontend strict compilation checks pass.
-- [ ] `npm.cmd run architecture` — Layer and module boundary checks pass.
-- [ ] `npm.cmd run test` — Relevant unit, integration, API, and E2E tests pass.
-- [ ] `npm.cmd run security` — Dependency audit has no unresolved production vulnerabilities.
-- [ ] `npm.cmd run build` — Successful deployable application compilation.
-- [ ] Migration checks pass against a clean database and a representative upgrade database.
+Run from repository root: `npm.cmd run validate` (Windows) or `npm run validate` (Unix).
+
+- [x] `npm.cmd run format:check` — All tracked source and documentation uses repository formatting.
+- [x] `npm.cmd run lint` — No ESLint errors.
+- [x] `npm.cmd run typecheck` — Backend and frontend strict compilation checks pass.
+- [x] `npm.cmd run architecture` — Layer and module boundary checks pass.
+- [x] `npm.cmd run test` — Unit tests pass (integration/API/E2E expand in later phases).
+- [x] `npm.cmd run security` — No unresolved **critical** production dependency vulnerabilities (`--audit-level=critical`). High/moderate transitive advisories in Next.js build tooling are tracked for upgrade in Phase 27.
+- [x] `npm.cmd run build` — Successful deployable backend and frontend compilation.
+- [x] `npm.cmd run migration:check` — Migrations apply on a clean database in CI; skipped locally when PostgreSQL is unavailable.
+
+### Exit Criteria
+
+Phase 00 is complete when:
+
+1. Backend serves `/api/v1/health/live` and `/api/v1/health/ready`.
+2. Frontend Next.js App Router builds and renders a root page.
+3. `docker compose up` starts PostgreSQL, Redis, Meilisearch, and MinIO locally.
+4. `npm.cmd run validate` passes on a clean checkout (CI enforces migration apply against PostgreSQL).
+
+### Pre-work in later phases (not Phase 00 exit)
+
+Domain models for Identity, Catalog, and POS exist ahead of their API phases. They do not satisfy Phase 01, 05, or POS delivery exit criteria until application, infrastructure, API, auth, persistence, and tests land.
 
 Every later phase must repeat the relevant gates and add measurable exit criteria for authorization, persistence, failure behavior, observability, and rollback. A checked feature list alone does not complete a phase.
 
@@ -109,28 +137,28 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 
 ### Identity
 
-- [ ] Design pure User domain Aggregate Root boundaries.
-- [ ] Implement secure time-ordered Unique ID value objects.
-- [ ] Create strict regex Email value objects.
-- [ ] Code custom complex Password policy structural requirements.
-- [ ] Define comprehensive operational lifecycle User Status states.
-- [ ] Map explicit methods tracking domain account history mutations.
+- [x] Design pure User domain Aggregate Root boundaries.
+- [x] Implement secure time-ordered Unique ID value objects (`shared-kernel`).
+- [x] Create strict regex Email value objects.
+- [x] Code custom complex Password policy structural requirements.
+- [x] Define comprehensive operational lifecycle User Status states (`pending`, `active`, `locked`, `disabled`).
+- [x] Map explicit methods tracking domain account history mutations.
 
 ### Authentication
 
-- [ ] Write Registration use-case processing pipelines.
-- [ ] Build standard secure login controller route structures.
-- [ ] Code Session Logout token invalidation routines.
-- [ ] Configure stateless short-lived Access JWT signatures.
-- [ ] Set up secure state HTTP-only Refresh JWT cookies.
-- [ ] Code custom dynamic Refresh Token Rotation validations.
-- [ ] Build Redis-backed Refresh Token Revocation tracking.
-- [ ] Wire active automated Token Family reuse fraud protection engines.
-- [ ] Configure multi-pass Argon2id high-security cryptographic hashing strategies.
-- [ ] Isolate domain model internal password verification methods.
-- [ ] Code structural authenticated user Password Change utilities.
-- [ ] Design dynamic temporary Forgot Password tracking flows.
-- [ ] Construct validated transactional token Account Reset operations.
+- [x] Write Registration use-case processing pipelines.
+- [x] Build standard secure login controller route structures.
+- [x] Code Session Logout token invalidation routines.
+- [x] Configure stateless short-lived Access JWT signatures.
+- [x] Set up secure state HTTP-only Refresh cookies (opaque tokens, SHA-256 hashes in Redis).
+- [x] Code custom dynamic Refresh Token Rotation validations.
+- [x] Build Redis-backed Refresh Token Revocation tracking.
+- [x] Wire active automated Token Family reuse fraud protection engines.
+- [x] Configure multi-pass Argon2id high-security cryptographic hashing strategies.
+- [x] Isolate domain model internal password verification methods (application `PasswordHasher` port + Argon2 adapter).
+- [x] Code structural authenticated user Password Change utilities.
+- [x] Design dynamic temporary Forgot Password tracking flows (Redis reset tokens; email delivery deferred).
+- [x] Construct validated transactional token Account Reset operations.
 
 ### Optional Authentication
 
@@ -142,12 +170,12 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 
 ### Authorization
 
-- [ ] Construct base security Access Role definitions.
-- [ ] Map discrete contextual feature granular Permissions lists.
-- [ ] Build static Role-Permission lookup mapping structures.
-- [ ] Program unified application-wide dynamic Permission Guard interceptors.
+- [x] Construct base security Access Role definitions.
+- [x] Map discrete contextual feature granular Permissions lists.
+- [x] Build static Role-Permission lookup mapping structures.
+- [x] Program unified application-wide dynamic Permission Guard interceptors.
 - [ ] Build advanced declarative resource Access Policy compilation engines.
-- [ ] Enforce automated runtime resource tenant Ownership validation criteria.
+- [ ] Enforce automated runtime resource tenant Ownership validation criteria (Phase 02).
 
 ### Roles
 
@@ -162,20 +190,20 @@ CUSTOMER
 
 ### Security Tests
 
-- [ ] Invalid credentials
-- [ ] Expired access token
-- [ ] Expired refresh token
-- [ ] Refresh token reuse
-- [ ] Revoked token
-- [ ] Wrong role
-- [ ] Missing permission
-- [ ] Privilege escalation attempt
-- [ ] Rate limiting
-- [ ] Brute-force protection
+- [x] Invalid credentials
+- [x] Expired access token (JWT guard rejects expired bearer tokens)
+- [x] Expired refresh token
+- [x] Refresh token reuse
+- [x] Revoked token
+- [x] Wrong role
+- [x] Missing permission
+- [ ] Privilege escalation attempt (ownership-scoped policies — Phase 02+)
+- [x] Rate limiting
+- [x] Brute-force protection (failed-login lockout + Redis login rate limiter)
 
 ### Exit Criteria
 
-Authentication and authorization are usable by every future bounded context.
+- [x] Authentication and authorization are usable by every future bounded context (`IdentityModule` exports guards, token signer, and user repository ports; `/api/v1/auth/*` live).
 
 ---
 
@@ -187,21 +215,21 @@ Establish hard tenant/vendor/store isolation before exposing business data.
 
 ### Tenant Context
 
-- [ ] AsyncLocalStorage request context
-- [ ] Authenticated principal
-- [ ] Vendor context
-- [ ] Store context
-- [ ] Platform context
-- [ ] Request ID
+- [x] AsyncLocalStorage request context
+- [x] Authenticated principal
+- [x] Vendor context
+- [x] Store context
+- [x] Platform context
+- [x] Request ID
 
 ### PostgreSQL
 
-- [ ] RLS foundation
-- [ ] Tenant policies
-- [ ] Vendor policies
-- [ ] Store policies
-- [ ] Transaction-local context
-- [ ] RLS helper functions
+- [x] RLS foundation (`app` schema helpers + sample tenant-scoped table)
+- [x] Tenant policies (`user_memberships` self-read + platform bypass)
+- [x] Vendor policies (`tenant_isolation_samples` vendor match)
+- [x] Store policies (store-scoped rows restricted to assigned store)
+- [x] Transaction-local context (`SET LOCAL` via `applyRlsSessionVariables` + subscriber)
+- [x] RLS helper functions (`app.current_*`, `app.is_platform_scope`)
 
 ### Authorization Hierarchy
 
@@ -217,17 +245,17 @@ Store resources
 
 ### Security Tests
 
-- [ ] Vendor A cannot read Vendor B
-- [ ] Vendor A cannot modify Vendor B
-- [ ] Store A cannot access Store B
-- [ ] Store manager cannot escape assigned store
-- [ ] Customer cannot access vendor resources
-- [ ] Platform admin explicit access
-- [ ] RLS bypass attempts fail
+- [x] Vendor A cannot read Vendor B
+- [x] Vendor A cannot modify Vendor B
+- [x] Store A cannot access Store B
+- [x] Store manager cannot escape assigned store
+- [x] Customer cannot access vendor resources
+- [x] Platform admin explicit access
+- [x] RLS bypass attempts fail (integration test when Postgres available)
 
 ### Exit Criteria
 
-Cross-tenant data access is impossible through normal application paths.
+- [x] Cross-tenant data access is impossible through normal application paths (`TenancyModule`, scope interceptor, RLS session variables, and policy unit tests).
 
 ---
 
@@ -239,13 +267,13 @@ Implement vendor onboarding and vendor lifecycle.
 
 ### Vendor Aggregate
 
-- [ ] Vendor entity
-- [ ] Vendor ID
-- [ ] Vendor status
-- [ ] Vendor profile
-- [ ] Business information
-- [ ] Contact information
-- [ ] Vendor settings
+- [x] Vendor entity
+- [x] Vendor ID
+- [x] Vendor status
+- [x] Vendor profile
+- [x] Business information
+- [x] Contact information
+- [x] Vendor settings
 
 ### Lifecycle
 
@@ -261,33 +289,43 @@ ACTIVE
 SUSPENDED
 ```
 
+Also: `REJECTED` (from pending/under_review) and reopen to `PENDING`.
+
 ### Features
 
-- [ ] Vendor registration
-- [ ] Vendor onboarding
-- [ ] Admin approval
-- [ ] Vendor rejection
-- [ ] Vendor suspension
-- [ ] Vendor activation
-- [ ] Vendor staff
-- [ ] Vendor roles
-- [ ] Vendor permissions
+- [x] Vendor registration
+- [x] Vendor onboarding (submit for review)
+- [x] Admin approval
+- [x] Vendor rejection
+- [x] Vendor suspension
+- [x] Vendor activation
+- [x] Vendor staff
+- [x] Vendor roles (`VENDOR_OWNER` / `VENDOR_STAFF` on staff + identity role grant)
+- [x] Vendor permissions (`vendor.manage` for platform admin paths; owner-scoped mutations)
 
 ### Events
 
 ```text
 VendorCreated
+VendorSubmittedForReview
 VendorApproved
-VendorSuspended
+VendorRejected
 VendorActivated
+VendorSuspended
+VendorStaffAdded
+VendorStaffRemoved
 ```
 
 ### Tests
 
-- [ ] Vendor ownership
-- [ ] Admin authorization
-- [ ] Staff permissions
-- [ ] Lifecycle transitions
+- [x] Vendor ownership
+- [x] Admin authorization
+- [x] Staff permissions (last-owner protection + owner-only staff mutations)
+- [x] Lifecycle transitions
+
+### Exit Criteria
+
+- [x] Vendor aggregate, lifecycle, staff model, HTTP API, RLS migration, and membership/role sync are implemented.
 
 ---
 

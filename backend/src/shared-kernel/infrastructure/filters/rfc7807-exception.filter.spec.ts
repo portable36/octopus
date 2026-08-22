@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { Rfc7807ExceptionFilter } from './rfc7807-exception.filter';
+
+describe('Rfc7807ExceptionFilter', () => {
+  const filter = new Rfc7807ExceptionFilter();
+
+  it('maps validation errors to RFC7807 with field details', () => {
+    const json = captureJson(
+      filter,
+      new BadRequestException({
+        message: 'Validation failed.',
+        errors: [{ field: 'email', message: 'email must be an email' }],
+      }),
+    );
+
+    expect(json.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(json.type).toBe(`https://httpstatuses.com/${HttpStatus.BAD_REQUEST}`);
+    expect(json.errors).toEqual([{ field: 'email', message: 'email must be an email' }]);
+  });
+
+  it('hides internal error details for unknown exceptions', () => {
+    const json = captureJson(filter, new Error('database password leaked'));
+
+    expect(json.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(json.detail).toBe('An unexpected error occurred.');
+    expect(json.detail).not.toContain('password');
+  });
+});
+
+function captureJson(filter: Rfc7807ExceptionFilter, exception: unknown): Record<string, unknown> {
+  let payload: Record<string, unknown> = {};
+
+  const response = {
+    status(code: number) {
+      expect(code).toBeGreaterThan(0);
+      return response;
+    },
+    type(contentType: string) {
+      expect(contentType).toBe('application/problem+json');
+      return response;
+    },
+    json(body: Record<string, unknown>) {
+      payload = body;
+      return response;
+    },
+  };
+
+  const request = { url: '/api/v1/example' };
+
+  filter.catch(exception, {
+    switchToHttp: () => ({
+      getResponse: () => response,
+      getRequest: () => request,
+    }),
+  } as never);
+
+  return payload;
+}

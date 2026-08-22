@@ -19,18 +19,23 @@ No ruleset can honestly guarantee a completely error-free production system. Thi
 ## Repository layout
 
 ```text
-src/
+backend/src/
   shared-kernel/
     domain/            # AggregateRoot, ValueObject, UniqueId, Money
     infrastructure/    # Cross-cutting concerns (AsyncLocalStorage tenant context)
   modules/
-    [context]/         # Bounded context (identity, pos, ...)
+    [context]/         # Bounded context (identity, pos, catalog, ...)
       domain/          # Pure TypeScript aggregates, value objects, events
       application/     # CQRS commands/queries + ports (planned per phase)
       infrastructure/  # Controllers, persistence adapters (planned per phase)
+frontend/src/          # Next.js App Router frontend (planned)
 docs/
   PHASES.md            # Canonical 30-phase implementation roadmap
   POS.md               # POS bounded context specification
+  module/              # Per-bounded-context specifications (identity, catalog, order, ...)
+  domains/             # Cross-cutting domain concepts (pricing, multivendor, ...)
+  architecture/        # System structure, ownership, deployment
+  engineering/         # Coding standards, testing, security, observability
 .cursor/
   commands/
   rules/               # Numbered governance rules (.mdc), applied by Cursor
@@ -54,12 +59,15 @@ scripts/               # Validation tooling
 
 ```bash
 npm install          # install toolchain
+docker compose up -d # local postgres, redis, meilisearch, minio
+npm run dev          # backend API (port 3000)
+npm run dev:frontend # Next.js storefront (port 3001)
 npm run format       # prettier write
 npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
 npm run architecture # layer-boundary + cross-module import checks
 npm test             # vitest unit tests
-npm run security     # npm audit
+npm run security     # npm audit (critical threshold)
 npm run validate     # full local gate pipeline
 ```
 

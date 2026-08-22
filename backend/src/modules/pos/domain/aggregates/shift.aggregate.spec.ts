@@ -56,16 +56,19 @@ describe('Shift cash accountability', () => {
   });
 
   it('rejects movements after close and unapproved opening adjustments', () => {
-    expect(() => Shift.open('register-1', 'cashier-1', usd(20), {
-      amount: usd(20),
-      reason: '',
-      actorId: 'admin-1',
-    })).toThrow('Opening balance adjustments require a reason and actor.');
+    expect(() =>
+      Shift.open('register-1', 'cashier-1', usd(20), {
+        amount: usd(20),
+        reason: '',
+        actorId: 'admin-1',
+      }),
+    ).toThrow('Opening balance adjustments require a reason and actor.');
 
     const shift = Shift.open('register-1', 'cashier-1', usd(0));
     shift.close(usd(0));
 
-    expect(() => shift.recordCashMovement('CASH_IN', usd(1)))
-      .toThrow('Only open shifts can record cash movements or close.');
+    expect(() => shift.recordCashMovement('CASH_IN', usd(1))).toThrow(
+      'Only open shifts can record cash movements or close.',
+    );
   });
 });

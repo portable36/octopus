@@ -1,0 +1,86 @@
+---
+description: Multi-tenant, vendor and store authorization rules
+globs:
+- apps/api/**/*.ts
+- packages/**/*.ts
+alwaysApply: false
+---
+
+# Tenant Isolation
+
+Tenant isolation is a hard security invariant.
+
+## Trust model
+
+Never trust these values from the client:
+
+- tenantId
+- vendorId
+- storeId
+- userId
+- role
+- permission
+- price
+- discount
+- commission
+- tax
+- payment status
+- ownership
+
+Resolve identity and scope from the authenticated principal and server-side authorization.
+
+## Scope
+
+Every tenant-owned repository operation must enforce the correct scope.
+
+A vendor request must not become:
+
+```ts
+repository.findById(id)
+```
+
+when it should be:
+
+```ts
+repository.findByIdForVendor(id, actor.vendorId)
+```
+
+or an equivalent policy-enforced query.
+
+## RLS
+
+Use PostgreSQL RLS as defense in depth.
+
+Never depend on a global connection-level tenant setting with a pooled database.
+
+Tenant context must be scoped to the transaction/request and cleared automatically.
+
+## Authorization order
+
+```text
+authenticate
+-> resolve tenant/vendor/store
+-> authorize action
+-> validate command
+-> load scoped aggregate
+-> execute
+```
+
+Do not reveal whether another tenant's resource exists when policy requires resource hiding.
+
+## Platform admin
+
+Platform admin access is explicit and audited. Do not make platform-admin behavior a hidden bypass in generic repositories.
+
+## Store hierarchy
+
+Verify:
+
+```text
+actor -> vendor -> store
+```
+
+before accessing store-owned resources.
+
+A vendor owner may access only their vendor's stores.
+A store manager may access only assigned stores.

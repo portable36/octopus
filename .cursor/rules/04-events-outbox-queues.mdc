@@ -1,0 +1,69 @@
+---
+description: Domain events, transactional outbox and BullMQ rules
+globs:
+- apps/api/**/*.ts
+alwaysApply: false
+---
+
+# Messaging Rules
+
+## Domain events
+
+Domain events describe facts:
+
+```text
+OrderPaid
+InventoryReserved
+VendorApproved
+PayoutCompleted
+```
+
+Events must be immutable.
+
+## Outbox
+
+For durable side effects:
+
+```text
+business mutation
++ outbox row
+-> commit
+-> dispatcher
+-> BullMQ
+```
+
+Never publish an external queue message before the transaction commits if doing so can create a lost-update/inconsistent-state problem.
+
+## Consumers
+
+Consumers must be idempotent.
+
+Use a durable provider event ID/job key where available.
+
+Repeated delivery must not:
+
+- duplicate an order
+- duplicate inventory decrement
+- duplicate payout
+- send duplicate financial effects
+
+## BullMQ
+
+Every queue must define:
+
+- payload schema
+- stable job name
+- retry count
+- backoff
+- timeout
+- concurrency
+- dead-letter/failure policy
+- idempotency strategy
+
+Do not retry permanent business validation failures.
+
+## Event versioning
+
+Prefer versioned event contracts when events may outlive the current deployment.
+
+Do not put ORM entities or request objects directly into event payloads.

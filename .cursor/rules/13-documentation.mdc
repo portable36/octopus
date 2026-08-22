@@ -1,0 +1,30 @@
+---
+description: Documentation rules for architecture and operations
+globs:
+- docs/**/*.md
+- README.md
+alwaysApply: false
+---
+
+# Documentation
+
+When changing a significant architectural decision, update documentation.
+
+Document:
+
+- bounded contexts
+- ownership
+- module contracts
+- event contracts
+- database migrations
+- security assumptions
+- deployment dependencies
+- operational runbooks
+
+Architecture Decision Records should explain:
+
+1. Context
+2. Decision
+3. Alternatives
+4. Consequences
+5. Rollout/rollback considerations

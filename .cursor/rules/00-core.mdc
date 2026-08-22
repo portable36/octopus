@@ -1,0 +1,22 @@
+---
+description: Core engineering rules for the entire repository
+globs:
+alwaysApply: true
+---
+
+# Core Engineering Contract
+
+- Treat this repository as a production multi-vendor, multi-store commerce platform.
+- Prefer correctness, explicitness, observability, and maintainability over cleverness.
+- Never claim code is production-ready without validation.
+- Never silently weaken security, tenant isolation, transaction boundaries, or tests to make a task easier.
+- Use TypeScript strict mode. Do not use `any` unless the boundary is explicitly justified and isolated.
+- Prefer small cohesive modules and explicit dependencies.
+- Do not introduce a new library when the existing stack already solves the problem.
+- Do not duplicate business rules between frontend and backend; frontend validation improves UX, backend validation is authoritative.
+- Every mutation must define authorization, validation, transaction, idempotency, and failure semantics.
+- Every external integration must be behind a port/adapter.
+- Do not leak infrastructure concerns into domain code.
+- Do not return ORM entities directly from API controllers.
+- Never expose secrets, tokens, credentials, or sensitive payment data in logs or responses.
+- When modifying architecture, update the relevant documentation and tests.

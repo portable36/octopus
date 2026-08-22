@@ -1,0 +1,61 @@
+---
+description: Testing rules for unit, integration, API and E2E
+globs:
+- **/*.test.ts
+- **/*.spec.ts
+- **/tests/**/*
+alwaysApply: false
+---
+
+# Testing Rules
+
+When changing behavior, update or add tests.
+
+## Domain
+
+No infrastructure mocks are needed for pure domain tests.
+
+Test invariant boundaries and invalid transitions.
+
+## Application
+
+Test authorization, transactions, repository interactions, event creation, idempotency, and failure behavior.
+
+## Database
+
+Use real PostgreSQL tests for:
+
+- RLS
+- unique constraints
+- transaction behavior
+- locking
+- SQL-specific queries
+
+## API
+
+Every privileged endpoint must have negative authorization tests.
+
+## E2E
+
+Cover critical revenue paths.
+
+At minimum:
+
+```text
+login
+browse
+search
+add to cart
+multi-vendor checkout
+payment
+order tracking
+vendor fulfillment
+refund
+payout statement
+```
+
+## Regression rule
+
+A production bug should result in a regression test at the lowest practical layer.
+
+Do not fix a domain bug only with an E2E test when a domain unit test can prove the invariant.

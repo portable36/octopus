@@ -1,0 +1,61 @@
+---
+description: Logging, tracing, metrics and error monitoring
+globs:
+- apps/api/**/*.ts
+- apps/web/**/*.ts
+- apps/web/**/*.tsx
+alwaysApply: false
+---
+
+# Observability Rules
+
+Use structured Pino logs.
+
+Every request should have a correlation/trace ID.
+
+Log useful fields:
+
+- requestId
+- traceId
+- operation
+- actorId when appropriate
+- tenantId/vendorId/storeId when safe
+- durationMs
+- outcome
+- errorCode
+
+Never log credentials or tokens.
+
+## Tracing
+
+Use OpenTelemetry around:
+
+- HTTP requests
+- database operations
+- Redis operations
+- BullMQ jobs
+- payment provider calls
+- search calls
+- object storage calls
+
+## Errors
+
+Use Sentry for actionable exceptions.
+
+Do not capture sensitive request bodies blindly.
+
+## Metrics
+
+Measure business and technical health:
+
+- checkout success/failure
+- payment callback success/failure
+- order creation latency
+- queue lag
+- inventory reservation conflicts
+- DB latency
+- Redis latency
+- search indexing lag
+- payout failures
+
+Dashboards and alerts should reflect SLOs, not just infrastructure CPU.

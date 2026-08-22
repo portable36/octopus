@@ -1,0 +1,26 @@
+---
+description: TypeScript code quality and maintainability rules
+globs:
+alwaysApply: true
+---
+
+# Code Quality
+
+- Use strict TypeScript.
+- Prefer discriminated unions over magic strings.
+- Prefer readonly data where mutation is not required.
+- Avoid giant classes/functions.
+- Name functions by business intent.
+- Avoid boolean parameters when an enum/domain type is clearer.
+- Avoid generic `utils.ts` dumping grounds.
+- Avoid circular dependencies.
+- Keep dependency injection explicit.
+- Validate assumptions at boundaries.
+- Fail closed.
+- Avoid catch-and-ignore.
+- Never swallow errors without a documented reason.
+- Preserve original error causes when wrapping errors.
+- Use exhaustive handling for domain state machines.
+- Prefer composition over inheritance.
+- Comments should explain why, not restate what.
+- Delete dead code rather than leaving commented-out implementations.

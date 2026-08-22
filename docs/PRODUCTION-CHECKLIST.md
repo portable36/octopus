@@ -1,0 +1,27 @@
+# Production Checklist
+
+- [ ] Production secrets come from a secret manager.
+- [ ] Database backups are enabled and restore-tested.
+- [ ] PostgreSQL RLS policies are enabled and tested.
+- [ ] Tenant/vendor/store authorization tests pass.
+- [ ] Refresh-token rotation/revocation is enabled.
+- [ ] Privileged accounts have stronger authentication controls.
+- [ ] CORS is an explicit allowlist.
+- [ ] Rate limiting is configured.
+- [ ] Webhook signatures are verified.
+- [ ] Payment callbacks are idempotent.
+- [ ] Financial ledger is auditable.
+- [ ] Inventory reservation is transactionally safe.
+- [ ] Outbox dispatcher is operational.
+- [ ] Queue retry/dead-letter behavior is tested.
+- [ ] Search indexing is recoverable.
+- [ ] Structured logs are enabled.
+- [ ] Tracing is enabled.
+- [ ] Sentry is configured without sensitive-data leakage.
+- [ ] Liveness/readiness endpoints exist.
+- [ ] Graceful shutdown is tested.
+- [ ] CI gates are enforced.
+- [ ] Database migrations are reviewed.
+- [ ] Expand/contract migration strategy is used for breaking schema changes.
+- [ ] Rollback/forward-recovery procedure is documented.
+- [ ] E2E smoke tests pass in a production-like environment.

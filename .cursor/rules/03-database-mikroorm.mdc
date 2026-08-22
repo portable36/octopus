@@ -1,0 +1,29 @@
+---
+description: PostgreSQL and MikroORM persistence rules
+globs:
+- apps/api/**/*entity*.ts
+- apps/api/**/*repository*.ts
+- apps/api/**/infrastructure/**/*.ts
+alwaysApply: false
+---
+
+# Persistence Rules
+
+- PostgreSQL is the source of truth.
+- MikroORM entities are persistence models, not domain entities.
+- Do not expose MikroORM entities through controllers.
+- Repository implementations map persistence models to domain objects.
+- Transactions belong at application/use-case boundaries.
+- Never perform external HTTP calls inside a database transaction.
+- Use database constraints for uniqueness and critical invariants.
+- Use optimistic concurrency or row locking where concurrent mutation is possible.
+- Review generated migration SQL before production.
+- Never edit an applied migration.
+- Prefer additive expand/contract migrations.
+- Use UTC timestamps.
+- Use integer minor units for money.
+- Never use floating point for monetary calculations.
+- Avoid N+1 queries.
+- Paginate unbounded collections.
+- Do not load entire order histories, catalogues, or audit logs into memory.
+- Add indexes based on real query patterns and tenant scope.

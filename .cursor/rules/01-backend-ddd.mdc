@@ -1,0 +1,121 @@
+---
+description: NestJS DDD Clean Architecture and Modular Monolith rules
+globs:
+- apps/api/**/*.ts
+alwaysApply: false
+---
+
+# Backend Architecture
+
+Use:
+
+```text
+Presentation -> Application -> Domain
+Infrastructure -> Application/Domain ports
+```
+
+## Domain
+
+Domain code may contain:
+
+- entities
+- aggregate roots
+- value objects
+- domain services
+- domain errors
+- domain events
+- repository interfaces
+
+Domain code must not import:
+
+- NestJS
+- MikroORM
+- Prisma
+- Redis
+- BullMQ
+- HTTP clients
+- framework decorators
+- environment/config modules
+
+## Application
+
+Application services/use cases:
+
+- authorize
+- validate command-level rules
+- load aggregates
+- invoke domain behavior
+- coordinate transactions
+- call ports
+- create outbox records
+- map domain results to application outputs
+
+Application code must not contain raw SQL or provider-specific HTTP details.
+
+## Infrastructure
+
+Infrastructure implements ports:
+
+- MikroORM repositories
+- Redis adapters
+- queue adapters
+- payment adapters
+- S3 adapters
+- Meilisearch adapters
+- email/SMS adapters
+
+## Presentation
+
+Controllers:
+
+- authenticate request
+- validate DTO
+- resolve actor/context
+- invoke a use case
+- map result to HTTP response
+
+Controllers must not contain business rules.
+
+## Module boundaries
+
+A module may access another module only through its published application contract/port.
+
+Do not import:
+
+```text
+other-module/internal/domain/*
+other-module/infrastructure/*
+other-module/presentation/*
+```
+
+Cross-module operations should use:
+
+- application ports
+- commands/queries
+- domain events
+- integration events
+
+Avoid a global "shared service" that becomes a hidden dependency graph.
+
+## Aggregates
+
+- Mutate aggregates through methods expressing business intent.
+- Do not expose mutable collections.
+- Do not add setters merely to satisfy ORM persistence.
+- Use factories for invariant-heavy creation.
+- Prefer domain-specific errors over generic errors.
+
+## Repository interfaces
+
+Repositories belong to the domain/application boundary.
+
+Example:
+
+```ts
+interface OrderRepository {
+  findById(id: OrderId): Promise<Order | null>;
+  save(order: Order): Promise<void>;
+}
+```
+
+MikroORM implementation belongs in infrastructure.

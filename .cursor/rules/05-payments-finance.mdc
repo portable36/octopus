@@ -1,0 +1,86 @@
+---
+description: Payment, refund, commission and payout correctness
+globs:
+- apps/api/src/modules/payment/**/*.ts
+- apps/api/src/modules/payout/**/*.ts
+- apps/api/src/modules/order/**/*.ts
+- apps/api/src/modules/checkout/**/*.ts
+alwaysApply: false
+---
+
+# Financial Correctness
+
+Money is an accounting problem, not a UI problem.
+
+## Money
+
+Use:
+
+```ts
+amountMinor: bigint | number
+currency: string
+```
+
+according to the persistence/runtime contract.
+
+Never use JavaScript floating point for monetary arithmetic.
+
+## Checkout
+
+The server recalculates:
+
+- item prices
+- quantities
+- discounts
+- taxes
+- shipping
+- commissions
+- total
+
+Never trust browser-calculated totals.
+
+## Payment state
+
+Payment callbacks are untrusted.
+
+Validate:
+
+- signature/authenticity
+- order/payment reference
+- amount
+- currency
+- provider transaction ID
+- current internal state
+- replay/idempotency
+
+Never mark an order paid based only on a frontend redirect.
+
+## Provider adapters
+
+Define a provider-independent interface such as:
+
+```text
+PaymentProvider
+  createPayment
+  verifyPayment
+  refund
+  parseWebhook
+```
+
+Implement SSLCommerz, bKash, and Nagad behind adapters.
+
+Provider SDKs never leak into domain code.
+
+## Refunds
+
+Refunds must be idempotent and state-validated.
+
+Do not refund more than the refundable amount.
+
+## Payouts
+
+Use immutable ledger entries.
+
+Commission, refunds, adjustments, and payouts must be traceable to source events.
+
+Never silently mutate financial history.

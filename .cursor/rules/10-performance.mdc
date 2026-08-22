@@ -1,0 +1,53 @@
+---
+description: Performance and scalability rules
+globs:
+alwaysApply: true
+---
+
+# Performance Rules
+
+Performance work must preserve correctness.
+
+## Database
+
+- Avoid N+1.
+- Paginate.
+- Select only required columns.
+- Use indexes based on query plans.
+- Avoid unbounded joins.
+- Cache only data that is safe to cache.
+
+## Redis
+
+Use Redis for:
+
+- caching
+- rate limiting
+- queue broker
+- short-lived coordination
+
+Do not use Redis as the source of truth for financial/accounting state.
+
+## Search
+
+Meilisearch is a read model. Do not write business state only to search.
+
+## Next.js
+
+- Prefer Server Components.
+- Avoid unnecessary client hydration.
+- Optimize images.
+- Stream where appropriate.
+- Cache only when invalidation semantics are understood.
+
+## Queues
+
+Move slow non-critical side effects out of request paths:
+
+- email
+- notifications
+- search indexing
+- analytics delivery
+- some media processing
+
+Do not move transaction-critical invariant enforcement to asynchronous jobs.

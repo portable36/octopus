@@ -1,0 +1,76 @@
+---
+description: Next.js App Router frontend architecture rules
+globs:
+- apps/web/**/*.ts
+- apps/web/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend Rules
+
+## Rendering
+
+Prefer Server Components.
+
+Use Client Components only when browser interactivity/state/effects require them.
+
+Do not turn entire routes into Client Components unnecessarily.
+
+## Data
+
+- Server Components may fetch server-side data directly through a safe server boundary.
+- TanStack Query owns client-side server state.
+- Zustand owns small client/UI state.
+- URL search params own shareable filter/navigation state.
+- Never duplicate the same server state in Zustand.
+
+## Security
+
+Never expose:
+
+- JWT signing secrets
+- database URLs
+- payment private credentials
+- service-account credentials
+- internal admin secrets
+
+Only `NEXT_PUBLIC_*` values are public.
+
+## Commerce UX
+
+Do not assume cart totals are authoritative.
+The server is authoritative for:
+
+- price
+- stock
+- discount
+- tax
+- shipping
+- total
+- payment state
+
+Display stale-data warnings when inventory/pricing can change between browse and checkout.
+
+## Forms
+
+Use schema-driven validation where appropriate, but backend validation remains authoritative.
+
+Handle:
+
+- loading
+- validation errors
+- authorization errors
+- network errors
+- stale data
+- retry states
+- success confirmation
+
+## SEO
+
+For indexable storefront pages:
+
+- use metadata
+- canonical URLs
+- structured data where appropriate
+- server-rendered product content
+- stable URL design

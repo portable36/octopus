@@ -1,0 +1,81 @@
+---
+description: REST API, DTO, OpenAPI and error contract rules
+globs:
+- apps/api/src/**/*.controller.ts
+- apps/api/src/**/*.dto.ts
+- apps/api/src/**/presentation/**/*.ts
+alwaysApply: false
+---
+
+# API Rules
+
+Use:
+
+```text
+/api/v1/...
+```
+
+## DTOs
+
+DTOs are transport contracts.
+
+- Validate all input.
+- Reject or explicitly handle unknown fields.
+- Bound string lengths.
+- Bound pagination.
+- Allowlist filters and sorting.
+- Do not expose internal database fields accidentally.
+
+## Responses
+
+Use explicit response DTOs.
+
+Do not return:
+
+- ORM objects
+- domain entities
+- internal error stacks
+- provider credentials
+- secret fields
+
+## Errors
+
+Use stable application error codes.
+
+Example:
+
+```json
+{
+  "error": {
+    "code": "ORDER_NOT_FOUND",
+    "message": "Order was not found.",
+    "requestId": "..."
+  }
+}
+```
+
+Messages may be user-safe; codes are for programmatic handling.
+
+## Idempotency
+
+Require idempotency keys for retry-sensitive mutations such as:
+
+- checkout submission
+- payment creation
+- payment callback processing
+- refunds
+- payout requests
+- webhook processing
+
+Persist the idempotency result with the relevant scope.
+
+## OpenAPI
+
+Every public endpoint must document:
+
+- authentication
+- request schema
+- response schema
+- errors
+- pagination where applicable
+- idempotency requirements

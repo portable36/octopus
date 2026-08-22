@@ -1,0 +1,39 @@
+---
+description: Git, CI and release quality gates
+globs:
+alwaysApply: true
+---
+
+# Delivery Rules
+
+Before merge:
+
+```text
+format
+lint
+typecheck
+architecture check
+unit tests
+integration tests
+API tests
+security/dependency checks
+migration validation
+build
+```
+
+Commits should be small and explainable.
+
+Do not commit:
+
+- .env
+- credentials
+- generated secrets
+- production dumps
+- node_modules
+- build artifacts
+
+Do not bypass CI checks to merge a known failing change unless the exception is explicitly documented and approved.
+
+Database migrations must be reviewed separately from application code.
+
+Production deployments must be reversible or have a documented forward-recovery plan.

@@ -27,7 +27,7 @@
     "dev:apps": "concurrently \"npm --workspace apps/api run start:dev\" \"npm --workspace apps/web run dev\""
   },
   "devDependencies": {
-    "concurrently": "^9.0.0",
+    "concurrently": "^10.0.5",
     "prettier": "^3.0.0",
     "vitest": "^3.0.0",
     "@playwright/test": "^1.0.0"

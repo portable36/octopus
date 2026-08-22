@@ -1,9 +1,7 @@
 ---
 description: Logging, tracing, metrics and error monitoring
 globs:
-- apps/api/**/*.ts
-- apps/web/**/*.ts
-- apps/web/**/*.tsx
+- src/**/*.ts
 alwaysApply: false
 ---
 

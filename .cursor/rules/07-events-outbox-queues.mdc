@@ -1,7 +1,7 @@
 ---
 description: Domain events, transactional outbox and BullMQ rules
 globs:
-- apps/api/**/*.ts
+- src/**/*.ts
 alwaysApply: false
 ---
 

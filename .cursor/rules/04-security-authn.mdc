@@ -1,0 +1,20 @@
+---
+description: Enforce strict token rotation, password cryptographic hashing rules, and role-permission evaluation pipelines.
+globs: src/modules/auth/**/*, src/modules/identity/**/*, **/*guard*.ts
+---
+# Security-First Cryptographic & Authorization Rules
+
+## 1. Password Cryptographic Processing
+- Raw user plain-text passwords must never pass beyond the API controller request boundaries or layer components.
+- Securely execute password evaluation, validation checks, and comparisons inside the domain boundary using optimized **Argon2id** password hashing configurations.
+
+## 2. Token Management & Token Family Rotation
+- JWT security pipelines must issue short-lived Access Tokens coupled with highly protected HTTP-only Refresh Tokens.
+- Implement explicit Redis-backed token validation lists to store active execution state histories.
+- If a client attempts an entry lookup using a leaked or reused historical Refresh Token, instantly invalidate the whole connected Token Family hierarchy in Redis to protect user records.
+
+## 3. Multi-Store 2D Matrix Authorization
+Every permission validation check must evaluate user capabilities across a two-dimensional grid measuring **Action Rank** and **Context Isolation Boundary**:
+- `PLATFORM_ADMIN`: Universal system authorization bypass capabilities.
+- `VENDOR_OWNER` / `VENDOR_STAFF`: Rigidly restricted to mutate records corresponding to their matched `vendor_id`.
+- `STORE_MANAGER` / `STORE_STAFF`: Heavily sandboxed to execute tasks within verified `vendor_id` and specific assigned `store_id` targets.

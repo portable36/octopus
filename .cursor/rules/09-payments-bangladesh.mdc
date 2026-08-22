@@ -1,0 +1,17 @@
+---
+description: Enforce idempotency protection, signature decoder verifications, and financial calculation safety rules for local MFS/Gateways.
+globs: src/modules/payment/**/*
+---
+# Regional MFS & Card Network Compliance Rules (Bangladesh)
+
+## 1. Gateway Request Idempotency
+- All transactional APIs executing callbacks, refund processes, or capturing funds against `bKash`, `Nagad`, or `SSLCommerz` MUST require a unique, high-entropy Idempotency Key validation header parameter.
+- Log incoming processing request hashes inside Redis for checking potential double-submit duplication loops before modifying balances.
+
+## 2. Webhook Signature Validation Controls
+- Do not process incoming payment status webhook notifications without computing confirmation hashes using vendor platform key secrets.
+- If a provider network connectivity error prevents instantaneous delivery, immediately fallback to background ledger status evaluation queues managed via `BullMQ`.
+
+## 3. Financial Splitting Aggregates
+- Order computation handlers must split unified cart totals down into transparent SubOrder item segments matching their parent shop origin profiles.
+- Platform calculation modules must instantly parse out systemic operational Commission rates from sub-totals before dispatching credit balances across merchant account ledger records.

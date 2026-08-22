@@ -1,8 +1,7 @@
 ---
 description: Multi-tenant, vendor and store authorization rules
 globs:
-- apps/api/**/*.ts
-- packages/**/*.ts
+- src/**/*.ts
 alwaysApply: false
 ---
 

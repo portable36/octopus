@@ -1,0 +1,19 @@
+---
+description: Enforce Row-Level Security (RLS), multi-tenant isolation data mapping, and MikroORM configuration requirements.
+globs: src/modules/**/infrastructure/persistence/**/*, src/shared-kernel/infrastructure/persistence/**/*
+---
+# Multi-Tenant Database Isolation Rules
+
+## 1. Mandatory Multi-Tenancy Discriminators
+- Every single entity schema interacting with multi-vendor structures must map a strict foreign key relationship to `vendor_id` or `store_id`.
+- Global platform tracking systems are the only exclusion allowed from this rule.
+
+## 2. PostgreSQL Row-Level Security (RLS) Compliance
+- All database read/write queries generated via MikroORM repository adapters must execute through a proxy session tracking the transaction context client identity configuration parameters.
+- Read current tenant data models context asynchronously using `AsyncLocalStorage` initialized at the incoming request execution boundary.
+- Do not write raw SQL bypass queries that omit the dynamic tenant connection parameter checks.
+
+## 3. Performance & Schema Constraints
+- Dynamic product configurations and unpredictable structural item variants must be mapped explicitly within highly flexible PostgreSQL `JSONB` parameters.
+- Provide custom index configurations (`GIN` indexes) across high-frequency lookup fields mapped within JSON structures.
+- All monetary attributes must be stored as integers representing fractions/Paisa to prevent floating-point calculation drift.

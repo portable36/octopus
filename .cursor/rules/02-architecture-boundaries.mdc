@@ -1,0 +1,24 @@
+---
+description: Enforce Domain-Driven Design (DDD), Clean Architecture, and Modular Monolith boundaries for all backend code modifications.
+globs: src/modules/**/*, src/shared-kernel/**/*
+---
+# Modular Monolith & DDD Architectural Guardrails
+
+## 1. Architectural Layers & Dependency Flow
+Dependencies must exclusively flow inward. Outer layers can import from inner layers, never the reverse:
+`Infrastructure (Controllers, Persistence) -> Application (Use Cases, Commands, Queries) -> Domain (Aggregates, Value Objects, Domain Events)`
+
+### Layer Definitions
+- **Domain Layer (`/domain`)**: Written in **pure TypeScript**. Zero external dependencies. No `@nestjs/...`, no `mikro-orm`, no decorators except custom structural domain base classes.
+- **Application Layer (`/application`)**: Orchestrates business logic using CQRS. Contains command/query handlers and abstract structural Ports (interfaces) for drivers/repositories.
+- **Infrastructure Layer (`/infrastructure`)**: Framework-specific code. Houses NestJS Controllers, Modules, and MikroORM database schemas/repository implementations.
+
+## 2. Cross-Module Isolation Boundaries
+- Explicitly enforce structural separation: Code inside `src/modules/catalog/` must NEVER import anything directly from `src/modules/order/`.
+- Cross-module communication must happen through asymmetric asynchronous **Domain Events** via the in-memory `EventEmitter2` bus, or by implementing a highly restrictive application-layer shared API contract interface.
+- Run `npm run architecture` to dynamically evaluate boundary leak violations.
+
+## 3. Mandatory DDD Code Conventions
+- Every entity transaction must occur through an **Aggregate Root**.
+- Entity IDs must be encapsulated inside a concrete `UniqueId` Value Object using UUIDv7 format.
+- Mutate inner domain properties strictly via semantic methods (e.g., use `product.publish()` instead of assigning `product.status = 'PUBLISHED'`).

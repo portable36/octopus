@@ -1,10 +1,10 @@
 ---
 description: Payment, refund, commission and payout correctness
 globs:
-- apps/api/src/modules/payment/**/*.ts
-- apps/api/src/modules/payout/**/*.ts
-- apps/api/src/modules/order/**/*.ts
-- apps/api/src/modules/checkout/**/*.ts
+- src/modules/payment/**/*.ts
+- src/modules/payout/**/*.ts
+- src/modules/order/**/*.ts
+- src/modules/checkout/**/*.ts
 alwaysApply: false
 ---
 

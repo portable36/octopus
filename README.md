@@ -1,74 +1,87 @@
-# Octopus — Multi-Vendor Multi-Store E-Commerce Platform
+# Octopus
 
-A production-oriented engineering-governance baseline and modular-monolith codebase for:
+<p align="center">
+  <img src="octopus.gif" alt="Octopus" width="420" />
+</p>
 
-- NestJS-style modular monolith + TypeScript strict mode
-- Domain-Driven Design + Clean Architecture (`domain` → `application` → `infrastructure`)
-- Next.js App Router frontend (planned)
-- PostgreSQL + MikroORM + Row-Level Security for tenant isolation
-- Redis + BullMQ
-- Meilisearch read models
-- JWT + refresh-token authentication, RBAC + permissions
-- Bangladesh payment gateways (SSLCommerz, bKash, Nagad)
-- Vitest tests, ESLint, Prettier, architecture boundary checks, GitHub Actions CI
+<p align="center">
+  <strong>Multi-vendor, multi-store commerce</strong> — modular monolith, strict TypeScript, tenant isolation first.
+</p>
 
-## Important
+Octopus is a production-oriented platform for many vendors and stores on one codebase: NestJS backend, Next.js storefront, PostgreSQL with row-level security, and explicit domain boundaries.
 
-No ruleset can honestly guarantee a completely error-free production system. This repository enforces architecture boundaries, security invariants, testing gates, transactional correctness, observability, and operational checks intended to make defects harder to introduce and easier to detect.
+## Stack
+
+| Layer | Choice |
+| --- | --- |
+| Backend | NestJS modular monolith, DDD + Clean Architecture |
+| Frontend | Next.js App Router |
+| Data | PostgreSQL + MikroORM + RLS |
+| Async | Redis + BullMQ |
+| Search | Meilisearch (read models) |
+| Auth | JWT + refresh tokens, RBAC |
+| Payments | Bangladesh gateways (SSLCommerz, bKash, Nagad) |
+| Quality | Vitest, ESLint, Prettier, architecture checks, GitHub Actions |
+
+## Status
+
+Roadmap: [`docs/PHASES.md`](docs/PHASES.md) (Phase 00–30).
+
+Shipped through early catalog/vendor/store work; inventory and checkout follow. See the phase file for checklists.
+
+## Quick start
+
+```bash
+npm install
+docker compose up -d          # postgres, redis, meilisearch, minio
+npm run dev                   # API → http://localhost:3000
+npm run dev:frontend          # storefront → http://localhost:3001
+npm run validate              # format → lint → typecheck → architecture → tests → build
+```
+
+On Windows PowerShell, prefer `npm.cmd run <script>` if the npm shim is blocked.
 
 ## Repository layout
 
 ```text
 backend/src/
-  shared-kernel/
-    domain/            # AggregateRoot, ValueObject, UniqueId, Money
-    infrastructure/    # Cross-cutting concerns (AsyncLocalStorage tenant context)
-  modules/
-    [context]/         # Bounded context (identity, pos, catalog, ...)
-      domain/          # Pure TypeScript aggregates, value objects, events
-      application/     # CQRS commands/queries + ports (planned per phase)
-      infrastructure/  # Controllers, persistence adapters (planned per phase)
-frontend/src/          # Next.js App Router frontend (planned)
+  shared-kernel/     # cross-cutting domain + ports
+  modules/<context>/ # identity, tenancy, vendor, store, catalog, …
+    domain/
+    application/
+    infrastructure/
+    presentation/
+frontend/src/        # Next.js App Router
 docs/
-  PHASES.md            # Canonical 30-phase implementation roadmap
-  POS.md               # POS bounded context specification
-  module/              # Per-bounded-context specifications (identity, catalog, order, ...)
-  domains/             # Cross-cutting domain concepts (pricing, multivendor, ...)
-  architecture/        # System structure, ownership, deployment
-  engineering/         # Coding standards, testing, security, observability
-.cursor/
-  commands/
-  rules/               # Numbered governance rules (.mdc), applied by Cursor
-scripts/               # Validation tooling
+  PHASES.md          # delivery roadmap
+  module/            # bounded-context specs
+  architecture/      # system structure
+  engineering/       # standards, security, ops
+.cursor/rules/       # agent / Cursor engineering contract
+scripts/             # validation tooling
 ```
 
-## Rule philosophy
+## Design rules (short)
 
-1. Domain code must not depend on NestJS, MikroORM, Redis, BullMQ, HTTP, or vendor SDKs.
-2. Application use cases orchestrate domain behavior and ports.
-3. Infrastructure implements ports.
-4. Controllers validate transport input and translate responses; they do not contain business rules.
-5. Cross-module access happens through explicit public application contracts, not internal imports.
-6. Domain events are committed through an outbox before asynchronous publication.
-7. Money, quantities, percentages, IDs, and dates use explicit value types (integer minor units).
-8. Tenant/vendor/store authorization is deny-by-default.
-9. Database transactions protect invariants; Redis locks are not a substitute for database correctness.
-10. Idempotency is mandatory for externally retried commands such as payment callbacks, checkout submission, refunds, payouts, and webhook processing.
+1. Domain stays pure — no Nest, ORM, HTTP, or vendor SDKs inside it.
+2. Application orchestrates; infrastructure implements ports.
+3. No cross-module imports; use shared-kernel ports.
+4. Deny-by-default tenant / vendor / store authorization.
+5. Money in integer minor units; idempotency on retried money paths.
+6. Database transactions own invariants; Redis is not the source of truth for money or stock.
 
-## Commands
+No ruleset guarantees a bug-free production system. This repo makes defects harder to ship and easier to catch.
 
-```bash
-npm install          # install toolchain
-docker compose up -d # local postgres, redis, meilisearch, minio
-npm run dev          # backend API (port 3000)
-npm run dev:frontend # Next.js storefront (port 3001)
-npm run format       # prettier write
-npm run lint         # eslint
-npm run typecheck    # tsc --noEmit
-npm run architecture # layer-boundary + cross-module import checks
-npm test             # vitest unit tests
-npm run security     # npm audit (critical threshold)
-npm run validate     # full local gate pipeline
-```
+## Docs
 
-CI runs the same gates on every push and pull request. Migration validation and build steps will be reintroduced as Phase 00+ of `docs/PHASES.md` lands.
+| Doc | What |
+| --- | --- |
+| [PHASES.md](docs/PHASES.md) | Implementation roadmap |
+| [AGENTS.md](AGENTS.md) | Guidance for coding agents |
+| [SECURITY.md](SECURITY.md) | Security posture |
+| [docs/engineering/](docs/engineering/) | Testing, AI workflow, ops |
+| [docs/module/](docs/module/) | Per-context specifications |
+
+## License
+
+Private / project license — see repository settings.

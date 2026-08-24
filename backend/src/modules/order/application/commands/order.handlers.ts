@@ -1,0 +1,262 @@
+import { Inject, Injectable } from '@nestjs/common';
+import type {
+  CheckoutOrderCreateInput,
+  CheckoutOrderCreateResult,
+} from '../../../../shared-kernel/application/ports/order.port';
+import { Order } from '../../domain/aggregates/order.aggregate';
+import { OrderNotFoundError } from '../errors/order.errors';
+import { ORDER_REPOSITORY, type OrderRepository } from '../ports/order-repository.interface';
+import { OrderAuthorizationService } from '../services/order-authorization.service';
+
+@Injectable()
+export class CreateOrderFromCheckoutHandler {
+  constructor(@Inject(ORDER_REPOSITORY) private readonly orders: OrderRepository) {}
+
+  public async execute(input: CheckoutOrderCreateInput): Promise<CheckoutOrderCreateResult> {
+    const existing = await this.orders.findByIdempotencyKey(input.idempotencyKey);
+    if (existing) {
+      return this.toResult(existing);
+    }
+
+    const order = Order.createFromCheckout({
+      checkoutId: input.checkoutId,
+      idempotencyKey: input.idempotencyKey,
+      customerId: input.customerId,
+      vendorId: input.vendorId,
+      storeId: input.storeId,
+      currencyCode: input.currencyCode,
+      subtotalMinor: input.subtotalMinor,
+      discountMinor: input.discountMinor,
+      shippingMinor: input.shippingMinor,
+      taxMinor: input.taxMinor,
+      commissionMinor: input.commissionMinor,
+      totalMinor: input.totalMinor,
+      shippingMethod: input.shippingMethod,
+      shippingAddress: input.shippingAddress,
+      appliedPromotionId: input.appliedPromotionId,
+      appliedCouponCode: input.appliedCouponCode,
+      pricingSnapshot: input.pricingSnapshot,
+      lines: input.lines.map((line) => ({
+        lineId: line.lineId,
+        productId: line.productId,
+        variantId: line.variantId,
+        offerId: line.offerId,
+        quantity: line.quantity,
+        unitPriceMinor: line.unitPriceMinor,
+        lineSubtotalMinor: line.lineSubtotalMinor,
+        lineDiscountMinor: line.lineDiscountMinor,
+        lineTaxMinor: line.lineTaxMinor,
+        lineTotalMinor: line.lineTotalMinor,
+        currencyCode: line.currencyCode,
+        reservationId: line.reservationId,
+        warehouseId: line.warehouseId,
+      })),
+    });
+    await this.orders.save(order);
+    return this.toResult(order);
+  }
+
+  private toResult(order: Order): CheckoutOrderCreateResult {
+    return {
+      orderId: order.id.value,
+      orderNumber: order.orderNumber,
+      vendorId: order.vendorId,
+      storeId: order.storeId,
+      totalMinor: order.totalMinor,
+      currencyCode: order.currencyCode,
+      status: 'PENDING_PAYMENT',
+    };
+  }
+}
+
+@Injectable()
+export class OrderLifecycleHandler {
+  constructor(
+    @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepository,
+    private readonly authz: OrderAuthorizationService,
+  ) {}
+
+  public async get(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    return this.authz.getOwnedOrThrow(
+      this.orders,
+      input.orderId,
+      input.actorUserId,
+      input.actorRoles,
+    );
+  }
+
+  public async listMine(input: {
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order[]> {
+    if (input.actorRoles.includes('PLATFORM_ADMIN')) {
+      return this.orders.listByCustomerId(input.actorUserId);
+    }
+    return this.orders.listByCustomerId(input.actorUserId);
+  }
+
+  public async listByStore(input: {
+    readonly storeId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order[]> {
+    const list = await this.orders.listByStoreId(input.storeId);
+    const readable: Order[] = [];
+    for (const order of list) {
+      try {
+        await this.authz.requireReadable(order, input.actorUserId, input.actorRoles);
+        readable.push(order);
+      } catch {
+        // skip unauthorized
+      }
+    }
+    return readable;
+  }
+
+  public async markPaid(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireForMutation(input);
+    order.markPaid();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async markPaymentFailed(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireForMutation(input);
+    order.markPaymentFailed();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async startProcessing(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    order.startProcessing();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async fulfillLine(input: {
+    readonly orderId: string;
+    readonly lineId: string;
+    readonly quantity: number;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    order.fulfillLine(input.lineId, input.quantity);
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async complete(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    order.complete();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async cancel(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireForMutation(input);
+    // Customer may cancel only when PAID before processing? Domain allows PAID -> CANCELLED.
+    // Also allow customer if they own it.
+    if (!input.actorRoles.includes('PLATFORM_ADMIN') && order.customerId === input.actorUserId) {
+      order.cancel();
+      await this.orders.save(order);
+      return order;
+    }
+    await this.authz.requireFulfiller(order, input.actorUserId, input.actorRoles);
+    order.cancel();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async requestRefund(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.authz.getOwnedOrThrow(
+      this.orders,
+      input.orderId,
+      input.actorUserId,
+      input.actorRoles,
+    );
+    order.requestRefund();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async requestReturn(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.authz.getOwnedOrThrow(
+      this.orders,
+      input.orderId,
+      input.actorUserId,
+      input.actorRoles,
+    );
+    order.requestReturn();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async markReturned(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    order.markReturned();
+    await this.orders.save(order);
+    return order;
+  }
+
+  private async requireForMutation(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    const order = await this.orders.findById(input.orderId);
+    if (!order) {
+      throw new OrderNotFoundError();
+    }
+    if (input.actorRoles.includes('PLATFORM_ADMIN')) {
+      return order;
+    }
+    await this.authz.requireFulfiller(order, input.actorUserId, input.actorRoles);
+    return order;
+  }
+
+  private async requireFulfillment(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<Order> {
+    return this.requireForMutation(input);
+  }
+}

@@ -14,4 +14,6 @@ export interface MembershipDirectory {
     storeIds?: readonly string[],
   ): Promise<void>;
   removeVendorMembership(userId: string, vendorId: string): Promise<void>;
+  assignStoreMembership(userId: string, vendorId: string, storeId: string): Promise<void>;
+  revokeStoreMembership(userId: string, vendorId: string, storeId: string): Promise<void>;
 }

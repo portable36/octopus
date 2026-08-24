@@ -12,16 +12,16 @@ Octopus is a production-oriented platform for many vendors and stores on one cod
 
 ## Stack
 
-| Layer | Choice |
-| --- | --- |
-| Backend | NestJS modular monolith, DDD + Clean Architecture |
-| Frontend | Next.js App Router |
-| Data | PostgreSQL + MikroORM + RLS |
-| Async | Redis + BullMQ |
-| Search | Meilisearch (read models) |
-| Auth | JWT + refresh tokens, RBAC |
-| Payments | Bangladesh gateways (SSLCommerz, bKash, Nagad) |
-| Quality | Vitest, ESLint, Prettier, architecture checks, GitHub Actions |
+| Layer    | Choice                                                        |
+| -------- | ------------------------------------------------------------- |
+| Backend  | NestJS modular monolith, DDD + Clean Architecture             |
+| Frontend | Next.js App Router                                            |
+| Data     | PostgreSQL + MikroORM + RLS                                   |
+| Async    | Redis + BullMQ                                                |
+| Search   | Meilisearch (read models)                                     |
+| Auth     | JWT + refresh tokens, RBAC                                    |
+| Payments | Bangladesh gateways (SSLCommerz, bKash, Nagad)                |
+| Quality  | Vitest, ESLint, Prettier, architecture checks, GitHub Actions |
 
 ## Status
 
@@ -74,13 +74,13 @@ No ruleset guarantees a bug-free production system. This repo makes defects hard
 
 ## Docs
 
-| Doc | What |
-| --- | --- |
-| [PHASES.md](docs/PHASES.md) | Implementation roadmap |
-| [AGENTS.md](AGENTS.md) | Guidance for coding agents |
-| [SECURITY.md](SECURITY.md) | Security posture |
-| [docs/engineering/](docs/engineering/) | Testing, AI workflow, ops |
-| [docs/module/](docs/module/) | Per-context specifications |
+| Doc                                    | What                       |
+| -------------------------------------- | -------------------------- |
+| [PHASES.md](docs/PHASES.md)            | Implementation roadmap     |
+| [AGENTS.md](AGENTS.md)                 | Guidance for coding agents |
+| [SECURITY.md](SECURITY.md)             | Security posture           |
+| [docs/engineering/](docs/engineering/) | Testing, AI workflow, ops  |
+| [docs/module/](docs/module/)           | Per-context specifications |
 
 ## License
 

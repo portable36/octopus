@@ -51,6 +51,14 @@ Mutations use intent methods: `register`, `activate`, `lock`, `changePassword`, 
 
 Refresh tokens rotate on use. Reuse of a revoked refresh token invalidates the entire token family. Access tokens remain short-lived and stateless where configured.
 
+### JWT rules (Identity-owned)
+
+- JWTs are not encryption; do not put PII (name, email, phone, address) in claims.
+- Prefer **opaque tokens to clients** and short-lived JWTs only on trusted internal boundaries (phantom / split token).
+- Pin verification `alg`; always validate `iss` and `aud`; keep access TTLs short.
+
+See `SECURITY.md` and `.cursor/rules/04-security-authn.mdc`. **Current gap:** access JWTs still embed `email` — remove in a follow-up so claims match this contract.
+
 ## Authorization contract
 
 Identity publishes role and permission catalogs. Application guards evaluate:

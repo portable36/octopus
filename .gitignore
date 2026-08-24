@@ -18,3 +18,10 @@ frontend/tsconfig.tsbuildinfo
 # Graphify (commit graph.json / GRAPH_REPORT.md / graph.html for team map)
 graphify-out/cost.json
 graphify-out/cache/
+
+# OpenViking (local dev context DB — config lives in ~/.openviking/)
+.openviking/
+openviking.log
+
+# Local scratch (mattpocock skills handoffs / optional local tickets)
+.scratch/

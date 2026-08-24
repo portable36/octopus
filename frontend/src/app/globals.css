@@ -23,3 +23,20 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

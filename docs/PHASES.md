@@ -337,16 +337,16 @@ Allow each vendor to operate multiple stores.
 
 ### Store
 
-- [ ] Store aggregate
-- [ ] Store ID
-- [ ] Vendor ownership
-- [ ] Store slug
-- [ ] Store status
-- [ ] Store settings
-- [ ] Store timezone
-- [ ] Store currency
-- [ ] Store address
-- [ ] Store staff
+- [x] Store aggregate
+- [x] Store ID
+- [x] Vendor ownership
+- [x] Store slug
+- [x] Store status
+- [x] Store settings
+- [x] Store timezone
+- [x] Store currency
+- [x] Store address
+- [x] Store staff
 
 ### Store Lifecycle
 
@@ -362,19 +362,23 @@ CLOSED
 
 ### Features
 
-- [ ] Create store
-- [ ] Update store
-- [ ] Activate store
-- [ ] Suspend store
-- [ ] Store staff assignment
-- [ ] Store permissions
+- [x] Create store
+- [x] Update store
+- [x] Activate store
+- [x] Suspend store
+- [x] Store staff assignment
+- [x] Store permissions
 
 ### Tests
 
-- [ ] Vendor isolation
-- [ ] Store ownership
-- [ ] Staff access
-- [ ] Store lifecycle
+- [x] Vendor isolation
+- [x] Store ownership
+- [x] Staff access
+- [x] Store lifecycle
+
+### Exit Criteria
+
+- [x] `StoreModule` under `backend/src/modules/store/` with RLS on `stores` / `store_staff`, membership sync, and HTTP under `/api/v1/stores/*`.
 
 ---
 
@@ -386,28 +390,28 @@ Build a scalable product/catalog domain.
 
 ### Product
 
-- [ ] Product aggregate
-- [ ] Product ID
-- [ ] SKU
-- [ ] Product name
-- [ ] Description
-- [ ] Brand
-- [ ] Category
-- [ ] Attributes
-- [ ] Media
-- [ ] Status
+- [x] Product aggregate
+- [x] Product ID
+- [x] SKU
+- [x] Product name
+- [x] Description
+- [x] Brand
+- [x] Category
+- [x] Attributes
+- [x] Media
+- [x] Status
 
 ### Product Variants
 
-- [ ] Canonical Variant ID and Product ID relationship
-- [ ] Variant name and status
-- [ ] Normalized, stable, unique Variant SKU
-- [ ] Barcode, GTIN, EAN, UPC, MPN, and manufacturer reference
-- [ ] Catalog price metadata with integer minor units and currency
-- [ ] Typed variant attributes and unique combinations
-- [ ] Variant media and thumbnail fallback
-- [ ] Tax/shipping classification references and external references
-- [ ] UTC created/updated timestamps
+- [x] Canonical Variant ID and Product ID relationship
+- [x] Variant name and status
+- [x] Normalized, stable, unique Variant SKU
+- [x] Barcode, GTIN, EAN, UPC, MPN, and manufacturer reference
+- [x] Catalog price metadata with integer minor units and currency
+- [x] Typed variant attributes and unique combinations
+- [x] Variant media and thumbnail fallback
+- [x] Tax/shipping classification references and external references
+- [x] UTC created/updated timestamps
 
 ### Store Offers
 
@@ -423,28 +427,33 @@ Price / Inventory / Availability
 
 This allows one vendor product to be offered differently by different stores.
 
+- [x] Store offer aggregate (store + variant price/availability; inventory remains Phase 06)
+
 ### Categories
 
-- [ ] Category tree
-- [ ] Parent/child categories
-- [ ] Slugs
-- [ ] SEO metadata
+- [x] Category tree
+- [x] Parent/child categories
+- [x] Slugs
+- [x] SEO metadata
 
 ### Media
 
-- [ ] S3/R2 integration
-- [ ] Signed URLs
-- [ ] Image metadata
-- [ ] Upload validation
-- [ ] Image ordering
+- [x] Media metadata references on products/variants (IDs + ordering)
+- [ ] S3/R2 binary upload pipeline — deferred to Media module / `.cursor/rules/38-media-uploads.mdc`
+- [ ] Signed URLs — deferred to Media module
+- [ ] Upload validation — deferred to Media module
 
 ### Tests
 
-- [ ] Vendor ownership
-- [ ] Store ownership
-- [ ] SKU uniqueness
-- [ ] Variant uniqueness
-- [ ] Product lifecycle
+- [x] Vendor ownership
+- [x] Store ownership (store offers)
+- [x] SKU uniqueness
+- [x] Variant uniqueness
+- [x] Product lifecycle
+
+### Exit Criteria
+
+- [x] `CatalogModule` with products, variants, categories, store offers, RLS migration, and HTTP under `/api/v1/products|variants|categories|store-offers`.
 
 ---
 
@@ -456,22 +465,22 @@ Implement concurrency-safe inventory management.
 
 ### Inventory
 
-- [ ] Inventory item
-- [ ] Warehouse
-- [ ] Stock quantity
-- [ ] Reserved quantity
-- [ ] Available quantity
-- [ ] Low-stock threshold
+- [x] Inventory item
+- [x] Warehouse
+- [x] Stock quantity
+- [x] Reserved quantity
+- [x] Available quantity
+- [x] Low-stock threshold
 
 ### Operations
 
-- [ ] Stock receive
-- [ ] Stock adjustment
-- [ ] Stock transfer
-- [ ] Stock reservation
-- [ ] Reservation release
-- [ ] Reservation expiration
-- [ ] Stock deduction
+- [x] Stock receive
+- [x] Stock adjustment
+- [x] Stock transfer
+- [x] Stock reservation
+- [x] Reservation release
+- [x] Reservation expiration
+- [x] Stock deduction
 
 ### Concurrency
 
@@ -494,13 +503,15 @@ InventoryReleased
 InventoryDepleted
 ```
 
+Also emitted: `StockTransferred`, `StockDeducted`, `ReservationExpired` (domain events; durable outbox is Phase 12).
+
 ### Tests
 
-- [ ] Concurrent reservation
-- [ ] Overselling prevention
-- [ ] Reservation expiry
-- [ ] Wrong vendor
-- [ ] Wrong store
+- [x] Concurrent reservation (unit serialization + integration when `DATABASE_URL` is set)
+- [x] Overselling prevention
+- [x] Reservation expiry
+- [x] Wrong vendor
+- [x] Wrong store
 
 ---
 
@@ -512,26 +523,26 @@ Create one authoritative pricing engine.
 
 ### Pricing
 
-- [ ] Base price
-- [ ] Sale price
-- [ ] Currency
-- [ ] Tax
-- [ ] Shipping
-- [ ] Discount
-- [ ] Commission
+- [x] Base price
+- [x] Sale price
+- [x] Currency
+- [x] Tax
+- [x] Shipping
+- [x] Discount
+- [x] Commission
 
 ### Promotions
 
-- [ ] Coupons
-- [ ] Percentage discount
-- [ ] Fixed discount
-- [ ] Minimum order amount
-- [ ] Product-specific promotion
-- [ ] Category promotion
-- [ ] Vendor promotion
-- [ ] Store promotion
-- [ ] Usage limits
-- [ ] Expiration
+- [x] Coupons
+- [x] Percentage discount
+- [x] Fixed discount
+- [x] Minimum order amount
+- [x] Product-specific promotion
+- [x] Category promotion
+- [x] Vendor promotion
+- [x] Store promotion
+- [x] Usage limits
+- [x] Expiration
 
 ### Rule
 
@@ -544,13 +555,17 @@ Backend price  = authoritative
 
 ### Tests
 
-- [ ] Discount calculation
-- [ ] Coupon validation
-- [ ] Expiration
-- [ ] Usage limits
-- [ ] Vendor restrictions
-- [ ] Store restrictions
-- [ ] Currency handling
+- [x] Discount calculation
+- [x] Coupon validation
+- [x] Expiration
+- [x] Usage limits
+- [x] Vendor restrictions
+- [x] Store restrictions
+- [x] Currency handling
+
+### Exit Criteria
+
+- [x] `PricingModule` with promotions, authoritative `POST /api/v1/pricing/quote`, usage recording, RLS migration, and `PRICING_PORT`.
 
 ---
 
@@ -562,23 +577,23 @@ Support unified multi-vendor shopping carts.
 
 ### Cart
 
-- [ ] Cart aggregate
-- [ ] Cart item
-- [ ] Quantity
-- [ ] Store
-- [ ] Vendor
-- [ ] Product
-- [ ] Variant
-- [ ] Price snapshot
+- [x] Cart aggregate
+- [x] Cart item
+- [x] Quantity
+- [x] Store
+- [x] Vendor
+- [x] Product
+- [x] Variant
+- [x] Price snapshot
 
 ### Cart Operations
 
-- [ ] Add item
-- [ ] Remove item
-- [ ] Update quantity
-- [ ] Clear cart
-- [ ] Validate cart
-- [ ] Recalculate cart
+- [x] Add item
+- [x] Remove item
+- [x] Update quantity
+- [x] Clear cart
+- [x] Validate cart
+- [x] Recalculate cart
 
 ### Multi-Vendor
 
@@ -598,12 +613,16 @@ Cart
 
 ### Tests
 
-- [ ] Quantity validation
-- [ ] Product availability
-- [ ] Price changes
-- [ ] Inventory changes
-- [ ] Multi-vendor cart
-- [ ] Vendor isolation
+- [x] Quantity validation
+- [x] Product availability
+- [x] Price changes
+- [x] Inventory changes
+- [x] Multi-vendor cart
+- [x] Vendor isolation
+
+### Exit Criteria
+
+- [x] `CartModule` with multi-vendor lines, validate/recalculate via Catalog + Inventory + Pricing ports, guest/customer ownership, RLS migration.
 
 ---
 
@@ -615,13 +634,13 @@ Create an atomic and authoritative checkout pipeline.
 
 ### Checkout
 
-- [ ] Address
-- [ ] Shipping method
-- [ ] Tax
-- [ ] Discounts
-- [ ] Shipping fee
-- [ ] Commission
-- [ ] Grand total
+- [x] Address
+- [x] Shipping method
+- [x] Tax
+- [x] Discounts
+- [x] Shipping fee
+- [x] Commission
+- [x] Grand total
 
 ### Validation
 
@@ -648,12 +667,16 @@ Repeated requests must not create duplicate orders.
 
 ### Tests
 
-- [ ] Price change
-- [ ] Stock change
-- [ ] Coupon failure
-- [ ] Duplicate request
-- [ ] Concurrent checkout
-- [ ] Multi-vendor checkout
+- [x] Price change
+- [x] Stock change
+- [x] Coupon failure
+- [x] Duplicate request
+- [x] Concurrent checkout
+- [x] Multi-vendor checkout
+
+### Exit Criteria
+
+- [x] `CheckoutModule` with `POST /api/v1/checkout/submit`, idempotent submissions, inventory reservation + compensate, multi-vendor order split via `ORDER_PORT` / `PAYMENT_PORT` (temporary adapters until Phases 10–11).
 
 ---
 
@@ -665,18 +688,18 @@ Build the central order domain.
 
 ### Order
 
-- [ ] Order aggregate
-- [ ] Order number
-- [ ] Customer
-- [ ] Vendor
-- [ ] Store
-- [ ] Order lines
-- [ ] Price snapshots
-- [ ] Tax snapshot
-- [ ] Shipping snapshot
-- [ ] Address snapshot
-- [ ] Payment status
-- [ ] Fulfillment status
+- [x] Order aggregate
+- [x] Order number
+- [x] Customer
+- [x] Vendor
+- [x] Store
+- [x] Order lines
+- [x] Price snapshots
+- [x] Tax snapshot
+- [x] Shipping snapshot
+- [x] Address snapshot
+- [x] Payment status
+- [x] Fulfillment status
 
 ### State Machine
 
@@ -707,12 +730,16 @@ No arbitrary status mutation.
 
 ### Tests
 
-- [ ] Valid transitions
-- [ ] Invalid transitions
-- [ ] Cancellation
-- [ ] Partial fulfillment
-- [ ] Refund
-- [ ] Return
+- [x] Valid transitions
+- [x] Invalid transitions
+- [x] Cancellation
+- [x] Partial fulfillment
+- [x] Refund
+- [x] Return
+
+### Exit Criteria
+
+- [x] `OrderModule` with state machine, immutable snapshots, RLS migration, HTTP under `/api/v1/orders`, and real `ORDER_PORT` (replacing checkout stub).
 
 ---
 

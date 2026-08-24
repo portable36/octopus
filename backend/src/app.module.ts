@@ -9,6 +9,13 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { VendorModule } from './modules/vendor/vendor.module';
+import { StoreModule } from './modules/store/store.module';
+import { PosModule } from './modules/pos/pos.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { CartModule } from './modules/cart/cart.module';
+import { CheckoutModule } from './modules/checkout/checkout.module';
+import { OrderModule } from './modules/order/order.module';
 import { DatabaseModule } from './shared-kernel/infrastructure/persistence/database.module';
 import { HealthModule } from './shared-kernel/infrastructure/health/health.module';
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
@@ -64,6 +71,13 @@ import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
     IdentityModule,
     TenancyModule,
     VendorModule,
+    StoreModule,
+    PosModule,
+    InventoryModule,
+    PricingModule,
+    CartModule,
+    OrderModule,
+    CheckoutModule,
   ],
   providers: [AppConfigService],
   exports: [AppConfigService],

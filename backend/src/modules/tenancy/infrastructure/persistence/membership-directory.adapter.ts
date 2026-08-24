@@ -62,4 +62,48 @@ export class MembershipDirectoryAdapter implements MembershipDirectory {
       await tx.remove(existing).flush();
     });
   }
+
+  public async assignStoreMembership(
+    userId: string,
+    vendorId: string,
+    storeId: string,
+  ): Promise<void> {
+    await withRlsContext(this.em, async (tx) => {
+      const existing = await tx.findOne(UserMembershipOrmEntity, { userId });
+      if (existing) {
+        existing.vendorId = vendorId;
+        const next = new Set(existing.storeIds);
+        next.add(storeId);
+        existing.storeIds = [...next];
+        existing.updatedAt = new Date();
+        await tx.flush();
+        return;
+      }
+
+      const entity = new UserMembershipOrmEntity();
+      entity.id = UniqueID.create().value;
+      entity.userId = userId;
+      entity.vendorId = vendorId;
+      entity.storeIds = [storeId];
+      entity.createdAt = new Date();
+      entity.updatedAt = new Date();
+      await tx.persist(entity).flush();
+    });
+  }
+
+  public async revokeStoreMembership(
+    userId: string,
+    vendorId: string,
+    storeId: string,
+  ): Promise<void> {
+    await withRlsContext(this.em, async (tx) => {
+      const existing = await tx.findOne(UserMembershipOrmEntity, { userId, vendorId });
+      if (!existing) {
+        return;
+      }
+      existing.storeIds = existing.storeIds.filter((id) => id !== storeId);
+      existing.updatedAt = new Date();
+      await tx.flush();
+    });
+  }
 }

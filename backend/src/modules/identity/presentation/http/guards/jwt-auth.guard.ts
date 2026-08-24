@@ -24,29 +24,24 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
-      return true;
-    }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authorization = request.headers.authorization;
+
+    if (isPublic) {
+      if (authorization?.startsWith('Bearer ')) {
+        await this.tryAuthenticate(request, authorization.slice('Bearer '.length).trim());
+      }
+      return true;
+    }
+
     if (!authorization?.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing bearer token.');
     }
 
     const token = authorization.slice('Bearer '.length).trim();
     try {
-      const payload = await this.tokenSigner.verifyAccess(token);
-      request.user = {
-        userId: payload.sub,
-        email: payload.email,
-        roles: payload.roles,
-      };
-      setAuthenticatedPrincipal({
-        userId: payload.sub,
-        email: payload.email,
-        roles: payload.roles,
-      });
+      await this.authenticate(request, token);
       return true;
     } catch (error) {
       if (error instanceof ExpiredAccessTokenError) {
@@ -54,5 +49,27 @@ export class JwtAuthGuard implements CanActivate {
       }
       throw new UnauthorizedException('Invalid access token.');
     }
+  }
+
+  private async tryAuthenticate(request: AuthenticatedRequest, token: string): Promise<void> {
+    try {
+      await this.authenticate(request, token);
+    } catch {
+      // Public routes allow anonymous access when the bearer token is absent or invalid.
+    }
+  }
+
+  private async authenticate(request: AuthenticatedRequest, token: string): Promise<void> {
+    const payload = await this.tokenSigner.verifyAccess(token);
+    request.user = {
+      userId: payload.sub,
+      email: payload.email,
+      roles: payload.roles,
+    };
+    setAuthenticatedPrincipal({
+      userId: payload.sub,
+      email: payload.email,
+      roles: payload.roles,
+    });
   }
 }

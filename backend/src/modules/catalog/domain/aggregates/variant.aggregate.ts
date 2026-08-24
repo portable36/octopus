@@ -217,6 +217,61 @@ export class Variant extends AggregateRoot<UniqueID> {
     return new Date(this.props.updatedAt);
   }
 
+  public static rehydrate(input: {
+    readonly id: string;
+    readonly productId: string;
+    readonly sku: string;
+    readonly name: string;
+    readonly barcode?: string;
+    readonly gtin?: string;
+    readonly ean?: string;
+    readonly upc?: string;
+    readonly mpn?: string;
+    readonly manufacturerReference?: string;
+    readonly costPrice?: Money;
+    readonly basePrice?: Money;
+    readonly compareAtPrice?: Money;
+    readonly weight?: Weight;
+    readonly dimensions?: Dimensions;
+    readonly status: VariantStatus;
+    readonly attributes: readonly VariantAttributeAssignment[];
+    readonly media: readonly VariantMediaReference[];
+    readonly taxClassificationReference?: string;
+    readonly shippingClassificationReference?: string;
+    readonly externalReferences: readonly VariantExternalReference[];
+    readonly createdAt: Date;
+    readonly updatedAt: Date;
+  }): Variant {
+    return new Variant(UniqueID.from(input.id), {
+      productId: UniqueID.from(input.productId),
+      sku: Sku.create(input.sku),
+      name: input.name,
+      identifiers: Variant.createIdentifiers({
+        name: input.name,
+        sku: input.sku,
+        ...(input.barcode !== undefined ? { barcode: input.barcode } : {}),
+        ...(input.gtin !== undefined ? { gtin: input.gtin } : {}),
+        ...(input.ean !== undefined ? { ean: input.ean } : {}),
+        ...(input.upc !== undefined ? { upc: input.upc } : {}),
+      }),
+      mpn: input.mpn,
+      manufacturerReference: input.manufacturerReference,
+      costPrice: input.costPrice,
+      basePrice: input.basePrice,
+      compareAtPrice: input.compareAtPrice,
+      weight: input.weight,
+      dimensions: input.dimensions,
+      status: input.status,
+      attributes: input.attributes,
+      media: input.media,
+      taxClassificationReference: input.taxClassificationReference,
+      shippingClassificationReference: input.shippingClassificationReference,
+      externalReferences: input.externalReferences,
+      createdAt: input.createdAt,
+      updatedAt: input.updatedAt,
+    });
+  }
+
   public changeSku(rawSku: string): void {
     if (this.props.externalReferences.length > 0) {
       throw new Error('SKU cannot change after external references exist.');

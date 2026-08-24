@@ -9,6 +9,8 @@ export interface TenantContext {
   readonly vendorId?: string;
   readonly storeId?: string;
   readonly platformScope?: boolean;
+  /** Opaque guest cart token for anonymous carts (RLS app.guest_token). */
+  readonly guestToken?: string;
 }
 
 type MutableTenantContext = {
@@ -132,6 +134,14 @@ export function setPlatformScope(active: boolean): void {
     delete context.vendorId;
     delete context.storeId;
   }
+}
+
+export function setGuestToken(guestToken: string): void {
+  const context = mutateContext();
+  if (!context) {
+    return;
+  }
+  context.guestToken = guestToken;
 }
 
 export function clearVendorStoreScope(): void {

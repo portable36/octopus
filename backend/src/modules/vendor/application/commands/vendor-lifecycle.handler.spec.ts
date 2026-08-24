@@ -32,6 +32,8 @@ describe('VendorLifecycleHandler authorization', () => {
         findByUserId: vi.fn(),
         upsertVendorMembership: vi.fn(),
         removeVendorMembership: vi.fn(),
+        assignStoreMembership: vi.fn(),
+        revokeStoreMembership: vi.fn(),
       },
       { ensureRoles: vi.fn() },
     );
@@ -64,6 +66,8 @@ describe('VendorLifecycleHandler authorization', () => {
         findByUserId: vi.fn(),
         upsertVendorMembership: vi.fn(),
         removeVendorMembership: vi.fn(),
+        assignStoreMembership: vi.fn(),
+        revokeStoreMembership: vi.fn(),
       },
       { ensureRoles: vi.fn() },
     );
@@ -95,6 +99,8 @@ describe('VendorLifecycleHandler authorization', () => {
         findByUserId: vi.fn(),
         upsertVendorMembership: vi.fn(),
         removeVendorMembership: vi.fn(),
+        assignStoreMembership: vi.fn(),
+        revokeStoreMembership: vi.fn(),
       },
       { ensureRoles: vi.fn() },
     );

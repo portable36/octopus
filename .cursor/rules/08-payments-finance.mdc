@@ -12,6 +12,18 @@ alwaysApply: false
 
 Money is an accounting problem, not a UI problem.
 
+## Backend payment invariants
+
+These apply to every payment path (capture, callback, refund, payout trigger):
+
+1. **Idempotency on every payment request.** Every client-initiated payment command and every provider callback/webhook must carry or map to a unique idempotency key. Retries must return the same outcome, not duplicate charges or ledger posts.
+2. **Never use float or double for money.** Store and compute amounts in integer minor units (`amountMinor` / paisa) with an explicit `currency`. No JavaScript floating-point arithmetic on money.
+3. **Never debit without guaranteed credit.** Do not post a debit (customer charge, vendor deduction, inventory commit tied to payment) unless the matching credit side is confirmed or compensatable. Use explicit state machines and, where multiple services are involved, a **Saga** (orchestrated steps with defined compensating actions) — not optimistic debits followed by hope.
+4. **Persist gateway evidence.** Store the provider's **transaction ID**, **response/status code**, and **timestamp** (provider time when available; always record `receivedAt` locally) on every API response and webhook. This is the audit trail for disputes, retries, and reconciliation.
+5. **Reconciliation is not optional.** Run scheduled reconciliation jobs that compare gateway settlement/report files against internal payment and ledger records. Mismatches must surface as alerts and reviewable exceptions — not silent drift.
+
+Authoritative modules: Payment, Order, Payout. See `docs/module/payment.md`.
+
 ## Money
 
 Use:
@@ -50,10 +62,19 @@ Validate:
 - amount
 - currency
 - provider transaction ID
+- response/status code and timestamp (persist all three)
 - current internal state
 - replay/idempotency
 
 Never mark an order paid based only on a frontend redirect.
+
+## Reconciliation
+
+Reconciliation is mandatory, not a nice-to-have:
+
+- Compare provider settlement/report data to internal payment transactions on a schedule.
+- Flag amount, status, or missing-record mismatches for human or automated review.
+- Do not close books or release payouts on unreconciled periods without explicit policy.
 
 ## Provider adapters
 

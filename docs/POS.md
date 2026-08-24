@@ -678,6 +678,29 @@ Receipt must contain:
 - Change
 - Customer
 
+## Receipt template (admin-customizable)
+
+Each store owns a structured `ReceiptTemplate` (not free-form HTML):
+
+- Display name, address lines, phone, website
+- Header / footer lines
+- Thank-you text and returns policy text
+- Show SKU / show tax flags
+- Paper width (58mm / 80mm), locale, currency
+- Optional logo media id
+
+System fields (receipt number, sale timestamp, line math, payments, change) always come from an immutable sale snapshot. Reprints use the frozen rendered text and template version captured at sale time.
+
+Admin APIs:
+
+- `GET/PUT /api/v1/pos/stores/:storeId/receipt-template`
+- `POST /api/v1/pos/stores/:storeId/receipt-template/preview`
+- `POST /api/v1/pos/stores/:storeId/receipts` (create from sale snapshot)
+- `GET /api/v1/pos/receipts/:receiptId`
+- `POST /api/v1/pos/receipts/:receiptId/printed`
+
+Permissions: `pos.receipt_template.manage` (managers/owners), `pos.receipt.view` (cashiers).
+
 Receipt generation should be asynchronous where possible.
 
 ---

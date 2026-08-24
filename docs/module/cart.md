@@ -56,9 +56,9 @@ Checkout receives an immutable cart snapshot ID or version. Cart lines copied in
 
 ## Exit criteria
 
-- Cart aggregate supports multi-store lines
-- Validation integrates Catalog and Inventory read contracts
-- Checkout handoff contract documented
+- [x] Cart aggregate supports multi-store lines
+- [x] Validation integrates Catalog and Inventory read contracts
+- [x] Checkout handoff contract documented (cart `id` + `version`; lines immutable after checkout starts in Phase 09)
 
 ## Related
 

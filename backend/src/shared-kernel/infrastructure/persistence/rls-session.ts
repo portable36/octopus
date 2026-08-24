@@ -14,6 +14,7 @@ export async function applyRlsSessionVariables(em: EntityManager): Promise<void>
     await connection.execute(`select set_config('app.vendor_id', '', true)`);
     await connection.execute(`select set_config('app.store_id', '', true)`);
     await connection.execute(`select set_config('app.user_id', '', true)`);
+    await connection.execute(`select set_config('app.guest_token', '', true)`);
     return;
   }
 
@@ -21,11 +22,13 @@ export async function applyRlsSessionVariables(em: EntityManager): Promise<void>
   const storeId = context.storeId ?? '';
   const userId = context.userId ?? context.principal?.userId ?? '';
   const platformScope = context.platformScope === true ? 'true' : 'false';
+  const guestToken = context.guestToken ?? '';
 
   await connection.execute(`select set_config('app.platform_scope', ?, true)`, [platformScope]);
   await connection.execute(`select set_config('app.vendor_id', ?, true)`, [vendorId]);
   await connection.execute(`select set_config('app.store_id', ?, true)`, [storeId]);
   await connection.execute(`select set_config('app.user_id', ?, true)`, [userId]);
+  await connection.execute(`select set_config('app.guest_token', ?, true)`, [guestToken]);
 }
 
 export async function withRlsContext<T>(

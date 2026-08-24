@@ -68,9 +68,9 @@ ReturnRequested
 
 ## Exit criteria
 
-- Order aggregate and state machine implemented
-- Payment and Fulfillment integrate through ports/events only
-- Snapshot invariants covered by domain tests
+- [x] Order aggregate and state machine implemented
+- [x] Payment and Fulfillment integrate through ports/events only (`ORDER_PORT` from Order module; payment provider still Phase 11)
+- [x] Snapshot invariants covered by domain tests
 
 ## Related
 

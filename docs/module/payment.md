@@ -4,6 +4,16 @@
 
 The Payment bounded context owns payment intents, provider transactions, webhook/callback processing, refunds, and internal payment state aligned with orders.
 
+## Backend payment invariants
+
+1. **Idempotency key** on every payment request and callback.
+2. **Integer minor units only** — never float/double for money.
+3. **No debit without guaranteed credit** — Saga-style orchestration with compensating steps when crossing service boundaries.
+4. **Gateway evidence persisted:** provider transaction ID, response code, timestamp on every interaction.
+5. **Reconciliation required** — scheduled comparison of gateway reports vs internal records.
+
+Full rule: `.cursor/rules/08-payments-finance.mdc`.
+
 Payment owns:
 
 - Payment intent and payment transaction aggregates

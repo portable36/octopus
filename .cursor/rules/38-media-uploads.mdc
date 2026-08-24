@@ -1,0 +1,31 @@
+---
+description: Direct-to-storage uploads, content validation, multipart/resumable, async processing
+globs:
+- backend/src/modules/media/**/*
+- frontend/src/**/*upload*
+- frontend/src/**/*media*
+alwaysApply: false
+---
+
+# Media Upload Design Rules
+
+Binary assets move through object storage (S3-compatible / MinIO / R2), not through the NestJS request body as the primary path.
+
+## Backend upload invariants
+
+1. **Never upload through the backend.** The API issues short-lived **presigned upload credentials** (or a signed multipart session). Clients PUT bytes directly to object storage. The backend records metadata, ownership, and lifecycle — it does not stream file bodies as the normal path. Do not add `multipart/form-data` file handlers on NestJS routes for product/media uploads.
+2. **Validate type by content, not extension.** After upload (or via storage events / head-byte fetch), inspect **magic bytes / file headers** and declared MIME. Reject mismatches (e.g. `.jpg` that is executable or HTML). Extension and client `Content-Type` are hints only — never authoritative.
+3. **Use multipart uploads.** Large objects use provider multipart (initiate → upload parts → complete). Object keys are generated server-side; never trust client filenames or paths.
+4. **Support resumable uploads.** Clients must be able to resume interrupted multipart sessions (part ETags, upload ID, remaining ranges). Expire abandoned sessions and clean incomplete objects.
+5. **Process everything async.** Virus scan, dimension checks, image variants, virus quarantine, and search indexing run via queues (BullMQ) after the object lands. Sync API responses only confirm session create / complete / status — not “fully processed.”
+6. **Rate limit and enforce size limits.** Cap max object size, max parts, upload session rate per actor/tenant, and concurrent uploads. Reject oversize before completing the object when possible.
+
+## Supporting controls
+
+- Private buckets by default; public URLs only via explicit policy and signed download URLs.
+- Tenant/vendor/store ownership on every media asset record.
+- Quarantine state until async validation/scan passes.
+- Never log storage secrets or full signed URL query strings.
+- Catalog and CMS store **media IDs**, not raw URLs as source of truth.
+
+See `docs/module/media.md` and `SECURITY.md`.

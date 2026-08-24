@@ -15,6 +15,15 @@ globs:
 - Implement explicit Redis-backed token validation lists to store active execution state histories.
 - If a client attempts an entry lookup using a leaked or reused historical Refresh Token, instantly invalidate the whole connected Token Family hierarchy in Redis to protect user records.
 
+## 2a. JWT security best practices
+JWTs are **Base64-encoded, not encrypted**. Treat every claim as readable to anyone who holds the token.
+
+1. **No PII in tokens.** Never put name, email, phone, address, or other personally identifiable fields in a JWT (or in any client-visible token). Prefer an opaque subject (`sub` as UUID) only when a JWT stays on a trusted internal hop. Load profile data from the identity store after authentication.
+2. **Opaque outside, JWT inside (phantom / split token).** Browser, mobile, and third-party clients receive **opaque** tokens (or HTTP-only refresh cookies). Translate to a short-lived JWT only behind the API gateway / BFF for internal services. Do not expose raw JWTs to untrusted clients when a phantom-token boundary exists.
+3. **Do not trust the `alg` header blindly.** Pin allowed algorithms in verification config (e.g. HS256 or RS256 only). Reject `none` and algorithm confusion (HMAC-with-public-key). Never let the token choose its own verification algorithm.
+4. **Validate `iss` and `aud`.** Every verify path must check **issuer** (`iss`) and **audience** (`aud`) against configured expected values. Reject tokens with missing or mismatched claims.
+5. **Keep tokens short-lived.** Access tokens: minutes (project default via `JWT_EXPIRES_IN`). Refresh tokens: longer but rotated, hashed at rest, and family-revoked on reuse.
+
 ## 3. Multi-Store 2D Matrix Authorization
 Every permission validation check must evaluate user capabilities across a two-dimensional grid measuring **Action Rank** and **Context Isolation Boundary**:
 - `PLATFORM_ADMIN`: Universal system authorization bypass capabilities.

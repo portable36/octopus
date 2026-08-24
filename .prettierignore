@@ -3,3 +3,7 @@ node_modules/
 dist/
 .next/
 coverage/
+.agents/
+graphify-out/
+skills-lock.json
+

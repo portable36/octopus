@@ -37,6 +37,7 @@
     "graphify:extract": "graphify extract . --code-only",
     "graphify:update": "graphify update .",
     "graphify:query": "graphify query",
+    "skills:update": "npx skills@latest update -y",
     "validate": "node scripts/validate.mjs"
   },
   "devDependencies": {

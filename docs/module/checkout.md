@@ -58,9 +58,13 @@ Unified checkout may create multiple orders when fulfillment, payout, tax, or pa
 
 ## Exit criteria
 
-- End-to-end checkout command with idempotency
-- Order and Payment contracts invoked through ports only
-- Integration tests cover failure and retry paths
+- [x] End-to-end checkout command with idempotency
+- [x] Order and Payment contracts invoked through ports only
+- [x] Unit tests cover failure and retry paths (integration tests expand with Phase 10/11)
+
+## Phase 09 notes
+
+`ORDER_PORT` is owned by `OrderModule` (Phase 10). Temporary `PAYMENT_PORT` adapter still persists payment intents in checkout-owned tables until Phase 11.
 
 ## Related
 

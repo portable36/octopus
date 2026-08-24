@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { AppConfigService } from '../../../../config/app-config.service';
 import {
   CART_PORT,
   type CartOwnerRef,
@@ -12,6 +13,7 @@ import {
 import { ORDER_PORT, type OrderPort } from '../../../../shared-kernel/application/ports/order.port';
 import {
   PAYMENT_PORT,
+  type PaymentMethodDto,
   type PaymentPort,
 } from '../../../../shared-kernel/application/ports/payment.port';
 import {
@@ -19,6 +21,14 @@ import {
   type PricingPort,
   type PricingQuoteResult,
 } from '../../../../shared-kernel/application/ports/pricing.port';
+import {
+  STORE_ACCESS,
+  type StoreAccessPort,
+} from '../../../../shared-kernel/application/ports/store-access.port';
+import {
+  VENDOR_ACCESS,
+  type VendorAccessPort,
+} from '../../../../shared-kernel/application/ports/vendor-access.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import {
   CheckoutAccessDeniedError,
@@ -33,6 +43,7 @@ import {
 import type {
   CheckoutOutcome,
   CheckoutOrderRef,
+  CheckoutPaymentRef,
   ShippingAddress,
 } from '../../domain/checkout.types';
 import {
@@ -40,13 +51,14 @@ import {
   type CheckoutRepository,
 } from '../ports/checkout-repository.interface';
 
-const RESERVATION_TTL_MS = 15 * 60 * 1000;
+const GATEWAY_RESERVATION_TTL_MS = 15 * 60 * 1000;
 
 export interface SubmitCheckoutInput {
   readonly owner: CartOwnerRef;
   readonly cartId: string;
   readonly expectedCartVersion: number;
   readonly idempotencyKey: string;
+  readonly paymentMethod: PaymentMethodDto;
   readonly shippingAddress: ShippingAddress;
   readonly shippingMethod: string;
   readonly shippingMinor?: number;
@@ -64,10 +76,14 @@ export class CheckoutSubmitHandler {
     @Inject(INVENTORY_PORT) private readonly inventory: InventoryPort,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Inject(PAYMENT_PORT) private readonly payments: PaymentPort,
+    @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
+    @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
+    private readonly config: AppConfigService,
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {
     this.assertOwner(input.owner);
+    this.assertShippingAddress(input.shippingAddress);
     const requestHash = hashSubmitRequest(input);
 
     const existing = await this.checkouts.findCompletedByIdempotencyKey(input.idempotencyKey);
@@ -101,6 +117,7 @@ export class CheckoutSubmitHandler {
     const shippingMinor = input.shippingMinor ?? 0;
     const taxRateBps = input.taxRateBps ?? 0;
     const commissionRateBps = input.commissionRateBps ?? 0;
+    const reservationTtlMs = await this.resolveReservationTtlMs(input.paymentMethod, byStore);
 
     try {
       for (const [storeId, lines] of byStore) {
@@ -138,7 +155,6 @@ export class CheckoutSubmitHandler {
       throw error;
     }
 
-    // Allocate shipping once on the first store quote for grand-total accounting.
     const storeIds = [...byStore.keys()];
     const primaryStoreId = storeIds[0]!;
     const primaryQuote = quotes.get(primaryStoreId)!;
@@ -147,6 +163,10 @@ export class CheckoutSubmitHandler {
       shippingMinor,
       totalMinor: primaryQuote.totalMinor - primaryQuote.shippingMinor + shippingMinor,
     });
+
+    if (input.paymentMethod === 'COD') {
+      await this.assertCodEligibility(byStore, quotes);
+    }
 
     const reservationIds: string[] = [];
     const lineReservations = new Map<string, { reservationId: string; warehouseId: string }>();
@@ -168,7 +188,7 @@ export class CheckoutSubmitHandler {
           warehouseId: pick.warehouseId,
           quantity: line.quantity,
           orderId: checkoutId,
-          expiresAt: new Date(Date.now() + RESERVATION_TTL_MS),
+          expiresAt: new Date(Date.now() + reservationTtlMs),
           actorUserId: input.owner.customerId ?? 'guest',
           idempotencyKey: `${input.idempotencyKey}:reserve:${line.lineId}`,
         });
@@ -180,6 +200,7 @@ export class CheckoutSubmitHandler {
       }
 
       const orderRefs: CheckoutOrderRef[] = [];
+      const paymentRefs: CheckoutPaymentRef[] = [];
       let subtotalMinor = 0;
       let discountMinor = 0;
       let taxMinor = 0;
@@ -196,6 +217,7 @@ export class CheckoutSubmitHandler {
           customerId: cart.customerId,
           vendorId: lines[0]!.vendorId,
           storeId,
+          paymentMethod: input.paymentMethod,
           currencyCode: quote.currencyCode,
           subtotalMinor: quote.subtotalMinor,
           discountMinor: quote.discountMinor,
@@ -237,7 +259,35 @@ export class CheckoutSubmitHandler {
           storeId: order.storeId,
           totalMinor: order.totalMinor,
           currencyCode: order.currencyCode,
+          paymentMethod: input.paymentMethod,
+          paymentStatus: 'PENDING',
         });
+
+        const payment = await this.payments.createIntent({
+          checkoutId,
+          orderId: order.orderId,
+          vendorId: order.vendorId,
+          storeId: order.storeId,
+          idempotencyKey: `${input.idempotencyKey}:payment:${order.orderId}`,
+          customerId: cart.customerId,
+          currencyCode: order.currencyCode,
+          amountMinor: order.totalMinor,
+          paymentMethod: input.paymentMethod,
+          ...(input.paymentMethod === 'COD'
+            ? { expiresAt: new Date(Date.now() + reservationTtlMs) }
+            : {}),
+          description: `Order ${order.orderNumber}`,
+        });
+        paymentRefs.push({
+          paymentIntentId: payment.paymentIntentId,
+          orderId: order.orderId,
+          paymentMethod: payment.paymentMethod,
+          amountMinor: payment.amountMinor,
+          currencyCode: payment.currencyCode,
+          status: payment.status,
+          ...(payment.clientSecret !== undefined ? { clientSecret: payment.clientSecret } : {}),
+        });
+
         subtotalMinor += quote.subtotalMinor;
         discountMinor += quote.discountMinor;
         taxMinor += quote.taxMinor;
@@ -254,16 +304,6 @@ export class CheckoutSubmitHandler {
         }
       }
 
-      const payment = await this.payments.createIntent({
-        checkoutId,
-        idempotencyKey: `${input.idempotencyKey}:payment`,
-        orderIds: orderRefs.map((o) => o.orderId),
-        customerId: cart.customerId,
-        currencyCode,
-        amountMinor: grandTotalMinor,
-        description: `Checkout ${checkoutId}`,
-      });
-
       await this.carts.markCheckedOut({
         cartId: cart.cartId,
         expectedVersion: cart.version,
@@ -275,6 +315,7 @@ export class CheckoutSubmitHandler {
         cartId: cart.cartId,
         cartVersion: cart.version,
         status: 'COMPLETED',
+        paymentMethod: input.paymentMethod,
         totals: {
           subtotalMinor,
           discountMinor,
@@ -285,13 +326,7 @@ export class CheckoutSubmitHandler {
           currencyCode,
         },
         orders: orderRefs,
-        payment: {
-          paymentIntentId: payment.paymentIntentId,
-          amountMinor: payment.amountMinor,
-          currencyCode: payment.currencyCode,
-          clientSecret: payment.clientSecret,
-          status: payment.status,
-        },
+        payments: paymentRefs,
         reservationIds,
       };
 
@@ -311,6 +346,93 @@ export class CheckoutSubmitHandler {
         input.idempotencyKey,
       );
       throw error;
+    }
+  }
+
+  private async resolveReservationTtlMs(
+    paymentMethod: PaymentMethodDto,
+    byStore: Map<string, readonly { readonly vendorId: string; readonly storeId: string }[]>,
+  ): Promise<number> {
+    if (paymentMethod !== 'COD') {
+      return GATEWAY_RESERVATION_TTL_MS;
+    }
+    let hours = this.config.codReservationTtlHours;
+    for (const [storeId, lines] of byStore) {
+      const store = await this.stores.findById(storeId);
+      const vendor = await this.vendors.findById(lines[0]!.vendorId);
+      const storeHours = store?.codReservationTtlHours;
+      const vendorHours = vendor?.codReservationTtlHours;
+      hours = Math.max(hours, storeHours ?? 0, vendorHours ?? 0);
+    }
+    return hours * 60 * 60 * 1000;
+  }
+
+  private async assertCodEligibility(
+    byStore: Map<string, readonly { readonly vendorId: string; readonly storeId: string }[]>,
+    quotes: Map<string, PricingQuoteResult>,
+  ): Promise<void> {
+    for (const [storeId, lines] of byStore) {
+      const store = await this.stores.findById(storeId);
+      const vendor = await this.vendors.findById(lines[0]!.vendorId);
+      if (!store || !vendor) {
+        throw new CheckoutValidationError('Store or vendor not found for COD eligibility.', [
+          { code: 'COD_NOT_AVAILABLE', message: 'Store or vendor missing.' },
+        ]);
+      }
+      const enabled = store.codEnabled && vendor.codEnabled;
+      if (!enabled) {
+        throw new CheckoutValidationError('Cash on delivery is not available for this store.', [
+          { code: 'COD_NOT_AVAILABLE', message: `COD disabled for store ${storeId}.` },
+        ]);
+      }
+
+      const quote = quotes.get(storeId)!;
+      const minAmount = Math.max(
+        store.codMinAmountMinor,
+        vendor.codMinAmountMinor,
+        this.config.codMinAmountMinor,
+      );
+      const maxCandidates = [
+        store.codMaxAmountMinor,
+        vendor.codMaxAmountMinor,
+        this.config.codMaxAmountMinor,
+      ].filter((value): value is number => value !== null && value !== undefined);
+      const maxAmount = maxCandidates.length > 0 ? Math.min(...maxCandidates) : null;
+
+      if (quote.totalMinor < minAmount) {
+        throw new CheckoutValidationError('Order total is below the COD minimum.', [
+          {
+            code: 'COD_AMOUNT_BELOW_MIN',
+            message: `Minimum COD amount is ${minAmount} minor units.`,
+          },
+        ]);
+      }
+      if (maxAmount !== null && quote.totalMinor > maxAmount) {
+        throw new CheckoutValidationError('Order total exceeds the COD maximum.', [
+          {
+            code: 'COD_AMOUNT_ABOVE_MAX',
+            message: `Maximum COD amount is ${maxAmount} minor units.`,
+          },
+        ]);
+      }
+
+      const expectedCurrency = store.currencyCode || vendor.currencyCode;
+      if (quote.currencyCode !== expectedCurrency) {
+        throw new CheckoutValidationError('Currency mismatch for COD checkout.', [
+          { code: 'COD_CURRENCY_MISMATCH', message: `Expected ${expectedCurrency}.` },
+        ]);
+      }
+    }
+  }
+
+  private assertShippingAddress(address: ShippingAddress): void {
+    if (!address.line1?.trim() || !address.city?.trim() || !address.countryCode?.trim()) {
+      throw new CheckoutValidationError('Shipping address is required.', [
+        {
+          code: 'SHIPPING_ADDRESS_REQUIRED',
+          message: 'line1, city, and countryCode are required.',
+        },
+      ]);
     }
   }
 
@@ -355,6 +477,7 @@ function hashSubmitRequest(input: SubmitCheckoutInput): string {
   const payload = JSON.stringify({
     cartId: input.cartId,
     expectedCartVersion: input.expectedCartVersion,
+    paymentMethod: input.paymentMethod,
     shippingMethod: input.shippingMethod,
     shippingAddress: input.shippingAddress,
     shippingMinor: input.shippingMinor ?? 0,

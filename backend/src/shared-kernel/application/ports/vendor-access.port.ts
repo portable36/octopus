@@ -5,6 +5,11 @@ export interface VendorAccessSnapshot {
   readonly status: string;
   readonly ownerUserId: string;
   readonly staffUserIds: readonly string[];
+  readonly currencyCode: string;
+  readonly codEnabled: boolean;
+  readonly codMinAmountMinor: number;
+  readonly codMaxAmountMinor: number | null;
+  readonly codReservationTtlHours: number;
 }
 
 export interface VendorAccessPort {

@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -65,6 +66,10 @@ export class SubmitCheckoutDto {
   @MinLength(8)
   @MaxLength(180)
   idempotencyKey!: string;
+
+  @ApiProperty({ enum: ['COD', 'SSLCOMMERZ', 'BKASH', 'NAGAD'] })
+  @IsIn(['COD', 'SSLCOMMERZ', 'BKASH', 'NAGAD'])
+  paymentMethod!: 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
 
   @ApiProperty({ type: ShippingAddressDto })
   @ValidateNested()

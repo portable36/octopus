@@ -34,6 +34,10 @@ export function toDomain(entity: VendorOrmEntity): Vendor {
       currencyCode: entity.currencyCode,
       timezone: entity.timezone,
       acceptsOnlineOrders: entity.acceptsOnlineOrders,
+      codEnabled: entity.codEnabled,
+      codMinAmountMinor: entity.codMinAmountMinor,
+      codMaxAmountMinor: entity.codMaxAmountMinor,
+      codReservationTtlHours: entity.codReservationTtlHours,
     },
     status: entity.status,
     ownerUserId: entity.ownerUserId,
@@ -58,6 +62,10 @@ export function applyToOrm(vendor: Vendor, entity: VendorOrmEntity): void {
   entity.currencyCode = vendor.settings.currencyCode;
   entity.timezone = vendor.settings.timezone;
   entity.acceptsOnlineOrders = vendor.settings.acceptsOnlineOrders;
+  entity.codEnabled = vendor.settings.codEnabled;
+  entity.codMinAmountMinor = vendor.settings.codMinAmountMinor;
+  entity.codMaxAmountMinor = vendor.settings.codMaxAmountMinor;
+  entity.codReservationTtlHours = vendor.settings.codReservationTtlHours;
   entity.status = vendor.status;
   entity.ownerUserId = vendor.ownerUserId;
   entity.rejectionReason = vendor.rejectionReason;

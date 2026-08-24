@@ -6,6 +6,12 @@ The Admin Dashboard is the internal operational interface for managing the
 multi-vendor, multi-store ecommerce platform. It is a presentation and
 operations layer, not a second backend.
 
+Delivery is sliced in [`docs/PHASES.md`](PHASES.md) Phase 20.1–20.8. **Phase 20.1**
+ships the admin shell, granular permissions, Settings/Media/Audit foundations,
+and read-only Vendor/Store admin APIs. **Phase 20.3 Website Control Center**
+(CMS page builder, nav/footer, SEO, `storefront/config`) is deferred until
+Settings + Media + CMS modules are ready.
+
 The frontend displays backend-owned state and invokes typed APIs. Business
 rules, authorization, transactions, validation, publishing, and audit behavior
 remain in backend bounded contexts.
@@ -37,43 +43,21 @@ Recommended frontend structure:
 frontend/src/
   app/
     (admin)/
-      dashboard/
-      commerce/
-      catalog/
-      inventory/
-      marketing/
-      content/
-      reports/
-      analytics/
-      pos/
-      support/
-      system/
-      settings/
+      admin/                 # URL prefix /admin/*
+        dashboard/
+        vendors/
+        stores/
+        system/health/
+        ...
     login/
   features/
     dashboard/
-    catalog/
-    inventory/
-    orders/
-    payments/
-    reports/
-    cms/
-    pos/
-    settings/
-  components/
-    ui/
-    layout/
-    data-table/
-    forms/
-    charts/
-    feedback/
-  lib/
-  hooks/
-  services/
-  types/
-  config/
+    ...
 ```
 
+Phase 20.1 lives under `app/(admin)/admin/`. Later slices add commerce/content
+routes from the checklist in `docs/PHASES.md` without inventing a parallel admin
+backend.
 Backend ownership remains separated across Identity/RBAC, Vendor, Store,
 Catalog, Inventory, Order, Payment, CMS/Content, Media, Settings/Branding,
 Reporting, Audit, and POS contexts.

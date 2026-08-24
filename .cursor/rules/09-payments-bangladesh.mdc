@@ -16,3 +16,8 @@ globs:
 ## 3. Financial Splitting Aggregates
 - Order computation handlers must split unified cart totals down into transparent SubOrder item segments matching their parent shop origin profiles.
 - Platform calculation modules must instantly parse out systemic operational Commission rates from sub-totals before dispatching credit balances across merchant account ledger records.
+
+## 4. Online COD vs MFS
+- Online COD is a first-class Payment method (`COD`), not a substitute for bKash/Nagad/SSLCommerz adapters.
+- COD collection still requires exact amount/currency match, idempotency, and never marks orders paid from the storefront.
+- Do not conflate online COD with POS till `CASH`.

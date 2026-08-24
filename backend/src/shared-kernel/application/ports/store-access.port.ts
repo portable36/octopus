@@ -12,6 +12,10 @@ export interface StoreAccessSnapshot {
   readonly region: string | null;
   readonly managerUserIds: readonly string[];
   readonly staffUserIds: readonly string[];
+  readonly codEnabled: boolean;
+  readonly codMinAmountMinor: number;
+  readonly codMaxAmountMinor: number | null;
+  readonly codReservationTtlHours: number;
 }
 
 export interface StoreAccessPort {

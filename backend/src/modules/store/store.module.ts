@@ -12,11 +12,12 @@ import { StoreOrmEntity } from './infrastructure/persistence/store.orm-entity';
 import { StoreStaffOrmEntity } from './infrastructure/persistence/store-staff.orm-entity';
 import { StoreRepositoryAdapter } from './infrastructure/persistence/store.repository.adapter';
 import { StoreController } from './presentation/http/store.controller';
+import { AdminStoreController } from './presentation/http/admin-store.controller';
 
 @Global()
 @Module({
   imports: [DatabaseModule, MikroOrmModule.forFeature([StoreOrmEntity, StoreStaffOrmEntity])],
-  controllers: [StoreController],
+  controllers: [StoreController, AdminStoreController],
   providers: [
     CreateStoreHandler,
     StoreLifecycleHandler,

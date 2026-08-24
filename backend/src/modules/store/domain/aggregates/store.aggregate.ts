@@ -94,6 +94,10 @@ export class Store extends AggregateRoot<UniqueID> {
         timezone: input.timezone ?? 'Asia/Dhaka',
         locale: input.locale ?? 'en-BD',
         acceptsOnlineOrders: false,
+        codEnabled: false,
+        codMinAmountMinor: 0,
+        codMaxAmountMinor: null,
+        codReservationTtlHours: 72,
       },
       status: 'draft',
       staff: [

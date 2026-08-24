@@ -48,18 +48,6 @@ export class OrderController {
     return this.orderResponse(order);
   }
 
-  @Post(':orderId/mark-paid')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Mark order paid (Payment module / trusted staff until Phase 11)' })
-  async markPaid(@CurrentUser() user: RequestPrincipal, @Param('orderId') orderId: string) {
-    const order = await this.lifecycle.markPaid({
-      orderId,
-      actorUserId: user.userId,
-      actorRoles: user.roles,
-    });
-    return this.orderResponse(order);
-  }
-
   @Post(':orderId/mark-payment-failed')
   @HttpCode(200)
   async markPaymentFailed(
@@ -175,6 +163,7 @@ export class OrderController {
       totalMinor: order.totalMinor,
       shippingMethod: order.shippingMethod,
       shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
       status: order.status,
       paymentStatus: order.paymentStatus,
       fulfillmentStatus: order.fulfillmentStatus,

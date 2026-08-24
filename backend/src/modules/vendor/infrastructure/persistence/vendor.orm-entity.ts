@@ -50,6 +50,18 @@ export class VendorOrmEntity {
   @Property({ fieldName: 'accepts_online_orders', default: false })
   acceptsOnlineOrders!: boolean;
 
+  @Property({ fieldName: 'cod_enabled', default: false })
+  codEnabled!: boolean;
+
+  @Property({ fieldName: 'cod_min_amount_minor', type: 'integer', default: 0 })
+  codMinAmountMinor!: number;
+
+  @Property({ fieldName: 'cod_max_amount_minor', type: 'integer', nullable: true })
+  codMaxAmountMinor!: number | null;
+
+  @Property({ fieldName: 'cod_reservation_ttl_hours', type: 'integer', default: 72 })
+  codReservationTtlHours!: number;
+
   @Property()
   status!: VendorStatus;
 

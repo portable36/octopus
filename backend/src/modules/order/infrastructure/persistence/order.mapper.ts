@@ -22,6 +22,7 @@ export function orderToDomain(entity: OrderOrmEntity, lines: OrderLineOrmEntity[
     shippingAddress: entity.shippingAddressJson as unknown as OrderShippingAddressSnapshot,
     appliedPromotionId: entity.appliedPromotionId,
     appliedCouponCode: entity.appliedCouponCode,
+    paymentMethod: entity.paymentMethod,
     pricingSnapshot: entity.pricingSnapshotJson as {
       taxRateBps: number;
       commissionRateBps: number;
@@ -73,6 +74,7 @@ export function applyOrderToOrm(order: Order, entity: OrderOrmEntity): void {
   entity.shippingAddressJson = { ...order.shippingAddress };
   entity.appliedPromotionId = order.appliedPromotionId;
   entity.appliedCouponCode = order.appliedCouponCode;
+  entity.paymentMethod = order.paymentMethod;
   entity.pricingSnapshotJson = { ...order.pricingSnapshot };
   entity.status = order.status;
   entity.paymentStatus = order.paymentStatus;

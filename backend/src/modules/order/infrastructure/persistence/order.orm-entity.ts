@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 import type {
   OrderFulfillmentStatus,
+  OrderPaymentMethod,
   OrderPaymentStatus,
   OrderStatus,
 } from '../../domain/order.types';
@@ -74,6 +75,9 @@ export class OrderOrmEntity {
 
   @Property({ fieldName: 'fulfillment_status' })
   fulfillmentStatus!: OrderFulfillmentStatus;
+
+  @Property({ fieldName: 'payment_method' })
+  paymentMethod!: OrderPaymentMethod;
 
   @Property({ type: 'integer' })
   version!: number;

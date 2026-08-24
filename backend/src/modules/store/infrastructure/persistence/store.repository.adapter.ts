@@ -48,6 +48,13 @@ export class StoreRepositoryAdapter implements StoreRepository {
     });
   }
 
+  public async listAll(): Promise<Store[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(StoreOrmEntity, {}, { populate: ['staff'] });
+      return entities.map(toDomain);
+    });
+  }
+
   public async existsByVendorAndSlug(vendorId: string, slug: string): Promise<boolean> {
     return withRlsContext(this.em, async (tx) => {
       const count = await tx.count(StoreOrmEntity, { vendorId, slug });

@@ -8,5 +8,6 @@ export interface VendorRepository {
   findBySlug(slug: string): Promise<Vendor | null>;
   findByOwnerUserId(userId: string): Promise<Vendor[]>;
   findByStaffUserId(userId: string): Promise<Vendor[]>;
+  listAll(): Promise<Vendor[]>;
   existsBySlug(slug: string): Promise<boolean>;
 }

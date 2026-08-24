@@ -68,6 +68,15 @@ Validate:
 
 Never mark an order paid based only on a frontend redirect.
 
+## Online COD (not POS cash)
+
+Online Cash on Delivery is a first-class `PaymentMethod` on Payment intents (`AWAITING_COLLECTION` → `COLLECTED`).
+
+- Storefront checkout may create COD intents; it must **never** call `Order.markPaid()` / any mark-paid HTTP endpoint.
+- Staff (or Phase 13 fulfillment) confirms cash via `CollectCodPayment` / `POST /api/v1/payments/cod/:id/collect` with exact amount match, RBAC `payment.cod.collect`, and idempotency.
+- **COD ≠ POS `CASH`.** Till/shift accounting stays in the POS module; online COD collections are Payment transactions, not POS receipts.
+- Unpaid COD orders may enter `PROCESSING` / fulfillment by domain policy; gateway (non-COD) orders still require `PAID` first.
+
 ## Reconciliation
 
 Reconciliation is mandatory, not a nice-to-have:

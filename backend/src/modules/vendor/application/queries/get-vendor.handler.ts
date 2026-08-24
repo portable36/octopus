@@ -27,4 +27,11 @@ export class GetVendorHandler {
   public async forActor(actorUserId: string): Promise<Vendor[]> {
     return this.vendors.findByStaffUserId(actorUserId);
   }
+
+  public async listAllForPlatform(actorRoles: readonly string[]): Promise<Vendor[]> {
+    if (!actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new VendorAccessDeniedError();
+    }
+    return this.vendors.listAll();
+  }
 }

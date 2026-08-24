@@ -1,13 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import type { Permission } from '../../domain/enums/permission.enum';
+import { PERMISSIONS, type Permission } from '../../domain/enums/permission.enum';
 import type { Role } from '../../domain/enums/role.enum';
-import { roleHasPermission } from '../../domain/policies/role-permissions.policy';
+import {
+  permissionsForRoles,
+  roleHasPermission,
+} from '../../domain/policies/role-permissions.policy';
 import { ForbiddenPermissionError, ForbiddenRoleError } from '../errors/identity.errors';
 
 @Injectable()
 export class AuthorizationService {
   public hasPermission(roles: readonly Role[], permission: Permission): boolean {
     return roleHasPermission(roles, permission);
+  }
+
+  public listPermissions(roles: readonly Role[]): readonly Permission[] {
+    if (roles.includes('PLATFORM_ADMIN')) {
+      return [...PERMISSIONS];
+    }
+    return [...permissionsForRoles(roles)];
   }
 
   public assertPermission(roles: readonly Role[], permission: Permission): void {

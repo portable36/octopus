@@ -8,6 +8,7 @@ import {
 import type {
   OrderFulfillmentStatus,
   OrderLineSnapshot,
+  OrderPaymentMethod,
   OrderPaymentStatus,
   OrderShippingAddressSnapshot,
   OrderStatus,
@@ -48,6 +49,7 @@ interface OrderProps {
   readonly shippingAddress: OrderShippingAddressSnapshot;
   readonly appliedPromotionId: string | null;
   readonly appliedCouponCode: string | null;
+  readonly paymentMethod: OrderPaymentMethod;
   readonly pricingSnapshot: {
     readonly taxRateBps: number;
     readonly commissionRateBps: number;
@@ -93,6 +95,7 @@ export class Order extends AggregateRoot<UniqueID> {
     readonly shippingAddress: OrderShippingAddressSnapshot;
     readonly appliedPromotionId: string | null;
     readonly appliedCouponCode: string | null;
+    readonly paymentMethod: OrderPaymentMethod;
     readonly pricingSnapshot: {
       readonly taxRateBps: number;
       readonly commissionRateBps: number;
@@ -168,6 +171,7 @@ export class Order extends AggregateRoot<UniqueID> {
       shippingAddress: { ...input.shippingAddress },
       appliedPromotionId: input.appliedPromotionId,
       appliedCouponCode: input.appliedCouponCode,
+      paymentMethod: input.paymentMethod,
       pricingSnapshot: { ...input.pricingSnapshot },
       status: 'PENDING_PAYMENT',
       paymentStatus: 'PENDING',
@@ -241,6 +245,9 @@ export class Order extends AggregateRoot<UniqueID> {
   get appliedCouponCode(): string | null {
     return this.props.appliedCouponCode;
   }
+  get paymentMethod(): OrderPaymentMethod {
+    return this.props.paymentMethod;
+  }
   get pricingSnapshot(): OrderProps['pricingSnapshot'] {
     return this.props.pricingSnapshot;
   }
@@ -271,8 +278,36 @@ export class Order extends AggregateRoot<UniqueID> {
   }
 
   public markPaid(): void {
-    this.transition('PAID', { paymentStatus: 'PAID' });
-    this.addEvent('OrderPaid', { orderId: this.id.value });
+    if (this.props.paymentStatus === 'PAID') {
+      return;
+    }
+
+    if (this.props.status === 'PENDING_PAYMENT') {
+      this.transition('PAID', { paymentStatus: 'PAID' });
+      this.addEvent('OrderPaid', { orderId: this.id.value });
+      return;
+    }
+
+    // COD may already be in fulfillment while cash is outstanding.
+    if (
+      this.props.paymentMethod === 'COD' &&
+      this.props.paymentStatus === 'PENDING' &&
+      (this.props.status === 'PROCESSING' ||
+        this.props.status === 'PARTIALLY_FULFILLED' ||
+        this.props.status === 'FULFILLED' ||
+        this.props.status === 'COMPLETED')
+    ) {
+      this.props = {
+        ...this.props,
+        paymentStatus: 'PAID',
+        version: this.props.version + 1,
+        updatedAt: new Date(),
+      };
+      this.addEvent('OrderPaid', { orderId: this.id.value });
+      return;
+    }
+
+    throw new InvalidOrderTransitionError(this.props.status, 'PAID');
   }
 
   public markPaymentFailed(): void {
@@ -283,6 +318,19 @@ export class Order extends AggregateRoot<UniqueID> {
   }
 
   public startProcessing(): void {
+    if (
+      this.props.status === 'PENDING_PAYMENT' &&
+      this.props.paymentMethod === 'COD' &&
+      this.props.paymentStatus === 'PENDING'
+    ) {
+      this.props = {
+        ...this.props,
+        status: 'PROCESSING',
+        version: this.props.version + 1,
+        updatedAt: new Date(),
+      };
+      return;
+    }
     this.transition('PROCESSING');
   }
 

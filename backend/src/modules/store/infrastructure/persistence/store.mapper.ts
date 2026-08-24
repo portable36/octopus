@@ -32,6 +32,10 @@ export function toDomain(entity: StoreOrmEntity): Store {
       timezone: entity.timezone,
       locale: entity.locale,
       acceptsOnlineOrders: entity.acceptsOnlineOrders,
+      codEnabled: entity.codEnabled,
+      codMinAmountMinor: entity.codMinAmountMinor,
+      codMaxAmountMinor: entity.codMaxAmountMinor,
+      codReservationTtlHours: entity.codReservationTtlHours,
     },
     status: entity.status,
     staff,
@@ -54,6 +58,10 @@ export function applyToOrm(store: Store, entity: StoreOrmEntity): void {
   entity.timezone = store.settings.timezone;
   entity.locale = store.settings.locale;
   entity.acceptsOnlineOrders = store.settings.acceptsOnlineOrders;
+  entity.codEnabled = store.settings.codEnabled;
+  entity.codMinAmountMinor = store.settings.codMinAmountMinor;
+  entity.codMaxAmountMinor = store.settings.codMaxAmountMinor;
+  entity.codReservationTtlHours = store.settings.codReservationTtlHours;
   entity.status = store.status;
   entity.updatedAt = new Date();
 

@@ -16,6 +16,11 @@ import { PricingModule } from './modules/pricing/pricing.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { OrderModule } from './modules/order/order.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { MediaModule } from './modules/media/media.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { DatabaseModule } from './shared-kernel/infrastructure/persistence/database.module';
 import { HealthModule } from './shared-kernel/infrastructure/health/health.module';
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
@@ -77,7 +82,12 @@ import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
     PricingModule,
     CartModule,
     OrderModule,
+    PaymentModule,
+    FulfillmentModule,
     CheckoutModule,
+    SettingsModule,
+    MediaModule,
+    AuditModule,
   ],
   providers: [AppConfigService],
   exports: [AppConfigService],

@@ -23,6 +23,11 @@ export class VendorAccessAdapter implements VendorAccessPort {
       status: vendor.status,
       ownerUserId: vendor.ownerUserId,
       staffUserIds: vendor.staff.map((member) => member.userId),
+      currencyCode: vendor.settings.currencyCode,
+      codEnabled: vendor.settings.codEnabled,
+      codMinAmountMinor: vendor.settings.codMinAmountMinor,
+      codMaxAmountMinor: vendor.settings.codMaxAmountMinor,
+      codReservationTtlHours: vendor.settings.codReservationTtlHours,
     };
   }
 }

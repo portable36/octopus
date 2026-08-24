@@ -20,6 +20,7 @@ function createPendingOrder() {
     shippingAddress: { line1: '12 Road', city: 'Dhaka', countryCode: 'BD' },
     appliedPromotionId: null,
     appliedCouponCode: null,
+    paymentMethod: 'SSLCOMMERZ',
     pricingSnapshot: {
       taxRateBps: 0,
       commissionRateBps: 1000,
@@ -127,5 +128,56 @@ describe('Order state machine', () => {
     order.fulfillLine('l2', 1);
     expect(order.status).toBe('FULFILLED');
     expect(order.fulfillmentStatus).toBe('FULFILLED');
+  });
+
+  it('allows COD unpaid processing then markPaid without reverting status', () => {
+    const order = Order.createFromCheckout({
+      checkoutId: 'chk-1',
+      idempotencyKey: 'idem-cod',
+      customerId: 'cust-1',
+      vendorId: 'vendor-1',
+      storeId: 'store-1',
+      paymentMethod: 'COD',
+      currencyCode: 'BDT',
+      subtotalMinor: 1000,
+      discountMinor: 0,
+      shippingMinor: 0,
+      taxMinor: 0,
+      commissionMinor: 0,
+      totalMinor: 1000,
+      shippingMethod: 'STANDARD',
+      shippingAddress: { line1: '12 Road', city: 'Dhaka', countryCode: 'BD' },
+      appliedPromotionId: null,
+      appliedCouponCode: null,
+      pricingSnapshot: {
+        taxRateBps: 0,
+        commissionRateBps: 0,
+        evaluatedAt: new Date().toISOString(),
+      },
+      lines: [
+        {
+          lineId: 'l1',
+          productId: 'p1',
+          variantId: 'v1',
+          offerId: 'o1',
+          quantity: 1,
+          unitPriceMinor: 1000,
+          lineSubtotalMinor: 1000,
+          lineDiscountMinor: 0,
+          lineTaxMinor: 0,
+          lineTotalMinor: 1000,
+          currencyCode: 'BDT',
+          reservationId: 'r1',
+          warehouseId: 'w1',
+        },
+      ],
+    });
+
+    order.startProcessing();
+    expect(order.status).toBe('PROCESSING');
+    expect(order.paymentStatus).toBe('PENDING');
+    order.markPaid();
+    expect(order.status).toBe('PROCESSING');
+    expect(order.paymentStatus).toBe('PAID');
   });
 });

@@ -53,4 +53,11 @@ export class GetStoreHandler {
   public async forActor(actorUserId: string): Promise<Store[]> {
     return this.stores.findByStaffUserId(actorUserId);
   }
+
+  public async listAllForPlatform(actorRoles: readonly string[]): Promise<Store[]> {
+    if (!actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new StoreAccessDeniedError();
+    }
+    return this.stores.listAll();
+  }
 }

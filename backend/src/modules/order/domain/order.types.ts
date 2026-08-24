@@ -16,6 +16,8 @@ export type OrderPaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUND_REQUEST
 export type OrderFulfillmentStatus =
   'UNFULFILLED' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'NOT_APPLICABLE';
 
+export type OrderPaymentMethod = 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
+
 export interface OrderShippingAddressSnapshot {
   readonly line1: string;
   readonly line2?: string;

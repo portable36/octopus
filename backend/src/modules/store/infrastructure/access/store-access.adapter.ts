@@ -31,6 +31,10 @@ export class StoreAccessAdapter implements StoreAccessPort {
         .filter((member) => member.role === 'STORE_MANAGER')
         .map((member) => member.userId),
       staffUserIds: store.staff.map((member) => member.userId),
+      codEnabled: store.settings.codEnabled,
+      codMinAmountMinor: store.settings.codMinAmountMinor,
+      codMaxAmountMinor: store.settings.codMaxAmountMinor,
+      codReservationTtlHours: store.settings.codReservationTtlHours,
     };
   }
 }

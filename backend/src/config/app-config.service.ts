@@ -94,4 +94,76 @@ export class AppConfigService {
   get isTest(): boolean {
     return this.nodeEnv === 'test';
   }
+
+  get codDefaultEnabled(): boolean {
+    return this.configService.get('COD_DEFAULT_ENABLED', { infer: true });
+  }
+
+  get codMinAmountMinor(): number {
+    return this.configService.get('COD_MIN_AMOUNT_MINOR', { infer: true });
+  }
+
+  get codMaxAmountMinor(): number | null {
+    const value = this.configService.get('COD_MAX_AMOUNT_MINOR', { infer: true });
+    return value === undefined ? null : value;
+  }
+
+  get codReservationTtlHours(): number {
+    return this.configService.get('COD_RESERVATION_TTL_HOURS', { infer: true });
+  }
+
+  get courierCredentialsKey(): string {
+    return this.configService.get('COURIER_CREDENTIALS_KEY', { infer: true }) ?? this.jwtSecret;
+  }
+
+  get courierHttpTimeoutMs(): number {
+    return this.configService.get('COURIER_HTTP_TIMEOUT_MS', { infer: true });
+  }
+
+  get steadfastBaseUrl(): string {
+    return this.configService.get('STEADFAST_BASE_URL', { infer: true });
+  }
+
+  get steadfastSandboxCredentials(): {
+    apiKey: string;
+    secretKey: string;
+    baseUrl: string;
+  } | null {
+    const apiKey = this.configService.get('STEADFAST_API_KEY', { infer: true });
+    const secretKey = this.configService.get('STEADFAST_SECRET_KEY', { infer: true });
+    if (!apiKey || !secretKey) {
+      return null;
+    }
+    return { apiKey, secretKey, baseUrl: this.steadfastBaseUrl };
+  }
+
+  get pathaoBaseUrl(): string {
+    return this.configService.get('PATHAO_BASE_URL', { infer: true });
+  }
+
+  get pathaoSandboxCredentials(): {
+    clientId: string;
+    clientSecret: string;
+    username: string;
+    password: string;
+    baseUrl: string;
+    pathaoStoreId: number;
+  } | null {
+    const clientId = this.configService.get('PATHAO_CLIENT_ID', { infer: true });
+    const clientSecret = this.configService.get('PATHAO_CLIENT_SECRET', { infer: true });
+    const username = this.configService.get('PATHAO_USERNAME', { infer: true });
+    const password = this.configService.get('PATHAO_PASSWORD', { infer: true });
+    const pathaoStoreId = this.configService.get('PATHAO_STORE_ID', { infer: true });
+    if (!clientId || !clientSecret || !username || !password || !pathaoStoreId) {
+      return null;
+    }
+    return {
+      clientId,
+      clientSecret,
+      username,
+      password,
+      baseUrl: this.pathaoBaseUrl,
+      pathaoStoreId,
+    };
+  }
 }

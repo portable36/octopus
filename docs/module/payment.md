@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-The Payment bounded context owns payment intents, provider transactions, webhook/callback processing, refunds, and internal payment state aligned with orders.
+The Payment bounded context owns payment intents, provider transactions, webhook/callback processing, refunds, **online COD collection**, and internal payment state aligned with orders.
 
 ## Backend payment invariants
 
@@ -17,25 +17,45 @@ Full rule: `.cursor/rules/08-payments-finance.mdc`.
 Payment owns:
 
 - Payment intent and payment transaction aggregates
-- Provider reference IDs and raw callback metadata (redacted in logs)
+- Online COD (`AWAITING_COLLECTION` → `COLLECTED`) and collection records
+- Provider reference IDs and raw callback metadata (redacted in logs) — gateways later
 - Amount, currency, and order/payment linkage
-- Idempotency records for callbacks and capture commands
-- Refund commands and provider refund correlation
+- Idempotency records for create/collect/cancel
+- Minimal `payment_outbox` rows (Phase 12 dispatcher)
 
 Payment does not own:
 
-- Order business lifecycle beyond coordinated status updates (Order module)
+- Order business lifecycle beyond coordinated status updates (Order module via `OrderPort.markPaidFromPayment`)
 - Vendor ledger posting (Payout module)
 - Checkout total calculation (Checkout module)
+- POS till/shift cash (POS module — **not** online COD)
+
+## Payment methods
+
+`COD | SSLCOMMERZ | BKASH | NAGAD` — one method per checkout; one intent per store order.
+
+- **COD:** no `clientSecret`; staff collects via `POST /api/v1/payments/cod/:paymentIntentId/collect` with `payment.cod.collect`.
+- **Gateways:** method-aware stub intents return `REQUIRES_PAYMENT` + `clientSecret` until live adapters ship.
+
+## Online COD flow
+
+```text
+Checkout(COD) → PaymentIntent AWAITING_COLLECTION → Order unpaid (paymentMethod=COD)
+→ Fulfillment allowed by policy while PENDING
+→ CollectCodPayment (exact amount, idempotent, RBAC)
+  or Fulfillment DELIVERED → confirmCodCollectionFromFulfillment
+→ COLLECTED + Order.markPaid() + outbox CodCollected
+```
+
+Storefront never marks paid. Cancel COD does not mark paid. Courier delivery confirmation uses the trusted Payment seam (not a second payment path).
 
 ## Provider port
 
 ```text
-PaymentProvider
-  createPayment()
-  verifyPayment()
-  refund()
-  parseWebhook()
+PaymentPort
+  createIntent({ paymentMethod, orderId, ... })
+  confirmCodCollection(...)
+  cancelIntent(...)
 ```
 
 Implement SSLCommerz, bKash, and Nagad behind adapters in infrastructure. Domain code never imports provider SDKs.
@@ -61,15 +81,18 @@ Never mark an order paid because the browser reached a success redirect URL.
 
 ## Testing requirements
 
-- Duplicate callback idempotency
-- Amount/currency mismatch rejection
-- Signature failure paths
-- Partial and full refunds within limits
-- Provider outage and retry behavior
+- COD checkout unpaid + `AWAITING_COLLECTION`, no clientSecret
+- Eligibility rejects (disabled store/vendor, amount limits, missing address)
+- Collect success → COLLECTED + markPaid; amount mismatch; idempotent / conflicting keys
+- Authz: wrong store / missing permission forbidden
+- Multi-store: collect A does not affect B
+- Cancel does not mark paid
+- Gateway createIntent still returns secret shape when method ≠ COD
 
 ## Exit criteria
 
-- Provider adapters behind port with contract tests
+- [x] COD path production-shaped with tests
+- [ ] Live gateway adapters behind port with contract tests
 - Order coordination documented and tested
 - Bangladesh gateway rules aligned with `.cursor/rules/09-payments-bangladesh.mdc`
 
@@ -77,6 +100,6 @@ Never mark an order paid because the browser reached a success redirect URL.
 
 - [PHASES.md](../PHASES.md) — Phase 11
 - [Order Module](./order.md)
+- [Checkout Module](./checkout.md)
 - `.cursor/rules/08-payments-finance.mdc`
-- `.cursor/rules/09-payments-bangladesh.mdc`
 - `.cursor/rules/37-order-payment.mdc`

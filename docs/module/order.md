@@ -69,7 +69,8 @@ ReturnRequested
 ## Exit criteria
 
 - [x] Order aggregate and state machine implemented
-- [x] Payment and Fulfillment integrate through ports/events only (`ORDER_PORT` from Order module; payment provider still Phase 11)
+- [x] Payment and Fulfillment integrate through ports/events only (`ORDER_PORT` from Order module; Payment module Phase 11 owns `markPaidFromPayment` / COD collect)
+- Orders persist `paymentMethod`; unpaid COD may enter `PROCESSING` by domain policy; storefront has no mark-paid endpoint
 - [x] Snapshot invariants covered by domain tests
 
 ## Related

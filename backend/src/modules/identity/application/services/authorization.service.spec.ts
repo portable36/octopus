@@ -7,6 +7,7 @@ describe('AuthorizationService', () => {
 
   it('grants platform admin every permission', () => {
     expect(service.hasPermission(['PLATFORM_ADMIN'], 'vendor.manage')).toBe(true);
+    expect(service.hasPermission(['PLATFORM_ADMIN'], 'settings.write')).toBe(true);
   });
 
   it('denies customer vendor management', () => {
@@ -14,6 +15,14 @@ describe('AuthorizationService', () => {
     expect(() => service.assertPermission(['CUSTOMER'], 'vendor.manage')).toThrow(
       ForbiddenPermissionError,
     );
+  });
+
+  it('denies vendor owner platform vendor list permission', () => {
+    expect(service.hasPermission(['VENDOR_OWNER'], 'platform.vendors.read')).toBe(false);
+  });
+
+  it('allows vendor owner settings.write for non-platform scopes (scope checks elsewhere)', () => {
+    expect(service.hasPermission(['VENDOR_OWNER'], 'settings.write')).toBe(true);
   });
 
   it('asserts role membership', () => {

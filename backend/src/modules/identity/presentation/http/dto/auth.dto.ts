@@ -88,4 +88,7 @@ export class MeResponseDto {
 
   @ApiProperty({ enum: ROLES, isArray: true })
   roles!: readonly Role[];
+
+  @ApiProperty({ type: [String] })
+  permissions!: readonly string[];
 }

@@ -747,19 +747,31 @@ No arbitrary status mutation.
 
 ## Objective
 
-Create provider-independent payment infrastructure.
+Create provider-independent payment infrastructure, including **online Cash on Delivery (COD)**.
 
 ### Provider Port
 
 ```text
-PaymentProvider
-  ├── createPayment()
-  ├── verifyPayment()
-  ├── refund()
-  └── parseWebhook()
+PaymentPort
+  ├── createIntent(paymentMethod, orderId, ...)
+  ├── confirmCodCollection(...)
+  └── cancelIntent(...)
 ```
 
-### Providers
+Gateway providers (SSLCommerz / bKash / Nagad) remain stubbed behind method-aware intents (`REQUIRES_PAYMENT` + optional `clientSecret`).
+
+### Online COD (shipped)
+
+- [x] Payment module (`payment_intents`, `payment_transactions`, `payment_operations`, `payment_outbox`)
+- [x] COD statuses: `AWAITING_COLLECTION` → `COLLECTED` (also `CANCELLED` / `FAILED` / `EXPIRED`)
+- [x] Checkout `paymentMethod` + eligibility (vendor/store `codEnabled`, min/max, address)
+- [x] One COD intent **per store order**; no `clientSecret` for COD
+- [x] `CollectCodPayment` + `POST /api/v1/payments/cod/:paymentIntentId/collect` + `payment.cod.collect`
+- [x] Exact amount match; idempotent collect; order `markPaid` only via Payment port
+- [x] COD inventory reservation TTL (default 72h) separate from gateway short TTL
+- [x] Minimal same-transaction `payment_outbox` rows (`CodPaymentCreated`, `CodCollected`) — dispatcher is Phase 12
+
+### Providers (live adapters later)
 
 - [ ] SSLCommerz
 - [ ] bKash
@@ -767,23 +779,21 @@ PaymentProvider
 
 ### Payment
 
-- [ ] Payment intent
-- [ ] Payment transaction
-- [ ] Provider reference
-- [ ] Amount
-- [ ] Currency
-- [ ] Status
-- [ ] Callback
+- [x] Payment intent
+- [x] Payment transaction (COD collection record)
+- [ ] Provider reference (gateway)
+- [x] Amount / currency / status
+- [ ] Callback / webhook
 - [ ] Refund
 
 ### Security
 
-- [ ] Signature validation
-- [ ] Replay protection
-- [ ] Idempotency
-- [ ] Amount verification
-- [ ] Currency verification
-- [ ] Order verification
+- [x] Idempotency
+- [x] Amount verification (COD collect)
+- [x] Currency verification
+- [x] Order verification via Payment → Order port
+- [ ] Signature validation (gateways)
+- [ ] Replay protection (gateways)
 
 ### Critical Rule
 
@@ -791,9 +801,10 @@ Never:
 
 ```text
 frontend success redirect → order PAID
+storefront → Order.markPaid()
 ```
 
-Instead:
+Instead (gateway):
 
 ```text
 provider callback
@@ -803,6 +814,16 @@ provider callback
 → mark order
 → outbox
 ```
+
+Instead (COD):
+
+```text
+Checkout(COD) → AWAITING_COLLECTION → unpaid order
+→ (optional) PROCESSING / fulfillment by policy
+→ CollectCodPayment → COLLECTED → Order.markPaid() → outbox
+```
+
+COD is **not** POS till `CASH`.
 
 ---
 
@@ -861,15 +882,14 @@ Consumer
 
 ## Objective
 
-Support vendor/store fulfillment.
+Support vendor/store fulfillment with multi-courier delivery (Steadfast, Pathao, MANUAL).
 
 ### Shipment
 
-- [ ] Shipment
-- [ ] Shipment items
-- [ ] Carrier
-- [ ] Tracking number
-- [ ] Shipping status
+- [x] Shipment aggregate + shipment lines
+- [x] Carrier provider (`STEADFAST` | `PATHAO` | `MANUAL`)
+- [x] Tracking / consignment ids
+- [x] Shipping status machine
 
 ### Status
 
@@ -884,13 +904,23 @@ FAILED
 RETURNED
 ```
 
+### Courier integrations (v1)
+
+- [x] `CourierPort` (shared-kernel) + status normalization
+- [x] Steadfast Packzy: create_order + status_by_*
+- [x] Pathao Aladdin: OAuth issue/refresh + create order + order info
+- [x] Per-vendor encrypted credentials + Pathao OAuth token store
+- [x] COD: `amount_to_collect` / `cod_amount` from PaymentIntent; on DELIVERED → `confirmCodCollectionFromFulfillment`
+- [ ] Bulk create / returns / price-plan UI (deferred)
+- [ ] Phase 12 status poller worker (sync endpoint shipped; worker deferred)
+
 ### Features
 
-- [ ] Vendor fulfillment
-- [ ] Partial fulfillment
-- [ ] Shipment tracking
-- [ ] Delivery confirmation
-- [ ] Return shipment
+- [x] Vendor/store staff create shipment (`POST /api/v1/fulfillment/shipments`)
+- [x] Partial line quantities on shipment
+- [x] Status sync pull (`POST .../sync-status`)
+- [x] Delivery confirmation → COD collect seam
+- [ ] Return shipment (Phase 14)
 
 ---
 
@@ -1141,39 +1171,101 @@ Build complete vendor operations.
 
 ## Objective
 
-Build platform-wide administration.
+Build the platform admin **presentation layer** over existing bounded contexts
+(see [`docs/admin-dashboard.md`](admin-dashboard.md)). Do not create a god
+`PlatformAdmin` domain. Ship in slices 20.1–20.8.
 
-### Vendor Management
+### Ownership model
 
-- [ ] Vendor onboarding
-- [ ] Approval
-- [ ] Suspension
-- [ ] Verification
-- [ ] Vendor staff
+- Next.js App Router shell under `frontend/src/app/(admin)/admin/`
+- Thin HTTP adapters at `/api/v1/admin/*` calling existing handlers/ports
+- New modules only where missing: **settings**, **media**, **cms** (later), **audit**
+- Scope from JWT + tenancy context; ignore body/URL tenant ids for authz
+- Effective storefront config (when Website Control Center ships): single
+  `GET /api/v1/storefront/config` resolving Platform→Vendor→Store server-side
 
-### Platform Configuration
+---
 
-- [ ] Commission rules
-- [ ] Tax settings
-- [ ] Payment providers
-- [ ] Shipping configuration
-- [ ] Global settings
+## Phase 20.1 — Foundation
 
-### Operations
+- [x] Granular `platform.*` / `settings.*` / `audit.read` / `media.*` / `website.*` permissions
+- [x] Admin shell: sidebar, scope badge, permission-aware nav
+- [x] Routes: `/admin/dashboard`, `/admin/vendors`, `/admin/stores`, `/admin/system/health`
+- [x] Settings module: typed `configuration_documents` + `resolveEffective` (Platform→Vendor→Store)
+- [x] Media module stub: MediaId metadata (`media_assets`); no public URL as truth
+- [x] Audit module skeleton: append-only `audit_events` with secret redaction
+- [x] Admin read APIs over existing Vendor/Store (`GET /admin/vendors`, `GET /admin/stores`)
+- [x] Additive migration for configuration/media/audit tables + RLS
+- [x] Unit tests: settings inheritance, vendor-owner deny on platform settings, store IDOR harness
 
-- [ ] Orders
-- [ ] Payments
-- [ ] Refunds
-- [ ] Payouts
-- [ ] Inventory
-- [ ] Users
+### Explicit non-goals for 20.1
 
-### Security
+- Full CMS page builder / menu drag-drop / SEO center
+- Printers / registers / barcode hardware
+- Payouts / refunds / commission engine
+- Arbitrary visual website builder
+- Parallel auth system
 
-- [ ] Admin RBAC
-- [ ] Audit logs
+---
+
+## Phase 20.2 — Vendor / Store admin ops
+
+- [ ] Admin UI + thin admin APIs for vendor lifecycle (approve/suspend) over existing handlers
+- [ ] Store lifecycle admin surfaces
+- [ ] Optional verification document fields (when domain supports them)
+- [ ] Vendor/store staff management from admin shell
+
+---
+
+## Phase 20.3 — Website Control Center _(deferred)_
+
+**Deferred until Settings + Media + CMS are ready.** Do not start page builder work
+in parallel with unfinished 20.1/20.2 foundation.
+
+When unblocked:
+
+- [ ] Branding / theme / nav / footer / CMS pages + SEO
+- [ ] Draft → publish + versioning
+- [ ] Preview + `GET /api/v1/storefront/config` effective inheritance endpoint
+- [ ] Redis cache for effective config only; DB remains truth
+
+---
+
+## Phase 20.4 — Commerce config surfaces
+
+Ship admin UIs **only after** owning domain modules exist:
+
+- [ ] Payment provider / COD admin surfaces (Payment + store/vendor COD settings)
+- [ ] Shipping / courier account admin surfaces (Fulfillment)
+- [ ] Tax / commission admin surfaces (dedicated engines or later phases)
+
+---
+
+## Phase 20.5 — POS admin
+
+- [ ] Registers / printers / barcode after POS domain expands beyond receipts
+- [ ] Receipt template management remains store-scoped (already started)
+
+---
+
+## Phase 20.6 — Operations lists
+
+- [ ] Orders / payments / inventory / users admin lists via existing modules
+- [ ] No duplicate business rules in the admin BFF
+
+---
+
+## Phase 20.7 — Security dashboard
+
 - [ ] Login history
-- [ ] Security events
+- [ ] Security events (align with Phase 22 audit expansion)
+
+---
+
+## Phase 20.8 — Reports entry
+
+- [ ] Operational counts from existing APIs where safe
+- [ ] Analytical widgets deferred to Phase 21 read models
 
 ---
 

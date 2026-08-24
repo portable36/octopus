@@ -64,7 +64,7 @@ Unified checkout may create multiple orders when fulfillment, payout, tax, or pa
 
 ## Phase 09 notes
 
-`ORDER_PORT` is owned by `OrderModule` (Phase 10). Temporary `PAYMENT_PORT` adapter still persists payment intents in checkout-owned tables until Phase 11.
+`ORDER_PORT` is owned by `OrderModule` (Phase 10). `PAYMENT_PORT` is owned by `PaymentModule` (Phase 11), including online COD. Checkout requires `paymentMethod`, creates **one intent per store order** after orders exist, and uses a longer inventory reservation TTL for COD.
 
 ## Related
 

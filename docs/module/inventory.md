@@ -27,6 +27,7 @@ BEGIN
   lock inventory row / optimistic version check
   verify available >= requested
   create or update reservation
+  (checkout passes method-aware expiresAt — COD uses longer TTL, default 72h)
   adjust reserved/available atomically
   insert outbox event
 COMMIT

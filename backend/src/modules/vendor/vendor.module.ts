@@ -12,11 +12,12 @@ import { VendorOrmEntity } from './infrastructure/persistence/vendor.orm-entity'
 import { VendorStaffOrmEntity } from './infrastructure/persistence/vendor-staff.orm-entity';
 import { VendorRepositoryAdapter } from './infrastructure/persistence/vendor.repository.adapter';
 import { VendorController } from './presentation/http/vendor.controller';
+import { AdminVendorController } from './presentation/http/admin-vendor.controller';
 
 @Global()
 @Module({
   imports: [DatabaseModule, MikroOrmModule.forFeature([VendorOrmEntity, VendorStaffOrmEntity])],
-  controllers: [VendorController],
+  controllers: [VendorController, AdminVendorController],
   providers: [
     RegisterVendorHandler,
     VendorLifecycleHandler,

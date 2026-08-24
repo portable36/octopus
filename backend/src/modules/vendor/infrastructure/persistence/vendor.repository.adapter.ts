@@ -59,6 +59,13 @@ export class VendorRepositoryAdapter implements VendorRepository {
     });
   }
 
+  public async listAll(): Promise<Vendor[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(VendorOrmEntity, {}, { populate: ['staff'] });
+      return entities.map(toDomain);
+    });
+  }
+
   public async existsBySlug(slug: string): Promise<boolean> {
     return withRlsContext(this.em, async (tx) => {
       const count = await tx.count(VendorOrmEntity, { slug });

@@ -7,5 +7,6 @@ export interface StoreRepository {
   findById(id: string): Promise<Store | null>;
   findByVendorId(vendorId: string): Promise<Store[]>;
   findByStaffUserId(userId: string): Promise<Store[]>;
+  listAll(): Promise<Store[]>;
   existsByVendorAndSlug(vendorId: string, slug: string): Promise<boolean>;
 }

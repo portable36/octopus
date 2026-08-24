@@ -4,7 +4,7 @@ import type {
   CheckoutOrderCreateResult,
 } from '../../../../shared-kernel/application/ports/order.port';
 import { Order } from '../../domain/aggregates/order.aggregate';
-import { OrderNotFoundError } from '../errors/order.errors';
+import { OrderNotFoundError, OrderPaymentMismatchError } from '../errors/order.errors';
 import { ORDER_REPOSITORY, type OrderRepository } from '../ports/order-repository.interface';
 import { OrderAuthorizationService } from '../services/order-authorization.service';
 
@@ -24,6 +24,7 @@ export class CreateOrderFromCheckoutHandler {
       customerId: input.customerId,
       vendorId: input.vendorId,
       storeId: input.storeId,
+      paymentMethod: input.paymentMethod,
       currencyCode: input.currencyCode,
       subtotalMinor: input.subtotalMinor,
       discountMinor: input.discountMinor,
@@ -232,6 +233,74 @@ export class OrderLifecycleHandler {
   }): Promise<Order> {
     const order = await this.requireFulfillment(input);
     order.markReturned();
+    await this.orders.save(order);
+    return order;
+  }
+
+  /** Trusted Payment-module entry — no staff RBAC; amount verified by caller. */
+  public async markPaidFromPayment(input: {
+    readonly orderId: string;
+    readonly amountMinor: number;
+    readonly currencyCode: string;
+  }): Promise<Order> {
+    const order = await this.orders.findById(input.orderId);
+    if (!order) {
+      throw new OrderNotFoundError();
+    }
+    if (
+      order.totalMinor !== input.amountMinor ||
+      order.currencyCode !== input.currencyCode.trim().toUpperCase()
+    ) {
+      throw new OrderPaymentMismatchError();
+    }
+    order.markPaid();
+    await this.orders.save(order);
+    return order;
+  }
+
+  public async getFulfillmentSnapshot(orderId: string): Promise<Order | null> {
+    return this.orders.findById(orderId);
+  }
+
+  public async prepareShipment(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+    readonly lines: readonly { readonly lineId: string; readonly quantity: number }[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    if (order.paymentMethod !== 'COD' && order.paymentStatus !== 'PAID') {
+      throw new OrderNotFoundError('Order must be paid before shipment (non-COD).');
+    }
+    for (const line of input.lines) {
+      const existing = order.lines.find((l) => l.lineId === line.lineId);
+      if (!existing) {
+        throw new OrderNotFoundError(`Order line ${line.lineId} was not found.`);
+      }
+      if (existing.fulfilledQuantity + line.quantity > existing.quantity) {
+        throw new OrderNotFoundError(`Cannot fulfill more than ordered for line ${line.lineId}.`);
+      }
+    }
+    if (order.status === 'PENDING_PAYMENT' && order.paymentMethod === 'COD') {
+      order.startProcessing();
+      await this.orders.save(order);
+    } else if (order.status === 'PAID') {
+      order.startProcessing();
+      await this.orders.save(order);
+    }
+    return (await this.orders.findById(order.id.value))!;
+  }
+
+  public async fulfillShipmentLines(input: {
+    readonly orderId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+    readonly lines: readonly { readonly lineId: string; readonly quantity: number }[];
+  }): Promise<Order> {
+    const order = await this.requireFulfillment(input);
+    for (const line of input.lines) {
+      order.fulfillLine(line.lineId, line.quantity);
+    }
     await this.orders.save(order);
     return order;
   }

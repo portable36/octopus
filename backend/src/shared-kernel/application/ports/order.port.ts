@@ -18,12 +18,15 @@ export interface CheckoutOrderLineInput {
   readonly warehouseId: string;
 }
 
+export type OrderPaymentMethodDto = 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
+
 export interface CheckoutOrderCreateInput {
   readonly checkoutId: string;
   readonly idempotencyKey: string;
   readonly customerId: string | null;
   readonly vendorId: string;
   readonly storeId: string;
+  readonly paymentMethod: OrderPaymentMethodDto;
   readonly currencyCode: string;
   readonly subtotalMinor: number;
   readonly discountMinor: number;
@@ -60,6 +63,54 @@ export interface CheckoutOrderCreateResult {
   readonly status: 'PENDING_PAYMENT';
 }
 
+export interface MarkOrderPaidFromPaymentInput {
+  readonly orderId: string;
+  readonly paymentIntentId: string;
+  readonly amountMinor: number;
+  readonly currencyCode: string;
+}
+
+export interface OrderFulfillmentLineSnapshot {
+  readonly lineId: string;
+  readonly quantity: number;
+  readonly fulfilledQuantity: number;
+  readonly productId: string;
+  readonly variantId: string;
+}
+
+export interface OrderFulfillmentSnapshot {
+  readonly orderId: string;
+  readonly orderNumber: string;
+  readonly vendorId: string;
+  readonly storeId: string;
+  readonly status: string;
+  readonly paymentStatus: string;
+  readonly paymentMethod: OrderPaymentMethodDto;
+  readonly currencyCode: string;
+  readonly totalMinor: number;
+  readonly shippingAddress: {
+    readonly line1: string;
+    readonly line2?: string;
+    readonly city: string;
+    readonly region?: string;
+    readonly postalCode?: string;
+    readonly countryCode: string;
+  };
+  readonly lines: readonly OrderFulfillmentLineSnapshot[];
+}
+
+export interface PrepareOrderShipmentInput {
+  readonly orderId: string;
+  readonly actorUserId: string;
+  readonly actorRoles: readonly string[];
+  readonly lines: readonly { readonly lineId: string; readonly quantity: number }[];
+}
+
 export interface OrderPort {
   createFromCheckout(input: CheckoutOrderCreateInput): Promise<CheckoutOrderCreateResult>;
+  /** Trusted Payment-module seam — never expose to storefront. */
+  markPaidFromPayment(input: MarkOrderPaidFromPaymentInput): Promise<void>;
+  getFulfillmentSnapshot(orderId: string): Promise<OrderFulfillmentSnapshot | null>;
+  prepareShipment(input: PrepareOrderShipmentInput): Promise<OrderFulfillmentSnapshot>;
+  fulfillShipmentLines(input: PrepareOrderShipmentInput): Promise<void>;
 }

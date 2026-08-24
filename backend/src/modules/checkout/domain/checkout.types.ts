@@ -1,5 +1,7 @@
 export type CheckoutStatus = 'COMPLETED' | 'FAILED';
 
+export type CheckoutPaymentMethod = 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
+
 export interface ShippingAddress {
   readonly line1: string;
   readonly line2?: string;
@@ -26,14 +28,19 @@ export interface CheckoutOrderRef {
   readonly storeId: string;
   readonly totalMinor: number;
   readonly currencyCode: string;
+  readonly paymentMethod: CheckoutPaymentMethod;
+  readonly paymentStatus: 'PENDING';
 }
 
 export interface CheckoutPaymentRef {
   readonly paymentIntentId: string;
+  readonly orderId: string;
+  readonly paymentMethod: CheckoutPaymentMethod;
   readonly amountMinor: number;
   readonly currencyCode: string;
-  readonly clientSecret: string;
   readonly status: string;
+  /** Gateway methods only — never present for COD. */
+  readonly clientSecret?: string;
 }
 
 export interface CheckoutOutcome {
@@ -41,8 +48,9 @@ export interface CheckoutOutcome {
   readonly cartId: string;
   readonly cartVersion: number;
   readonly status: 'COMPLETED';
+  readonly paymentMethod: CheckoutPaymentMethod;
   readonly totals: CheckoutTotals;
   readonly orders: readonly CheckoutOrderRef[];
-  readonly payment: CheckoutPaymentRef;
+  readonly payments: readonly CheckoutPaymentRef[];
   readonly reservationIds: readonly string[];
 }

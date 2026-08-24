@@ -1,27 +1,9 @@
 import type { Permission } from '../enums/permission.enum';
+import { PERMISSIONS } from '../enums/permission.enum';
 import type { Role } from '../enums/role.enum';
 
 const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
-  PLATFORM_ADMIN: [
-    'catalog.product.read',
-    'catalog.product.create',
-    'catalog.product.update',
-    'inventory.adjust',
-    'inventory.read',
-    'pricing.read',
-    'pricing.write',
-    'cart.read',
-    'cart.write',
-    'checkout.submit',
-    'order.read',
-    'order.fulfill',
-    'payout.read',
-    'payout.request',
-    'vendor.manage',
-    'store.manage',
-    'pos.receipt_template.manage',
-    'pos.receipt.view',
-  ],
+  PLATFORM_ADMIN: [...PERMISSIONS],
   VENDOR_OWNER: [
     'catalog.product.read',
     'catalog.product.create',
@@ -34,12 +16,17 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'checkout.submit',
     'order.read',
     'order.fulfill',
+    'payment.cod.collect',
     'payout.read',
     'payout.request',
     'vendor.manage',
     'store.manage',
     'pos.receipt_template.manage',
     'pos.receipt.view',
+    'settings.read',
+    'settings.write',
+    'media.read',
+    'website.read',
   ],
   VENDOR_STAFF: [
     'catalog.product.read',
@@ -53,6 +40,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'order.read',
     'order.fulfill',
     'pos.receipt.view',
+    'settings.read',
+    'media.read',
   ],
   STORE_MANAGER: [
     'catalog.product.read',
@@ -64,9 +53,16 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'cart.read',
     'order.read',
     'order.fulfill',
+    'payment.cod.collect',
     'store.manage',
     'pos.receipt_template.manage',
     'pos.receipt.view',
+    'settings.read',
+    'settings.write',
+    'media.read',
+    'media.write',
+    'website.read',
+    'website.update',
   ],
   STORE_STAFF: [
     'catalog.product.read',
@@ -76,6 +72,8 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'order.read',
     'order.fulfill',
     'pos.receipt.view',
+    'settings.read',
+    'media.read',
   ],
   CUSTOMER: [
     'catalog.product.read',

@@ -10,10 +10,13 @@ alwaysApply: false
 # Order and Payment Rules
 
 - Order status changes use explicit domain methods; no arbitrary string assignment.
-- Valid path: `PENDING_PAYMENT -> PAID -> PROCESSING -> PARTIALLY_FULFILLED -> FULFILLED -> COMPLETED`.
+- Default path: `PENDING_PAYMENT -> PAID -> PROCESSING -> PARTIALLY_FULFILLED -> FULFILLED -> COMPLETED`.
+- **COD exception:** when `paymentMethod === 'COD'` and `paymentStatus === PENDING`, `PENDING_PAYMENT -> PROCESSING` (and further fulfillment) is allowed; `markPaid()` may then set `paymentStatus=PAID` without reverting status.
+- `markPaid()` is only invoked from the Payment module (`OrderPort.markPaidFromPayment` / CollectCodPayment). No storefront mark-paid endpoint.
 - Payment callbacks are untrusted: verify signature, amount, currency, references, and idempotency before marking paid.
 - Never set order to PAID from frontend redirect alone.
 - Provider SDKs stay in infrastructure adapters implementing `PaymentProvider`.
+- Online COD is Payment-owned; POS `CASH` remains till/shift-scoped and must not be reused for online COD.
 - Refunds cannot exceed refundable amount; refund commands must be idempotent.
 - Coordinate inventory commit/release with payment and fulfillment through documented ports/events.
 - Financial side effects emit outbox events for Payout ledger projectors.

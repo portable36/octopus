@@ -27,6 +27,7 @@ describe('VendorLifecycleHandler authorization', () => {
         findByOwnerUserId: vi.fn(),
         findByStaffUserId: vi.fn(),
         existsBySlug: vi.fn(),
+        listAll: vi.fn(),
       },
       {
         findByUserId: vi.fn(),
@@ -61,6 +62,7 @@ describe('VendorLifecycleHandler authorization', () => {
         findByOwnerUserId: vi.fn(),
         findByStaffUserId: vi.fn(),
         existsBySlug: vi.fn(),
+        listAll: vi.fn(),
       },
       {
         findByUserId: vi.fn(),
@@ -94,6 +96,7 @@ describe('VendorLifecycleHandler authorization', () => {
         findByOwnerUserId: vi.fn(),
         findByStaffUserId: vi.fn(),
         existsBySlug: vi.fn(),
+        listAll: vi.fn(),
       },
       {
         findByUserId: vi.fn(),

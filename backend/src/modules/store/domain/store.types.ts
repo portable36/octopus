@@ -22,6 +22,10 @@ export interface StoreSettings {
   readonly timezone: string;
   readonly locale: string;
   readonly acceptsOnlineOrders: boolean;
+  readonly codEnabled: boolean;
+  readonly codMinAmountMinor: number;
+  readonly codMaxAmountMinor: number | null;
+  readonly codReservationTtlHours: number;
 }
 
 export interface StoreStaffMember {

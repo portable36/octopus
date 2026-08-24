@@ -52,6 +52,7 @@ export class CheckoutController {
       cartId: body.cartId,
       expectedCartVersion: body.expectedCartVersion,
       idempotencyKey: idempotencyKey.trim(),
+      paymentMethod: body.paymentMethod,
       shippingAddress: {
         line1: body.shippingAddress.line1,
         city: body.shippingAddress.city,

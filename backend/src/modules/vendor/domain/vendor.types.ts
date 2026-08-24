@@ -27,6 +27,10 @@ export interface VendorSettings {
   readonly currencyCode: string;
   readonly timezone: string;
   readonly acceptsOnlineOrders: boolean;
+  readonly codEnabled: boolean;
+  readonly codMinAmountMinor: number;
+  readonly codMaxAmountMinor: number | null;
+  readonly codReservationTtlHours: number;
 }
 
 export interface VendorStaffMember {

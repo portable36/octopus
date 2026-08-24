@@ -40,6 +40,7 @@ import { IdentityExceptionFilter } from './filters/identity-exception.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import type { AuthPrincipal } from '../../application/dto/auth-session.dto';
+import { AuthorizationService } from '../../application/services/authorization.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,6 +54,7 @@ export class AuthController {
     private readonly changePassword: ChangePasswordHandler,
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly resetPassword: ResetPasswordHandler,
+    private readonly authorization: AuthorizationService,
     private readonly config: AppConfigService,
   ) {}
 
@@ -121,7 +123,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Return the authenticated principal' })
   me(@CurrentUser() user: AuthPrincipal): MeResponseDto {
-    return user;
+    return {
+      ...user,
+      permissions: this.authorization.listPermissions(user.roles),
+    };
   }
 
   @Post('change-password')

@@ -74,6 +74,82 @@ function quoteFor(storeId: string, lines: { lineId: string; quantity: number; un
   };
 }
 
+function accessMocks(codEnabled = true) {
+  return {
+    stores: {
+      findById: vi.fn(async (storeId: string) => ({
+        storeId,
+        vendorId: storeId === 'store-a' ? 'vendor-a' : 'vendor-b',
+        status: 'active',
+        displayName: storeId,
+        locale: 'en-BD',
+        currencyCode: 'BDT',
+        addressLine1: 'x',
+        city: 'Dhaka',
+        region: null,
+        managerUserIds: [],
+        staffUserIds: [],
+        codEnabled,
+        codMinAmountMinor: 0,
+        codMaxAmountMinor: null,
+        codReservationTtlHours: 72,
+      })),
+    },
+    vendors: {
+      findById: vi.fn(async (vendorId: string) => ({
+        vendorId,
+        status: 'active',
+        ownerUserId: 'owner-1',
+        staffUserIds: [],
+        currencyCode: 'BDT',
+        codEnabled,
+        codMinAmountMinor: 0,
+        codMaxAmountMinor: null,
+        codReservationTtlHours: 72,
+      })),
+    },
+    config: {
+      codReservationTtlHours: 72,
+      codMinAmountMinor: 0,
+      codMaxAmountMinor: null,
+    },
+  };
+}
+
+function buildHandler(deps: {
+  checkouts?: unknown;
+  carts?: unknown;
+  pricing?: unknown;
+  inventory?: unknown;
+  orders?: unknown;
+  payments?: unknown;
+  codEnabled?: boolean;
+}) {
+  const access = accessMocks(deps.codEnabled ?? true);
+  return new CheckoutSubmitHandler(
+    (deps.checkouts ?? {
+      findCompletedByIdempotencyKey: vi.fn(async () => null),
+      saveCompleted: vi.fn(),
+    }) as never,
+    (deps.carts ?? {
+      validate: vi.fn(async () => ({ cart: baseCart(), issues: [], valid: true })),
+      markCheckedOut: vi.fn(),
+      getOwnedCart: vi.fn(),
+    }) as never,
+    (deps.pricing ?? { quote: vi.fn(), recordUsage: vi.fn() }) as never,
+    (deps.inventory ?? {
+      pickWarehouseForReservation: vi.fn(),
+      reserve: vi.fn(),
+      release: vi.fn(),
+    }) as never,
+    (deps.orders ?? { createFromCheckout: vi.fn() }) as never,
+    (deps.payments ?? { createIntent: vi.fn() }) as never,
+    access.stores as never,
+    access.vendors as never,
+    access.config as never,
+  );
+}
+
 describe('CheckoutSubmitHandler', () => {
   const address = {
     line1: '12 Road',
@@ -81,7 +157,7 @@ describe('CheckoutSubmitHandler', () => {
     countryCode: 'BD',
   };
 
-  it('creates one order per vendor/store and is idempotent on retry', async () => {
+  it('creates one order + payment intent per store and is idempotent on retry', async () => {
     const cart = baseCart();
     const outcomeStore: { value: CheckoutOutcome | null } = { value: null };
     const checkouts = {
@@ -127,36 +203,33 @@ describe('CheckoutSubmitHandler', () => {
       })),
     };
     const payments = {
-      createIntent: vi.fn(async () => ({
-        paymentIntentId: 'pi-1',
-        status: 'REQUIRES_PAYMENT' as const,
-        amountMinor: 2000,
+      createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
+        paymentIntentId: `pi-${input.orderId}`,
+        paymentMethod: 'COD' as const,
+        status: 'AWAITING_COLLECTION',
+        amountMinor: input.amountMinor,
         currencyCode: 'BDT',
-        clientSecret: 'secret',
       })),
     };
 
-    const handler = new CheckoutSubmitHandler(
-      checkouts as never,
-      carts as never,
-      pricing as never,
-      inventory as never,
-      orders as never,
-      payments as never,
-    );
+    const handler = buildHandler({ checkouts, carts, pricing, inventory, orders, payments });
 
     const first = await handler.submit({
       owner: { customerId: 'customer-1' },
       cartId: 'cart-1',
       expectedCartVersion: 3,
       idempotencyKey: 'idem-1-xxxxxx',
+      paymentMethod: 'COD',
       shippingAddress: address,
       shippingMethod: 'STANDARD',
       shippingMinor: 0,
     });
     expect(first.orders).toHaveLength(2);
-    expect(first.orders.map((o) => o.storeId).sort()).toEqual(['store-a', 'store-b']);
+    expect(first.payments).toHaveLength(2);
+    expect(first.payments.every((p) => p.status === 'AWAITING_COLLECTION')).toBe(true);
+    expect(first.payments.every((p) => p.clientSecret === undefined)).toBe(true);
     expect(orders.createFromCheckout).toHaveBeenCalledTimes(2);
+    expect(payments.createIntent).toHaveBeenCalledTimes(2);
     expect(carts.markCheckedOut).toHaveBeenCalled();
 
     const second = await handler.submit({
@@ -164,6 +237,7 @@ describe('CheckoutSubmitHandler', () => {
       cartId: 'cart-1',
       expectedCartVersion: 3,
       idempotencyKey: 'idem-1-xxxxxx',
+      paymentMethod: 'COD',
       shippingAddress: address,
       shippingMethod: 'STANDARD',
     });
@@ -171,28 +245,92 @@ describe('CheckoutSubmitHandler', () => {
     expect(orders.createFromCheckout).toHaveBeenCalledTimes(2);
   });
 
-  it('fails on price/stock validation and coupon errors without creating orders', async () => {
-    const checkouts = {
-      findCompletedByIdempotencyKey: vi.fn(async () => null),
-      saveCompleted: vi.fn(),
+  it('rejects COD when store or vendor disables it', async () => {
+    const pricing = {
+      quote: vi.fn(async (input: { storeId: string }) =>
+        input.storeId === 'store-a'
+          ? quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }])
+          : quoteFor('store-b', [{ lineId: 'line-b', quantity: 2, unit: 500 }]),
+      ),
+      recordUsage: vi.fn(),
     };
-    const carts = {
-      validate: vi.fn(async () => ({
-        cart: baseCart(),
-        issues: [{ lineId: 'line-a', code: 'PRICE_CHANGED', message: 'price' }],
-        valid: false,
+    const handler = buildHandler({ pricing, codEnabled: false });
+    await expect(
+      handler.submit({
+        owner: { customerId: 'customer-1' },
+        cartId: 'cart-1',
+        expectedCartVersion: 3,
+        idempotencyKey: 'idem-cod-off',
+        paymentMethod: 'COD',
+        shippingAddress: address,
+        shippingMethod: 'STANDARD',
+      }),
+    ).rejects.toBeInstanceOf(CheckoutValidationError);
+  });
+
+  it('gateway createIntent still receives non-COD method and can return clientSecret', async () => {
+    const pricing = {
+      quote: vi.fn(async (input: { storeId: string }) =>
+        input.storeId === 'store-a'
+          ? quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }])
+          : quoteFor('store-b', [{ lineId: 'line-b', quantity: 2, unit: 500 }]),
+      ),
+      recordUsage: vi.fn(),
+    };
+    const inventory = {
+      pickWarehouseForReservation: vi.fn(async () => ({ warehouseId: 'wh-1', available: 10 })),
+      reserve: vi.fn(async () => ({ reservationId: Uniqueish(), availableAfter: 9 })),
+      release: vi.fn(),
+    };
+    const orders = {
+      createFromCheckout: vi.fn(async (input: { storeId: string; totalMinor: number }) => ({
+        orderId: `order-${input.storeId}`,
+        orderNumber: `ORD-${input.storeId}`,
+        vendorId: input.storeId === 'store-a' ? 'vendor-a' : 'vendor-b',
+        storeId: input.storeId,
+        totalMinor: input.totalMinor,
+        currencyCode: 'BDT',
+        status: 'PENDING_PAYMENT' as const,
       })),
-      markCheckedOut: vi.fn(),
-      getOwnedCart: vi.fn(),
     };
-    const handler = new CheckoutSubmitHandler(
-      checkouts as never,
-      carts as never,
-      { quote: vi.fn(), recordUsage: vi.fn() } as never,
-      { pickWarehouseForReservation: vi.fn(), reserve: vi.fn(), release: vi.fn() } as never,
-      { createFromCheckout: vi.fn() } as never,
-      { createIntent: vi.fn() } as never,
+    const payments = {
+      createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
+        paymentIntentId: `pi-${input.orderId}`,
+        paymentMethod: 'SSLCOMMERZ' as const,
+        status: 'REQUIRES_PAYMENT',
+        amountMinor: input.amountMinor,
+        currencyCode: 'BDT',
+        clientSecret: 'secret',
+      })),
+    };
+    const handler = buildHandler({ pricing, inventory, orders, payments });
+    const result = await handler.submit({
+      owner: { customerId: 'customer-1' },
+      cartId: 'cart-1',
+      expectedCartVersion: 3,
+      idempotencyKey: 'idem-gateway',
+      paymentMethod: 'SSLCOMMERZ',
+      shippingAddress: address,
+      shippingMethod: 'STANDARD',
+    });
+    expect(result.payments[0]?.clientSecret).toBe('secret');
+    expect(payments.createIntent).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMethod: 'SSLCOMMERZ' }),
     );
+  });
+
+  it('fails on price/stock validation and coupon errors without creating orders', async () => {
+    const handler = buildHandler({
+      carts: {
+        validate: vi.fn(async () => ({
+          cart: baseCart(),
+          issues: [{ lineId: 'line-a', code: 'PRICE_CHANGED', message: 'price' }],
+          valid: false,
+        })),
+        markCheckedOut: vi.fn(),
+        getOwnedCart: vi.fn(),
+      },
+    });
 
     await expect(
       handler.submit({
@@ -200,21 +338,12 @@ describe('CheckoutSubmitHandler', () => {
         cartId: 'cart-1',
         expectedCartVersion: 3,
         idempotencyKey: 'idem-price',
+        paymentMethod: 'SSLCOMMERZ',
         shippingAddress: address,
         shippingMethod: 'STANDARD',
       }),
     ).rejects.toBeInstanceOf(CheckoutValidationError);
 
-    const cartsOk = {
-      validate: vi.fn(async () => ({ cart: baseCart(), issues: [], valid: true })),
-      markCheckedOut: vi.fn(),
-      getOwnedCart: vi.fn(),
-    };
-    const inventoryFail = {
-      pickWarehouseForReservation: vi.fn(async () => null),
-      reserve: vi.fn(),
-      release: vi.fn(),
-    };
     const pricingOk = {
       quote: vi.fn(async (input: { storeId: string }) =>
         input.storeId === 'store-a'
@@ -223,48 +352,46 @@ describe('CheckoutSubmitHandler', () => {
       ),
       recordUsage: vi.fn(),
     };
-    const handlerStock = new CheckoutSubmitHandler(
-      checkouts as never,
-      cartsOk as never,
-      pricingOk as never,
-      inventoryFail as never,
-      { createFromCheckout: vi.fn() } as never,
-      { createIntent: vi.fn() } as never,
-    );
+    const handlerStock = buildHandler({
+      pricing: pricingOk,
+      inventory: {
+        pickWarehouseForReservation: vi.fn(async () => null),
+        reserve: vi.fn(),
+        release: vi.fn(),
+      },
+    });
     await expect(
       handlerStock.submit({
         owner: { customerId: 'customer-1' },
         cartId: 'cart-1',
         expectedCartVersion: 3,
         idempotencyKey: 'idem-stock',
+        paymentMethod: 'SSLCOMMERZ',
         shippingAddress: address,
         shippingMethod: 'STANDARD',
       }),
     ).rejects.toBeInstanceOf(CheckoutInventoryError);
 
-    const pricingFail = {
-      quote: vi.fn(async () => {
-        const err = Object.assign(new Error('Coupon expired'), {
-          code: 'PRICING_COUPON_EXPIRED',
-        });
-        throw err;
-      }),
-      recordUsage: vi.fn(),
-    };
-    const handlerCoupon = new CheckoutSubmitHandler(
-      checkouts as never,
-      cartsOk as never,
-      pricingFail as never,
-      inventoryFail as never,
-      { createFromCheckout: vi.fn() } as never,
-      { createIntent: vi.fn() } as never,
-    );
+    const handlerCoupon = buildHandler({
+      pricing: {
+        quote: vi.fn(async () => {
+          throw Object.assign(new Error('Coupon expired'), { code: 'PRICING_COUPON_EXPIRED' });
+        }),
+        recordUsage: vi.fn(),
+      },
+      inventory: {
+        pickWarehouseForReservation: vi.fn(async () => null),
+        reserve: vi.fn(),
+        release: vi.fn(),
+      },
+    });
     await expect(
       handlerCoupon.submit({
         owner: { customerId: 'customer-1' },
         cartId: 'cart-1',
         expectedCartVersion: 3,
         idempotencyKey: 'idem-coupon',
+        paymentMethod: 'SSLCOMMERZ',
         shippingAddress: address,
         shippingMethod: 'STANDARD',
         couponCode: 'OLD',
@@ -273,12 +400,8 @@ describe('CheckoutSubmitHandler', () => {
   });
 
   it('rejects stale cart version (concurrent checkout)', async () => {
-    const handler = new CheckoutSubmitHandler(
-      {
-        findCompletedByIdempotencyKey: vi.fn(async () => null),
-        saveCompleted: vi.fn(),
-      } as never,
-      {
+    const handler = buildHandler({
+      carts: {
         validate: vi.fn(async () => ({
           cart: baseCart({ version: 9 }),
           issues: [],
@@ -286,12 +409,8 @@ describe('CheckoutSubmitHandler', () => {
         })),
         markCheckedOut: vi.fn(),
         getOwnedCart: vi.fn(),
-      } as never,
-      { quote: vi.fn(), recordUsage: vi.fn() } as never,
-      { pickWarehouseForReservation: vi.fn(), reserve: vi.fn(), release: vi.fn() } as never,
-      { createFromCheckout: vi.fn() } as never,
-      { createIntent: vi.fn() } as never,
-    );
+      },
+    });
 
     await expect(
       handler.submit({
@@ -299,6 +418,7 @@ describe('CheckoutSubmitHandler', () => {
         cartId: 'cart-1',
         expectedCartVersion: 3,
         idempotencyKey: 'idem-concurrent',
+        paymentMethod: 'SSLCOMMERZ',
         shippingAddress: address,
         shippingMethod: 'STANDARD',
       }),

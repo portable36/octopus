@@ -36,9 +36,9 @@ npx.cmd playwright show-report
 
 ## Layout
 
-| Path | Role |
-| --- | --- |
+| Path                   | Role                                   |
+| ---------------------- | -------------------------------------- |
 | `playwright.config.ts` | baseURL, Chromium project, `webServer` |
-| `e2e/*.spec.ts` | specs (role/label locators) |
+| `e2e/*.spec.ts`        | specs (role/label locators)            |
 
 `PLAYWRIGHT_BASE_URL` overrides the default `http://127.0.0.1:3001`.

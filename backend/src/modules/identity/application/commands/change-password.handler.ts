@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  NOTIFICATION_PORT,
+  type NotificationPort,
+} from '../../../../shared-kernel/application/ports/notification.port';
+import {
   PasswordPolicy,
   PasswordPolicyViolationError,
 } from '../../domain/value-objects/password-policy.value-object';
@@ -32,6 +36,7 @@ export class ChangePasswordHandler {
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
+    @Inject(NOTIFICATION_PORT) private readonly notifications: NotificationPort,
   ) {}
 
   public async execute(command: ChangePasswordCommand): Promise<void> {
@@ -53,6 +58,17 @@ export class ChangePasswordHandler {
     user.changePassword(newHash);
     await this.users.save(user);
     await this.refreshTokenStore.revokeAllForUser(user.id.value);
+
+    // ponytail: identity has no outbox yet — notify inline; upgrade when identity_outbox lands.
+    await this.notifications.notify({
+      eventId: `notify:password_changed:${user.id.value}:${Date.now()}`,
+      recipientUserId: user.id.value,
+      recipientEmail: user.email.value,
+      type: 'security.password_changed',
+      templateKey: 'security.password_changed',
+      category: 'SECURITY',
+      channels: ['IN_APP', 'EMAIL'],
+    });
   }
 }
 

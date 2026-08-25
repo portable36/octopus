@@ -868,10 +868,10 @@ Consumer (idempotent Redis NX by outbox id)
 - [x] Domain events (`octopus.domain-events`) — log + dedupe consumer
 - [x] Payment (`octopus.payment`) — COD event consumer (idempotent; side effects later)
 - [ ] Email (`octopus.email`)
-- [ ] Notification (`octopus.notification`)
-- [ ] Search indexing (`octopus.search-indexing`)
+- [x] Notification (`octopus.notification`)
+- [x] Search indexing (`octopus.search-indexing`)
 - [ ] Webhooks (`octopus.webhooks`)
-- [ ] Payout (`octopus.payout`)
+- [x] Payout (`octopus.payout`)
 - [ ] Analytics (`octopus.analytics`)
 - [x] Dead-letter (`octopus.dead-letter`)
 
@@ -1064,8 +1064,7 @@ Docs: [docs/module/payout.md](./module/payout.md), [docs/domains/commissions.md]
 
 Async Meilisearch **read model**. PostgreSQL/domain remains truth (not MySQL). Redis/BullMQ = transport only.
 
-**Prereqs:** Phase 12 Messaging · Catalog `StoreOffer` + Product · Inventory availability ports.  
-**Gap to close first:** Catalog domain events exist but are **not yet written to an outbox** — add `catalog_outbox` (same pattern as payment/returns) before indexing works.
+**Prereqs:** Phase 12 Messaging · Catalog `StoreOffer` + Product · Inventory availability ports.
 
 ### Index unit (Octopus-specific)
 
@@ -1082,18 +1081,18 @@ Prefer indexing **sellable store offers** (product + variant + store + vendor + 
 
 ### 16.2 — Catalog outbox → `octopus.search-indexing`
 
-- [ ] Persist catalog/offer events to `catalog_outbox`
-- [ ] Dispatcher routes to search queue (Phase 12 name already reserved)
-- [ ] Worker loads authoritative offer/product; upsert or delete; idempotent by document id
-- [ ] Out-of-order guard via `updatedAt` / aggregate version
-- [ ] Inventory signal → availability field only (checkout still revalidates Inventory)
+- [x] Persist catalog/offer events to `catalog_outbox`
+- [x] Dispatcher routes to search queue (Phase 12 name already reserved)
+- [x] Worker loads authoritative offer/product; upsert or delete; idempotent by document id
+- [x] Out-of-order guard via `updatedAt` / aggregate version
+- [x] Inventory signal → availability field only (checkout still revalidates Inventory)
 
 ### 16.3 — Search API + reindex
 
-- [ ] `GET /api/v1/search/products` allowlisted filters (q, category, vendor, store, price, availability, sort, page)
-- [ ] Facets transformed to app DTO (not raw Meili)
-- [ ] Admin `POST /admin/search/reindex` → queued batches (not inline HTTP)
-- [ ] Storefront context: store/vendor scope from server, not client trust
+- [x] `GET /api/v1/search/products` allowlisted filters (q, category, vendor, store, price, availability, sort, page)
+- [x] Facets transformed to app DTO (not raw Meili)
+- [x] Admin `POST /admin/search/reindex` → queued batches (not inline HTTP)
+- [x] Storefront context: store/vendor scope from server, not client trust
 
 ### Deferred
 
@@ -1118,17 +1117,17 @@ Prefer **OSS/free**: SMTP (or console stub in dev); SMS/push adapters stubbed un
 
 ### 17.1 — Core + in-app + email stub
 
-- [ ] Notification aggregate + delivery attempts + idempotency `(eventId, recipientId, type, channel)`
-- [ ] Templates (`key`, `channel`, `locale` en/bn) + version on send
-- [ ] `EmailProviderPort` (SMTP or log stub)
-- [ ] In-app persistence + `GET /notifications`, unread, mark-read
-- [ ] Queue `octopus.notification` (name reserved) + retry/DLQ
+- [x] Notification aggregate + delivery attempts + idempotency `(eventId, recipientId, type, channel)`
+- [x] Templates (`key`, `channel`, `locale` en/bn) + version on send
+- [x] `EmailProviderPort` (SMTP or log stub)
+- [x] In-app persistence + `GET /notifications`, unread, mark-read
+- [x] Queue `octopus.notification` (name reserved) + retry/DLQ
 
 ### 17.2 — Event consumers (transactional)
 
-- [ ] Wire existing outbox events: account/order/payment/shipment/COD as available
-- [ ] Preference gate (marketing optional; security/transactional mandatory)
-- [ ] Recipient resolution in Notification module (minimal PII in events)
+- [x] Wire existing outbox events: account/order/payment/shipment/COD as available
+- [x] Preference gate (marketing optional; security/transactional mandatory)
+- [x] Recipient resolution in Notification module (minimal PII in events)
 
 ### 17.3 — SMS / Push ports (adapters stub)
 
@@ -1159,12 +1158,12 @@ Customer-facing storefront on Next.js App Router. Backend remains authoritative 
 
 ### 18.1 — Storefront API foundation
 
-- [ ] Public catalog/PLP/PDP/category/store-by-slug (`@Public`, published only)
-- [ ] `@Public` search (allowlisted filters)
-- [ ] Guest → customer **cart merge** (server-side)
-- [ ] Customer module: profile + address book (owner-scoped)
-- [ ] Public media URL for thumbnails
-- [ ] Docs: `customer.md` / `marketplace.md` aligned
+- [x] Public catalog/PLP/PDP/category/store-by-slug (`@Public`, published only)
+- [x] `@Public` search (allowlisted filters)
+- [x] Guest → customer **cart merge** (server-side)
+- [x] Customer module: profile + address book (owner-scoped)
+- [x] Public media URL for thumbnails
+- [x] Docs: `customer.md` / `marketplace.md` aligned
 
 ### 18.2 — Browse shell (frontend)
 
@@ -1186,12 +1185,37 @@ Customer-facing storefront on Next.js App Router. Backend remains authoritative 
 
 ### 18.5 — SEO + resilience
 
+Gap analysis (full engine vs repo): [engineering/seo-gap-analysis.md](./engineering/seo-gap-analysis.md).  
+**Do not** ship keyword/AI/GSC/mass landing pages here — rule-based serve first after 18.1–18.2.
+
 - [ ] Metadata, canonical, sitemap, robots, Product/Breadcrumb JSON-LD (no fake ratings)
+- [ ] Category manual SEO respected; product/store fallbacks + templates (no overwrite of manual)
+- [ ] Facet/query URLs noindex or canonical to clean category (default strict)
 - [ ] 404 / unavailable / checkout failure / mobile-first pass
 
 ### Deferred (not Phase 18 blockers)
 
 - Wishlist · product reviews · in-app notifications (Phase 17) · flash/best-seller engines · WebSockets · Website CMS (20.3)
+- Full SEO center (keywords, health scanner, opportunities, AI drafts) — see seo-gap-analysis P2–P5 / marketing M8
+
+### 18.6 — Growth / measurement (after 18.3)
+
+GTM + GA4 + Meta Pixel/CAPI + attribution. Tags are **sinks only** (PostgreSQL domain = truth). Plan: [docs/module/marketing.md](./module/marketing.md).
+
+**Prereqs:** 18.3 checkout · 17.2 marketing consent · **order outbox** (`OrderPaid` not outboxed today).
+
+- [ ] Public marketing config (GTM/GA4/Pixel IDs; secrets server-only; env isolation)
+- [ ] ConsentManager + centralized TrackingService / dataLayer (no per-component DIY)
+- [ ] Order attribution snapshot (utm / gclid / fbclid); first + last touch
+- [ ] Server `purchase`/`refund` via outbox → GA4 MP + Meta CAPI; `transaction_id` / `event_id` dedupe
+- [ ] COD authoritative `purchase` only on `CodCollected`
+- [ ] `item_id` / `content_ids` = variant **SKU**
+- [ ] Admin Settings → Marketing (Meta, GA, GTM, Ads, Consent) + event audit log
+
+SEO metadata/sitemap: Phase **18.5** ([seo-gap-analysis.md](./engineering/seo-gap-analysis.md)). Keyword registry + Search Console UI: later (marketing.md M8).  
+First-party funnel/AOV/acquisition dashboards: Phase **21** (not GA4 as accounting).
+
+Deferred: vendor-owned tags · ROAS without ad spend · wishlist events · COD risk engine.
 
 Related: [customer.md](./module/customer.md), [marketplace.md](./module/marketplace.md), [product/ux-parity.md](./product/ux-parity.md), [frontend.md](./frontend.md) (Nike section = reference only).
 
@@ -1358,7 +1382,8 @@ Ship admin UIs **only after** owning domain modules exist:
 
 ## Objective
 
-Build read-optimized reporting.
+Build read-optimized **first-party** reporting (orders, revenue, AOV, store/vendor/product).  
+Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as the ledger.
 
 ### Reports
 
@@ -1385,8 +1410,10 @@ Events
       ↓
 Read models / reporting tables
       ↓
-Analytics
+Admin Analytics (funnel, acquisition from order attribution)
 ```
+
+Marketing tag sinks + consent: [docs/module/marketing.md](./module/marketing.md). Acquisition/campaign widgets may join order attribution snapshots; **ROAS only with ad-spend import**.
 
 ---
 

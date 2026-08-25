@@ -131,6 +131,8 @@ The admin route groups are:
 /inventory/adjustments
 /marketing/promotions
 /marketing/coupons
+/marketing/settings
+/marketing/events
 /content/pages
 /content/blocks
 /content/media

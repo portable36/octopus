@@ -64,4 +64,22 @@ export class CategoryRepositoryAdapter implements CategoryRepository {
       return ancestors;
     });
   }
+
+  public async findActiveBySlug(slug: string): Promise<Category | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(CategoryOrmEntity, { slug, status: 'active' });
+      return entity ? categoryToDomain(entity) : null;
+    });
+  }
+
+  public async listActive(): Promise<Category[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        CategoryOrmEntity,
+        { status: 'active' },
+        { orderBy: { sortOrder: 'asc', name: 'asc' } },
+      );
+      return entities.map(categoryToDomain);
+    });
+  }
 }

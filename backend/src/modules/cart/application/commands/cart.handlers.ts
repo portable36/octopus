@@ -273,6 +273,40 @@ export class CartCommandHandler {
     return cart;
   }
 
+  /**
+   * Merge guest cart lines into the authenticated customer's active cart, then abandon the guest cart.
+   */
+  public async mergeGuestCart(input: {
+    readonly customerId: string;
+    readonly guestToken: string;
+  }): Promise<Cart> {
+    const guestToken = input.guestToken.trim();
+    if (guestToken.length < 8) {
+      throw new CartAccessDeniedError();
+    }
+    const guest = await this.carts.findActiveByGuestToken(guestToken);
+    const customerCart = await this.getOrCreate({ customerId: input.customerId });
+    if (!guest || guest.id.value === customerCart.id.value) {
+      return customerCart;
+    }
+    for (const line of guest.lines) {
+      customerCart.addItem({
+        vendorId: line.vendorId,
+        storeId: line.storeId,
+        productId: line.productId,
+        variantId: line.variantId,
+        offerId: line.offerId,
+        quantity: line.quantity,
+        unitPriceSnapshotMinor: line.unitPriceSnapshotMinor,
+        currencyCode: line.currencyCode,
+      });
+    }
+    await this.carts.save(customerCart);
+    guest.abandon();
+    await this.carts.save(guest);
+    return customerCart;
+  }
+
   private assertOwner(owner: CartOwner): void {
     if (!owner.customerId && !owner.guestToken) {
       throw new CartAccessDeniedError();

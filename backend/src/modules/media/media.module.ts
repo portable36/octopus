@@ -6,10 +6,11 @@ import { MEDIA_REPOSITORY } from './application/ports/media-repository.interface
 import { MediaAssetOrmEntity } from './infrastructure/persistence/media-asset.orm-entity';
 import { MediaRepositoryAdapter } from './infrastructure/persistence/media.repository.adapter';
 import { AdminMediaController } from './presentation/http/admin-media.controller';
+import { PublicMediaController } from './presentation/http/public-media.controller';
 
 @Module({
   imports: [DatabaseModule, MikroOrmModule.forFeature([MediaAssetOrmEntity])],
-  controllers: [AdminMediaController],
+  controllers: [AdminMediaController, PublicMediaController],
   providers: [
     MediaHandlers,
     {
@@ -17,6 +18,6 @@ import { AdminMediaController } from './presentation/http/admin-media.controller
       useClass: MediaRepositoryAdapter,
     },
   ],
-  exports: [MediaHandlers],
+  exports: [MediaHandlers, MEDIA_REPOSITORY],
 })
 export class MediaModule {}

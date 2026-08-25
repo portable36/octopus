@@ -4,6 +4,7 @@ import { withRlsContext } from '../../../../shared-kernel/infrastructure/persist
 import type { VariantRepository } from '../../application/ports/variant-repository.interface';
 import type { Variant } from '../../domain/aggregates/variant.aggregate';
 import { applyVariantToOrm, variantToDomain } from './catalog.mappers';
+import { appendCatalogOutbox } from './append-catalog-outbox';
 import { ProductOrmEntity } from './product.orm-entity';
 import { VariantOrmEntity } from './variant.orm-entity';
 
@@ -21,6 +22,8 @@ export class VariantRepositoryAdapter implements VariantRepository {
       const entity = existing ?? new VariantOrmEntity();
       applyVariantToOrm(variant, product.vendorId, entity);
       await tx.persist(entity).flush();
+      await appendCatalogOutbox(tx, variant.id.value, variant.getUncommittedEvents());
+      variant.clearEvents();
     });
   }
 

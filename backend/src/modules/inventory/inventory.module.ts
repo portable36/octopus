@@ -14,6 +14,7 @@ import { InventoryPortAdapter } from './infrastructure/access/inventory-port.ada
 import { InventoryItemOrmEntity } from './infrastructure/persistence/inventory-item.orm-entity';
 import { InventoryMovementOrmEntity } from './infrastructure/persistence/inventory-movement.orm-entity';
 import { InventoryOperationOrmEntity } from './infrastructure/persistence/inventory-operation.orm-entity';
+import { InventoryOutboxOrmEntity } from './infrastructure/persistence/inventory-outbox.orm-entity';
 import { InventoryReservationOrmEntity } from './infrastructure/persistence/inventory-reservation.orm-entity';
 import { InventoryRepositoryAdapter } from './infrastructure/persistence/inventory.repository.adapter';
 import { WarehouseOrmEntity } from './infrastructure/persistence/warehouse.orm-entity';
@@ -30,6 +31,7 @@ import { InventoryController } from './presentation/http/inventory.controller';
       InventoryReservationOrmEntity,
       InventoryMovementOrmEntity,
       InventoryOperationOrmEntity,
+      InventoryOutboxOrmEntity,
     ]),
   ],
   controllers: [InventoryController],

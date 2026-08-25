@@ -28,15 +28,20 @@ import { ProductOrmEntity } from './infrastructure/persistence/product.orm-entit
 import { VariantOrmEntity } from './infrastructure/persistence/variant.orm-entity';
 import { CategoryOrmEntity } from './infrastructure/persistence/category.orm-entity';
 import { StoreOfferOrmEntity } from './infrastructure/persistence/store-offer.orm-entity';
+import { CatalogOutboxOrmEntity } from './infrastructure/persistence/catalog-outbox.orm-entity';
 import { ProductRepositoryAdapter } from './infrastructure/persistence/product.repository.adapter';
 import { VariantRepositoryAdapter } from './infrastructure/persistence/variant.repository.adapter';
 import { CategoryRepositoryAdapter } from './infrastructure/persistence/category.repository.adapter';
 import { StoreOfferRepositoryAdapter } from './infrastructure/persistence/store-offer.repository.adapter';
 import { CatalogController } from './presentation/http/catalog.controller';
+import { PublicCatalogController } from './presentation/http/public-catalog.controller';
+import { PublicCatalogQueryHandler } from './application/queries/public-catalog.query-handler';
 import { CatalogVariantAccessAdapter } from './infrastructure/access/catalog-variant-access.adapter';
 import { CatalogStoreOfferAccessAdapter } from './infrastructure/access/catalog-store-offer-access.adapter';
 import { CATALOG_VARIANT_ACCESS } from '../../shared-kernel/application/ports/catalog-variant-access.port';
 import { CATALOG_STORE_OFFER_ACCESS } from '../../shared-kernel/application/ports/catalog-store-offer-access.port';
+import { CATALOG_OFFER_SEARCH_SOURCE } from '../../shared-kernel/application/ports/catalog-offer-search-source.port';
+import { CatalogOfferSearchSourceAdapter } from './infrastructure/access/catalog-offer-search-source.adapter';
 
 @Global()
 @Module({
@@ -47,9 +52,10 @@ import { CATALOG_STORE_OFFER_ACCESS } from '../../shared-kernel/application/port
       VariantOrmEntity,
       CategoryOrmEntity,
       StoreOfferOrmEntity,
+      CatalogOutboxOrmEntity,
     ]),
   ],
-  controllers: [CatalogController],
+  controllers: [CatalogController, PublicCatalogController],
   providers: [
     CatalogAuthorizationService,
     CreateProductHandler,
@@ -62,12 +68,14 @@ import { CATALOG_STORE_OFFER_ACCESS } from '../../shared-kernel/application/port
     ListCategoriesHandler,
     CreateStoreOfferHandler,
     StoreOfferLifecycleHandler,
+    PublicCatalogQueryHandler,
     { provide: PRODUCT_REPOSITORY, useClass: ProductRepositoryAdapter },
     { provide: VARIANT_REPOSITORY, useClass: VariantRepositoryAdapter },
     { provide: CATEGORY_REPOSITORY, useClass: CategoryRepositoryAdapter },
     { provide: STORE_OFFER_REPOSITORY, useClass: StoreOfferRepositoryAdapter },
     { provide: CATALOG_VARIANT_ACCESS, useClass: CatalogVariantAccessAdapter },
     { provide: CATALOG_STORE_OFFER_ACCESS, useClass: CatalogStoreOfferAccessAdapter },
+    { provide: CATALOG_OFFER_SEARCH_SOURCE, useClass: CatalogOfferSearchSourceAdapter },
   ],
   exports: [
     PRODUCT_REPOSITORY,
@@ -76,6 +84,7 @@ import { CATALOG_STORE_OFFER_ACCESS } from '../../shared-kernel/application/port
     STORE_OFFER_REPOSITORY,
     CATALOG_VARIANT_ACCESS,
     CATALOG_STORE_OFFER_ACCESS,
+    CATALOG_OFFER_SEARCH_SOURCE,
   ],
 })
 export class CatalogModule {}

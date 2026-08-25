@@ -9,6 +9,8 @@ import {
   type QueueName,
 } from '../domain/outbox.types';
 import { DomainEventsProcessor } from './processors/domain-events.processor';
+import { NotificationProcessor } from './processors/notification.processor';
+import { SearchIndexingProcessor } from './processors/search-indexing.processor';
 
 const DEFAULT_JOB_OPTIONS: JobsOptions = {
   attempts: 5,
@@ -35,6 +37,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     private readonly config: AppConfigService,
     @Inject(OUTBOX_STORE) private readonly outbox: OutboxStore,
     private readonly domainEvents: DomainEventsProcessor,
+    private readonly searchIndexing: SearchIndexingProcessor,
+    private readonly notifications: NotificationProcessor,
   ) {
     // BullMQ requires maxRetriesPerRequest: null on its dedicated connection.
     this.connection = {
@@ -52,6 +56,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     this.ensureQueue(QUEUE_NAMES.domainEvents);
     this.ensureQueue(QUEUE_NAMES.payment);
     this.ensureQueue(QUEUE_NAMES.payout);
+    this.ensureQueue(QUEUE_NAMES.searchIndexing);
+    this.ensureQueue(QUEUE_NAMES.notification);
     this.ensureQueue(QUEUE_NAMES.deadLetter);
 
     this.workers.push(
@@ -77,6 +83,22 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
         {
           connection: this.connection,
           concurrency: 3,
+        },
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.searchIndexing,
+        async (job) => this.searchIndexing.handle(job.data),
+        {
+          connection: this.connection,
+          concurrency: 5,
+        },
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.notification,
+        async (job) => this.notifications.handle(job.data),
+        {
+          connection: this.connection,
+          concurrency: 5,
         },
       ),
     );

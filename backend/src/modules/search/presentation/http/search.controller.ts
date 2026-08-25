@@ -7,6 +7,8 @@ import {
   type ProductSearchIndexPort,
 } from '../../application/ports/product-search-index.port';
 import type { SearchStockStatus } from '../../domain/search.types';
+import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
+import { tryGetTenantContext } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
 
 class SearchProductsQueryDto {
   @IsOptional()
@@ -64,22 +66,13 @@ class SearchProductsQueryDto {
 export class SearchController {
   constructor(@Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort) {}
 
+  @Public()
   @Get('products')
   @ApiOperation({ summary: 'Search sellable store offers (Meilisearch read model)' })
   async searchProducts(@Query() query: SearchProductsQueryDto) {
+    const scoped = applyServerScope(query);
     try {
-      return await this.searchIndex.search({
-        ...(query.q !== undefined ? { q: query.q } : {}),
-        ...(query.vendorId !== undefined ? { vendorId: query.vendorId } : {}),
-        ...(query.storeId !== undefined ? { storeId: query.storeId } : {}),
-        ...(query.categoryId !== undefined ? { categoryId: query.categoryId } : {}),
-        ...(query.minPriceMinor !== undefined ? { minPriceMinor: query.minPriceMinor } : {}),
-        ...(query.maxPriceMinor !== undefined ? { maxPriceMinor: query.maxPriceMinor } : {}),
-        ...(query.stockStatus !== undefined ? { stockStatus: query.stockStatus } : {}),
-        ...(query.sort !== undefined ? { sort: query.sort } : {}),
-        ...(query.page !== undefined ? { page: query.page } : {}),
-        ...(query.limit !== undefined ? { limit: query.limit } : {}),
-      });
+      return await this.searchIndex.search(scoped);
     } catch {
       throw new BadGatewayException({
         type: 'about:blank',
@@ -90,4 +83,34 @@ export class SearchController {
       });
     }
   }
+}
+
+/** Tenant context (from validated x-vendor-id / x-store-id) wins over client query params. */
+export function applyServerScope(query: SearchProductsQueryDto): {
+  q?: string;
+  vendorId?: string;
+  storeId?: string;
+  categoryId?: string;
+  minPriceMinor?: number;
+  maxPriceMinor?: number;
+  stockStatus?: SearchStockStatus;
+  sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  page?: number;
+  limit?: number;
+} {
+  const ctx = tryGetTenantContext();
+  const vendorId = ctx?.vendorId ?? query.vendorId;
+  const storeId = ctx?.storeId ?? query.storeId;
+  return {
+    ...(query.q !== undefined ? { q: query.q } : {}),
+    ...(vendorId !== undefined ? { vendorId } : {}),
+    ...(storeId !== undefined ? { storeId } : {}),
+    ...(query.categoryId !== undefined ? { categoryId: query.categoryId } : {}),
+    ...(query.minPriceMinor !== undefined ? { minPriceMinor: query.minPriceMinor } : {}),
+    ...(query.maxPriceMinor !== undefined ? { maxPriceMinor: query.maxPriceMinor } : {}),
+    ...(query.stockStatus !== undefined ? { stockStatus: query.stockStatus } : {}),
+    ...(query.sort !== undefined ? { sort: query.sort } : {}),
+    ...(query.page !== undefined ? { page: query.page } : {}),
+    ...(query.limit !== undefined ? { limit: query.limit } : {}),
+  };
 }

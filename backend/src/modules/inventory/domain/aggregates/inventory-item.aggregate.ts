@@ -59,6 +59,8 @@ export class InventoryItem extends AggregateRoot<UniqueID> {
       inventoryItemId: item.id.value,
       variantId: item.variantId,
       warehouseId: item.warehouseId,
+      storeId: item.storeId,
+      vendorId: item.vendorId,
     });
     return item;
   }
@@ -365,6 +367,8 @@ export class InventoryItem extends AggregateRoot<UniqueID> {
       inventoryItemId: this.id.value,
       variantId: this.variantId,
       warehouseId: this.warehouseId,
+      storeId: this.storeId,
+      vendorId: this.vendorId,
       kind,
       quantity,
       onHand: this.onHand,

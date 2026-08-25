@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppConfigService } from '../../config/app-config.service';
 import { USER_ROLE_ASSIGNER } from '../../shared-kernel/application/ports/user-role-assigner.port';
+import { USER_CONTACT_PORT } from '../../shared-kernel/application/ports/user-contact.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import { RegisterUserHandler } from './application/commands/register-user.handler';
 import { LoginUserHandler } from './application/commands/login-user.handler';
@@ -29,6 +30,7 @@ import { RedisLoginRateLimiterAdapter } from './infrastructure/redis/redis-login
 import { RedisPasswordResetStoreAdapter } from './infrastructure/redis/redis-password-reset-store.adapter';
 import { JwtTokenSignerAdapter } from './infrastructure/tokens/jwt-token-signer.adapter';
 import { UserRoleAssignerAdapter } from './infrastructure/persistence/user-role-assigner.adapter';
+import { UserContactAdapter } from './infrastructure/access/user-contact.adapter';
 import { AuthController } from './presentation/http/auth.controller';
 import { JwtAuthGuard } from './presentation/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
@@ -93,6 +95,10 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
       provide: USER_ROLE_ASSIGNER,
       useClass: UserRoleAssignerAdapter,
     },
+    {
+      provide: USER_CONTACT_PORT,
+      useClass: UserContactAdapter,
+    },
   ],
   exports: [
     AuthorizationService,
@@ -101,6 +107,7 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
     TOKEN_SIGNER,
     USER_REPOSITORY,
     USER_ROLE_ASSIGNER,
+    USER_CONTACT_PORT,
   ],
 })
 export class IdentityModule {}

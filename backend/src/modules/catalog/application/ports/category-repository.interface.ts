@@ -8,4 +8,6 @@ export interface CategoryRepository {
   findAll(): Promise<Category[]>;
   existsSiblingSlug(parentId: string | null, slug: string, excludeId?: string): Promise<boolean>;
   findAncestorIds(categoryId: string): Promise<string[]>;
+  findActiveBySlug(slug: string): Promise<Category | null>;
+  listActive(): Promise<Category[]>;
 }

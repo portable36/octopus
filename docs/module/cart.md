@@ -35,6 +35,7 @@ Checkout splits or orchestrates per documented order boundaries. Cart never merg
 - `addItem`, `removeItem`, `updateQuantity`, `clearCart`
 - `validateCart` — checks sellability, basic availability signals, and stale line detection
 - `recalculateDisplayTotals` — server-side display recalculation; not checkout authority
+- `mergeGuestCart` — authenticated `POST /cart/merge` with `x-guest-token` merges lines then abandons guest cart
 
 ## Invariants
 

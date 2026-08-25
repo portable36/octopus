@@ -8,4 +8,5 @@ export interface StoreOfferRepository {
   findByStoreId(storeId: string): Promise<StoreOffer[]>;
   findByStoreAndVariant(storeId: string, variantId: string): Promise<StoreOffer | null>;
   existsByStoreAndVariant(storeId: string, variantId: string): Promise<boolean>;
+  findActiveByProductId(productId: string): Promise<StoreOffer[]>;
 }

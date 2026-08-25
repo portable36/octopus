@@ -9,4 +9,6 @@ export interface StoreRepository {
   findByStaffUserId(userId: string): Promise<Store[]>;
   listAll(): Promise<Store[]>;
   existsByVendorAndSlug(vendorId: string, slug: string): Promise<boolean>;
+  /** Public storefront: active stores only. Optional vendorId disambiguates slug. */
+  findActiveBySlug(slug: string, vendorId?: string): Promise<Store | null>;
 }

@@ -20,6 +20,7 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        findActiveBySlug: vi.fn(),
       },
       { findById: vi.fn().mockResolvedValue(null) },
       {
@@ -51,6 +52,7 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        findActiveBySlug: vi.fn(),
       },
       {
         findById: vi.fn().mockResolvedValue({
@@ -89,6 +91,7 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        findActiveBySlug: vi.fn(),
       },
       {
         findById: vi.fn().mockResolvedValue({
@@ -130,6 +133,7 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        findActiveBySlug: vi.fn(),
       },
       {
         findById: vi.fn().mockResolvedValue({

@@ -8,24 +8,31 @@ Meilisearch **read model** for storefront discovery. Never source of truth for c
 
 Index **store offers** (product + variant + vendor + store + price), not orphan products. Document ids must be stable (e.g. `offerId`).
 
-## Pipeline
+## Pipeline (Phase 16.2)
 
 ```text
-Catalog/Offer mutation (+ catalog_outbox)
+Catalog/Offer or Inventory mutation
+→ catalog_outbox / inventory_outbox
 → Phase 12 dispatcher
 → octopus.search-indexing
-→ load authoritative DB state
-→ Meilisearch upsert/delete
+→ CatalogOfferSearchSourcePort + InventoryPort
+→ Meilisearch upsertIfNewer / delete
 ```
 
-**Current gap:** Catalog emits in-memory domain events; outbox persistence must ship in Phase 16.2.
+Idempotent consumers use Redis NX on `outboxId`. Out-of-order writes skipped via document `version` / `updatedAtUnix`.
 
-## Query rules
+## Query API (Phase 16.3)
 
-- Allowlist filters/sorts only
-- Public search: published/available offers only — no cost, supplier, or internal stock qty
+- `GET /api/v1/search/products` — public; allowlisted filters only (`q`, category, vendor, store, price, stockStatus, sort, page/limit)
+- Response includes app-shaped `facets` (not raw Meili `facetDistribution`)
+- Validated tenant scope (`x-vendor-id` / `x-store-id` after auth) overrides client vendor/store query params
+- Public search: `searchable = true` only — no cost, supplier, or internal stock qty
 - Checkout revalidates Inventory — search stock is informational
 - Currency: BDT-first; no FX in search
+
+## Admin reindex
+
+- `POST /api/v1/admin/search/reindex` (platform admin) → pages offer ids → enqueues `SearchReindexBatch` jobs on `octopus.search-indexing` (never indexes inline in HTTP)
 
 ## Config
 

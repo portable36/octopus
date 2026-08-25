@@ -61,4 +61,15 @@ export class StoreRepositoryAdapter implements StoreRepository {
       return count > 0;
     });
   }
+
+  public async findActiveBySlug(slug: string, vendorId?: string): Promise<Store | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const where: Record<string, unknown> = { slug, status: 'active' };
+      if (vendorId) {
+        where.vendorId = vendorId;
+      }
+      const entity = await tx.findOne(StoreOrmEntity, where, { populate: ['staff'] });
+      return entity ? toDomain(entity) : null;
+    });
+  }
 }

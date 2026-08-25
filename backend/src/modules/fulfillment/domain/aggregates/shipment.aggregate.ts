@@ -224,7 +224,11 @@ export class Shipment extends AggregateRoot<UniqueID> {
       updatedAt: new Date(),
     };
     if (normalized === 'DELIVERED') {
-      this.addEvent('ShipmentDelivered', { shipmentId: this.id.value });
+      this.addEvent('ShipmentDelivered', {
+        shipmentId: this.id.value,
+        orderId: this.props.orderId,
+        orderNumber: this.props.orderNumber,
+      });
     } else if (normalized === 'FAILED') {
       this.addEvent('ShipmentFailed', { shipmentId: this.id.value });
     }
@@ -246,7 +250,11 @@ export class Shipment extends AggregateRoot<UniqueID> {
       version: this.props.version + 1,
       updatedAt: new Date(),
     };
-    this.addEvent('ShipmentDelivered', { shipmentId: this.id.value });
+    this.addEvent('ShipmentDelivered', {
+      shipmentId: this.id.value,
+      orderId: this.props.orderId,
+      orderNumber: this.props.orderNumber,
+    });
   }
 
   private assertCanTransition(next: ShipmentStatus): void {

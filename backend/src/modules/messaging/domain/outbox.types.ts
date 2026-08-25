@@ -1,4 +1,5 @@
-export type OutboxSource = 'payment' | 'fulfillment' | 'returns' | 'payout';
+export type OutboxSource =
+  'payment' | 'fulfillment' | 'returns' | 'payout' | 'catalog' | 'inventory' | 'notification';
 
 export type OutboxRow = {
   readonly id: string;
@@ -50,6 +51,17 @@ export function routeQueueForEvent(eventType: string): QueueName {
     eventType.includes('Commission')
   ) {
     return QUEUE_NAMES.payout;
+  }
+  if (eventType.startsWith('Notification')) {
+    return QUEUE_NAMES.notification;
+  }
+  if (
+    eventType.startsWith('StoreOffer') ||
+    eventType.startsWith('Product') ||
+    eventType.startsWith('Inventory') ||
+    eventType.startsWith('SearchReindex')
+  ) {
+    return QUEUE_NAMES.searchIndexing;
   }
   if (
     eventType.startsWith('Return') ||

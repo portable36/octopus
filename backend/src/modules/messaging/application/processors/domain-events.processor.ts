@@ -5,12 +5,17 @@ import {
   type LedgerPort,
   type LedgerRefundAllocation,
 } from '../../../../shared-kernel/application/ports/ledger.port';
+import {
+  NOTIFICATION_OUTBOX_HANDLER,
+  type NotificationOutboxHandler,
+} from '../../../../shared-kernel/application/ports/notification-outbox-handler.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
 
 /**
  * Idempotent domain-event consumer.
- * Phase 15: CodCollected → sale/commission; RefundCompleted → REFUND debit + optional commission clawback.
+ * Phase 15: CodCollected / RefundCompleted → ledger.
+ * Phase 17.2: outbox events → NotificationOutboxHandler.
  */
 @Injectable()
 export class DomainEventsProcessor {
@@ -19,6 +24,8 @@ export class DomainEventsProcessor {
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(LEDGER_PORT) private readonly ledger: LedgerPort,
+    @Inject(NOTIFICATION_OUTBOX_HANDLER)
+    private readonly notificationEvents: NotificationOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
@@ -39,6 +46,8 @@ export class DomainEventsProcessor {
     if (job.eventType === 'RefundCompleted') {
       await this.handleRefundCompleted(job.payload);
     }
+
+    await this.notificationEvents.handle(job.eventType, job.payload);
   }
 
   private async handleCodCollected(payload: Record<string, unknown>): Promise<void> {

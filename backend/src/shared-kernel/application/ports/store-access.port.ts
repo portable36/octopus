@@ -5,8 +5,11 @@ export interface StoreAccessSnapshot {
   readonly vendorId: string;
   readonly status: string;
   readonly displayName: string;
+  readonly slug: string;
+  readonly description: string | null;
   readonly locale: string;
   readonly currencyCode: string;
+  readonly acceptsOnlineOrders: boolean;
   readonly addressLine1: string | null;
   readonly city: string | null;
   readonly region: string | null;
@@ -20,4 +23,5 @@ export interface StoreAccessSnapshot {
 
 export interface StoreAccessPort {
   findById(storeId: string): Promise<StoreAccessSnapshot | null>;
+  findActiveBySlug(slug: string, vendorId?: string): Promise<StoreAccessSnapshot | null>;
 }

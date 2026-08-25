@@ -28,6 +28,8 @@ import { PayoutModule } from './modules/payout/payout.module';
 import { DatabaseModule } from './shared-kernel/infrastructure/persistence/database.module';
 import { HealthModule } from './shared-kernel/infrastructure/health/health.module';
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { CustomerModule } from './modules/customer/customer.module';
 
 @Module({
   imports: [
@@ -93,9 +95,11 @@ import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
     MediaModule,
     AuditModule,
     PayoutModule,
+    NotificationModule,
+    CustomerModule,
+    SearchModule,
     MessagingModule,
     ReturnsModule,
-    SearchModule,
   ],
   providers: [AppConfigService],
   exports: [AppConfigService],

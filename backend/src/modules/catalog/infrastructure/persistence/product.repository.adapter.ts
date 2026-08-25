@@ -4,6 +4,7 @@ import { withRlsContext } from '../../../../shared-kernel/infrastructure/persist
 import type { ProductRepository } from '../../application/ports/product-repository.interface';
 import type { Product } from '../../domain/aggregates/product.aggregate';
 import { applyProductToOrm, productToDomain } from './catalog.mappers';
+import { appendCatalogOutbox } from './append-catalog-outbox';
 import { ProductOrmEntity } from './product.orm-entity';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class ProductRepositoryAdapter implements ProductRepository {
       const entity = existing ?? new ProductOrmEntity();
       applyProductToOrm(product, entity);
       await tx.persist(entity).flush();
+      await appendCatalogOutbox(tx, product.id.value, product.getUncommittedEvents());
+      product.clearEvents();
     });
   }
 
@@ -37,6 +40,13 @@ export class ProductRepositoryAdapter implements ProductRepository {
     return withRlsContext(this.em, async (tx) => {
       const count = await tx.count(ProductOrmEntity, { vendorId, sku });
       return count > 0;
+    });
+  }
+
+  public async findPublishedById(id: string): Promise<Product | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(ProductOrmEntity, { id, status: 'published' });
+      return entity ? productToDomain(entity) : null;
     });
   }
 }

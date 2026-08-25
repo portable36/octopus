@@ -44,6 +44,23 @@ export class CartController {
     return this.cartResponse(cart);
   }
 
+  @Post('merge')
+  @ApiOperation({ summary: 'Merge guest cart into the authenticated customer cart' })
+  async merge(
+    @CurrentUser() user: RequestPrincipal,
+    @Headers('x-guest-token') guestToken: string | undefined,
+  ) {
+    if (!guestToken?.trim()) {
+      throw new CartAccessDeniedError();
+    }
+    setGuestToken(guestToken.trim());
+    const cart = await this.carts.mergeGuestCart({
+      customerId: user.userId,
+      guestToken: guestToken.trim(),
+    });
+    return this.cartResponse(cart);
+  }
+
   @Public()
   @Get(':cartId')
   @ApiOperation({ summary: 'Get a cart by id' })

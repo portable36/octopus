@@ -75,6 +75,15 @@ export class AppConfigService {
     return this.configService.get('S3_BUCKET', { infer: true });
   }
 
+  /** Browser-reachable media base (CDN or MinIO path-style). */
+  get mediaPublicBaseUrl(): string {
+    const configured = this.configService.get('MEDIA_PUBLIC_BASE_URL', { infer: true });
+    if (configured) {
+      return configured.replace(/\/$/, '');
+    }
+    return `${this.s3Endpoint.replace(/\/$/, '')}/${this.s3Bucket}`;
+  }
+
   get logLevel(): Env['LOG_LEVEL'] {
     return this.configService.get('LOG_LEVEL', { infer: true });
   }

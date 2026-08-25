@@ -284,6 +284,17 @@ export class Cart extends AggregateRoot<UniqueID> {
     };
   }
 
+  public abandon(): void {
+    this.assertActive();
+    this.props = {
+      ...this.props,
+      status: 'ABANDONED',
+      version: this.props.version + 1,
+      updatedAt: new Date(),
+    };
+    this.addEvent('CartAbandoned', { cartId: this.id.value });
+  }
+
   public assertExpectedVersion(expectedVersion: number): void {
     if (this.props.version !== expectedVersion) {
       throw new CartDomainError(

@@ -152,6 +152,14 @@ export interface PrepareOrderShipmentInput {
   readonly lines: readonly { readonly lineId: string; readonly quantity: number }[];
 }
 
+export interface OrderNotificationSnapshot {
+  readonly orderId: string;
+  readonly orderNumber: string;
+  readonly customerId: string | null;
+  readonly currencyCode: string;
+  readonly totalMinor: number;
+}
+
 export interface OrderPort {
   createFromCheckout(input: CheckoutOrderCreateInput): Promise<CheckoutOrderCreateResult>;
   /** Trusted Payment-module seam — never expose to storefront. */
@@ -159,6 +167,8 @@ export interface OrderPort {
   getFulfillmentSnapshot(orderId: string): Promise<OrderFulfillmentSnapshot | null>;
   getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null>;
   getFinanceSnapshot(orderId: string): Promise<OrderFinanceSnapshot | null>;
+  /** Minimal fields for Notification recipients (no PII beyond customer id). */
+  getNotificationSnapshot(orderId: string): Promise<OrderNotificationSnapshot | null>;
   prepareShipment(input: PrepareOrderShipmentInput): Promise<OrderFulfillmentSnapshot>;
   fulfillShipmentLines(input: PrepareOrderShipmentInput): Promise<void>;
 }

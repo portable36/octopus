@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { MeilisearchProductSearchAdapter } from './meilisearch-product-search.adapter';
 import type { OfferSearchDocument } from '../../domain/search.types';
 
-describe('MeilisearchProductSearchAdapter upsertIfNewer', () => {
+describe('MeilisearchProductSearchAdapter', () => {
   const baseDoc: OfferSearchDocument = {
     id: 'offer-1',
     offerId: 'offer-1',
@@ -58,5 +58,36 @@ describe('MeilisearchProductSearchAdapter upsertIfNewer', () => {
     const result = await adapter.upsertIfNewer(baseDoc);
     expect(result).toBe('written');
     expect(addDocuments).toHaveBeenCalled();
+  });
+
+  it('maps Meili facetDistribution into app facet buckets', async () => {
+    const search = vi.fn().mockResolvedValue({
+      hits: [],
+      estimatedTotalHits: 0,
+      processingTimeMs: 3,
+      facetDistribution: {
+        categoryIds: { c1: 2, c2: 5 },
+        vendorId: { v1: 7 },
+        storeId: { s1: 7 },
+        stockStatus: { IN_STOCK: 7 },
+      },
+    });
+    const adapter = Object.create(
+      MeilisearchProductSearchAdapter.prototype,
+    ) as MeilisearchProductSearchAdapter;
+    Object.assign(adapter, { index: () => ({ search }) });
+
+    const result = await adapter.search({ q: 'tee' });
+    expect(result.facets.categoryIds).toEqual([
+      { value: 'c2', count: 5 },
+      { value: 'c1', count: 2 },
+    ]);
+    expect(result.facets.vendorId).toEqual([{ value: 'v1', count: 7 }]);
+    expect(search).toHaveBeenCalledWith(
+      'tee',
+      expect.objectContaining({
+        facets: ['categoryIds', 'vendorId', 'storeId', 'stockStatus'],
+      }),
+    );
   });
 });

@@ -13,6 +13,7 @@ import { applyInventoryItemToOrm, inventoryItemToDomain } from './inventory-item
 import { InventoryItemOrmEntity } from './inventory-item.orm-entity';
 import { InventoryMovementOrmEntity } from './inventory-movement.orm-entity';
 import { InventoryOperationOrmEntity } from './inventory-operation.orm-entity';
+import { InventoryOutboxOrmEntity } from './inventory-outbox.orm-entity';
 import { applyReservationToOrm, reservationToDomain } from './inventory-reservation.mapper';
 import { InventoryReservationOrmEntity } from './inventory-reservation.orm-entity';
 
@@ -24,6 +25,24 @@ class MikroInventoryUnitOfWork implements InventoryMutationUnitOfWork {
     const entity = existing ?? new InventoryItemOrmEntity();
     applyInventoryItemToOrm(item, entity);
     await this.tx.persist(entity).flush();
+    for (const event of item.getUncommittedEvents()) {
+      const outbox = new InventoryOutboxOrmEntity();
+      outbox.id = UniqueID.create().value;
+      outbox.aggregateId = item.id.value;
+      outbox.eventType = event.eventName;
+      outbox.payloadJson = {
+        ...event.payload,
+        storeId: item.storeId,
+        vendorId: item.vendorId,
+        variantId: item.variantId,
+      };
+      outbox.eventVersion = 1;
+      outbox.createdAt = event.occurredAt;
+      outbox.publishedAt = null;
+      outbox.retryCount = 0;
+      await this.tx.persist(outbox).flush();
+    }
+    item.clearEvents();
   }
 
   public async saveReservation(reservation: InventoryReservation): Promise<void> {
@@ -112,6 +131,24 @@ export class InventoryRepositoryAdapter implements InventoryRepository {
       const entity = existing ?? new InventoryItemOrmEntity();
       applyInventoryItemToOrm(item, entity);
       await tx.persist(entity).flush();
+      for (const event of item.getUncommittedEvents()) {
+        const outbox = new InventoryOutboxOrmEntity();
+        outbox.id = UniqueID.create().value;
+        outbox.aggregateId = item.id.value;
+        outbox.eventType = event.eventName;
+        outbox.payloadJson = {
+          ...event.payload,
+          storeId: item.storeId,
+          vendorId: item.vendorId,
+          variantId: item.variantId,
+        };
+        outbox.eventVersion = 1;
+        outbox.createdAt = event.occurredAt;
+        outbox.publishedAt = null;
+        outbox.retryCount = 0;
+        await tx.persist(outbox).flush();
+      }
+      item.clearEvents();
     });
   }
 

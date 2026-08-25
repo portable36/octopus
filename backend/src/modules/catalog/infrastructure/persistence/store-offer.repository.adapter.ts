@@ -4,6 +4,7 @@ import { withRlsContext } from '../../../../shared-kernel/infrastructure/persist
 import type { StoreOfferRepository } from '../../application/ports/store-offer-repository.interface';
 import type { StoreOffer } from '../../domain/aggregates/store-offer.aggregate';
 import { applyOfferToOrm, offerToDomain } from './catalog.mappers';
+import { appendCatalogOutbox } from './append-catalog-outbox';
 import { StoreOfferOrmEntity } from './store-offer.orm-entity';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class StoreOfferRepositoryAdapter implements StoreOfferRepository {
       const entity = existing ?? new StoreOfferOrmEntity();
       applyOfferToOrm(offer, entity);
       await tx.persist(entity).flush();
+      await appendCatalogOutbox(tx, offer.id.value, offer.getUncommittedEvents());
+      offer.clearEvents();
     });
   }
 
@@ -47,6 +50,13 @@ export class StoreOfferRepositoryAdapter implements StoreOfferRepository {
     return withRlsContext(this.em, async (tx) => {
       const count = await tx.count(StoreOfferOrmEntity, { storeId, variantId });
       return count > 0;
+    });
+  }
+
+  public async findActiveByProductId(productId: string): Promise<StoreOffer[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(StoreOfferOrmEntity, { productId, status: 'active' });
+      return entities.map(offerToDomain);
     });
   }
 }

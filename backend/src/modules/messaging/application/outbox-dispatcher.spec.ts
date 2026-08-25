@@ -13,6 +13,11 @@ describe('routeQueueForEvent', () => {
     expect(routeQueueForEvent('PayoutRequested')).toBe(QUEUE_NAMES.payout);
     expect(routeQueueForEvent('PayoutCompleted')).toBe(QUEUE_NAMES.payout);
     expect(routeQueueForEvent('LedgerAdjustmentRecorded')).toBe(QUEUE_NAMES.payout);
+    expect(routeQueueForEvent('StoreOfferActivated')).toBe(QUEUE_NAMES.searchIndexing);
+    expect(routeQueueForEvent('ProductStatusChanged')).toBe(QUEUE_NAMES.searchIndexing);
+    expect(routeQueueForEvent('InventoryAdjusted')).toBe(QUEUE_NAMES.searchIndexing);
+    expect(routeQueueForEvent('SearchReindexBatch')).toBe(QUEUE_NAMES.searchIndexing);
+    expect(routeQueueForEvent('NotificationDeliver')).toBe(QUEUE_NAMES.notification);
   });
 
   it('routes shipment events to domain-events queue', () => {
@@ -55,6 +60,8 @@ describe('parseRefundAllocation', () => {
 });
 
 describe('DomainEventsProcessor', () => {
+  const notifications = { handle: vi.fn().mockResolvedValue(undefined) };
+
   it('processes once and skips duplicates via Redis NX', async () => {
     const redis = {
       set: vi.fn().mockResolvedValueOnce('OK').mockResolvedValueOnce(null),
@@ -63,7 +70,11 @@ describe('DomainEventsProcessor', () => {
       recordRefundAllocation: vi.fn(),
       recordSaleRecognition: vi.fn(),
     };
-    const processor = new DomainEventsProcessor(redis as never, ledger as never);
+    const processor = new DomainEventsProcessor(
+      redis as never,
+      ledger as never,
+      notifications as never,
+    );
     const job = {
       outboxId: '11111111-1111-7111-8111-111111111111',
       source: 'payment' as const,
@@ -86,7 +97,11 @@ describe('DomainEventsProcessor', () => {
       recordRefundAllocation: vi.fn().mockResolvedValue(undefined),
       recordSaleRecognition: vi.fn().mockResolvedValue(undefined),
     };
-    const processor = new DomainEventsProcessor(redis as never, ledger as never);
+    const processor = new DomainEventsProcessor(
+      redis as never,
+      ledger as never,
+      notifications as never,
+    );
 
     await processor.handle({
       outboxId: '33333333-3333-7333-8333-333333333333',
@@ -121,6 +136,7 @@ describe('DomainEventsProcessor', () => {
         idempotencyKey: 'ledger:refund:refund-1',
       }),
     );
+    expect(notifications.handle).toHaveBeenCalled();
   });
 
   it('recognizes sale on CodCollected', async () => {
@@ -129,7 +145,11 @@ describe('DomainEventsProcessor', () => {
       recordRefundAllocation: vi.fn(),
       recordSaleRecognition: vi.fn().mockResolvedValue(undefined),
     };
-    const processor = new DomainEventsProcessor(redis as never, ledger as never);
+    const processor = new DomainEventsProcessor(
+      redis as never,
+      ledger as never,
+      notifications as never,
+    );
     await processor.handle({
       outboxId: '44444444-4444-7444-8444-444444444444',
       source: 'payment',

@@ -68,6 +68,20 @@ export class OrderPortAdapter implements OrderPort {
     };
   }
 
+  public async getNotificationSnapshot(orderId: string) {
+    const order = await this.lifecycle.getFulfillmentSnapshot(orderId);
+    if (!order) {
+      return null;
+    }
+    return {
+      orderId: order.id.value,
+      orderNumber: order.orderNumber,
+      customerId: order.customerId,
+      currencyCode: order.currencyCode,
+      totalMinor: order.totalMinor,
+    };
+  }
+
   public async prepareShipment(
     input: PrepareOrderShipmentInput,
   ): Promise<OrderFulfillmentSnapshot> {

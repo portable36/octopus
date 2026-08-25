@@ -7,4 +7,6 @@ export interface ProductRepository {
   findById(id: string): Promise<Product | null>;
   findByVendorId(vendorId: string): Promise<Product[]>;
   existsByVendorAndSku(vendorId: string, sku: string): Promise<boolean>;
+  /** Public storefront: published products only (RLS + status filter). */
+  findPublishedById(id: string): Promise<Product | null>;
 }

@@ -6,12 +6,12 @@ Detailed pyramid and E2E journeys: [TESTING.md](../../TESTING.md).
 
 ## Layer guidance
 
-| Layer       | Proves                           | Tools               |
-| ----------- | -------------------------------- | ------------------- |
-| Domain unit | Invariants, state machines       | Vitest              |
-| Application | Authz, transactions, idempotency | Vitest + mocks/DB   |
-| Integration | SQL, RLS, locking, queues        | Vitest + containers |
-| API         | HTTP contracts, tenant isolation | Supertest           |
+| Layer       | Proves                           | Tools                                                                  |
+| ----------- | -------------------------------- | ---------------------------------------------------------------------- |
+| Domain unit | Invariants, state machines       | Vitest                                                                 |
+| Application | Authz, transactions, idempotency | Vitest + mocks/DB                                                      |
+| Integration | SQL, RLS, locking, queues        | Vitest + containers                                                    |
+| API         | HTTP contracts, tenant isolation | Supertest                                                              |
 | E2E         | Critical user journeys           | [Playwright](https://playwright.dev/) (`e2e/`, `npm.cmd run test:e2e`) |
 
 ## When to add tests

@@ -6,7 +6,9 @@ import type {
   SearchProductsQuery,
   SearchProductsResult,
 } from '../../domain/search.types';
-import type { ProductSearchIndexPort } from '../../application/ports/product-search-index.port';
+import type { ProductSearchIndexPort } from '../../../../shared-kernel/application/ports/product-search-index.port';
+import type { CatalogOfferSearchSourceDto } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
+import { buildOfferSearchDocument } from '../../domain/services/build-offer-search-document';
 
 const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug'] as const;
 const FILTERABLE = [
@@ -90,6 +92,18 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
     return 'written';
   }
 
+  public async indexOfferSource(
+    source: CatalogOfferSearchSourceDto,
+    stockAvailable?: number | null,
+  ): Promise<'written' | 'skipped'> {
+    return this.upsertIfNewer(
+      buildOfferSearchDocument({
+        ...source,
+        stockAvailable: stockAvailable ?? null,
+      }),
+    );
+  }
+
   public async deleteByOfferId(offerId: string): Promise<void> {
     await this.index().deleteDocument(offerId);
   }
@@ -128,13 +142,16 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
             ? ['updatedAtUnix:desc']
             : undefined;
 
+    const facetKeys = ['categoryIds', 'vendorId', 'storeId', 'stockStatus'] as const;
     const result = await this.index().search<OfferSearchDocument>(query.q ?? '', {
       filter: filters.join(' AND '),
       ...(sort ? { sort } : {}),
       offset,
       limit,
+      facets: [...facetKeys],
     });
 
+    const distribution = result.facetDistribution ?? {};
     return {
       hits: result.hits,
       query: query.q ?? '',
@@ -142,6 +159,12 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
       limit,
       estimatedTotal: result.estimatedTotalHits ?? result.hits.length,
       processingTimeMs: result.processingTimeMs,
+      facets: {
+        categoryIds: toFacetBuckets(distribution['categoryIds']),
+        vendorId: toFacetBuckets(distribution['vendorId']),
+        storeId: toFacetBuckets(distribution['storeId']),
+        stockStatus: toFacetBuckets(distribution['stockStatus']),
+      },
     };
   }
 
@@ -152,4 +175,15 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
 
 function escapeFilterValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function toFacetBuckets(
+  raw: Record<string, number> | undefined,
+): readonly { value: string; count: number }[] {
+  if (!raw) {
+    return [];
+  }
+  return Object.entries(raw)
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
 }

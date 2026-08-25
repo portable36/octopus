@@ -2,36 +2,38 @@
 
 ## Responsibility
 
-**Not a required Nest bounded-context module today.** “Marketplace” means customer-facing **composition**: storefront discovery (PLP/PDP/store pages) built from Catalog, Store, Pricing, Search, and Inventory **ports/APIs**.
+**Not a Nest bounded-context module.** Customer-facing **composition**: storefront discovery built from Catalog, Store, Search, and Inventory via **public read APIs**.
 
-Owns (conceptually / FE + public read APIs):
+## Public APIs (Phase 18.1)
 
-- Public browse DTOs and storefront routing
-- Merchandising zones driven by Settings/public config (full CMS = Phase 20.3)
-- SEO surfaces for categories and stores
+| Surface               | Endpoint                                                                  |
+| --------------------- | ------------------------------------------------------------------------- |
+| Categories            | `GET /api/v1/public/categories`, `GET /api/v1/public/categories/:slug`    |
+| PDP                   | `GET /api/v1/public/products/:productId` (published only + active offers) |
+| Store                 | `GET /api/v1/public/stores/by-slug/:slug?vendorId=`                       |
+| Search / PLP          | `GET /api/v1/search/products` (`@Public`, allowlisted filters)            |
+| Media thumbnails      | `GET /api/v1/public/media/:mediaId` → `{ url }`                           |
+| Cart (guest/customer) | existing `/cart` + `POST /cart/merge`                                     |
+| Customer profile      | `/customer/*`                                                             |
 
-Does not own:
-
-- Canonical product/inventory/order/payment records
-- Cross-module SQL joins into other modules’ tables
+Published/active filters are enforced in handlers; additive RLS public SELECT policies enable anonymous reads without platform scope.
 
 ## Composition
 
 ```text
-Catalog + StoreOffer + Pricing signal + Search index + Inventory availability signal
-→ public PLP/PDP DTOs → Next.js (storefront)
+Catalog + StoreOffer + Search index + Inventory signals
+→ public DTOs → Next.js storefront (Phase 18.2+)
 ```
 
-Prefer extending Catalog/Search public endpoints over inventing `MarketplaceModule` unless aggregation complexity forces a dedicated BC later.
+Prefer extending Catalog/Search public endpoints over inventing `MarketplaceModule`.
 
 ## Multi-vendor UX
 
-- Filters: category, brand (when present), store, vendor, price, availability
-- PDP: store-specific offer + add to cart
-- Cart: unified multi-vendor cart (Cart module)
+- Filters: category, store, vendor, price, availability (via Search)
+- PDP: store-specific offers + add to cart
+- Cart: unified multi-vendor cart
 
 ## Related
 
 - [PHASES.md](../PHASES.md) — Phase 18
-- [search.md](./search.md) · [catalog.md](./catalog.md)
-- [product/ux-parity.md](../product/ux-parity.md)
+- [customer.md](./customer.md) · [search.md](./search.md) · [catalog.md](./catalog.md)

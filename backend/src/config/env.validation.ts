@@ -16,6 +16,8 @@ export const envSchema = z.object({
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
   S3_BUCKET: z.string().min(1),
+  /** Public CDN/base URL for media thumbnails (no trailing slash required). Defaults to S3 endpoint + bucket. */
+  MEDIA_PUBLIC_BASE_URL: z.string().url().optional(),
   CORS_ORIGINS: z.string().default('http://localhost:3001'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(10_000),

@@ -1,16 +1,16 @@
 # Graph Report - octopus  (2026-08-25)
 
 ## Corpus Check
-- 904 files · ~640,037 words
+- 953 files · ~654,302 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11397 nodes · 17956 edges · 816 communities (761 shown, 55 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 297 edges (avg confidence: 0.81)
+- 11801 nodes · 18873 edges · 824 communities (760 shown, 64 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 336 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a4aaa94f`
+- Built from commit: `9f99d39e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -26,7 +26,7 @@
 - Variant
 - catalog.mappers.ts
 - tenant-context.storage.ts
-- resolve-scope.handler.ts
+- scope-policy.ts
 - AppConfigService
 - Product
 - health.module.ts
@@ -42,23 +42,23 @@
 - IndexOptimizer
 - identity.module.ts
 - RedisRefreshTokenStoreAdapter
-- OrderController
+- CurrentUser
 - order.module.ts
 - RollbackGenerator
 - VendorController
-- MembershipDirectory
+- resolve-scope.handler.ts
 - admin-settings.controller.ts
 - APILinter
 - Table
 - POS.md
-- express
+- Rfc7807ExceptionFilter
 - frontend.md
 - RouteInfo
 - Admin Dashboard and Dynamic CMS
 - check-architecture.mjs
 - ProjectScanner
-- vendor.aggregate.ts
 - mikro-orm.config.ts
+- meilisearch-product-search.adapter.ts
 - Required workflow
 - vendor.module.ts
 - Payment Module
@@ -80,13 +80,13 @@
 - InventoryItem
 - Architecture Contract
 - Public
-- domain/errors/vendor.errors.ts
+- vendor.aggregate.ts
 - cart.aggregate.ts
 - Identity Module
 - Production Operations
 - Vendor Module
 - Phase 30 — Production Readiness Review
-- InventoryReservation
+- returns.handlers.ts
 - DashboardGenerator
 - Backend Security Practices
 - CodeAnalyzer
@@ -114,7 +114,7 @@
 - QA Best Practices for React and Next.js
 - TestGenerator
 - AI-Assisted Development
-- CatalogAuthorizationService
+- withRlsContext
 - order.aggregate.ts
 - cart.module.ts
 - checkout.handlers.ts
@@ -127,9 +127,9 @@
 - Objective
 - Objective
 - Database Rules
-- Cross-Module Communication
+- ADR-0001: Modular Monolith
 - SLODesigner
-- inventory.port.ts
+- inventory.handlers.ts
 - Pipeline Design Notes — Pitfalls, Strategy, and Scaling
 - nestjs-features-performance/SKILL.md
 - Objective
@@ -150,7 +150,7 @@
 - Octopus
 - media.handlers.ts
 - MigrationPlanner
-- VendorAccessPort
+- store.module.ts
 - NestJS Features, Scaling, and Performance
 - NestJS Architecture and Principles
 - .create
@@ -159,7 +159,7 @@
 - Database Optimization Guide
 - SQL Database Assistant - POWERFUL Tier Skill
 - Validate Repository For AI Changes
-- payment.repository.adapter.ts
+- Refund
 - Database Designer - POWERFUL Tier Skill
 - ioredis
 - @mikro-orm/migrations
@@ -191,13 +191,13 @@
 - DependencyAnalyzer
 - Next.js Optimization Guide
 - order.port.ts
-- Any
+- MigrationGenerator
 - Technology Decision Guide
 - Senior Frontend
 - Fullstack Tech Stack Guide
 - Issue tracker: GitHub
 - Category
-- CurrentUser
+- RequestPrincipal
 - API Design Patterns
 - api_load_tester.py
 - ORM Patterns Reference
@@ -242,7 +242,7 @@
 - review_report_generator.py
 - Codebase Design
 - Senior Fullstack
-- pos-authorization.service.ts
+- pos-exception.filter.ts
 - pricing.module.ts
 - Senior Backend Engineer
 - analyze_project
@@ -258,7 +258,7 @@
 - Role
 - receipt-template.aggregate.ts
 - Feature Flags Architect
-- anti_recommendations
+- vite-spa.json
 - SLI design
 - store.controller.ts
 - HTML Report Format
@@ -284,8 +284,8 @@
 - NestJS OOP and Design Patterns
 - Ask Matt
 - Senior Architect
-- admin-shell.tsx
-- PromotionCommandHandler
+- react
+- PricingQuoteHandler
 - receipt-template-settings.tsx
 - pipeline_generator.py
 - ._check_column_naming
@@ -294,7 +294,7 @@
 - Any
 - main
 - fullstack_decision_engine.py
-- CreateProductDto
+- catalog.controller.ts
 - receipt-renderer.ts
 - Dart / Flutter — Language-Specific Review Notes
 - Java — Language-Specific Review Notes
@@ -371,7 +371,7 @@
 - Shipment
 - app/layout.tsx
 - Security Engineering
-- MigrationGenerator
+- ._generate_step_id
 - Flag taxonomy — the 4 types
 - Migration Patterns Catalog
 - sample_service_web.json
@@ -395,7 +395,7 @@
 - ComparisonReport
 - flag_debt_scanner.py
 - kill_switch_audit.py
-- 2. Parallel Schema Pattern
+- 1. Expand-Contract Pattern
 - business_metrics
 - The Hierarchy of Information
 - Implementation Patterns
@@ -426,8 +426,8 @@
 - pricing-exception.filter.ts
 - Architecture Review
 - Language
-- payment-intent.aggregate.ts
-- promotion.repository.adapter.ts
+- ReturnRequest
+- pricing.types.ts
 - Rules
 - package.json
 - Common Anti-Patterns to Avoid
@@ -453,14 +453,14 @@
 - marketing-site.json
 - <Questionnaire title>
 - Web Application Testing
-- Pricing Module
+- VendorAccessPort
 - REST API Design Rules Reference
 - ._create_table_step
 - schema_analyzer.py
 - Frontend Design
 - Alert Design Patterns
 - Alert Routing and Escalation
-- Dashboard Best Practices: Design for Insight and Action
+- Effective Panel Design
 - Default Time Ranges by Dashboard Type
 - Dashboard Performance
 - Layout Patterns
@@ -614,7 +614,7 @@
 - Zero Trust Architecture
 - DREAD Risk Scoring
 - STRIDE Framework
-- react
+- data-table.tsx
 - form-pattern.tsx
 - Component Composition Patterns
 - Color Customization
@@ -626,7 +626,7 @@
 - Subquery Patterns
 - Migration20250824180000
 - Migration20250824200000
-- Pricing
+- returns.repository.adapter.ts
 - Common API Anti-Patterns and How to Avoid Them
 - 10. Poor Error Messages
 - 11. Ignoring Content Negotiation
@@ -656,7 +656,7 @@
 - Performance Considerations
 - Pagination Patterns
 - REST Design Principles
-- PaymentRepository
+- ReturnsController
 - ._drop_column_step
 - ._rename_table_step
 - hitl-loop.template.sh
@@ -666,7 +666,7 @@
 - daily_active_users
 - Advanced Patterns
 - Accessibility
-- Color and Visualization Best Practices
+- Dashboard Best Practices: Design for Insight and Action
 - Dashboard Archetypes
 - Interactive Features
 - Scripts Overview
@@ -686,7 +686,7 @@
 - Hashing and Password Storage
 - Defense in Depth
 - Attack Trees
-- fulfillment.handlers.ts
+- shipment.aggregate.ts
 - Utility Components
 - Pagination Patterns
 - UPSERT Patterns
@@ -707,65 +707,65 @@
 - Rate Limiting Implementation
 - Idempotency
 - compliance_requirements
-- payment.handlers.spec.ts
+- receipt.repository.adapter.ts
 - Cost Optimization for Observability
 - Runbook Generation and Incident Response
 - check_bounding_boxes.py
 - api_layer_options
 - golden-rules.md
 - verify-setup.sh
-- AggregateRoot
+- product.aggregate.ts
 - agents/triage-labels.md
-- Promotions
+- ReturnsHandlers
 - Objective
 - Objective
 - Objective
-- pathao.client.ts
+- fulfillment.handlers.ts
 - Observability and SRE
-- .collect
+- payment.controller.ts
 - Migration20250824220000
 - Migration20250824240000
 - auth.controller.ts
 - Production Readiness
 - app.module.ts
 - class-validator
-- inventory.handlers.ts
+- catalog-variant-access.adapter.ts
 - PaymentRepositoryAdapter
-- CollectCodPaymentDto
+- ApiProperty
 - Scaling and Reliability
 - fulfillment.module.ts
 - Object Design
 - OOP and SOLID in NestJS
-- domain/errors/order.errors.ts
-- redis-login-rate-limiter.adapter.ts
-- StoreAccessSnapshot
-- withRlsContext
+- returns.types.ts
+- redis.module.ts
+- stub-ledger.adapter.ts
+- courier-account.store.ts
 - CI/CD and Container Delivery
 - api-client.ts
-- shipment.aggregate.ts
+- RequestReturnDto
 - Migration20250824270000
 - NestJS Feature Selection
-- checkout.module.ts
+- OrderRepository
 - CreateShipmentDto
 - GetStoreHandler
-- StoreRepositoryAdapter
+- Fulfillment Module
 - cart.handlers.ts
 - GetVendorHandler
 - VendorLifecycleHandler
 - .findById
 - .create
-- rls-session.ts
-- .submit
+- database.module.ts
+- Inventory Module
 - VendorRepositoryAdapter
-- .register
+- Order Module
 - Current product & ops baselines
 - admin-widget.tsx
-- vite-spa.json
-- canon_references
-- ci_gates
-- component_library_options
+- Payout / Vendor Finance Module
+- TenancyController
+- RegisterVendorHandler
+- Refunds Module
 - Migration20250824280000
-- framework_options
+- pricing.handlers.ts
 - Dependency Injection and Ports
 - Feedback Components
 - Migration20250824290000
@@ -781,7 +781,7 @@
 - Objective
 - Objective
 - Architecture Ladder
-- CatalogExceptionFilter
+- Reporting Module
 - Microservices Rules
 - VendorExceptionFilter
 - Error Handling Rules
@@ -789,62 +789,70 @@
 - Testing Rules
 - Database and ORM Rules
 - NestJS Module Boundaries
-- Marketplace Module
+- Marketplace (composition pattern)
 - Apply SOLID as diagnostic questions
 - Quality Gates Check (Octopus)
 - Multi-Vendor
-- Colors
-- Components
+- Search Module
+- Objective
 - Architecture Boundary Guard (Octopus)
 - Docs State Maintainer (Octopus)
-- Responsive Behavior
-- Typography
-- Ownership and aggregate boundaries
+- Objective
+- Migration20250824310000
+- Multi-Store
 - Objective
 - Cost-Efficient Agent (Octopus)
-- ._add_constraint_step
-- 1. Expand-Contract Pattern
+- Customer Module
+- Objective
 - Migration20250824300000
-- Layout
-- Do's and Don'ts
-- bullmq
-- class-transformer
-- cookie-parser
-- nestjs-pino
-- zod
+- ._modify_column_step
+- 3. Event Sourcing Migration
+- Symmetric Encryption
+- Migration20250824320000
+- Migration20250824330000
+- Objective
+- helmet
+- @mikro-orm/core
+- @nestjs/core
+- @nestjs/jwt
+- @nestjs/swagger
+- @nestjs/terminus
+- Path
+- ApiPropertyOptional
+- MinLength
 
 ## God Nodes (most connected - your core abstractions)
-1. `withRlsContext()` - 129 edges
+1. `withRlsContext()` - 139 edges
 2. `CurrentUser` - 117 edges
 3. `RequestPrincipal` - 115 edges
-4. `Order` - 85 edges
-5. `UniqueID` - 85 edges
+4. `UniqueID` - 87 edges
+5. `Order` - 85 edges
 6. `Vendor` - 71 edges
-7. `Store` - 62 edges
-8. `AppConfigService` - 60 edges
-9. `InventoryItem` - 58 edges
-10. `Variant` - 55 edges
+7. `AppConfigService` - 63 edges
+8. `Store` - 62 edges
+9. `InventoryItem` - 60 edges
+10. `ReturnRequest` - 58 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `CartRepositoryAdapter` --implements--> `CartRepository`  [EXTRACTED]
-  backend/src/modules/cart/infrastructure/persistence/cart.repository.adapter.ts → backend/src/modules/cart/application/ports/cart-repository.interface.ts
-- `CartProps` --references--> `CartStatus`  [EXTRACTED]
-  backend/src/modules/cart/domain/aggregates/cart.aggregate.ts → backend/src/modules/cart/domain/cart.types.ts
-- `Cart` --inherits--> `AggregateRoot`  [EXTRACTED]
-  backend/src/modules/cart/domain/aggregates/cart.aggregate.ts → backend/src/shared-kernel/domain/aggregate-root.ts
-- `CartOrmEntity` --references--> `CartStatus`  [EXTRACTED]
-  backend/src/modules/cart/infrastructure/persistence/cart.orm-entity.ts → backend/src/modules/cart/domain/cart.types.ts
-- `CreateVariantCommand` --references--> `VariantCreateInput`  [EXTRACTED]
-  backend/src/modules/catalog/application/commands/variant.handlers.ts → backend/src/modules/catalog/domain/aggregates/variant.aggregate.ts
+- `InventoryItemProps` --references--> `InventoryItemStatus`  [EXTRACTED]
+  backend/src/modules/inventory/domain/aggregates/inventory-item.aggregate.ts → backend/src/modules/inventory/domain/inventory.types.ts
+- `WarehouseProps` --references--> `WarehouseStatus`  [EXTRACTED]
+  backend/src/modules/inventory/domain/aggregates/warehouse.aggregate.ts → backend/src/modules/inventory/domain/inventory.types.ts
+- `PaymentRepositoryAdapter` --implements--> `PaymentRepository`  [EXTRACTED]
+  backend/src/modules/payment/infrastructure/persistence/payment.repository.adapter.ts → backend/src/modules/payment/application/ports/payment-repository.interface.ts
+- `PaymentPortAdapter` --implements--> `PaymentPort`  [EXTRACTED]
+  backend/src/modules/payment/infrastructure/access/payment-port.adapter.ts → backend/src/shared-kernel/application/ports/payment.port.ts
+- `ReturnsRepositoryAdapter` --implements--> `ReturnsRepository`  [EXTRACTED]
+  backend/src/modules/returns/infrastructure/persistence/returns.repository.adapter.ts → backend/src/modules/returns/application/ports/returns-repository.interface.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (816 total, 55 thin omitted)
+## Communities (824 total, 64 thin omitted)
 
 ### Community 0 - "AuthController"
 Cohesion: 0.21
-Nodes (16): AuthPrincipal, AuthController, ApiBearerAuth, ApiOperation, ApiTags, Body, Controller, Get (+8 more)
+Nodes (15): AuthController, ApiBearerAuth, ApiOperation, ApiTags, Body, Controller, Get, HttpCode (+7 more)
 
 ### Community 1 - "User"
 Cohesion: 0.08
@@ -860,7 +868,7 @@ Nodes (10): createVariant(), CashMovementKind, OpeningBalanceAdjustment, SalePay
 
 ### Community 4 - "dependencies"
 Cohesion: 0.09
-Nodes (23): argon2, dependencies, argon2, helmet, @mikro-orm/core, @mikro-orm/postgresql, @nestjs/config, @nestjs/core (+15 more)
+Nodes (23): argon2, dependencies, argon2, bullmq, class-transformer, cookie-parser, meilisearch, @mikro-orm/postgresql (+15 more)
 
 ### Community 5 - "devDependencies"
 Cohesion: 0.11
@@ -875,20 +883,20 @@ Cohesion: 0.09
 Nodes (22): scripts, architecture, build, build:backend, build:frontend, deps:outdated, dev, dev:frontend (+14 more)
 
 ### Community 8 - "Variant"
-Cohesion: 0.05
-Nodes (6): VariantRepository, Variant, Dimensions, variantToDomain(), Injectable, VariantRepositoryAdapter
+Cohesion: 0.06
+Nodes (7): attributeFingerprint(), CreateVariantHandler, Inject, Injectable, VariantLifecycleHandler, VariantRepository, Variant
 
 ### Community 9 - "catalog.mappers.ts"
-Cohesion: 0.09
-Nodes (24): CreateVariantCommand, VariantAttributeAssignment, VariantCreateInput, VariantExternalReference, VariantMediaReference, VariantProps, VariantStatus, BarcodeIdentifier (+16 more)
+Cohesion: 0.07
+Nodes (26): CreateVariantCommand, VariantAttributeAssignment, VariantCreateInput, VariantExternalReference, VariantMediaReference, VariantProps, VariantStatus, BarcodeIdentifier (+18 more)
 
 ### Community 10 - "tenant-context.storage.ts"
-Cohesion: 0.10
-Nodes (30): withRequestScope(), TenancyController, ApiBearerAuth, ApiOperation, ApiTags, Controller, Get, AuthenticatedPrincipal (+22 more)
+Cohesion: 0.14
+Nodes (23): withRequestScope(), AuthenticatedPrincipal, ContextMiddleware, Injectable, asyncLocalStorage, clearVendorStoreScope(), createRequestContext(), getCurrentStoreId() (+15 more)
 
-### Community 11 - "resolve-scope.handler.ts"
-Cohesion: 0.12
-Nodes (21): ResolveScopeCommand, ResolveScopeHandler, Injectable, assertCustomerCannotAccessVendorResources(), assertStoreAccess(), assertVendorAccess(), hasAnyStaffRole(), hasVendorWideRole() (+13 more)
+### Community 11 - "scope-policy.ts"
+Cohesion: 0.18
+Nodes (14): assertCustomerCannotAccessVendorResources(), assertStoreAccess(), assertVendorAccess(), hasAnyStaffRole(), hasVendorWideRole(), resolveActorScope(), ActorMembership, MissingStoreScopeError (+6 more)
 
 ### Community 12 - "AppConfigService"
 Cohesion: 0.05
@@ -896,11 +904,11 @@ Nodes (11): AppModule, Module, AppConfigService, Injectable, parseDurationToMs()
 
 ### Community 13 - "Product"
 Cohesion: 0.06
-Nodes (11): ProductLifecycleHandler, ALLOWED_TRANSITIONS, Product, ProductProps, CatalogAttributeAssignment, CatalogMediaReference, ProductStatus, Sku (+3 more)
+Nodes (11): GetProductHandler, ProductLifecycleHandler, Inject, Injectable, ProductRepository, Product, ProductProps, CatalogAttributeAssignment (+3 more)
 
 ### Community 14 - "health.module.ts"
-Cohesion: 0.11
-Nodes (16): DatabaseHealthIndicator, Injectable, HealthModule, Module, RedisHealthIndicator, Inject, Injectable, RedisModule (+8 more)
+Cohesion: 0.13
+Nodes (13): DatabaseHealthIndicator, Injectable, HealthModule, Module, RedisHealthIndicator, Inject, Injectable, HealthController (+5 more)
 
 ### Community 15 - "Cart"
 Cohesion: 0.09
@@ -911,32 +919,28 @@ Cohesion: 0.05
 Nodes (40): autoprefixer, class-variance-authority, clsx, dependencies, class-variance-authority, clsx, next, @radix-ui/react-slot (+32 more)
 
 ### Community 17 - "jwt-auth.guard.ts"
-Cohesion: 0.18
-Nodes (7): TOKEN_SIGNER, TokenSigner, Inject, JwtAuthGuard, Inject, Injectable, AuthenticatedRequest
+Cohesion: 0.19
+Nodes (7): AuthPrincipal, TokenSigner, Inject, JwtAuthGuard, Inject, Injectable, AuthenticatedRequest
 
 ### Community 18 - "compilerOptions"
 Cohesion: 0.07
 Nodes (27): compilerOptions, declaration, emitDecoratorMetadata, esModuleInterop, exactOptionalPropertyTypes, experimentalDecorators, forceConsistentCasingInFileNames, lib (+19 more)
-
-### Community 19 - "Order"
-Cohesion: 0.05
-Nodes (3): Inject, OrderRepository, Order
 
 ### Community 20 - "compilerOptions"
 Cohesion: 0.07
 Nodes (28): compilerOptions, allowJs, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx, lib (+20 more)
 
 ### Community 21 - "catalog.module.ts"
-Cohesion: 0.10
-Nodes (28): CreateCategoryHandler, ListCategoriesHandler, Injectable, CreateProductCommand, CreateProductHandler, GetProductHandler, Injectable, CreateStoreOfferHandler (+20 more)
+Cohesion: 0.13
+Nodes (18): CreateProductCommand, CreateProductHandler, CatalogAccessDeniedError, CatalogApplicationError, CatalogSkuTakenError, CategoryNotFoundError, CategorySlugTakenError, ProductNotFoundError (+10 more)
 
 ### Community 22 - "UniqueID"
-Cohesion: 0.11
-Nodes (13): productId, InventoryItemProps, ids, ReservationProps, InsufficientStockError, InvalidReservationStateError, InvalidStockQuantityError, InventoryDomainError (+5 more)
+Cohesion: 0.06
+Nodes (27): productId, InventoryItemProps, ids, ReservationProps, InsufficientStockError, InvalidReservationStateError, InvalidStockQuantityError, InventoryDomainError (+19 more)
 
 ### Community 23 - "outbox-dispatcher.service.ts"
 Cohesion: 0.10
-Nodes (21): DEFAULT_JOB_OPTIONS, isDuplicateJobIdError(), OutboxDispatcherService, Inject, Injectable, OUTBOX_STORE, OutboxStore, DomainEventsProcessor (+13 more)
+Nodes (22): DEFAULT_JOB_OPTIONS, isDuplicateJobIdError(), OutboxDispatcherService, Inject, Injectable, OUTBOX_STORE, OutboxStore, DomainEventsProcessor (+14 more)
 
 ### Community 24 - "IndexOptimizer"
 Cohesion: 0.07
@@ -944,15 +948,15 @@ Nodes (34): Column, Index, IndexOptimizer, IndexRecommendation, main(), Any, Que
 
 ### Community 25 - "identity.module.ts"
 Cohesion: 0.05
-Nodes (39): ChangePasswordCommand, ChangePasswordHandler, RequestPasswordResetCommand, RequestPasswordResetHandler, ResetPasswordCommand, ResetPasswordHandler, Inject, Injectable (+31 more)
+Nodes (38): ChangePasswordCommand, ChangePasswordHandler, RequestPasswordResetCommand, RequestPasswordResetHandler, ResetPasswordCommand, ResetPasswordHandler, Inject, Injectable (+30 more)
 
 ### Community 26 - "RedisRefreshTokenStoreAdapter"
 Cohesion: 0.27
 Nodes (4): RefreshTokenRecord, RedisRefreshTokenStoreAdapter, Inject, Injectable
 
-### Community 27 - "OrderController"
-Cohesion: 0.24
-Nodes (11): OrderController, ApiBearerAuth, ApiOperation, ApiTags, Body, Controller, Get, HttpCode (+3 more)
+### Community 27 - "CurrentUser"
+Cohesion: 0.23
+Nodes (12): OrderController, ApiBearerAuth, ApiOperation, ApiTags, Body, Controller, Get, HttpCode (+4 more)
 
 ### Community 28 - "order.module.ts"
 Cohesion: 0.16
@@ -966,13 +970,13 @@ Nodes (40): CommunicationTemplate, DataRecoveryPlan, main(), Any, Enum, Main fun
 Cohesion: 0.23
 Nodes (13): ApiBearerAuth, ApiOperation, ApiTags, Body, Controller, Delete, Get, HttpCode (+5 more)
 
-### Community 31 - "MembershipDirectory"
-Cohesion: 0.10
-Nodes (16): Inject, TenantIsolationSampleOrmEntity, Entity, PrimaryKey, Property, Entity, PrimaryKey, Property (+8 more)
+### Community 31 - "resolve-scope.handler.ts"
+Cohesion: 0.07
+Nodes (24): framework_options, fastapi, ResolveScopeCommand, ResolveScopeHandler, Inject, Injectable, ResolvedScope, TenantIsolationSampleOrmEntity (+16 more)
 
 ### Community 32 - "admin-settings.controller.ts"
-Cohesion: 0.05
-Nodes (55): SettingsHandlers, Inject, Injectable, SettingsAccessDeniedError, SettingsDomainError, SettingsNotFoundError, CONFIGURATION_REPOSITORY, ConfigurationRepository (+47 more)
+Cohesion: 0.06
+Nodes (54): SettingsHandlers, Inject, Injectable, SettingsAccessDeniedError, SettingsDomainError, SettingsNotFoundError, CONFIGURATION_REPOSITORY, ConfigurationRepository (+46 more)
 
 ### Community 33 - "APILinter"
 Cohesion: 0.07
@@ -986,21 +990,21 @@ Nodes (35): Column, DatabaseMigrationTool, Index, Issue, main(), MigrationGenera
 Cohesion: 0.04
 Nodes (48): 10. Sale Lifecycle, 11. Sale Lines, 12. Product Search, 13. Barcode Scanner, 14. Inventory, 15. Customer Selection, 16. Pricing, 17. Discounts (+40 more)
 
-### Community 36 - "express"
-Cohesion: 0.15
-Nodes (9): AuditAccessDeniedError, AuditExceptionFilter, Catch, FieldError, ProblemDetails, Rfc7807ExceptionFilter, captureJson(), Catch (+1 more)
+### Community 36 - "Rfc7807ExceptionFilter"
+Cohesion: 0.29
+Nodes (5): FieldError, ProblemDetails, Rfc7807ExceptionFilter, captureJson(), Catch
 
 ### Community 37 - "frontend.md"
-Cohesion: 0.22
-Nodes (8): Border Radius Scale, Decorative Depth, Elevation & Depth, Iteration Guide, Known Gaps, Overview, Photography Geometry, Shapes
+Cohesion: 0.05
+Nodes (37): Border Radius Scale, Brand & Accent, Breakpoints, Buttons, Cards & Containers, Category Accents (sport / collection chips), Collapsing Strategy, Colors (+29 more)
 
 ### Community 38 - "RouteInfo"
 Cohesion: 0.05
 Nodes (34): ConfigGenerator, E2ETestScaffolder, main(), PageObject, PageObjectGenerator, Path, Recursively scan directory for routes, Process a potential page file (+26 more)
 
 ### Community 39 - "Admin Dashboard and Dynamic CMS"
-Cohesion: 0.05
-Nodes (36): 10. Menus and Navigation, 11. Draft, Preview, and Publishing, 12. CMS API and Application Contracts, 13. Audit and Security, 14. Reports, POS, and Financial UI, 15. Implementation Sequence, 16. Definition of Done, 1. Purpose (+28 more)
+Cohesion: 0.12
+Nodes (17): 10. Menus and Navigation, 11. Draft, Preview, and Publishing, 12. CMS API and Application Contracts, 13. Audit and Security, 14. Reports, POS, and Financial UI, 15. Implementation Sequence, 16. Definition of Done, 1. Purpose (+9 more)
 
 ### Community 40 - "check-architecture.mjs"
 Cohesion: 0.25
@@ -1010,25 +1014,25 @@ Nodes (7): checkFile(), kernelRoot, LAYER_RULES, modulesRoot, segments(), srcRoo
 Cohesion: 0.05
 Nodes (26): ASCIIGenerator, DiagramGenerator, main(), MermaidGenerator, PlantUMLGenerator, ProjectScanner, Path, Extract import statements from a file. (+18 more)
 
-### Community 42 - "vendor.aggregate.ts"
-Cohesion: 0.16
-Nodes (22): ALLOWED_TRANSITIONS, VendorProps, VendorBusinessInfo, VendorContactInfo, VendorProfile, VendorSettings, VendorStaffMember, VendorStaffRole (+14 more)
+### Community 42 - "mikro-orm.config.ts"
+Cohesion: 0.15
+Nodes (21): VendorProps, VendorBusinessInfo, VendorContactInfo, VendorProfile, VendorSettings, VendorStaffMember, VendorStaffRole, VendorStatus (+13 more)
 
-### Community 43 - "mikro-orm.config.ts"
-Cohesion: 0.10
-Nodes (30): WarehouseProps, InventoryMovementRecord, InventoryItemStatus, InventoryOperationType, InventoryReferenceType, ReservationStatus, WarehouseStatus, InventoryItemOrmEntity (+22 more)
+### Community 43 - "meilisearch-product-search.adapter.ts"
+Cohesion: 0.07
+Nodes (31): PRODUCT_SEARCH_INDEX, ProductSearchIndexPort, OfferSearchDocument, OfferSearchSource, SearchProductsQuery, SearchProductsResult, SearchStockStatus, buildOfferSearchDocument() (+23 more)
 
 ### Community 44 - "Required workflow"
 Cohesion: 0.05
 Nodes (34): Change sizing, Completion evidence, Failure handling, Implementation and Verification, Test selection, Verification order, API example, Decision test (+26 more)
 
 ### Community 45 - "vendor.module.ts"
-Cohesion: 0.18
-Nodes (9): RegisterVendorCommand, RegisterVendorHandler, Inject, Injectable, VendorAccessDeniedError, VendorApplicationError, VendorNotFoundError, VendorSlugTakenError (+1 more)
+Cohesion: 0.23
+Nodes (7): RegisterVendorCommand, VendorAccessDeniedError, VendorApplicationError, VendorNotFoundError, VendorSlugTakenError, VENDOR_REPOSITORY, USER_ROLE_ASSIGNER
 
 ### Community 46 - "Payment Module"
-Cohesion: 0.05
-Nodes (36): COD handoff, Courier providers, Exit criteria, Fulfillment Module, HTTP, Related, Responsibility, Shipment status (+28 more)
+Cohesion: 0.17
+Nodes (12): Backend payment invariants, Callback handling, Exit criteria, Online COD flow, Payment methods, Payment Module, Provider port, Refunds (Phase 14.2) (+4 more)
 
 ### Community 47 - ".prettierrc.json"
 Cohesion: 0.33
@@ -1047,32 +1051,32 @@ Cohesion: 0.06
 Nodes (31): Commit Messages, Conventional Commit selection, Examples, Quality rules, Ticket references, Changelogs, GitHub Pages after a push, Pull request structure (+23 more)
 
 ### Community 55 - "Vendor"
-Cohesion: 0.07
-Nodes (6): Inject, Injectable, UpdateVendorHandler, VendorRepository, slugify(), Vendor
+Cohesion: 0.08
+Nodes (5): Inject, Injectable, UpdateVendorHandler, VendorRepository, Vendor
 
 ### Community 56 - "PHASES.md"
-Cohesion: 0.06
-Nodes (31): Customer Module, Exit criteria, Privacy, Related, Responsibility, Testing requirements, Appendix — Cursor Execution Rule, Architecture (+23 more)
+Cohesion: 0.09
+Nodes (13): Phase roadmap plans — Octopus fit, Calculation timing, Commissions, Concept, Related, Rules, Appendix — Cursor Execution Rule, Audit Events (+5 more)
 
 ### Community 63 - "Catalog Module"
-Cohesion: 0.15
-Nodes (13): Architecture, Attributes and options, Barcode identifiers, Catalog Module, Exit criteria, Identifiers and value objects, Lifecycle and publication, Media and thumbnail rules (+5 more)
+Cohesion: 0.11
+Nodes (18): Architecture, Attributes and options, Barcode identifiers, Brand, Catalog Module, Category, Exit criteria, Identifiers and value objects (+10 more)
 
 ### Community 64 - "InventoryItem"
-Cohesion: 0.06
-Nodes (6): InventoryRepository, InventoryItem, applyInventoryItemToOrm(), inventoryItemToDomain(), InventoryRepositoryAdapter, Injectable
+Cohesion: 0.03
+Nodes (11): InventoryMutationUnitOfWork, InventoryRepository, InventoryItem, InventoryReservation, applyInventoryItemToOrm(), inventoryItemToDomain(), InventoryRepositoryAdapter, MikroInventoryUnitOfWork (+3 more)
 
 ### Community 65 - "Architecture Contract"
-Cohesion: 0.06
-Nodes (32): 10. Payments, 11. Payouts, 12. Events, 13. Search, 14. API, 15. Frontend, 1. Bounded contexts, 2. Module structure (+24 more)
+Cohesion: 0.12
+Nodes (16): 10. Payments, 11. Payouts, 12. Events, 13. Search, 14. API, 15. Frontend, 1. Bounded contexts, 2. Module structure (+8 more)
 
 ### Community 66 - "Public"
 Cohesion: 0.21
 Nodes (17): CartController, ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller, Delete (+9 more)
 
-### Community 67 - "domain/errors/vendor.errors.ts"
-Cohesion: 0.22
-Nodes (6): CannotRemoveLastOwnerError, InvalidVendorStatusTransitionError, VendorDomainError, VendorNotOperableError, VendorStaffAlreadyExistsError, VendorStaffNotFoundError
+### Community 67 - "vendor.aggregate.ts"
+Cohesion: 0.24
+Nodes (7): ALLOWED_TRANSITIONS, CannotRemoveLastOwnerError, InvalidVendorStatusTransitionError, VendorDomainError, VendorNotOperableError, VendorStaffAlreadyExistsError, VendorStaffNotFoundError
 
 ### Community 68 - "cart.aggregate.ts"
 Cohesion: 0.13
@@ -1094,9 +1098,9 @@ Nodes (10): Architecture, Events, Exit criteria, Key invariants, Lifecycle, Publ
 Cohesion: 0.20
 Nodes (10): Architecture, Definition of Production Ready, Financial, Inventory, Observability, Operations, Phase 30 — Production Readiness Review, Reliability (+2 more)
 
-### Community 73 - "InventoryReservation"
-Cohesion: 0.07
-Nodes (5): InventoryMutationUnitOfWork, InventoryReservation, MikroInventoryUnitOfWork, applyReservationToOrm(), reservationToDomain()
+### Community 73 - "returns.handlers.ts"
+Cohesion: 0.11
+Nodes (18): ReturnNotFoundError, ReturnsAccessDeniedError, ReturnsIdempotencyConflictError, ALLOWED, seedReturn(), InvalidReturnInspectionError, InvalidReturnReasonError, InvalidReturnTransitionError (+10 more)
 
 ### Community 74 - "DashboardGenerator"
 Cohesion: 0.07
@@ -1119,16 +1123,16 @@ Cohesion: 0.22
 Nodes (9): Cart Module, Exit criteria, Handoff to checkout, Invariants, Multi-vendor structure, Operations, Related, Responsibility (+1 more)
 
 ### Community 79 - "Checkout Module"
-Cohesion: 0.20
-Nodes (10): Checkout Module, Exit criteria, Idempotency, Invariants, Multi-vendor checkout, Phase 09 notes, Related, Responsibility (+2 more)
+Cohesion: 0.06
+Nodes (28): Authority, Inputs, Module ownership, Pricing, Related, Rules, Concept, Promotion types (+20 more)
 
 ### Community 80 - "cart-port.adapter.ts"
 Cohesion: 0.20
 Nodes (9): CartPortAdapter, Inject, Injectable, CART_PORT, CartLineSnapshotDto, CartOwnerRef, CartPort, CartSnapshotDto (+1 more)
 
 ### Community 81 - "payment.handlers.ts"
-Cohesion: 0.15
-Nodes (19): CancelCodPaymentHandler, CollectCodPaymentHandler, CreatePaymentIntentHandler, hashCancel(), hashCollect(), hashCreateIntent(), toCreateResult(), Injectable (+11 more)
+Cohesion: 0.05
+Nodes (42): CancelCodPaymentHandler, CollectCodPaymentHandler, CreatePaymentIntentHandler, CreateRefundHandler, hashCancel(), hashCollect(), hashCreateIntent(), hashRefund() (+34 more)
 
 ### Community 82 - "Objective"
 Cohesion: 0.22
@@ -1160,11 +1164,11 @@ Nodes (45): 1. Additive Changes Only, 1. Backward Compatibility, 1. Blue-Green D
 
 ### Community 89 - "backend/package.json"
 Cohesion: 0.22
-Nodes (8): ./mikro-orm.config.ts, mikro-orm, configPaths, useTsNode, name, private, version, ./dist/mikro-orm.config.js
+Nodes (8): mikro-orm, configPaths, useTsNode, name, private, version, ./dist/mikro-orm.config.js, ./mikro-orm.config.ts
 
 ### Community 90 - "Notification Module"
-Cohesion: 0.25
-Nodes (7): Delivery model, Exit criteria, Notification Module, Related, Responsibility, Rules, Testing requirements
+Cohesion: 0.29
+Nodes (6): Channels (cost posture), Notification Module, Pipeline, Related, Responsibility, Rules
 
 ### Community 91 - "Objective"
 Cohesion: 0.25
@@ -1206,25 +1210,25 @@ Nodes (28): ComponentInfo, ComponentScanner, main(), Path, Scan a single file fo
 Cohesion: 0.14
 Nodes (13): AI-Assisted Development, Completion protocol, Context database (OpenViking, optional), Engineering depth (alirezarezvani/claude-skills), Engineering skills (mattpocock/skills), Knowledge graph (Graphify), NestJS depth (amirtaherkhani/nestjs-agent-skills), Octopus-adapted workflow skills (Colorcom patterns) (+5 more)
 
-### Community 101 - "CatalogAuthorizationService"
-Cohesion: 0.10
-Nodes (10): Inject, Inject, attributeFingerprint(), Inject, Injectable, VariantLifecycleHandler, ProductRepository, CatalogAuthorizationService (+2 more)
+### Community 101 - "withRlsContext"
+Cohesion: 0.09
+Nodes (13): applyOfferToOrm(), offerToDomain(), productToDomain(), variantToDomain(), ProductRepositoryAdapter, Injectable, StoreOfferRepositoryAdapter, Injectable (+5 more)
 
 ### Community 102 - "order.aggregate.ts"
-Cohesion: 0.20
-Nodes (18): ALLOWED_TRANSITIONS, assertMoney(), OrderLineProps, OrderProps, OrderFulfillmentStatus, OrderLineSnapshot, OrderPaymentMethod, OrderPaymentStatus (+10 more)
+Cohesion: 0.13
+Nodes (23): ALLOWED_TRANSITIONS, assertMoney(), OrderLineProps, OrderProps, createPendingOrder(), InvalidOrderFulfillmentError, InvalidOrderSnapshotError, InvalidOrderTransitionError (+15 more)
 
 ### Community 103 - "cart.module.ts"
 Cohesion: 0.17
 Nodes (12): CART_REPOSITORY, applyCartToOrm(), cartLinesToOrm(), cartToDomain(), CartLineOrmEntity, CartOrmEntity, Entity, PrimaryKey (+4 more)
 
 ### Community 104 - "checkout.handlers.ts"
-Cohesion: 0.11
-Nodes (20): accessMocks(), baseCart(), buildHandler(), SubmitCheckoutInput, CheckoutAccessDeniedError, CheckoutIdempotencyConflictError, CheckoutOrderRef, CheckoutPaymentMethod (+12 more)
+Cohesion: 0.06
+Nodes (39): CheckoutSubmitHandler, groupLinesByStore(), hashSubmitRequest(), isPricingFailure(), accessMocks(), baseCart(), buildHandler(), SubmitCheckoutInput (+31 more)
 
 ### Community 105 - "SubmitCheckoutDto"
-Cohesion: 0.17
-Nodes (15): ShippingAddressDto, SubmitCheckoutDto, ApiProperty, ApiPropertyOptional, IsIn, IsInt, IsOptional, IsString (+7 more)
+Cohesion: 0.08
+Nodes (26): CheckoutController, ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller, Headers (+18 more)
 
 ### Community 106 - "SchemaCompatibilityChecker"
 Cohesion: 0.09
@@ -1255,20 +1259,20 @@ Cohesion: 0.25
 Nodes (8): Critical Rule, Objective, Online COD (shipped), Payment, Phase 11 — Payment, Provider Port, Providers (live adapters later), Security
 
 ### Community 113 - "Database Rules"
-Cohesion: 0.08
-Nodes (22): Constraints, Database Rules, IDs, Indexing, Migrations, Optimistic concurrency, PostgreSQL, RLS (+14 more)
+Cohesion: 0.05
+Nodes (34): Constraints, Database Rules, IDs, Indexing, Migrations, Optimistic concurrency, PostgreSQL, RLS (+26 more)
 
-### Community 114 - "Cross-Module Communication"
-Cohesion: 0.07
-Nodes (24): ADR-0001: Modular Monolith, Consequences, Context, Decision, Extraction rule, Status, ADR-0002: Event-Driven Architecture, Consequences (+16 more)
+### Community 114 - "ADR-0001: Modular Monolith"
+Cohesion: 0.14
+Nodes (12): ADR-0001: Modular Monolith, Consequences, Context, Decision, Extraction rule, Status, ADR-0002: Event-Driven Architecture, Consequences (+4 more)
 
 ### Community 115 - "SLODesigner"
 Cohesion: 0.08
 Nodes (24): main(), Any, Generate Service Level Indicators based on service characteristics., Create detailed SLI definition., Generate additional SLIs for user-facing services., Generate Service Level Objectives based on service criticality., Create SLO definition from SLI., Design and generate SLO frameworks for services. (+16 more)
 
-### Community 116 - "inventory.port.ts"
-Cohesion: 0.08
-Nodes (15): InventoryPortAdapter, Inject, Injectable, AvailabilityQuery, AvailabilityResult, CommitInventoryInput, INVENTORY_PORT, InventoryPort (+7 more)
+### Community 116 - "inventory.handlers.ts"
+Cohesion: 0.05
+Nodes (43): CrossStoreTransferDeniedError, InventoryAccessDeniedError, InventoryApplicationError, InventoryItemNotFoundError, ReservationNotFoundError, VariantNotFoundForInventoryError, WarehouseCodeTakenError, WarehouseNotFoundError (+35 more)
 
 ### Community 117 - "Pipeline Design Notes — Pitfalls, Strategy, and Scaling"
 Cohesion: 0.05
@@ -1311,8 +1315,8 @@ Cohesion: 0.29
 Nodes (7): Exit Criteria, Objective, Phase 07 — Pricing & Promotion, Pricing, Promotions, Rule, Tests
 
 ### Community 127 - "audit.module.ts"
-Cohesion: 0.08
-Nodes (23): AuditHandlers, Inject, Injectable, AUDIT_REPOSITORY, AuditRepository, AuditEventRecord, redactSecrets(), AuditEventOrmEntity (+15 more)
+Cohesion: 0.06
+Nodes (29): AuditHandlers, Inject, Injectable, AuditAccessDeniedError, AUDIT_REPOSITORY, AuditRepository, AuditModule, Global (+21 more)
 
 ### Community 128 - "scripts"
 Cohesion: 0.29
@@ -1343,16 +1347,16 @@ Cohesion: 0.11
 Nodes (16): Agent skills, AGENTS, Domain docs, Everyday flows, Issue tracker, Non-negotiables (also in `.cursor/rules`), Related, Triage labels (+8 more)
 
 ### Community 135 - "media.handlers.ts"
-Cohesion: 0.07
-Nodes (28): MEDIA_READ_ROLES, MEDIA_WRITE_ROLES, MediaHandlers, Inject, Injectable, MediaAccessDeniedError, MediaDomainError, MediaNotFoundError (+20 more)
+Cohesion: 0.06
+Nodes (33): MEDIA_READ_ROLES, MEDIA_WRITE_ROLES, MediaHandlers, Inject, Injectable, MediaAccessDeniedError, MediaDomainError, MediaNotFoundError (+25 more)
 
 ### Community 136 - "MigrationPlanner"
 Cohesion: 0.08
 Nodes (30): main(), MigrationComplexity, MigrationConstraint, MigrationPhase, MigrationPlan, MigrationPlanner, MigrationType, Any (+22 more)
 
-### Community 137 - "VendorAccessPort"
-Cohesion: 0.06
-Nodes (30): Inject, Inject, Inject, Inject, COD_COLLECT_ROLES, Inject, Inject, Inject (+22 more)
+### Community 137 - "store.module.ts"
+Cohesion: 0.10
+Nodes (19): CreateStoreCommand, CreateStoreHandler, Inject, Injectable, Inject, Inject, StoreAccessDeniedError, StoreApplicationError (+11 more)
 
 ### Community 138 - "NestJS Features, Scaling, and Performance"
 Cohesion: 0.11
@@ -1378,9 +1382,9 @@ Nodes (40): 1. Query Analysis with EXPLAIN, 2. Indexing Strategies, 3. N+1 Query
 Cohesion: 0.05
 Nodes (40): Anti-Patterns, Backup Best Practices, Backup & Restore, Common Query Templates, Compatibility Tips, Constraint Strategy, Core Capabilities, Cross-References (+32 more)
 
-### Community 146 - "payment.repository.adapter.ts"
-Cohesion: 0.22
-Nodes (15): PaymentIntentProps, PAYMENT_METHODS, PaymentIntentStatus, PaymentMethod, PaymentProvider, applyPaymentIntentToOrm(), paymentIntentToDomain(), PaymentIntentOrmEntity (+7 more)
+### Community 146 - "Refund"
+Cohesion: 0.05
+Nodes (34): PaymentIntentProps, Refund, RefundProps, CodAlreadyCollectedError, CodAmountMismatchError, CodCancelledError, CodNotAvailableError, CodNotCollectibleError (+26 more)
 
 ### Community 147 - "Database Designer - POWERFUL Tier Skill"
 Cohesion: 0.05
@@ -1395,8 +1399,8 @@ Cohesion: 0.13
 Nodes (15): Boolean flag arguments, Circular dependency and `forwardRef`, Code Smells and Refactoring, Data-only domain model, Divergent change, Feature envy and train wrecks, Generic `BaseService<T>`, God service (+7 more)
 
 ### Community 154 - "PaymentPort"
-Cohesion: 0.18
-Nodes (5): Inject, FulfillmentAuthorizationService, Injectable, CourierPort, PaymentPort
+Cohesion: 0.14
+Nodes (5): Inject, FulfillmentRepository, FulfillmentAuthorizationService, Injectable, PaymentPort
 
 ### Community 156 - "Engineering Principles as Decision Tests"
 Cohesion: 0.14
@@ -1415,8 +1419,8 @@ Cohesion: 0.05
 Nodes (38): business_metrics, conversion_rate, revenue_per_hour, cluster_size, type, compliance_requirements, metric, target (+30 more)
 
 ### Community 172 - "Warehouse"
-Cohesion: 0.11
-Nodes (6): WarehouseRepository, Warehouse, applyWarehouseToOrm(), warehouseToDomain(), Injectable, WarehouseRepositoryAdapter
+Cohesion: 0.08
+Nodes (13): WarehouseRepository, Warehouse, WarehouseProps, WarehouseStatus, applyWarehouseToOrm(), warehouseToDomain(), Entity, PrimaryKey (+5 more)
 
 ### Community 173 - "code_quality_checker.py"
 Cohesion: 0.09
@@ -1435,12 +1439,12 @@ Cohesion: 0.05
 Nodes (36): Analyze Bundle Size, Bundle Optimization, Caching Strategies, Client Components, Code Splitting, Config Template, Core Web Vitals, Cumulative Layout Shift (CLS) (+28 more)
 
 ### Community 177 - "order.port.ts"
-Cohesion: 0.11
-Nodes (16): CreateOrderFromCheckoutHandler, Injectable, OrderPortAdapter, toSnapshot(), Inject, Injectable, CheckoutOrderCreateInput, CheckoutOrderCreateResult (+8 more)
+Cohesion: 0.09
+Nodes (20): CreateOrderFromCheckoutHandler, Injectable, OrderPortAdapter, toReturnSnapshot(), toSnapshot(), Inject, Injectable, daysBetween() (+12 more)
 
-### Community 178 - "Any"
-Cohesion: 0.13
-Nodes (12): Any, Generate complete migration plan from schema changes., Generate steps for creating new tables., Generate steps for adding indexes., Create step for adding index., Generate steps for removing indexes., Create step for dropping index., Generate steps for removing tables. (+4 more)
+### Community 178 - "MigrationGenerator"
+Cohesion: 0.10
+Nodes (19): MigrationGenerator, Any, Generates migration steps from schema differences., Generate complete migration plan from schema changes., Generate steps for creating new tables., Generate steps for modifying columns., Create zero-downtime steps for column modification., Generate steps for adding constraints. (+11 more)
 
 ### Community 179 - "Technology Decision Guide"
 Cohesion: 0.06
@@ -1459,12 +1463,12 @@ Cohesion: 0.06
 Nodes (30): Before exploring, read these, Domain Docs, File structure, Flag ADR conflicts, Use the glossary's vocabulary, Conventions, Issue tracker: GitHub, Pull requests as a triage surface (+22 more)
 
 ### Community 183 - "Category"
-Cohesion: 0.08
-Nodes (10): isPlatformAdmin(), Inject, UpdateCategoryHandler, CategoryRepository, Category, slugify(), applyCategoryToOrm(), categoryToDomain() (+2 more)
+Cohesion: 0.06
+Nodes (20): CreateCategoryHandler, isPlatformAdmin(), ListCategoriesHandler, Inject, Injectable, UpdateCategoryHandler, CategoryRepository, Category (+12 more)
 
-### Community 184 - "CurrentUser"
-Cohesion: 0.15
-Nodes (16): CatalogController, ApiBearerAuth, ApiOperation, ApiQuery, ApiTags, Body, Controller, Get (+8 more)
+### Community 184 - "RequestPrincipal"
+Cohesion: 0.17
+Nodes (15): CatalogController, ApiBearerAuth, ApiOperation, ApiQuery, ApiTags, Body, Controller, Get (+7 more)
 
 ### Community 185 - "API Design Patterns"
 Cohesion: 0.06
@@ -1487,16 +1491,16 @@ Cohesion: 0.09
 Nodes (33): analyze_query(), check_cartesian_join(), check_function_on_column(), check_leading_wildcard(), check_missing_limit(), check_missing_where(), check_not_in_subquery(), check_order_by_rand() (+25 more)
 
 ### Community 190 - "StoreOffer"
-Cohesion: 0.08
-Nodes (8): StoreOfferLifecycleHandler, Injectable, StoreOfferRepository, StoreOffer, applyOfferToOrm(), offerToDomain(), StoreOfferRepositoryAdapter, Injectable
+Cohesion: 0.09
+Nodes (6): CreateStoreOfferHandler, StoreOfferLifecycleHandler, Inject, Injectable, StoreOfferRepository, StoreOffer
 
 ### Community 191 - "Receipt"
-Cohesion: 0.06
-Nodes (22): ReceiptRepository, formatReceiptNumber(), Receipt, ReceiptProps, ReceiptSaleSnapshot, ReceiptStatus, applyReceiptToOrm(), receiptToDomain() (+14 more)
+Cohesion: 0.08
+Nodes (6): ReceiptRepository, Receipt, applyReceiptToOrm(), receiptToDomain(), ReceiptRepositoryAdapter, Injectable
 
 ### Community 192 - "ReceiptTemplate"
-Cohesion: 0.08
-Nodes (4): ReceiptTemplate, ReceiptTemplateProps, applyTemplateToOrm(), templateToDomain()
+Cohesion: 0.07
+Nodes (6): ReceiptTemplateRepository, ReceiptTemplate, applyTemplateToOrm(), templateToDomain(), ReceiptTemplateRepositoryAdapter, Injectable
 
 ### Community 193 - "Database Designer - POWERFUL Tier Skill"
 Cohesion: 0.06
@@ -1563,8 +1567,8 @@ Cohesion: 0.06
 Nodes (6): PromotionRepository, Promotion, applyPromotionToOrm(), promotionToDomain(), PromotionRepositoryAdapter, Injectable
 
 ### Community 209 - "Store"
-Cohesion: 0.09
-Nodes (11): CreateStoreHandler, Injectable, isPlatformAdmin(), StoreLifecycleHandler, Injectable, Injectable, UpdateStoreHandler, slugify() (+3 more)
+Cohesion: 0.06
+Nodes (10): isPlatformAdmin(), StoreLifecycleHandler, Injectable, Injectable, UpdateStoreHandler, slugify(), Store, toDomain() (+2 more)
 
 ### Community 210 - "PDF Processing Guide"
 Cohesion: 0.07
@@ -1580,7 +1584,7 @@ Nodes (25): Learning Record Format, Numbering, Optional sections, Supersession, 
 
 ### Community 213 - "store.aggregate.ts"
 Cohesion: 0.09
-Nodes (25): ALLOWED_TRANSITIONS, StoreProps, CannotRemoveLastManagerError, InvalidStoreStatusTransitionError, StoreClosedError, StoreDomainError, StoreNotOperableError, StoreStaffAlreadyExistsError (+17 more)
+Nodes (27): ALLOWED_TRANSITIONS, StoreProps, CannotRemoveLastManagerError, InvalidStoreStatusTransitionError, StoreClosedError, StoreDomainError, StoreNotOperableError, StoreStaffAlreadyExistsError (+19 more)
 
 ### Community 214 - "._score_consistency"
 Cohesion: 0.14
@@ -1612,15 +1616,15 @@ Nodes (26): 1. Visual Theme & Atmosphere, 2. Color Palette & Roles, 3. Typograph
 
 ### Community 221 - "AuditReport"
 Cohesion: 0.14
-Nodes (20): AuditReport, clone_repo(), Finding, main(), print_report(), Path, Scan a code file for dangerous patterns., Scan a markdown file for prompt injection patterns. (+12 more)
+Nodes (20): AuditReport, clone_repo(), Finding, main(), print_report(), Scan a code file for dangerous patterns., Scan a markdown file for prompt injection patterns., Scan dependency files for supply chain risks. (+12 more)
 
 ### Community 222 - "pos.module.ts"
-Cohesion: 0.17
-Nodes (12): CreateReceiptFromSaleInput, CreateReceiptHandler, Inject, Injectable, ReceiptTemplateHandler, Inject, Injectable, RECEIPT_REPOSITORY (+4 more)
+Cohesion: 0.15
+Nodes (14): CreateReceiptFromSaleInput, CreateReceiptHandler, Inject, Injectable, ReceiptTemplateHandler, Inject, Injectable, RECEIPT_REPOSITORY (+6 more)
 
 ### Community 223 - "promotion.aggregate.ts"
-Cohesion: 0.13
-Nodes (13): PROMOTION_REPOSITORY, CouponCustomerLimitReachedError, CouponExpiredError, CouponMinOrderError, CouponNotFoundError, CouponNotYetActiveError, CouponStoreRestrictionError, CouponUsageLimitReachedError (+5 more)
+Cohesion: 0.15
+Nodes (11): CouponCustomerLimitReachedError, CouponExpiredError, CouponMinOrderError, CouponNotYetActiveError, CouponStoreRestrictionError, CouponUsageLimitReachedError, CouponVendorRestrictionError, CurrencyMismatchError (+3 more)
 
 ### Community 224 - "InventoryController"
 Cohesion: 0.22
@@ -1642,13 +1646,13 @@ Nodes (21): 1. In-process, 2. Local-substitutable, 3. Remote but owned (Ports & 
 Cohesion: 0.08
 Nodes (23): Architecture Patterns (`references/architecture_patterns.md`), Assumptions and Verifiable Success Criteria (Karpathy discipline), Code Quality Analyzer, Common Issues, Composition map, Customization profiles, Decision Engine, Development Workflows (`references/development_workflows.md`) (+15 more)
 
-### Community 229 - "pos-authorization.service.ts"
+### Community 229 - "pos-exception.filter.ts"
 Cohesion: 0.13
 Nodes (10): PosAccessDeniedError, PosApplicationError, PosStoreNotFoundError, ReceiptAlreadyExistsError, ReceiptNotFoundError, InvalidReceiptSnapshotError, InvalidReceiptTemplateError, PosDomainError (+2 more)
 
 ### Community 230 - "pricing.module.ts"
-Cohesion: 0.13
-Nodes (15): PricingQuoteHandler, Injectable, PricingPortAdapter, Inject, Injectable, PricingModule, Global, Module (+7 more)
+Cohesion: 0.23
+Nodes (9): PricingPortAdapter, Injectable, PRICING_PORT, PricingPort, PricingQuoteLineInput, PricingQuoteLineResult, PricingQuoteRequest, PricingQuoteResult (+1 more)
 
 ### Community 231 - "Senior Backend Engineer"
 Cohesion: 0.09
@@ -1699,24 +1703,24 @@ Cohesion: 0.18
 Nodes (12): RegisterUserCommand, AuthorizationService, Injectable, Permission, PERMISSIONS, Role, permissionsForRoles(), ROLE_PERMISSIONS (+4 more)
 
 ### Community 243 - "receipt-template.aggregate.ts"
-Cohesion: 0.16
-Nodes (14): sanitizeLine(), sanitizeLines(), sanitizeMultiline(), DEFAULT_FOOTER_LINES, DEFAULT_RETURNS_POLICY_TEXT, DEFAULT_THANK_YOU_TEXT, ReceiptPaperWidth, ReceiptPaymentLine (+6 more)
+Cohesion: 0.19
+Nodes (13): sanitizeLine(), sanitizeLines(), sanitizeMultiline(), DEFAULT_FOOTER_LINES, DEFAULT_RETURNS_POLICY_TEXT, DEFAULT_THANK_YOU_TEXT, ReceiptPaperWidth, ReceiptTemplateProps (+5 more)
 
 ### Community 244 - "Feature Flags Architect"
 Cohesion: 0.10
 Nodes (20): Anti-patterns, Asset templates, Core principle: flags are a lifecycle, not an `if`, Feature Flags Architect, `flag_debt_scanner.py`, `kill_switch_audit.py`, Provider chooser (5 + DIY), Quick start (+12 more)
 
-### Community 245 - "anti_recommendations"
-Cohesion: 0.33
-Nodes (6): anti_recommendations, context-as-global-state, next-or-remix-for-pure-spa, no-code-splitting, redux-without-justification, ssr-on-spa-only-surface
+### Community 245 - "vite-spa.json"
+Cohesion: 0.10
+Nodes (20): anti_recommendations, context-as-global-state, next-or-remix-for-pure-spa, no-code-splitting, redux-without-justification, ssr-on-spa-only-surface, canon_references, ci_gates (+12 more)
 
 ### Community 246 - "SLI design"
 Cohesion: 0.10
 Nodes (20): 1. Request-success-rate (most common), 2. Request-latency, 3. Availability-time, 4. Data-freshness, 5. Correctness, Common SLI mistakes, Conflating SLIs across user journeys, Counting bot traffic (+12 more)
 
 ### Community 247 - "store.controller.ts"
-Cohesion: 0.25
-Nodes (17): AddStoreStaffRequestDto, CreateStoreRequestDto, SuspendStoreRequestDto, ApiProperty, ApiPropertyOptional, IsBoolean, IsIn, IsInt (+9 more)
+Cohesion: 0.19
+Nodes (19): AddStoreStaffRequestDto, CreateStoreRequestDto, SuspendStoreRequestDto, ApiProperty, ApiPropertyOptional, IsBoolean, IsIn, IsInt (+11 more)
 
 ### Community 248 - "HTML Report Format"
 Cohesion: 0.10
@@ -1743,8 +1747,8 @@ Cohesion: 0.11
 Nodes (18): A.1: Analyze the Structure, A.2: Check for Missing Elements, A.3: Create fields.json with PDF Coordinates, A.4: Validate Bounding Boxes, Approach A: Structure-Based Coordinates (Preferred), Approach B: Visual Estimation (Fallback), B.1: Convert PDF to Images, B.2: Initial Field Identification (+10 more)
 
 ### Community 254 - "stack"
-Cohesion: 0.20
-Nodes (10): stack, build_tool, code_split, data_fetching, forms, language, router, state_client (+2 more)
+Cohesion: 0.11
+Nodes (19): shadcn-ui, stack, build_tool, code_split, component_library_options, data_fetching, forms, framework_options (+11 more)
 
 ### Community 255 - "Senior QA Engineer"
 Cohesion: 0.11
@@ -1771,8 +1775,8 @@ Cohesion: 0.11
 Nodes (17): Development Override Pattern, docker-compose.override.yml (dev — auto-loaded), Docker Compose Patterns Reference, docker-compose.yml (base — production-like), .env.example (committed to repo), Environment Variable Patterns, Key Patterns, Logging Configuration (+9 more)
 
 ### Community 262 - "Cryptography Implementation Guide"
-Cohesion: 0.11
-Nodes (18): AES-256-GCM Implementation, Algorithm Selection Guide, Asymmetric Encryption, ChaCha20-Poly1305 Implementation, Cryptographic Primitives, Cryptography Implementation Guide, Digital Signatures (Ed25519), ECDH Key Exchange (+10 more)
+Cohesion: 0.14
+Nodes (14): Algorithm Selection Guide, Asymmetric Encryption, Cryptographic Primitives, Cryptography Implementation Guide, Digital Signatures (Ed25519), ECDH Key Exchange, Hardware Security Module Integration, Key Derivation Functions (+6 more)
 
 ### Community 263 - "CreateReceiptRequestDto"
 Cohesion: 0.20
@@ -1806,13 +1810,13 @@ Nodes (14): Phase boundaries, Primary and secondary sources, The five options, T
 Cohesion: 0.12
 Nodes (15): 1. Architecture Diagram Generator, 2. Dependency Analyzer, 3. Project Architect, Architecture Pattern Selection Workflow, Common Commands, Database Selection Workflow, Decision Workflows, Getting Help (+7 more)
 
-### Community 271 - "admin-shell.tsx"
-Cohesion: 0.18
-Nodes (10): ErrorPageProps, AdminShell(), MeResponse, NAV, NavItem, scopeLabel(), Button, ButtonProps (+2 more)
+### Community 271 - "react"
+Cohesion: 0.13
+Nodes (14): AuthLayout(), ErrorPageProps, ErrorBoundaryProps, ErrorBoundaryState, AdminShell(), MeResponse, NAV, NavItem (+6 more)
 
-### Community 272 - "PromotionCommandHandler"
-Cohesion: 0.24
-Nodes (4): PromotionCommandHandler, Inject, PricingAuthorizationService, Injectable
+### Community 272 - "PricingQuoteHandler"
+Cohesion: 0.18
+Nodes (5): PricingQuoteHandler, PromotionCommandHandler, Inject, Injectable, Inject
 
 ### Community 273 - "receipt-template-settings.tsx"
 Cohesion: 0.19
@@ -1846,12 +1850,12 @@ Nodes (14): analyze_dependencies(), analyze_imports(), calculate_score(), check_
 Cohesion: 0.30
 Nodes (13): build_parser(), Inputs, load_profiles(), main(), Match, Any, ArgumentParser, rank() (+5 more)
 
-### Community 281 - "CreateProductDto"
-Cohesion: 0.33
-Nodes (15): CreateCategoryDto, CreateProductDto, CreateStoreOfferDto, CreateVariantDto, ApiProperty, ApiPropertyOptional, IsArray, IsInt (+7 more)
+### Community 281 - "catalog.controller.ts"
+Cohesion: 0.24
+Nodes (17): CreateCategoryDto, CreateProductDto, CreateStoreOfferDto, CreateVariantDto, ApiProperty, ApiPropertyOptional, IsArray, IsInt (+9 more)
 
 ### Community 282 - "receipt-renderer.ts"
-Cohesion: 0.28
+Cohesion: 0.30
 Nodes (12): assertSnapshot(), buildSampleSaleSnapshot(), center(), formatDate(), formatMoney(), padColumns(), renderReceiptText(), repeat() (+4 more)
 
 ### Community 283 - "Dart / Flutter — Language-Specific Review Notes"
@@ -1883,8 +1887,8 @@ Cohesion: 0.14
 Nodes (13): Burn-rate alerts (Google SRE Workbook canon), Burn-rate vs uptime alerting, Computation, Error budget, Error budget policy, Recommended thresholds, Recovery path, Reference table (+5 more)
 
 ### Community 290 - "pricing-engine.ts"
-Cohesion: 0.27
-Nodes (8): PriceQuote, QuoteLineInput, QuoteLineResult, allocateDiscount(), assertNonNegativeInteger(), calculatePriceQuote(), PricingEngineInput, unitStartingPrice()
+Cohesion: 0.24
+Nodes (9): PriceQuote, QuoteLineInput, QuoteLineResult, allocateDiscount(), assertNonNegativeInteger(), calculatePriceQuote(), PricingEngineInput, activePromo() (+1 more)
 
 ### Community 291 - "._compare_path_operations"
 Cohesion: 0.18
@@ -2067,8 +2071,8 @@ Cohesion: 0.17
 Nodes (12): ci_cd, gates, platform, stages, build, deploy-preview, deploy-prod, lighthouse-ci (+4 more)
 
 ### Community 336 - "stages"
-Cohesion: 0.17
-Nodes (12): ci_cd, gates, platform, stages, build, deploy-preview, deploy-prod, lint (+4 more)
+Cohesion: 0.29
+Nodes (7): stages, build, deploy-preview, deploy-prod, lint, test, typecheck
 
 ### Community 337 - "hosting"
 Cohesion: 0.17
@@ -2144,19 +2148,19 @@ Nodes (11): Button, Checkbox, Form, Form Components, Input, Label, Radio Group, 
 
 ### Community 355 - "Shipment"
 Cohesion: 0.07
-Nodes (5): FulfillmentRepository, Shipment, shipmentToDomain(), FulfillmentRepositoryAdapter, Injectable
+Nodes (7): hashCreate(), ShipmentResponse, toResponse(), Shipment, ShipmentProps, ShipmentLineSnapshot, ShipmentStatus
 
 ### Community 356 - "app/layout.tsx"
-Cohesion: 0.16
-Nodes (6): metadata, AppProviders(), AppProvidersProps, ErrorBoundary, ErrorBoundaryProps, ErrorBoundaryState
+Cohesion: 0.20
+Nodes (4): metadata, AppProviders(), AppProvidersProps, ErrorBoundary
 
 ### Community 357 - "Security Engineering"
 Cohesion: 0.06
 Nodes (29): Architecture, Change quality, Coding Standards, Data and money, Scope and ownership, Security and tenant scope, TypeScript, API errors (+21 more)
 
-### Community 358 - "MigrationGenerator"
-Cohesion: 0.13
-Nodes (12): MigrationGenerator, Generates migration steps from schema differences., Generate unique step ID., Generate steps for adding columns., Create step for adding a column., Create zero-downtime step for adding column., Generate steps for modifying columns., Create step for modifying a column. (+4 more)
+### Community 358 - "._generate_step_id"
+Cohesion: 0.22
+Nodes (5): Generate unique step ID., Generate steps for adding columns., Create step for adding a column., Create zero-downtime step for adding column., Create step for dropping table.
 
 ### Community 359 - "Flag taxonomy — the 4 types"
 Cohesion: 0.20
@@ -2250,9 +2254,9 @@ Nodes (8): _age_days(), assess(), collect_flags(), _first_commit_date(), main(),
 Cohesion: 0.39
 Nodes (8): audit(), discover_code_flags(), main(), _missing_fields(), Split flag-doc into per-flag sections by H2 (## flag-name) or H3., render_text(), _split_sections(), _walk_code_files()
 
-### Community 382 - "2. Parallel Schema Pattern"
+### Community 382 - "1. Expand-Contract Pattern"
 Cohesion: 0.22
-Nodes (9): 2. Parallel Schema Pattern, 3. Event Sourcing Migration, Best Practices, Database Migration Patterns, Description, Description, Event Store Schema, Implementation Example (+1 more)
+Nodes (9): 1. Expand-Contract Pattern, 2. Parallel Schema Pattern, Best Practices, Database Migration Patterns, Description, Description, Implementation Example, Implementation Steps (+1 more)
 
 ### Community 383 - "business_metrics"
 Cohesion: 0.22
@@ -2347,12 +2351,12 @@ Cohesion: 0.22
 Nodes (9): cms, framework_options_ranked, rendering, styling, 11ty, astro, hugo, frontend (+1 more)
 
 ### Community 406 - "saas-startup.json"
-Cohesion: 0.22
-Nodes (8): description, named_approver_chain, external-service-add, production-data-migration, stack_change, profile_name, $schema, version
+Cohesion: 0.14
+Nodes (13): ci_cd, gates, platform, description, named_approver_chain, external-service-add, production-data-migration, stack_change (+5 more)
 
 ### Community 407 - "backend"
-Cohesion: 0.22
-Nodes (9): cache, database, framework_options, language, pattern, queue, fastapi, backend (+1 more)
+Cohesion: 0.33
+Nodes (6): cache, database, language, pattern, queue, backend
 
 ### Community 408 - "success_thresholds"
 Cohesion: 0.22
@@ -2374,13 +2378,13 @@ Nodes (11): 1. Establish the baseline, 2. Tie findings to change pressure, 3. Re
 Cohesion: 0.22
 Nodes (8): Catalog and offers, Commerce flow, Isolation and change, Language, Media, Money and compliance, Octopus, Tenancy and actors
 
-### Community 413 - "payment-intent.aggregate.ts"
-Cohesion: 0.20
-Nodes (8): CodAlreadyCollectedError, CodAmountMismatchError, CodCancelledError, CodNotAvailableError, CodNotCollectibleError, InvalidPaymentMethodError, InvalidPaymentMoneyError, PaymentDomainError
+### Community 413 - "ReturnRequest"
+Cohesion: 0.07
+Nodes (3): build(), ReturnsRepository, ReturnRequest
 
-### Community 414 - "promotion.repository.adapter.ts"
-Cohesion: 0.24
-Nodes (12): makePromo(), PromotionProps, DiscountType, PromotionScope, PromotionStatus, activePromo(), PromotionOrmEntity, PromotionUsageOrmEntity (+4 more)
+### Community 414 - "pricing.types.ts"
+Cohesion: 0.23
+Nodes (10): PromotionProps, DiscountType, PromotionScope, PromotionStatus, PromotionOrmEntity, PromotionUsageOrmEntity, Entity, PrimaryKey (+2 more)
 
 ### Community 415 - "Rules"
 Cohesion: 0.17
@@ -2482,9 +2486,9 @@ Nodes (7): Anything else?, Context, Document structure, How to answer, <Question
 Cohesion: 0.25
 Nodes (7): Best Practices, Common Pitfall, Decision Tree: Choosing Your Approach, Example: Using with_server.py, Reconnaissance-Then-Action Pattern, Reference Files, Web Application Testing
 
-### Community 440 - "Pricing Module"
-Cohesion: 0.29
-Nodes (7): Boundaries, Cross-module seam, HTTP, Money, Pricing Module, Related, Responsibility
+### Community 440 - "VendorAccessPort"
+Cohesion: 0.15
+Nodes (15): Inject, Inject, Inject, Inject, Inject, COD_COLLECT_ROLES, REFUND_CREATE_ROLES, Inject (+7 more)
 
 ### Community 441 - "REST API Design Rules Reference"
 Cohesion: 0.29
@@ -2510,9 +2514,9 @@ Nodes (7): Alert Design Patterns, Pattern 1: Symptoms, Not Causes, Pattern 2: Mu
 Cohesion: 0.29
 Nodes (7): Alert Routing and Escalation, Critical Path Services, Escalation Patterns, Linear Escalation, Routing by Impact and Urgency, Severity-Based Escalation, Time-Based Routing
 
-### Community 447 - "Dashboard Best Practices: Design for Insight and Action"
-Cohesion: 0.29
-Nodes (6): Dashboard Best Practices: Design for Insight and Action, Effective Panel Design, Introduction, Stat Panels, Table Panels, Time Series Panels
+### Community 447 - "Effective Panel Design"
+Cohesion: 0.50
+Nodes (4): Effective Panel Design, Stat Panels, Table Panels, Time Series Panels
 
 ### Community 448 - "Default Time Ranges by Dashboard Type"
 Cohesion: 0.29
@@ -3122,9 +3126,9 @@ Nodes (5): DREAD Assessment Example, DREAD Calculation, DREAD Components, DREAD 
 Cohesion: 0.40
 Nodes (5): STRIDE Analysis Template, STRIDE Categories, STRIDE Framework, STRIDE per Element, Threat Mitigation Matrix
 
-### Community 601 - "react"
-Cohesion: 0.22
-Nodes (5): AuthLayout(), columns, data, User, react
+### Community 601 - "data-table.tsx"
+Cohesion: 0.40
+Nodes (3): columns, data, User
 
 ### Community 602 - "form-pattern.tsx"
 Cohesion: 0.40
@@ -3162,9 +3166,9 @@ Nodes (5): Conditional INSERT (skip if exists), Deduplicate rows, Generate serie
 Cohesion: 0.40
 Nodes (5): Derived table — subquery in FROM, EXISTS — correlated existence check, NOT EXISTS — safer than NOT IN for NULLs, Scalar subquery — single value, Subquery Patterns
 
-### Community 613 - "Pricing"
-Cohesion: 0.33
-Nodes (6): Authority, Inputs, Module ownership, Pricing, Related, Rules
+### Community 613 - "returns.repository.adapter.ts"
+Cohesion: 0.14
+Nodes (14): ReturnLineQuantityRow, RETURNS_REPOSITORY, applyReturnRequestToOrm(), returnRequestToDomain(), ReturnOperationOrmEntity, ReturnRequestOrmEntity, ReturnsOutboxOrmEntity, Entity (+6 more)
 
 ### Community 614 - "Common API Anti-Patterns and How to Avoid Them"
 Cohesion: 0.50
@@ -3282,9 +3286,9 @@ Nodes (4): Cursor-Based Pagination, Offset-Based Pagination, Page-Based Paginati
 Cohesion: 0.50
 Nodes (4): HTTP Method Usage, Resource Naming Conventions, REST Design Principles, URL Structure Best Practices
 
-### Community 643 - "PaymentRepository"
-Cohesion: 0.15
-Nodes (4): Inject, PaymentRepository, PaymentAuthorizationService, Injectable
+### Community 643 - "ReturnsController"
+Cohesion: 0.24
+Nodes (15): ReturnsController, toResponse(), ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller (+7 more)
 
 ### Community 646 - "hitl-loop.template.sh"
 Cohesion: 0.83
@@ -3314,9 +3318,9 @@ Nodes (4): A/B Testing for Dashboards, Advanced Patterns, Composite Dashboards, 
 Cohesion: 0.50
 Nodes (4): Accessibility, High Contrast Mode, Keyboard Navigation, Screen Reader Support
 
-### Community 653 - "Color and Visualization Best Practices"
-Cohesion: 0.50
-Nodes (4): Color and Visualization Best Practices, Color Blind Friendly Palettes, Consistent Color Semantics, Threshold Configuration
+### Community 653 - "Dashboard Best Practices: Design for Insight and Action"
+Cohesion: 0.29
+Nodes (6): Color and Visualization Best Practices, Color Blind Friendly Palettes, Consistent Color Semantics, Dashboard Best Practices: Design for Insight and Action, Introduction, Threshold Configuration
 
 ### Community 654 - "Dashboard Archetypes"
 Cohesion: 0.50
@@ -3394,9 +3398,9 @@ Nodes (4): Defense in Depth, Fail-Safe Defaults, Implementation Checklist, Secur
 Cohesion: 0.50
 Nodes (4): Attack Tree Analysis, Attack Tree Structure, Attack Trees, Calculating Attack Probability
 
-### Community 674 - "fulfillment.handlers.ts"
-Cohesion: 0.10
-Nodes (17): CreateShipmentCommand, CreateShipmentHandler, hashCreate(), MarkShipmentDeliveredManualHandler, ShipmentResponse, SyncShipmentStatusHandler, toResponse(), Injectable (+9 more)
+### Community 674 - "shipment.aggregate.ts"
+Cohesion: 0.14
+Nodes (10): FulfillmentAccessDeniedError, FulfillmentIdempotencyConflictError, FulfillmentValidationError, ShipmentNotFoundError, ALLOWED, FulfillmentDomainError, InvalidShipmentSnapshotError, InvalidShipmentTransitionError (+2 more)
 
 ### Community 675 - "Utility Components"
 Cohesion: 0.50
@@ -3466,9 +3470,9 @@ Nodes (3): Idempotency, Idempotency Keys, Idempotent Methods
 Cohesion: 0.67
 Nodes (3): compliance_requirements, GDPR, CCPA
 
-### Community 695 - "payment.handlers.spec.ts"
-Cohesion: 0.27
-Nodes (5): PaymentAccessDeniedError, PaymentIdempotencyConflictError, PaymentNotFoundError, PaymentExceptionFilter, Catch
+### Community 695 - "receipt.repository.adapter.ts"
+Cohesion: 0.15
+Nodes (16): formatReceiptNumber(), ReceiptProps, ReceiptSaleSnapshot, ReceiptStatus, StoredSnapshot, ReceiptOrmEntity, Entity, PrimaryKey (+8 more)
 
 ### Community 696 - "Cost Optimization for Observability"
 Cohesion: 0.67
@@ -3482,37 +3486,37 @@ Nodes (3): Incident Detection Patterns, Runbook Generation and Incident Response
 Cohesion: 0.67
 Nodes (3): api_layer_options, django-ninja-when-async-needed, django-rest-framework
 
-### Community 705 - "AggregateRoot"
-Cohesion: 0.09
-Nodes (16): CategoryProps, StoreOfferProps, CategorySeo, CategoryStatus, StoreOfferStatus, CatalogDomainError, CategoryCycleError, DuplicateVariantAttributesError (+8 more)
+### Community 705 - "product.aggregate.ts"
+Cohesion: 0.12
+Nodes (13): ALLOWED_TRANSITIONS, StoreOfferProps, StoreOfferStatus, CatalogDomainError, CategoryCycleError, DuplicateVariantAttributesError, InvalidProductStatusTransitionError, InvalidStoreOfferError (+5 more)
 
-### Community 718 - "Promotions"
-Cohesion: 0.40
-Nodes (5): Concept, Promotion types, Promotions, Related, Rules
+### Community 718 - "ReturnsHandlers"
+Cohesion: 0.19
+Nodes (7): hashRequest(), ReturnsHandlers, Inject, Injectable, ReturnsAuthorizationService, Inject, Injectable
 
 ### Community 719 - "Objective"
-Cohesion: 0.40
-Nodes (5): Channels, Events, Objective, Phase 17 — Notifications, Reliability
+Cohesion: 0.29
+Nodes (7): 17.1 — Core + in-app + email stub, 17.2 — Event consumers (transactional), 17.3 — SMS / Push ports (adapters stub), Deferred, Objective, Phase 17 — Notifications, Rules
 
 ### Community 720 - "Objective"
-Cohesion: 0.40
-Nodes (5): Customer Account, Objective, Phase 18 — Customer Experience, SEO, Storefront
+Cohesion: 0.25
+Nodes (8): 18.1 — Storefront API foundation, 18.2 — Browse shell (frontend), 18.3 — Cart + checkout + COD UX, 18.4 — Customer account, 18.5 — SEO + resilience, Deferred (not Phase 18 blockers), Objective, Phase 18 — Customer Experience
 
 ### Community 721 - "Objective"
 Cohesion: 0.33
 Nodes (6): Courier integrations (v1), Features, Objective, Phase 13 — Shipping & Fulfillment, Shipment, Status
 
-### Community 722 - "pathao.client.ts"
+### Community 722 - "fulfillment.handlers.ts"
 Cohesion: 0.13
-Nodes (18): CourierProviderError, mapPathaoStatus(), mapSteadfastStatus(), minorToMajorUnits(), CourierPortAdapter, Injectable, PathaoCourierClient, Injectable (+10 more)
+Nodes (19): CreateShipmentCommand, CourierProviderError, mapPathaoStatus(), mapSteadfastStatus(), minorToMajorUnits(), CourierPortAdapter, Injectable, SteadfastCourierClient (+11 more)
 
 ### Community 723 - "Observability and SRE"
 Cohesion: 0.18
 Nodes (11): Alert for action, Build dashboards for decisions, Control telemetry cost and risk, Diagnose incidents from live evidence, Instrument useful signals, Logs, Metrics, Observability and SRE (+3 more)
 
-### Community 724 - ".collect"
-Cohesion: 0.14
-Nodes (12): PaymentController, ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller, Headers (+4 more)
+### Community 724 - "payment.controller.ts"
+Cohesion: 0.11
+Nodes (27): ApiProperty, ApiPropertyOptional, CollectCodPaymentDto, CollectCodPaymentResponseDto, CreateRefundDto, IsInt, IsOptional, IsString (+19 more)
 
 ### Community 727 - "auth.controller.ts"
 Cohesion: 0.22
@@ -3523,28 +3527,24 @@ Cohesion: 0.18
 Nodes (10): Configuration and startup, Contracts and data, Health, deployment, and shutdown, Observability, Production Readiness, Queues, events, and schedules, Resource safety, Rollout record (+2 more)
 
 ### Community 729 - "app.module.ts"
-Cohesion: 0.05
-Nodes (38): envSchema, validateEnv(), AuditModule, Global, Module, CartModule, Global, Module (+30 more)
+Cohesion: 0.04
+Nodes (47): envSchema, validateEnv(), CartModule, Global, Module, CatalogModule, Global, Module (+39 more)
 
-### Community 731 - "inventory.handlers.ts"
-Cohesion: 0.13
-Nodes (15): CatalogVariantAccessAdapter, Injectable, CrossStoreTransferDeniedError, InventoryAccessDeniedError, InventoryApplicationError, InventoryItemNotFoundError, ReservationNotFoundError, VariantNotFoundForInventoryError (+7 more)
+### Community 731 - "catalog-variant-access.adapter.ts"
+Cohesion: 0.29
+Nodes (5): CatalogVariantAccessAdapter, Injectable, CATALOG_VARIANT_ACCESS, CatalogVariantAccessPort, CatalogVariantAccessSnapshot
 
 ### Community 732 - "PaymentRepositoryAdapter"
-Cohesion: 0.18
-Nodes (3): CodCollectionRecord, PaymentRepositoryAdapter, Injectable
-
-### Community 733 - "CollectCodPaymentDto"
-Cohesion: 0.20
-Nodes (10): CollectCodPaymentDto, CollectCodPaymentResponseDto, ApiProperty, ApiPropertyOptional, IsInt, IsOptional, IsString, MaxLength (+2 more)
+Cohesion: 0.14
+Nodes (4): CodCollectionRecord, paymentIntentToDomain(), PaymentRepositoryAdapter, Injectable
 
 ### Community 734 - "Scaling and Reliability"
 Cohesion: 0.18
 Nodes (11): Backpressure and overload, Capacity model, Data and cache scale, Graceful shutdown, Horizontal web scaling, Idempotency, Queues and workers, Retry and timeout budget (+3 more)
 
 ### Community 735 - "fulfillment.module.ts"
-Cohesion: 0.30
-Nodes (14): FULFILLMENT_REPOSITORY, CourierProvider, applyShipmentToOrm(), shipmentLinesToOrm(), CourierAccountOrmEntity, CourierOauthTokenOrmEntity, FulfillmentOperationOrmEntity, FulfillmentOutboxOrmEntity (+6 more)
+Cohesion: 0.17
+Nodes (17): FULFILLMENT_REPOSITORY, ShipmentRecipientSnapshot, applyShipmentToOrm(), shipmentLinesToOrm(), shipmentToDomain(), CourierAccountOrmEntity, CourierOauthTokenOrmEntity, FulfillmentOperationOrmEntity (+9 more)
 
 ### Community 736 - "Object Design"
 Cohesion: 0.18
@@ -3554,21 +3554,21 @@ Nodes (11): Application operation/use case, Controller/resolver/message handler,
 Cohesion: 0.18
 Nodes (11): Abstraction, Composition over inheritance, Dependency Inversion Principle, Encapsulation, Interface Segregation Principle, Liskov Substitution Principle, OOP and SOLID in NestJS, OOP checklist (+3 more)
 
-### Community 738 - "domain/errors/order.errors.ts"
-Cohesion: 0.27
-Nodes (5): createPendingOrder(), InvalidOrderFulfillmentError, InvalidOrderSnapshotError, InvalidOrderTransitionError, OrderDomainError
+### Community 738 - "returns.types.ts"
+Cohesion: 0.13
+Nodes (13): ReturnRequestProps, DEFAULT_RETURN_WINDOW_DAYS, RETURN_QTY_RELEASE_STATUSES, RETURN_REASONS, ReturnInspectionSnapshot, ReturnLineSnapshot, ReturnReasonDefinition, ReturnStatus (+5 more)
 
-### Community 739 - "redis-login-rate-limiter.adapter.ts"
-Cohesion: 0.12
-Nodes (9): LoginRateLimiter, PasswordResetRecord, RedisLoginRateLimiterAdapter, Inject, Injectable, RedisPasswordResetStoreAdapter, Inject, Injectable (+1 more)
+### Community 739 - "redis.module.ts"
+Cohesion: 0.10
+Nodes (11): Inject, LoginRateLimiter, PasswordResetRecord, PasswordResetStore, RedisLoginRateLimiterAdapter, Inject, Injectable, RedisPasswordResetStoreAdapter (+3 more)
 
-### Community 740 - "StoreAccessSnapshot"
-Cohesion: 0.29
-Nodes (4): PosAuthorizationService, Injectable, ReceiptTemplateUpdate, StoreAccessSnapshot
+### Community 740 - "stub-ledger.adapter.ts"
+Cohesion: 0.13
+Nodes (13): Inject, StubLedgerAdapter, Inject, Injectable, PayoutModule, Global, Module, LEDGER_PORT (+5 more)
 
-### Community 741 - "withRlsContext"
-Cohesion: 0.18
-Nodes (7): decryptSecret(), encryptSecret(), CourierAccountStore, Injectable, MembershipDirectoryAdapter, Injectable, withRlsContext()
+### Community 741 - "courier-account.store.ts"
+Cohesion: 0.20
+Nodes (8): CourierProvider, decryptSecret(), encryptSecret(), PathaoCourierClient, Injectable, CourierAccountStore, PathaoCredentials, Injectable
 
 ### Community 742 - "CI/CD and Container Delivery"
 Cohesion: 0.20
@@ -3578,29 +3578,25 @@ Nodes (10): 1. Source and trust, 2. Reproducible install and build, 3. Artifact 
 Cohesion: 0.16
 Nodes (10): StoreRow, VendorRow, AdminPageHeader(), DashboardHealthWidget(), ReadyResponse, ApiClientError, ApiProblemDetails, apiRequest() (+2 more)
 
-### Community 744 - "shipment.aggregate.ts"
-Cohesion: 0.20
-Nodes (7): ALLOWED, ShipmentProps, FulfillmentDomainError, InvalidShipmentSnapshotError, InvalidShipmentTransitionError, ShipmentLineSnapshot, ShipmentRecipientSnapshot
+### Community 744 - "RequestReturnDto"
+Cohesion: 0.21
+Nodes (15): ArrayMinSize, InspectReturnDto, RejectReturnDto, RequestReturnDto, RequestReturnItemDto, IsIn, IsInt, IsOptional (+7 more)
 
 ### Community 746 - "NestJS Feature Selection"
 Cohesion: 0.20
 Nodes (9): Authentication and authorization, Binding scope, Cross-cutting behavior, Events, queues, and schedules, Lifecycle hooks, NestJS Feature Selection, Request lifecycle review, Responsibility matrix (+1 more)
 
-### Community 747 - "checkout.module.ts"
-Cohesion: 0.16
-Nodes (14): CHECKOUT_REPOSITORY, CheckoutRepository, CheckoutModule, Global, Module, CheckoutOutcome, CheckoutPaymentIntentOrmEntity, CheckoutSubmissionOrmEntity (+6 more)
-
 ### Community 748 - "CreateShipmentDto"
-Cohesion: 0.18
-Nodes (18): CreateShipmentDto, MarkDeliveredManualDto, ShipmentLineDto, ApiProperty, ApiPropertyOptional, ArrayMinSize, IsArray, IsIn (+10 more)
+Cohesion: 0.14
+Nodes (22): CreateShipmentHandler, MarkShipmentDeliveredManualHandler, SyncShipmentStatusHandler, Injectable, CreateShipmentDto, MarkDeliveredManualDto, ShipmentLineDto, ApiProperty (+14 more)
 
 ### Community 749 - "GetStoreHandler"
-Cohesion: 0.12
-Nodes (12): GetStoreHandler, Injectable, AdminStoreController, ApiBearerAuth, ApiOperation, ApiTags, Controller, Get (+4 more)
+Cohesion: 0.14
+Nodes (10): GetStoreHandler, Injectable, AdminStoreController, ApiBearerAuth, ApiOperation, ApiTags, Controller, Get (+2 more)
 
-### Community 750 - "StoreRepositoryAdapter"
-Cohesion: 0.27
-Nodes (3): toDomain(), StoreRepositoryAdapter, Injectable
+### Community 750 - "Fulfillment Module"
+Cohesion: 0.22
+Nodes (9): COD handoff, Courier providers, Exit criteria, Fulfillment Module, HTTP, Related, Responsibility, Shipment status (+1 more)
 
 ### Community 751 - "cart.handlers.ts"
 Cohesion: 0.17
@@ -3615,56 +3611,56 @@ Cohesion: 0.24
 Nodes (4): isPlatformAdmin(), Inject, Injectable, VendorLifecycleHandler
 
 ### Community 754 - ".findById"
-Cohesion: 0.18
-Nodes (6): CheckoutSubmitHandler, groupLinesByStore(), hashSubmitRequest(), isPricingFailure(), Inject, Injectable
+Cohesion: 0.27
+Nodes (3): PricingAuthorizationService, Injectable, StoreAccessSnapshot
 
 ### Community 755 - ".create"
 Cohesion: 0.23
 Nodes (12): FulfillmentController, ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller, Headers (+4 more)
 
-### Community 756 - "rls-session.ts"
-Cohesion: 0.17
-Nodes (10): tryGetTenantContext(), DatabaseModule, Module, createMikroOrmOptions(), PlatformSchemaLockEntity, Entity, PrimaryKey, Property (+2 more)
+### Community 756 - "database.module.ts"
+Cohesion: 0.19
+Nodes (9): DatabaseModule, Module, createMikroOrmOptions(), PlatformSchemaLockEntity, Entity, PrimaryKey, Property, RlsContextSubscriber (+1 more)
 
-### Community 757 - ".submit"
-Cohesion: 0.15
-Nodes (11): CheckoutController, ApiBearerAuth, ApiHeader, ApiOperation, ApiTags, Body, Controller, Headers (+3 more)
+### Community 757 - "Inventory Module"
+Cohesion: 0.22
+Nodes (9): Concurrency model, Events, Exit criteria, Inventory Module, Operations, Public contracts, Related, Responsibility (+1 more)
 
 ### Community 758 - "VendorRepositoryAdapter"
 Cohesion: 0.25
 Nodes (3): toDomain(), Injectable, VendorRepositoryAdapter
 
-### Community 759 - ".register"
+### Community 759 - "Order Module"
 Cohesion: 0.22
-Nodes (5): ApiOperation, Body, Get, Param, Post
+Nodes (9): Events, Exit criteria, Order Module, Public contracts, Related, Responsibility, Snapshots, State machine (+1 more)
 
 ### Community 760 - "Current product & ops baselines"
-Cohesion: 0.20
-Nodes (8): Current product & ops baselines, Hardware (print), Infrastructure, Octopus improves / keeps / drops, Products in production today, Related, Top UX deficits to beat (initial), UX journey parity (Martvill / App → Octopus)
+Cohesion: 0.29
+Nodes (7): Cost posture (tools & products), Current product & ops baselines, Hardware (print), Infrastructure, Octopus improves / keeps / drops, Products in production today, Related
 
 ### Community 761 - "admin-widget.tsx"
 Cohesion: 0.29
 Nodes (3): AdminWidget, Props, State
 
-### Community 762 - "vite-spa.json"
-Cohesion: 0.40
-Nodes (4): description, profile_name, $schema, version
+### Community 762 - "Payout / Vendor Finance Module"
+Cohesion: 0.22
+Nodes (9): Boundaries, Ledger, Payout lifecycle, Payout / Vendor Finance Module, Phase 14.4 (shipped stub), Recognition, Related, Responsibility (+1 more)
 
-### Community 763 - "canon_references"
-Cohesion: 0.40
-Nodes (5): canon_references, Brad Frost, Atomic Design (2016), Evan You + Vite team, Vite docs (2020-2024), Marcy Sutton, Accessibility in JavaScript Applications (2017+), TanStack Query docs — server state vs UI state distinction
+### Community 763 - "TenancyController"
+Cohesion: 0.25
+Nodes (7): TenancyController, ApiBearerAuth, ApiOperation, ApiTags, Controller, Get, UseInterceptors
 
-### Community 764 - "ci_gates"
-Cohesion: 0.40
-Nodes (5): ci_gates, a11y-axe-checks, typecheck-strict, bundlewatch-initial-and-per-route, playwright-smoke-on-key-flows
+### Community 764 - "RegisterVendorHandler"
+Cohesion: 0.25
+Nodes (4): RegisterVendorHandler, Inject, Injectable, slugify()
 
-### Community 765 - "component_library_options"
-Cohesion: 0.40
-Nodes (5): shadcn-ui, component_library_options, ant-design, chakra-ui, mantine
+### Community 765 - "Refunds Module"
+Cohesion: 0.25
+Nodes (8): Inventory restore (14.3), Payment refunds (14.2), Refunds Module, Related, Responsibility, Return state machine (14.1), Rules, Separation
 
-### Community 767 - "framework_options"
-Cohesion: 0.50
-Nodes (4): framework_options, preact, solid, vue
+### Community 767 - "pricing.handlers.ts"
+Cohesion: 0.43
+Nodes (3): makePromo(), PROMOTION_REPOSITORY, CouponNotFoundError
 
 ### Community 768 - "Dependency Injection and Ports"
 Cohesion: 0.22
@@ -3691,8 +3687,8 @@ Cohesion: 0.22
 Nodes (9): Choose exceptions or results deliberately, Design the HTTP representation, Error Taxonomy and Contracts, Map HTTP semantics precisely, Map other transports without pretending they are HTTP, Protect compatibility, Separate internal meaning from public disclosure, Start from the existing contract (+1 more)
 
 ### Community 775 - "Store Module"
-Cohesion: 0.13
-Nodes (14): Concept, Isolation rules, Multi-Store, Related, Store offer model, Architecture, Events, Exit criteria (+6 more)
+Cohesion: 0.22
+Nodes (9): Architecture, Events, Exit criteria, Lifecycle, Related, Responsibility, Store Module, Store offers (+1 more)
 
 ### Community 776 - "Exception Filters and Transports"
 Cohesion: 0.22
@@ -3715,12 +3711,16 @@ Cohesion: 0.40
 Nodes (5): Environments, IaC, Infrastructure, Objective, Phase 28 — Infrastructure as Code
 
 ### Community 781 - "Objective"
-Cohesion: 0.40
-Nodes (5): Features, Ledger, Objective, Phase 15 — Vendor Financial Ledger & Payouts, Rules
+Cohesion: 0.22
+Nodes (9): 15.1 — Ledger + balances, 15.2 — Payouts, 15.3 — Adjustments + reconciliation, 15.4 — Refund / commission integration + UI hooks, Core model, Deferred, Objective, Phase 15 — Vendor Financial Ledger & Payouts (+1 more)
 
 ### Community 782 - "Architecture Ladder"
 Cohesion: 0.25
 Nodes (7): Architecture decision record, Architecture Ladder, Decision table, Level 1: cohesive feature modules, Level 2: layered feature modules, Level 3: hexagonal boundaries or CQRS, Level 4: independently deployed services
+
+### Community 783 - "Reporting Module"
+Cohesion: 0.29
+Nodes (7): Data flow, Exit criteria, Related, Reporting Module, Responsibility, Rules, Testing requirements
 
 ### Community 784 - "Microservices Rules"
 Cohesion: 0.25
@@ -3746,9 +3746,9 @@ Nodes (7): Database and ORM Rules, Migrations, Ownership and mapping, Query and 
 Cohesion: 0.29
 Nodes (7): Boundary checklist, Composition root, Define modules by capability, Export deliberately, Keep the graph acyclic, NestJS Module Boundaries, Shared and global modules
 
-### Community 792 - "Marketplace Module"
-Cohesion: 0.29
-Nodes (7): Composition pattern, Exit criteria, Marketplace Module, Multi-vendor UX, Related, Responsibility, Testing requirements
+### Community 792 - "Marketplace (composition pattern)"
+Cohesion: 0.40
+Nodes (5): Composition, Marketplace (composition pattern), Multi-vendor UX, Related, Responsibility
 
 ### Community 794 - "Apply SOLID as diagnostic questions"
 Cohesion: 0.33
@@ -3762,13 +3762,13 @@ Nodes (5): Authority, Output, Quality Gates Check (Octopus), Risk extras, Workfl
 Cohesion: 0.33
 Nodes (6): Concept, Hierarchy, Isolation rules, Module ownership, Multi-Vendor, Related
 
-### Community 797 - "Colors"
-Cohesion: 0.33
-Nodes (6): Brand & Accent, Category Accents (sport / collection chips), Colors, Semantic, Surface, Text
+### Community 797 - "Search Module"
+Cohesion: 0.29
+Nodes (7): Config, Octopus index unit, Pipeline, Query rules, Related, Responsibility, Search Module
 
-### Community 798 - "Components"
-Cohesion: 0.33
-Nodes (6): Buttons, Cards & Containers, Components, Inputs & Forms, Navigation, Signature Components
+### Community 798 - "Objective"
+Cohesion: 0.29
+Nodes (7): 14.1 — Returns domain (this slice), 14.2 — Refunds (Payment-owned), 14.3 — Inventory restoration, 14.4 — Ledger hook, Deferred, Objective, Phase 14 — Refunds & Returns
 
 ### Community 799 - "Architecture Boundary Guard (Octopus)"
 Cohesion: 0.40
@@ -3778,56 +3778,60 @@ Nodes (4): Architecture Boundary Guard (Octopus), Authority (mandatory), Precede
 Cohesion: 0.40
 Nodes (4): Authority, Docs State Maintainer (Octopus), Output, Workflow
 
-### Community 801 - "Responsive Behavior"
-Cohesion: 0.40
-Nodes (5): Breakpoints, Collapsing Strategy, Image Behavior, Responsive Behavior, Touch Targets
+### Community 801 - "Objective"
+Cohesion: 0.33
+Nodes (6): Exit Criteria, Objective, Order, Phase 10 — Orders, State Machine, Tests
 
-### Community 802 - "Typography"
+### Community 803 - "Multi-Store"
 Cohesion: 0.40
-Nodes (5): Font Family, Hierarchy, Note on Font Substitutes, Principles, Typography
-
-### Community 803 - "Ownership and aggregate boundaries"
-Cohesion: 0.40
-Nodes (5): Brand, Category, Ownership and aggregate boundaries, Product aggregate, Variant
+Nodes (5): Concept, Isolation rules, Multi-Store, Related, Store offer model
 
 ### Community 804 - "Objective"
-Cohesion: 0.40
-Nodes (5): Index Pipeline, Meilisearch, Objective, Phase 16 — Search, Rule
+Cohesion: 0.25
+Nodes (8): 16.1 — Contracts + Meilisearch adapter, 16.2 — Catalog outbox → `octopus.search-indexing`, 16.3 — Search API + reindex, Deferred, Index unit (Octopus-specific), Objective, Phase 16 — Search, Rule
 
 ### Community 805 - "Cost-Efficient Agent (Octopus)"
-Cohesion: 0.50
-Nodes (3): Cost-Efficient Agent (Octopus), Never cheap about, Rules
+Cohesion: 0.40
+Nodes (4): Cost-Efficient Agent (Octopus), Never cheap about, Product / infra cost (not just tokens), Rules
 
-### Community 807 - "1. Expand-Contract Pattern"
-Cohesion: 0.50
-Nodes (4): 1. Expand-Contract Pattern, Description, Implementation Steps, Pros and Cons
+### Community 806 - "Customer Module"
+Cohesion: 0.40
+Nodes (5): Customer Module, Related, Responsibility, Rules (when built), Status (Phase 18)
 
-### Community 809 - "Layout"
-Cohesion: 0.50
-Nodes (4): Grid & Container, Layout, Spacing System, Whitespace Philosophy
+### Community 807 - "Objective"
+Cohesion: 0.40
+Nodes (5): Deployment, Deployment Strategies, Objective, Phase 27 — CI/CD, Pull Request
 
-### Community 810 - "Do's and Don'ts"
-Cohesion: 0.67
-Nodes (3): Do, Do's and Don'ts, Don't
+### Community 810 - "3. Event Sourcing Migration"
+Cohesion: 0.50
+Nodes (4): 3. Event Sourcing Migration, Description, Event Store Schema, Migration Event Handler
+
+### Community 811 - "Symmetric Encryption"
+Cohesion: 0.50
+Nodes (4): AES-256-GCM Implementation, ChaCha20-Poly1305 Implementation, Envelope Encryption Pattern, Symmetric Encryption
+
+### Community 814 - "Objective"
+Cohesion: 0.50
+Nodes (4): Architecture, Objective, Phase 21 — Reporting & Analytics, Reports
 
 ## Knowledge Gaps
-- **4551 isolated node(s):** `DbOptions`, `name`, `type`, `criticality`, `user_facing` (+4546 more)
+- **4584 isolated node(s):** `Authority (mandatory)`, `Workflow`, `Precedence conflicts`, `Rules`, `Product / infra cost (not just tokens)` (+4579 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **55 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `CurrentUser` connect `CurrentUser` to `AuthController`, `media.handlers.ts`, `PricingController`, `vendor.controller.ts`, `catalog.module.ts`, `OrderController`, `order.module.ts`, `VendorController`, `admin-settings.controller.ts`, `fulfillment.handlers.ts`, `vendor.module.ts`, `payment.handlers.spec.ts`, `Public`, `.collect`, `auth.controller.ts`, `StoreController`, `store.controller.ts`, `pos.module.ts`, `InventoryController`, `QuoteRequestDto`, `GetStoreHandler`, `cart.handlers.ts`, `GetVendorHandler`, `.create`, `.submit`, `.register`, `inventory.controller.ts`, `PosReceiptController`, `audit.module.ts`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `AggregateRoot` connect `AggregateRoot` to `User`, `Money`, `Variant`, `catalog.mappers.ts`, `Product`, `Cart`, `Order`, `UniqueID`, `payment-intent.aggregate.ts`, `user.aggregate.ts`, `PaymentIntent`, `Warehouse`, `vendor.aggregate.ts`, `Category`, `Vendor`, `StoreOffer`, `Receipt`, `InventoryItem`, `ReceiptTemplate`, `cart.aggregate.ts`, `InventoryReservation`, `Promotion`, `Store`, `store.aggregate.ts`, `promotion.aggregate.ts`, `Shipment`, `order.aggregate.ts`, `shipment.aggregate.ts`, `receipt-template.aggregate.ts`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `RequestPrincipal` connect `CurrentUser` to `media.handlers.ts`, `PricingController`, `vendor.controller.ts`, `catalog.module.ts`, `OrderController`, `order.module.ts`, `VendorController`, `admin-settings.controller.ts`, `fulfillment.handlers.ts`, `vendor.module.ts`, `payment.handlers.spec.ts`, `Public`, `.collect`, `StoreController`, `store.controller.ts`, `pos.module.ts`, `InventoryController`, `QuoteRequestDto`, `GetStoreHandler`, `cart.handlers.ts`, `GetVendorHandler`, `.create`, `.submit`, `.register`, `inventory.controller.ts`, `PosReceiptController`, `audit.module.ts`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **What connects `DbOptions`, `name`, `type` to the rest of the system?**
-  _4551 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `CurrentUser` connect `CurrentUser` to `AuthController`, `media.handlers.ts`, `PricingController`, `store.module.ts`, `vendor.controller.ts`, `catalog.controller.ts`, `order.module.ts`, `VendorController`, `admin-settings.controller.ts`, `vendor.module.ts`, `RequestPrincipal`, `Public`, `returns.handlers.ts`, `payment.controller.ts`, `auth.controller.ts`, `StoreController`, `pos.module.ts`, `InventoryController`, `checkout.handlers.ts`, `SubmitCheckoutDto`, `CreateShipmentDto`, `QuoteRequestDto`, `GetStoreHandler`, `cart.handlers.ts`, `GetVendorHandler`, `.create`, `store.controller.ts`, `inventory.controller.ts`, `PosReceiptController`, `audit.module.ts`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `AggregateRoot` connect `UniqueID` to `User`, `Money`, `Variant`, `catalog.mappers.ts`, `Product`, `Cart`, `Refund`, `Order`, `shipment.aggregate.ts`, `user.aggregate.ts`, `PaymentIntent`, `Warehouse`, `receipt.repository.adapter.ts`, `Category`, `Vendor`, `StoreOffer`, `Receipt`, `InventoryItem`, `product.aggregate.ts`, `ReceiptTemplate`, `vendor.aggregate.ts`, `cart.aggregate.ts`, `returns.handlers.ts`, `Promotion`, `Store`, `store.aggregate.ts`, `promotion.aggregate.ts`, `Shipment`, `order.aggregate.ts`, `receipt-template.aggregate.ts`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `RequestPrincipal` connect `RequestPrincipal` to `media.handlers.ts`, `PricingController`, `store.module.ts`, `vendor.controller.ts`, `catalog.controller.ts`, `CurrentUser`, `order.module.ts`, `VendorController`, `admin-settings.controller.ts`, `vendor.module.ts`, `Public`, `returns.handlers.ts`, `payment.controller.ts`, `StoreController`, `pos.module.ts`, `InventoryController`, `checkout.handlers.ts`, `SubmitCheckoutDto`, `CreateShipmentDto`, `QuoteRequestDto`, `GetStoreHandler`, `cart.handlers.ts`, `GetVendorHandler`, `.create`, `store.controller.ts`, `inventory.controller.ts`, `PosReceiptController`, `audit.module.ts`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **What connects `Authority (mandatory)`, `Workflow`, `Precedence conflicts` to the rest of the system?**
+  _4584 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `User` be split into smaller, more focused modules?**
-  _Cohesion score 0.07564102564102564 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07827260458839407 - nodes in this community are weakly interconnected._
 - **Should `identity.errors.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.08637873754152824 - nodes in this community are weakly interconnected._
 - **Should `Money` be split into smaller, more focused modules?**

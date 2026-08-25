@@ -296,7 +296,26 @@ describe('CreateRefundHandler', () => {
         receivedAt: new Date(),
       })),
     };
-    const handler = new CreateRefundHandler(repo as never, authz as never, gateway as never);
+    const handler = new CreateRefundHandler(
+      repo as never,
+      authz as never,
+      gateway as never,
+      {
+        getFinanceSnapshot: vi.fn(async () => ({
+          orderId: intent.orderId,
+          vendorId: intent.vendorId,
+          storeId: intent.storeId,
+          paymentStatus: 'PAID',
+          paymentMethod: 'COD',
+          currencyCode: 'BDT',
+          subtotalMinor: 1500,
+          discountMinor: 0,
+          commissionMinor: 150,
+          totalMinor: 1500,
+          commissionRateBps: 1000,
+        })),
+      } as never,
+    );
 
     const first = await handler.execute({
       paymentIntentId: intent.id.value,

@@ -22,6 +22,8 @@ describe('Refund aggregate', () => {
       providerRefundId: 'manual:local',
       providerResponseCode: 'MANUAL_OK',
       providerReceivedAt: new Date('2026-08-25T12:00:00.000Z'),
+      orderCommissionMinor: 100,
+      orderTotalMinor: 1500,
     });
     expect(refund.status).toBe('SUCCEEDED');
     expect(refund.getUncommittedEvents().some((e) => e.eventName === 'RefundCompleted')).toBe(true);
@@ -29,7 +31,7 @@ describe('Refund aggregate', () => {
     expect(completed?.payload['allocation']).toMatchObject({
       entryType: 'REFUND',
       amountMinor: 500,
-      commissionReversalMinor: null,
+      commissionReversalMinor: 33, // floor(100 * 500 / 1500)
     });
   });
 

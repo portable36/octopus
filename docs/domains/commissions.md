@@ -21,7 +21,7 @@ line subtotal
 ## Rules
 
 - Commission rates versioned or effective-dated where overrides exist
-- Refunds reverse commission proportionally per documented policy
+- Refunds reverse commission proportionally: `floor(order.commissionMinor × refundAmount / order.totalMinor)` from the order snapshot (never reprice). Posted as ADJUSTMENT CREDIT alongside REFUND debit.
 - Never mutate historical ledger entries; post adjusting entries instead
 
 ## Related

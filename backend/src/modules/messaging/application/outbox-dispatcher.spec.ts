@@ -8,6 +8,11 @@ describe('routeQueueForEvent', () => {
     expect(routeQueueForEvent('CodPaymentCreated')).toBe(QUEUE_NAMES.payment);
     expect(routeQueueForEvent('CodCollected')).toBe(QUEUE_NAMES.payment);
     expect(routeQueueForEvent('RefundCompleted')).toBe(QUEUE_NAMES.payment);
+    expect(routeQueueForEvent('VendorSaleRecorded')).toBe(QUEUE_NAMES.payout);
+    expect(routeQueueForEvent('CommissionRecorded')).toBe(QUEUE_NAMES.payout);
+    expect(routeQueueForEvent('PayoutRequested')).toBe(QUEUE_NAMES.payout);
+    expect(routeQueueForEvent('PayoutCompleted')).toBe(QUEUE_NAMES.payout);
+    expect(routeQueueForEvent('LedgerAdjustmentRecorded')).toBe(QUEUE_NAMES.payout);
   });
 
   it('routes shipment events to domain-events queue', () => {
@@ -54,14 +59,17 @@ describe('DomainEventsProcessor', () => {
     const redis = {
       set: vi.fn().mockResolvedValueOnce('OK').mockResolvedValueOnce(null),
     };
-    const ledger = { recordRefundAllocation: vi.fn() };
+    const ledger = {
+      recordRefundAllocation: vi.fn(),
+      recordSaleRecognition: vi.fn(),
+    };
     const processor = new DomainEventsProcessor(redis as never, ledger as never);
     const job = {
       outboxId: '11111111-1111-7111-8111-111111111111',
       source: 'payment' as const,
       aggregateId: '22222222-2222-7222-8222-222222222222',
       eventType: 'CodCollected',
-      payload: { amountMinor: 100 },
+      payload: { amountMinor: 100, orderId: 'ord-cod' },
       eventVersion: 1,
     };
 
@@ -74,7 +82,10 @@ describe('DomainEventsProcessor', () => {
 
   it('posts RefundCompleted allocation to LedgerPort', async () => {
     const redis = { set: vi.fn().mockResolvedValue('OK') };
-    const ledger = { recordRefundAllocation: vi.fn().mockResolvedValue(undefined) };
+    const ledger = {
+      recordRefundAllocation: vi.fn().mockResolvedValue(undefined),
+      recordSaleRecognition: vi.fn().mockResolvedValue(undefined),
+    };
     const processor = new DomainEventsProcessor(redis as never, ledger as never);
 
     await processor.handle({
@@ -110,5 +121,26 @@ describe('DomainEventsProcessor', () => {
         idempotencyKey: 'ledger:refund:refund-1',
       }),
     );
+  });
+
+  it('recognizes sale on CodCollected', async () => {
+    const redis = { set: vi.fn().mockResolvedValue('OK') };
+    const ledger = {
+      recordRefundAllocation: vi.fn(),
+      recordSaleRecognition: vi.fn().mockResolvedValue(undefined),
+    };
+    const processor = new DomainEventsProcessor(redis as never, ledger as never);
+    await processor.handle({
+      outboxId: '44444444-4444-7444-8444-444444444444',
+      source: 'payment',
+      aggregateId: 'pi-1',
+      eventType: 'CodCollected',
+      payload: { orderId: 'ord-9', paymentIntentId: 'pi-1' },
+      eventVersion: 1,
+    });
+    expect(ledger.recordSaleRecognition).toHaveBeenCalledWith({
+      orderId: 'ord-9',
+      paymentIntentId: 'pi-1',
+    });
   });
 });

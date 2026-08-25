@@ -186,4 +186,8 @@ export class AppConfigService {
   get outboxMaxDispatchRetries(): number {
     return this.configService.get('OUTBOX_MAX_DISPATCH_RETRIES', { infer: true });
   }
+
+  get ledgerSettlementDays(): number {
+    return this.configService.get('LEDGER_SETTLEMENT_DAYS', { infer: true });
+  }
 }

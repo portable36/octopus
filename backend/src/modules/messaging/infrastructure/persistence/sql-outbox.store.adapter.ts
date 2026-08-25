@@ -42,6 +42,7 @@ function toRow(source: OutboxSource, row: SqlOutboxRow): OutboxRow {
 function outboxTable(source: OutboxSource): string {
   if (source === 'payment') return 'payment_outbox';
   if (source === 'fulfillment') return 'fulfillment_outbox';
+  if (source === 'payout') return 'payout_outbox';
   return 'returns_outbox';
 }
 
@@ -65,11 +66,13 @@ export class SqlOutboxStoreAdapter implements OutboxStore {
           batchSize,
         );
         const returns = await this.selectBatch(conn, 'returns_outbox', maxRetries, batchSize);
+        const payout = await this.selectBatch(conn, 'payout_outbox', maxRetries, batchSize);
 
         return [
           ...payment.map((row) => toRow('payment', row)),
           ...fulfillment.map((row) => toRow('fulfillment', row)),
           ...returns.map((row) => toRow('returns', row)),
+          ...payout.map((row) => toRow('payout', row)),
         ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       }),
     );
@@ -77,7 +80,7 @@ export class SqlOutboxStoreAdapter implements OutboxStore {
 
   private async selectBatch(
     conn: { execute: (sql: string, params?: unknown[]) => Promise<unknown> },
-    table: 'payment_outbox' | 'fulfillment_outbox' | 'returns_outbox',
+    table: 'payment_outbox' | 'fulfillment_outbox' | 'returns_outbox' | 'payout_outbox',
     maxRetries: number,
     batchSize: number,
   ): Promise<SqlOutboxRow[]> {

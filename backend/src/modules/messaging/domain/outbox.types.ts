@@ -1,4 +1,4 @@
-export type OutboxSource = 'payment' | 'fulfillment' | 'returns';
+export type OutboxSource = 'payment' | 'fulfillment' | 'returns' | 'payout';
 
 export type OutboxRow = {
   readonly id: string;
@@ -42,6 +42,14 @@ export function routeQueueForEvent(eventType: string): QueueName {
     eventType.includes('Refund')
   ) {
     return QUEUE_NAMES.payment;
+  }
+  if (
+    eventType.startsWith('Vendor') ||
+    eventType.startsWith('Payout') ||
+    eventType.startsWith('Ledger') ||
+    eventType.includes('Commission')
+  ) {
+    return QUEUE_NAMES.payout;
   }
   if (
     eventType.startsWith('Return') ||

@@ -49,6 +49,7 @@ export const envSchema = z.object({
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(500).max(60_000).default(2000),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(200).default(50),
   OUTBOX_MAX_DISPATCH_RETRIES: z.coerce.number().int().min(1).max(50).default(10),
+  LEDGER_SETTLEMENT_DAYS: z.coerce.number().int().min(0).max(365).default(7),
 });
 
 export type Env = z.infer<typeof envSchema>;

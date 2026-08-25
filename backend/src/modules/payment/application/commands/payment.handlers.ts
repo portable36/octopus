@@ -247,6 +247,7 @@ export class CreateRefundHandler {
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
     private readonly authz: PaymentAuthorizationService,
     @Inject(PAYMENT_REFUND_GATEWAY) private readonly gateway: PaymentRefundGateway,
+    @Inject(ORDER_PORT) private readonly orders: OrderPort,
   ) {}
 
   public async execute(input: CreateRefundInput): Promise<CreateRefundResult> {
@@ -306,6 +307,8 @@ export class CreateRefundHandler {
       idempotencyKey: input.idempotencyKey,
     });
 
+    const finance = await this.orders.getFinanceSnapshot(reserved.refund.orderId);
+
     return this.payments.withTransaction(async (repo) => {
       const refund = (await repo.findRefundById(reserved.refund.id.value)) ?? reserved.refund;
 
@@ -335,6 +338,8 @@ export class CreateRefundHandler {
         providerRefundId: gatewayResult.providerRefundId,
         providerResponseCode: gatewayResult.responseCode,
         providerReceivedAt: gatewayResult.receivedAt,
+        orderCommissionMinor: finance?.commissionMinor ?? null,
+        orderTotalMinor: finance?.totalMinor ?? null,
       });
       await repo.saveRefund(refund);
 

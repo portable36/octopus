@@ -3,6 +3,7 @@ import type {
   CheckoutOrderCreateInput,
   CheckoutOrderCreateResult,
   MarkOrderPaidFromPaymentInput,
+  OrderFinanceSnapshot,
   OrderFulfillmentSnapshot,
   OrderPort,
   OrderReturnSnapshot,
@@ -45,6 +46,26 @@ export class OrderPortAdapter implements OrderPort {
   public async getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null> {
     const order = await this.lifecycle.getFulfillmentSnapshot(orderId);
     return order ? toReturnSnapshot(order) : null;
+  }
+
+  public async getFinanceSnapshot(orderId: string): Promise<OrderFinanceSnapshot | null> {
+    const order = await this.lifecycle.getFulfillmentSnapshot(orderId);
+    if (!order) {
+      return null;
+    }
+    return {
+      orderId: order.id.value,
+      vendorId: order.vendorId,
+      storeId: order.storeId,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      currencyCode: order.currencyCode,
+      subtotalMinor: order.subtotalMinor,
+      discountMinor: order.discountMinor,
+      commissionMinor: order.commissionMinor,
+      totalMinor: order.totalMinor,
+      commissionRateBps: order.pricingSnapshot.commissionRateBps,
+    };
   }
 
   public async prepareShipment(

@@ -10,7 +10,7 @@ import type { OutboxJobPayload } from '../../domain/outbox.types';
 
 /**
  * Idempotent domain-event consumer.
- * Phase 14.4: RefundCompleted → LedgerPort stub. Email/search/webhooks later.
+ * Phase 15: CodCollected → sale/commission; RefundCompleted → REFUND debit + optional commission clawback.
  */
 @Injectable()
 export class DomainEventsProcessor {
@@ -33,15 +33,30 @@ export class DomainEventsProcessor {
       `Processed ${job.source} event ${job.eventType} aggregate=${job.aggregateId} v${job.eventVersion}`,
     );
 
+    if (job.eventType === 'CodCollected') {
+      await this.handleCodCollected(job.payload);
+    }
     if (job.eventType === 'RefundCompleted') {
       await this.handleRefundCompleted(job.payload);
     }
   }
 
+  private async handleCodCollected(payload: Record<string, unknown>): Promise<void> {
+    const orderId = String(payload['orderId'] ?? '');
+    if (!orderId) {
+      this.logger.warn('CodCollected missing orderId; skipping sale recognition.');
+      return;
+    }
+    await this.ledger.recordSaleRecognition({
+      orderId,
+      paymentIntentId: payload['paymentIntentId'] ? String(payload['paymentIntentId']) : null,
+    });
+  }
+
   private async handleRefundCompleted(payload: Record<string, unknown>): Promise<void> {
     const allocation = parseRefundAllocation(payload);
     if (!allocation) {
-      this.logger.warn('RefundCompleted missing allocation payload; skipping ledger stub.');
+      this.logger.warn('RefundCompleted missing allocation payload; skipping ledger post.');
       return;
     }
     await this.ledger.recordRefundAllocation(allocation);

@@ -131,6 +131,20 @@ export interface OrderReturnSnapshot {
   readonly lines: readonly OrderReturnLineSnapshot[];
 }
 
+export interface OrderFinanceSnapshot {
+  readonly orderId: string;
+  readonly vendorId: string;
+  readonly storeId: string;
+  readonly paymentStatus: string;
+  readonly paymentMethod: OrderPaymentMethodDto;
+  readonly currencyCode: string;
+  readonly subtotalMinor: number;
+  readonly discountMinor: number;
+  readonly commissionMinor: number;
+  readonly totalMinor: number;
+  readonly commissionRateBps: number;
+}
+
 export interface PrepareOrderShipmentInput {
   readonly orderId: string;
   readonly actorUserId: string;
@@ -144,6 +158,7 @@ export interface OrderPort {
   markPaidFromPayment(input: MarkOrderPaidFromPaymentInput): Promise<void>;
   getFulfillmentSnapshot(orderId: string): Promise<OrderFulfillmentSnapshot | null>;
   getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null>;
+  getFinanceSnapshot(orderId: string): Promise<OrderFinanceSnapshot | null>;
   prepareShipment(input: PrepareOrderShipmentInput): Promise<OrderFulfillmentSnapshot>;
   fulfillShipmentLines(input: PrepareOrderShipmentInput): Promise<void>;
 }

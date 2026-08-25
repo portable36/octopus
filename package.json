@@ -29,6 +29,9 @@
     "typecheck": "tsc --noEmit -p backend && tsc --noEmit -p frontend",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "architecture": "node scripts/check-architecture.mjs",
     "env:check": "node scripts/check-env.mjs",
     "security": "npm audit --omit=dev --audit-level=critical",
@@ -41,6 +44,7 @@
     "validate": "node scripts/validate.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.3.1",
     "eslint": "^9.36.0",
     "prettier": "^3.6.2",

@@ -1,4 +1,5 @@
 import type { LedgerRefundAllocation } from '../../../../shared-kernel/application/ports/ledger.port';
+import { proportionalCommissionReversal } from './proportional-commission-reversal';
 
 /** Build the allocation payload embedded in RefundCompleted outbox events. */
 export function buildRefundLedgerAllocation(input: {
@@ -11,7 +12,16 @@ export function buildRefundLedgerAllocation(input: {
   readonly amountMinor: number;
   readonly currencyCode: string;
   readonly method: string;
+  /** Order snapshot commission (never reprice). */
+  readonly orderCommissionMinor?: number | null;
+  /** Order snapshot total for proportional clawback denominator. */
+  readonly orderTotalMinor?: number | null;
 }): LedgerRefundAllocation {
+  const reversal = proportionalCommissionReversal({
+    commissionMinor: input.orderCommissionMinor ?? 0,
+    refundAmountMinor: input.amountMinor,
+    orderTotalMinor: input.orderTotalMinor ?? 0,
+  });
   return {
     entryType: 'REFUND',
     refundId: input.refundId,
@@ -26,6 +36,6 @@ export function buildRefundLedgerAllocation(input: {
     referenceType: 'REFUND',
     referenceId: input.refundId,
     idempotencyKey: `ledger:refund:${input.refundId}`,
-    commissionReversalMinor: null,
+    commissionReversalMinor: reversal > 0 ? reversal : null,
   };
 }

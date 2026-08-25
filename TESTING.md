@@ -55,7 +55,9 @@ Cover:
 
 ### E2E
 
-Playwright should cover critical business journeys:
+[Playwright](https://playwright.dev/) covers critical business journeys. Scaffold lives in `e2e/` (`npm.cmd run test:e2e`). See [e2e/README.md](./e2e/README.md).
+
+Target journeys as the product grows:
 
 1. Customer registration/login.
 2. Browse/search.

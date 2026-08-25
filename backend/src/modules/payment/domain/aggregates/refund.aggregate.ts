@@ -148,6 +148,8 @@ export class Refund extends AggregateRoot<UniqueID> {
     readonly providerRefundId: string | null;
     readonly providerResponseCode: string;
     readonly providerReceivedAt: Date;
+    readonly orderCommissionMinor?: number | null;
+    readonly orderTotalMinor?: number | null;
   }): void {
     if (this.props.status !== 'PENDING') {
       throw new InvalidRefundStateError(`Cannot succeed refund in status ${this.props.status}.`);
@@ -183,6 +185,8 @@ export class Refund extends AggregateRoot<UniqueID> {
         amountMinor: this.amountMinor,
         currencyCode: this.currencyCode,
         method: this.method,
+        orderCommissionMinor: input.orderCommissionMinor ?? null,
+        orderTotalMinor: input.orderTotalMinor ?? null,
       }),
     });
   }

@@ -1,8 +1,7 @@
 export const LEDGER_PORT = Symbol('LEDGER_PORT');
 
 /**
- * Refund allocation shape carried on Payment `RefundCompleted` outbox payloads
- * and consumed by Vendor Finance (Phase 15 persists; Phase 14.4 stub only).
+ * Refund allocation shape carried on Payment `RefundCompleted` outbox payloads.
  */
 export type LedgerRefundAllocation = {
   readonly entryType: 'REFUND';
@@ -18,14 +17,46 @@ export type LedgerRefundAllocation = {
   readonly referenceType: 'REFUND';
   readonly referenceId: string;
   readonly idempotencyKey: string;
-  /**
-   * Proportional commission clawback — filled when sale/commission snapshots exist (15.4).
-   * Stub must not invent commission math.
-   */
   readonly commissionReversalMinor: number | null;
 };
 
+export type LedgerSaleRecognitionInput = {
+  readonly orderId: string;
+  readonly paymentIntentId?: string | null;
+  readonly actorUserId?: string | null;
+};
+
+export type VendorLedgerBalanceDto = {
+  readonly vendorId: string;
+  readonly currencyCode: string;
+  readonly pendingMinor: number;
+  readonly availableMinor: number;
+  readonly rebuiltAt: string;
+};
+
+export type VendorLedgerEntryDto = {
+  readonly id: string;
+  readonly entryType: string;
+  readonly direction: string;
+  readonly amountMinor: number;
+  readonly currencyCode: string;
+  readonly orderId: string | null;
+  readonly referenceType: string;
+  readonly referenceId: string;
+  readonly availableAt: string;
+  readonly occurredAt: string;
+};
+
 export interface LedgerPort {
-  /** Idempotent DEBIT REFUND (+ optional commission credit later). No duplicate posts. */
+  /** Idempotent SALE + COMMISSION from order pricing snapshot when payment is PAID. */
+  recordSaleRecognition(input: LedgerSaleRecognitionInput): Promise<void>;
+  /** Idempotent DEBIT REFUND (+ optional commission credit later). */
   recordRefundAllocation(input: LedgerRefundAllocation): Promise<void>;
+  rebuildVendorBalance(vendorId: string): Promise<VendorLedgerBalanceDto>;
+  getVendorBalance(vendorId: string): Promise<VendorLedgerBalanceDto | null>;
+  listVendorEntries(
+    vendorId: string,
+    limit: number,
+    offset: number,
+  ): Promise<readonly VendorLedgerEntryDto[]>;
 }

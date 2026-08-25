@@ -51,6 +51,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
 
     this.ensureQueue(QUEUE_NAMES.domainEvents);
     this.ensureQueue(QUEUE_NAMES.payment);
+    this.ensureQueue(QUEUE_NAMES.payout);
     this.ensureQueue(QUEUE_NAMES.deadLetter);
 
     this.workers.push(
@@ -68,6 +69,14 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
         {
           connection: this.connection,
           concurrency: 5,
+        },
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.payout,
+        async (job) => this.domainEvents.handle(job.data),
+        {
+          connection: this.connection,
+          concurrency: 3,
         },
       ),
     );

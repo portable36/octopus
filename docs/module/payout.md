@@ -10,7 +10,7 @@ Does **not** own Order/Payment/Return tables, provider charge/refund APIs, or PO
 
 MikroORM + PostgreSQL (not Prisma/MySQL). Redis only for queues/cache.
 
-## Ledger
+## Ledger (Phase 15.1)
 
 ```text
 CREDIT  SALE
@@ -20,23 +20,59 @@ DEBIT   REFUND
 DEBIT   PAYOUT
 ```
 
-Append-only. Corrections = new reversal/adjustment rows.
+Append-only `vendor_ledger_entries`. Corrections = new reversal/adjustment rows.
 
-Balance = `Σ CREDIT − Σ DEBIT` (rebuildable). Optional snapshot is derived.
+Balance snapshot `vendor_ledger_balances` is **derived** via `rebuildVendorBalance`.
+
+- SALE amount = `subtotalMinor − discountMinor` from order snapshot (never reprice)
+- COMMISSION = `order.commissionMinor`
+- Settlement: `LEDGER_SETTLEMENT_DAYS` (default 7) before SALE/COMMISSION count as available
+- REFUND debits apply immediately to available
 
 ## Recognition
 
-- Sale/commission post from **order pricing snapshot** after payment is financially real (`PAID` / COD `COLLECTED`).
-- Uncollected COD → no SALE credit.
-- Refunds (Phase 14.2) → REFUND debit + commission adjustment per policy — never mutate original SALE/COMMISSION rows.
+- `CodCollected` (payment queue) → `LedgerPort.recordSaleRecognition` (requires order `PAID`)
+- Uncollected COD → no SALE credit
+- `RefundCompleted` → `LedgerPort.recordRefundAllocation` (persisted entry, not Redis stub)
 
-## Payout lifecycle
+## APIs
+
+- `GET /api/v1/finance/vendors/:vendorId/balance` — `finance.ledger.read`
+- `GET /api/v1/finance/vendors/:vendorId/summary` — dashboard (pending/available/reserved/spendable + type totals)
+- `GET /api/v1/finance/vendors/:vendorId/ledger?limit&offset`
+- `GET /api/v1/finance/vendors/:vendorId/statement?limit&offset&from&to` — paginated statement + `total`
+- `GET /api/v1/finance/vendors/:vendorId/reconciliation` — platform `finance.ledger.reconcile` (report only)
+- `POST /api/v1/finance/vendors/:vendorId/adjustments` — platform `finance.ledger.adjust` + Idempotency-Key
+- `POST /api/v1/finance/vendors/:vendorId/payouts` — `payout.request` + Idempotency-Key
+- `GET /api/v1/finance/vendors/:vendorId/payouts` — `payout.read`
+- `GET /api/v1/finance/payouts/:payoutId`
+- `POST /api/v1/finance/payouts/:payoutId/approve` — platform `payout.approve`
+- `POST /api/v1/finance/payouts/:payoutId/reject` — platform (releases reservation)
+- `POST /api/v1/finance/payouts/:payoutId/process` — platform `payout.process` (stub provider)
+
+## Adjustments + reconciliation (Phase 15.3)
+
+- Platform ADJUSTMENT posts append-only CREDIT/DEBIT with `reason` + `actorUserId` audit metadata and `LedgerAdjustmentRecorded` outbox.
+- Reconciliation compares derived balance vs snapshot and lists orphan PAYOUT refs; **never auto-fixes**.
+- Statement returns `{ items, total, limit, offset, from, to }` with optional ISO date filters.
+
+## Refund / commission (Phase 15.4)
+
+- `RefundCompleted` → `DEBIT REFUND` + proportional commission CREDIT (`floor(commission × refund / orderTotal)` from order snapshot).
+- FE dashboards deferred to Phase 20 / vendor portal; consume `/summary` API-first.
+
+## Payout lifecycle (Phase 15.2)
 
 ```text
 REQUESTED → UNDER_REVIEW → APPROVED → PROCESSING → COMPLETED | FAILED
+                         ↘ REJECTED
 ```
 
-`COMPLETED` posts exactly one `DEBIT PAYOUT` (idempotent). Concurrent requests cannot overdraw available balance.
+- Request creates `UNDER_REVIEW` immediately; amount ≤ `available − sum(in-flight)`.
+- In-flight statuses reserve available (REQUESTED / UNDER_REVIEW / APPROVED / PROCESSING).
+- Concurrent requests serialize on `vendor_ledger_balances` row lock.
+- `COMPLETED` posts exactly one `DEBIT PAYOUT` (`ledger:payout:{id}`).
+- `FAILED` / `REJECTED` release reservation; no ledger debit.
 
 ## Boundaries
 
@@ -45,13 +81,6 @@ Payment / Order events → Vendor Finance (ports + outbox)
 Return/Refund completed → Vendor Finance
 Vendor Finance → PayoutProvider port (external disbursement)
 ```
-
-## Phase 14.4 (shipped stub)
-
-- `RefundCompleted` outbox includes `allocation` (`entryType: REFUND`, amounts, vendor/store/order refs, `commissionReversalMinor: null`)
-- `LedgerPort.recordRefundAllocation` — **stub** in `PayoutModule` (Redis NX idempotency only)
-- Domain-events / payment queue consumer calls the port
-- **Do not** create a second ledger; Phase 15 replaces stub with append-only `vendor_ledger_entries`
 
 ## Related
 

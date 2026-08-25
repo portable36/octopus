@@ -24,6 +24,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'return.inspect',
     'payout.read',
     'payout.request',
+    'finance.ledger.read',
     'vendor.manage',
     'store.manage',
     'pos.receipt_template.manage',

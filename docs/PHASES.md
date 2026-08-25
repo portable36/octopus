@@ -1014,34 +1014,34 @@ Never `vendor.balance` as authority. Never UPDATE/DELETE ledger rows — reverse
 
 ### 15.1 — Ledger + balances
 
-- [ ] `vendor_ledger_entries` append-only (+ unique reference constraints)
-- [ ] Types: SALE, COMMISSION, REFUND, ADJUSTMENT, PAYOUT
-- [ ] Record sale + commission from **order pricing snapshot** on eligible recognition event (COD: only after `COLLECTED` / paid)
-- [ ] Pending vs available (configurable settlement window; default explicit)
-- [ ] `rebuildVendorBalance` + optional snapshot table
-- [ ] RBAC: `finance.ledger.read` (+ existing `payout.*` until renamed)
-- [ ] Vendor/store isolation + RLS
-- [ ] Outbox: `VendorSaleRecorded`, `CommissionRecorded`
+- [x] `vendor_ledger_entries` append-only (+ unique reference constraints)
+- [x] Types: SALE, COMMISSION, REFUND, ADJUSTMENT, PAYOUT
+- [x] Record sale + commission from **order pricing snapshot** on eligible recognition event (COD: only after `COLLECTED` / paid)
+- [x] Pending vs available (configurable settlement window; default explicit)
+- [x] `rebuildVendorBalance` + optional snapshot table
+- [x] RBAC: `finance.ledger.read` (+ existing `payout.*` until renamed)
+- [x] Vendor/store isolation + RLS
+- [x] Outbox: `VendorSaleRecorded`, `CommissionRecorded`
 
 ### 15.2 — Payouts
 
-- [ ] `VendorPayout` state machine: REQUESTED → … → COMPLETED | FAILED
-- [ ] Request ≤ available; concurrent over-payout impossible (TX + lock/version)
-- [ ] Approve / reject / process (provider port stub OK)
-- [ ] COMPLETED → single `DEBIT PAYOUT` (idempotent)
-- [ ] Failure releases reservation; no silent double debit
+- [x] `VendorPayout` state machine: REQUESTED → … → COMPLETED | FAILED
+- [x] Request ≤ available; concurrent over-payout impossible (TX + lock/version)
+- [x] Approve / reject / process (provider port stub OK)
+- [x] COMPLETED → single `DEBIT PAYOUT` (idempotent)
+- [x] Failure releases reservation; no silent double debit
 
 ### 15.3 — Adjustments + reconciliation
 
-- [ ] Platform-only financial adjustments (reason + audit)
-- [ ] Reconciliation report (derived vs snapshot, orphan refs) — report only, no auto-fix
-- [ ] Vendor statement query (server-side pagination)
+- [x] Platform-only financial adjustments (reason + audit)
+- [x] Reconciliation report (derived vs snapshot, orphan refs) — report only, no auto-fix
+- [x] Vendor statement query (server-side pagination)
 
 ### 15.4 — Refund / commission integration + UI hooks
 
-- [ ] Consume `RefundCompleted` → `DEBIT REFUND` + proportional commission credit
-- [ ] Admin/vendor finance read APIs (dashboard numbers from backend)
-- [ ] FE surfaces deferred with Phase 20 / vendor portal — API-first
+- [x] Consume `RefundCompleted` → `DEBIT REFUND` + proportional commission credit
+- [x] Admin/vendor finance read APIs (dashboard numbers from backend)
+- [x] FE surfaces deferred with Phase 20 / vendor portal — API-first
 
 ### Deferred
 

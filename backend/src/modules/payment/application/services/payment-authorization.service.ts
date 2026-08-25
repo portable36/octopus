@@ -10,8 +10,9 @@ import {
 import type { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
 import { PaymentAccessDeniedError } from '../errors/payment.errors';
 
-/** Mirrors identity RBAC grant for payment.cod.collect (avoid cross-module import). */
+/** Mirrors identity RBAC (avoid cross-module import). */
 const COD_COLLECT_ROLES = new Set(['PLATFORM_ADMIN', 'VENDOR_OWNER', 'STORE_MANAGER']);
+const REFUND_CREATE_ROLES = new Set(['PLATFORM_ADMIN', 'VENDOR_OWNER', 'STORE_MANAGER']);
 
 @Injectable()
 export class PaymentAuthorizationService {
@@ -25,8 +26,38 @@ export class PaymentAuthorizationService {
     actorUserId: string,
     actorRoles: readonly string[],
   ): Promise<void> {
-    if (!actorRoles.some((role) => COD_COLLECT_ROLES.has(role))) {
-      throw new PaymentAccessDeniedError('Missing permission payment.cod.collect.');
+    await this.requireStoreScopedRole(
+      intent,
+      actorUserId,
+      actorRoles,
+      COD_COLLECT_ROLES,
+      'Missing permission payment.cod.collect.',
+    );
+  }
+
+  public async requireRefundCreator(
+    intent: PaymentIntent,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<void> {
+    await this.requireStoreScopedRole(
+      intent,
+      actorUserId,
+      actorRoles,
+      REFUND_CREATE_ROLES,
+      'Missing permission payment.refund.create.',
+    );
+  }
+
+  private async requireStoreScopedRole(
+    intent: PaymentIntent,
+    actorUserId: string,
+    actorRoles: readonly string[],
+    allowedRoles: ReadonlySet<string>,
+    missingPermissionMessage: string,
+  ): Promise<void> {
+    if (!actorRoles.some((role) => allowedRoles.has(role))) {
+      throw new PaymentAccessDeniedError(missingPermissionMessage);
     }
     if (actorRoles.includes('PLATFORM_ADMIN')) {
       return;

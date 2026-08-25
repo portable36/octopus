@@ -182,4 +182,7 @@ export class FulfillmentOutboxOrmEntity {
 
   @Property({ fieldName: 'published_at', nullable: true })
   publishedAt!: Date | null;
+
+  @Property({ fieldName: 'retry_count', type: 'integer', default: 0 })
+  retryCount = 0;
 }

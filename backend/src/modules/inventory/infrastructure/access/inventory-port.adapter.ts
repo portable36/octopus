@@ -7,7 +7,17 @@ import type {
   ReleaseInventoryInput,
   ReservationResult,
   ReserveInventoryInput,
+  RestoreFromReturnInput,
+  RestoreFromReturnResult,
 } from '../../../../shared-kernel/application/ports/inventory.port';
+import {
+  ReservationCommandHandler,
+  StockCommandHandler,
+} from '../../application/commands/inventory.handlers';
+import {
+  ReservationNotFoundError,
+  WarehouseNotFoundError,
+} from '../../application/errors/inventory.errors';
 import {
   INVENTORY_REPOSITORY,
   type InventoryRepository,
@@ -16,11 +26,6 @@ import {
   WAREHOUSE_REPOSITORY,
   type WarehouseRepository,
 } from '../../application/ports/warehouse-repository.interface';
-import { ReservationCommandHandler } from '../../application/commands/inventory.handlers';
-import {
-  ReservationNotFoundError,
-  WarehouseNotFoundError,
-} from '../../application/errors/inventory.errors';
 
 @Injectable()
 export class InventoryPortAdapter implements InventoryPort {
@@ -28,6 +33,7 @@ export class InventoryPortAdapter implements InventoryPort {
     @Inject(INVENTORY_REPOSITORY) private readonly inventory: InventoryRepository,
     @Inject(WAREHOUSE_REPOSITORY) private readonly warehouses: WarehouseRepository,
     private readonly reservations: ReservationCommandHandler,
+    private readonly stock: StockCommandHandler,
   ) {}
 
   public async checkAvailability(input: AvailabilityQuery): Promise<AvailabilityResult> {
@@ -116,7 +122,6 @@ export class InventoryPortAdapter implements InventoryPort {
     if (!warehouse) {
       throw new WarehouseNotFoundError();
     }
-    // Trusted cross-module callers; authorization is enforced at HTTP for staff mutations.
     return this.reservations.reserve({
       storeId: warehouse.storeId,
       warehouseId: input.warehouseId,
@@ -153,5 +158,9 @@ export class InventoryPortAdapter implements InventoryPort {
       idempotencyKey: input.idempotencyKey,
       ...(input.correlationId !== undefined ? { correlationId: input.correlationId } : {}),
     });
+  }
+
+  public restoreFromReturn(input: RestoreFromReturnInput): Promise<RestoreFromReturnResult> {
+    return this.stock.restoreFromReturn(input);
   }
 }

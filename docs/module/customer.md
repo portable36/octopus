@@ -2,40 +2,30 @@
 
 ## Responsibility
 
-The Customer Experience bounded context owns customer profile, addresses, wishlists, order history views, and preference settings distinct from Identity credentials.
+Customer profile and address book distinct from Identity credentials. Order history and returns are consumed via Order/Returns APIs — this module does not own order mutation or payment.
 
-Customer owns:
+## Status (Phase 18)
 
-- Customer profile aggregate linked to Identity User ID
-- Saved shipping/billing addresses
-- Wishlist and recently viewed (where productized)
-- Notification and marketing preferences
-- Customer-facing order history projections (via Order read ports)
+| Capability                             | Status                     |
+| -------------------------------------- | -------------------------- |
+| Identity auth (register/login/refresh) | Shipped — Identity module  |
+| Profile linked 1:1 to Identity user    | **Planned — Phase 18.1**   |
+| Address book CRUD                      | **Planned — Phase 18.1**   |
+| Orders / returns UI                    | Phase 18.4 (APIs exist)    |
+| Wishlist                               | Deferred until productized |
+| Reviews                                | Deferred until productized |
+| Notification preferences               | Deferred — Phase 17        |
 
-Customer does not own:
+There is **no** `backend/src/modules/customer` yet. Do not treat this doc as implemented.
 
-- Authentication secrets (Identity module)
-- Order mutation or payment (Order/Payment modules)
+## Rules (when built)
 
-## Privacy
-
-- Export and deletion requests coordinated with Identity and Audit
+- Derive ownership from authenticated user — never from client-supplied `userId`
 - PII minimization in logs
 - Address validation at application boundary
-
-## Testing requirements
-
-- Customer A cannot read Customer B profile or addresses
-- Address CRUD authorization
-- Preference changes affect Notification routing
-
-## Exit criteria
-
-- Profile linked 1:1 with Identity user for registered customers
-- Address book integrated with Checkout
+- Guest cart merge into customer cart is **Cart module** responsibility (server-side)
 
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 18
-- [Identity Module](./identity.md)
-- [Checkout Module](./checkout.md)
+- [PHASES.md](../PHASES.md) — Phase 18.1–18.5
+- [Identity](./identity.md) · [Cart](./cart.md) · [Order](./order.md) · [Refunds](./refunds.md)

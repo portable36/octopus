@@ -4,6 +4,10 @@ import type {
   CatalogVariantAccessSnapshot,
 } from '../../../../shared-kernel/application/ports/catalog-variant-access.port';
 import { CATALOG_VARIANT_ACCESS } from '../../../../shared-kernel/application/ports/catalog-variant-access.port';
+import type {
+  RestoreFromReturnInput,
+  RestoreFromReturnResult,
+} from '../../../../shared-kernel/application/ports/inventory.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { InventoryItem } from '../../domain/aggregates/inventory-item.aggregate';
 import { InventoryReservation } from '../../domain/aggregates/inventory-reservation.aggregate';
@@ -11,12 +15,14 @@ import { Warehouse } from '../../domain/aggregates/warehouse.aggregate';
 import { createMovement } from '../../domain/entities/inventory-movement';
 import type { InventoryOperationType, InventoryReferenceType } from '../../domain/inventory.types';
 import { stockStatus } from '../../domain/inventory.types';
+import { dispositionForReturnCondition } from '../../domain/services/return-disposition';
 import {
   CrossStoreTransferDeniedError,
   InventoryItemNotFoundError,
   ReservationNotFoundError,
   VariantNotFoundForInventoryError,
   WarehouseCodeTakenError,
+  WarehouseNotFoundError,
 } from '../errors/inventory.errors';
 import {
   INVENTORY_REPOSITORY,
@@ -352,6 +358,123 @@ export class StockCommandHandler {
       stockStatus: stockStatus(available, maxThreshold),
       locations,
     };
+  }
+
+  /**
+   * Trusted Returns seam after inspection accept — idempotent per returnId key.
+   * Sellable → onHand; unsellable → unsellableOnHand (never inflates available).
+   */
+  public async restoreFromReturn(input: RestoreFromReturnInput): Promise<RestoreFromReturnResult> {
+    const disposition = dispositionForReturnCondition(input.condition);
+    const prior = await this.inventory.findCompletedOperation(input.idempotencyKey);
+    if (prior?.['returnId']) {
+      return {
+        returnId: String(prior['returnId']),
+        disposition: prior['disposition'] as RestoreFromReturnResult['disposition'],
+        restoredQuantity: Number(prior['restoredQuantity'] ?? 0),
+        lineResults: (prior['lineResults'] as RestoreFromReturnResult['lineResults']) ?? [],
+      };
+    }
+
+    const positiveLines = input.lines.filter(
+      (line) => Number.isInteger(line.quantity) && line.quantity > 0,
+    );
+    if (positiveLines.length === 0) {
+      const empty: RestoreFromReturnResult = {
+        returnId: input.returnId,
+        disposition,
+        restoredQuantity: 0,
+        lineResults: [],
+      };
+      await this.inventory.recordCompletedOperation({
+        idempotencyKey: input.idempotencyKey,
+        operationType: 'RESTORE_FROM_RETURN',
+        referenceId: input.returnId,
+        result: empty as unknown as Record<string, unknown>,
+      });
+      return empty;
+    }
+
+    const operationType: InventoryOperationType =
+      disposition === 'SELLABLE' ? 'RESTOCK' : 'RETURN_UNSELLABLE';
+
+    const lineResults: RestoreFromReturnResult['lineResults'][number][] = [];
+    let restoredQuantity = 0;
+
+    await this.inventory.withLockedUnitOfWork(async (uow) => {
+      for (const line of positiveLines) {
+        const warehouse = await this.warehouses.findById(line.warehouseId);
+        if (!warehouse || warehouse.storeId !== input.storeId) {
+          throw new WarehouseNotFoundError();
+        }
+        warehouse.assertActive();
+
+        let current = await uow.findItemByWarehouseAndVariantForUpdate(
+          warehouse.id.value,
+          line.variantId,
+        );
+        if (!current) {
+          current = InventoryItem.create({
+            vendorId: warehouse.vendorId,
+            storeId: warehouse.storeId,
+            warehouseId: warehouse.id.value,
+            variantId: line.variantId,
+          });
+          await uow.saveItem(current);
+          current =
+            (await uow.findItemByIdForUpdate(current.id.value)) ??
+            (await uow.findItemByWarehouseAndVariantForUpdate(warehouse.id.value, line.variantId))!;
+        }
+
+        const change =
+          disposition === 'SELLABLE'
+            ? current.restock(line.quantity)
+            : current.receiveUnsellable(line.quantity);
+
+        await uow.saveItem(current);
+        await uow.appendMovement(
+          createMovement({
+            id: UniqueID.create().value,
+            vendorId: current.vendorId,
+            storeId: current.storeId,
+            warehouseId: current.warehouseId,
+            variantId: current.variantId,
+            inventoryItemId: current.id.value,
+            operationType,
+            quantity: line.quantity,
+            beforeQuantity: change.before,
+            afterQuantity: change.after,
+            referenceType: 'RETURN' satisfies InventoryReferenceType,
+            referenceId: input.returnId,
+            actorUserId: input.actorUserId,
+            reason: `return restore (${disposition})`,
+            correlationId: input.correlationId ?? null,
+          }),
+        );
+
+        lineResults.push({
+          variantId: line.variantId,
+          warehouseId: line.warehouseId,
+          quantity: line.quantity,
+          inventoryItemId: current.id.value,
+        });
+        restoredQuantity += line.quantity;
+      }
+    });
+
+    const result: RestoreFromReturnResult = {
+      returnId: input.returnId,
+      disposition,
+      restoredQuantity,
+      lineResults,
+    };
+    await this.inventory.recordCompletedOperation({
+      idempotencyKey: input.idempotencyKey,
+      operationType: 'RESTORE_FROM_RETURN',
+      referenceId: input.returnId,
+      result: result as unknown as Record<string, unknown>,
+    });
+    return result;
   }
 
   private async mutateOnHand(input: {

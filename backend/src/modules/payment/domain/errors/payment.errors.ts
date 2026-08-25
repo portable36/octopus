@@ -49,3 +49,21 @@ export class InvalidPaymentMoneyError extends PaymentDomainError {
     super(message, 'INVALID_CURRENCY');
   }
 }
+
+export class RefundNotRefundableError extends PaymentDomainError {
+  constructor(message = 'Payment intent is not refundable.') {
+    super(message, 'PAYMENT_NOT_REFUNDABLE');
+  }
+}
+
+export class RefundExceedsAvailableError extends PaymentDomainError {
+  constructor(message = 'Refund amount exceeds remaining refundable balance.') {
+    super(message, 'REFUND_EXCEEDS_AVAILABLE');
+  }
+}
+
+export class InvalidRefundStateError extends PaymentDomainError {
+  constructor(message = 'Invalid refund state transition.') {
+    super(message, 'INVALID_REFUND_STATE');
+  }
+}

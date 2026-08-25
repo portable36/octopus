@@ -25,6 +25,9 @@ export class InventoryItemOrmEntity {
   @Property({ fieldName: 'reserved', type: 'integer' })
   reserved!: number;
 
+  @Property({ fieldName: 'unsellable_on_hand', type: 'integer', default: 0 })
+  unsellableOnHand = 0;
+
   @Property({ fieldName: 'low_stock_threshold', type: 'integer' })
   lowStockThreshold!: number;
 

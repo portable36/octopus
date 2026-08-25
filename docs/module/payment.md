@@ -18,9 +18,10 @@ Payment owns:
 
 - Payment intent and payment transaction aggregates
 - Online COD (`AWAITING_COLLECTION` → `COLLECTED`) and collection records
+- Refunds (`payment_refunds`: PENDING → SUCCEEDED | FAILED) with max-refundable cap
 - Provider reference IDs and raw callback metadata (redacted in logs) — gateways later
 - Amount, currency, and order/payment linkage
-- Idempotency records for create/collect/cancel
+- Idempotency records for create/collect/cancel/refund
 - Minimal `payment_outbox` rows (Phase 12 dispatcher)
 
 Payment does not own:
@@ -56,9 +57,19 @@ PaymentPort
   createIntent({ paymentMethod, orderId, ... })
   confirmCodCollection(...)
   cancelIntent(...)
+  createRefund({ paymentIntentId, amountMinor, ... })
 ```
 
-Implement SSLCommerz, bKash, and Nagad behind adapters in infrastructure. Domain code never imports provider SDKs.
+Implement SSLCommerz, bKash, and Nagad behind adapters in infrastructure. Domain code never imports provider SDKs. Refunds use `PaymentRefundGateway` (stub until live).
+
+## Refunds (Phase 14.2)
+
+```text
+COLLECTED COD → POST /payments/:id/refunds (MANUAL)
+  → PENDING reservation → gateway/manual complete → SUCCEEDED + RefundCompleted outbox
+```
+
+Partial/full refunds; uncollected COD and unpaid gateway intents are refused. `RefundCompleted` carries a ledger `allocation` payload; `LedgerPort` stub records it until Phase 15 persists append-only entries.
 
 ## Callback handling
 

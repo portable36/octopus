@@ -16,3 +16,4 @@ alwaysApply: false
 - Never trust browser-calculated discounts, tax, shipping, or grand totals.
 - Checkout orchestrates Order and Payment through application ports only.
 - Persist immutable snapshots on orders at creation time.
+- Guest cart → authenticated cart **merge must run server-side** (concurrency-safe). Never merge only in browser state or localStorage.

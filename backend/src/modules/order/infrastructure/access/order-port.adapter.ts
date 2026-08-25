@@ -5,6 +5,7 @@ import type {
   MarkOrderPaidFromPaymentInput,
   OrderFulfillmentSnapshot,
   OrderPort,
+  OrderReturnSnapshot,
   PrepareOrderShipmentInput,
 } from '../../../../shared-kernel/application/ports/order.port';
 import {
@@ -41,6 +42,11 @@ export class OrderPortAdapter implements OrderPort {
     return order ? toSnapshot(order) : null;
   }
 
+  public async getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null> {
+    const order = await this.lifecycle.getFulfillmentSnapshot(orderId);
+    return order ? toReturnSnapshot(order) : null;
+  }
+
   public async prepareShipment(
     input: PrepareOrderShipmentInput,
   ): Promise<OrderFulfillmentSnapshot> {
@@ -71,6 +77,37 @@ function toSnapshot(order: Order): OrderFulfillmentSnapshot {
       fulfilledQuantity: line.fulfilledQuantity,
       productId: line.productId,
       variantId: line.variantId,
+    })),
+  };
+}
+
+function toReturnSnapshot(order: Order): OrderReturnSnapshot {
+  return {
+    orderId: order.id.value,
+    orderNumber: order.orderNumber,
+    customerId: order.customerId,
+    vendorId: order.vendorId,
+    storeId: order.storeId,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod,
+    currencyCode: order.currencyCode,
+    totalMinor: order.totalMinor,
+    returnWindowAnchorAt: order.updatedAt,
+    lines: order.lines.map((line) => ({
+      lineId: line.lineId,
+      productId: line.productId,
+      variantId: line.variantId,
+      offerId: line.offerId,
+      quantity: line.quantity,
+      fulfilledQuantity: line.fulfilledQuantity,
+      unitPriceMinor: line.unitPriceMinor,
+      lineSubtotalMinor: line.lineSubtotalMinor,
+      lineDiscountMinor: line.lineDiscountMinor,
+      lineTaxMinor: line.lineTaxMinor,
+      lineTotalMinor: line.lineTotalMinor,
+      currencyCode: line.currencyCode,
+      warehouseId: line.warehouseId,
     })),
   };
 }

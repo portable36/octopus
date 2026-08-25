@@ -3,15 +3,23 @@ import { Injectable } from '@nestjs/common';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
 import type { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
+import type { Refund } from '../../domain/aggregates/refund.aggregate';
+import { REFUND_STATUSES_COUNTING_TOWARD_CAP } from '../../domain/refund.types';
 import type {
   CodCollectionRecord,
   PaymentRepository,
 } from '../../application/ports/payment-repository.interface';
-import { applyPaymentIntentToOrm, paymentIntentToDomain } from './payment.mapper';
+import {
+  applyPaymentIntentToOrm,
+  applyRefundToOrm,
+  paymentIntentToDomain,
+  refundToDomain,
+} from './payment.mapper';
 import {
   PaymentIntentOrmEntity,
   PaymentOperationOrmEntity,
   PaymentOutboxOrmEntity,
+  PaymentRefundOrmEntity,
   PaymentTransactionOrmEntity,
 } from './payment.orm-entity';
 
@@ -137,6 +145,42 @@ export class PaymentRepositoryAdapter implements PaymentRepository {
         idempotencyKey: entity.idempotencyKey,
         collectedAt: entity.collectedAt,
       };
+    });
+  }
+
+  public async sumRefundedOrPendingMinor(paymentIntentId: string): Promise<number> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(PaymentRefundOrmEntity, {
+        paymentIntentId,
+        status: { $in: [...REFUND_STATUSES_COUNTING_TOWARD_CAP] },
+      });
+      return rows.reduce((sum, row) => sum + row.amountMinor, 0);
+    });
+  }
+
+  public async saveRefund(refund: Refund): Promise<void> {
+    await withRlsContext(this.em, async (tx) => {
+      let entity = await tx.findOne(PaymentRefundOrmEntity, { id: refund.id.value });
+      if (!entity) {
+        entity = new PaymentRefundOrmEntity();
+      }
+      applyRefundToOrm(refund, entity);
+      await tx.persist(entity).flush();
+      for (const event of refund.getUncommittedEvents()) {
+        await this.appendOutboxInTx(tx, {
+          aggregateId: refund.id.value,
+          eventType: event.eventName,
+          payload: event.payload,
+        });
+      }
+      refund.clearEvents();
+    });
+  }
+
+  public async findRefundById(id: string): Promise<Refund | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(PaymentRefundOrmEntity, { id });
+      return entity ? refundToDomain(entity) : null;
     });
   }
 

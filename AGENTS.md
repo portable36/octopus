@@ -12,6 +12,8 @@ Installed under `.agents/skills/`:
 - [google-labs-code/stitch-skills](https://github.com/google-labs-code/stitch-skills) — `/shadcn-ui`, `/design-md`
 - [redis/agent-skills](https://github.com/redis/agent-skills/tree/main/skills/redis-core) — `/redis-core` (cache/sessions/queues only — never inventory or money truth)
 - [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) — curated engineering subset only (~20 skills; not the full ~343 pack)
+- [amirtaherkhani/nestjs-agent-skills](https://github.com/amirtaherkhani/nestjs-agent-skills) — NestJS architecture / OOP / performance (Octopus rules win on conflicts)
+- Octopus-adapted ops skills (from Colorcom patterns): `/architecture-boundary-guard`, `/quality-gates-check`, `/docs-state-maintainer`, `/cost-efficient-agent`
 
 Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.cursor/rules/` as the hard engineering contract. Third-party skills must not weaken tenant isolation, payments, authn, or module boundaries.
 
@@ -49,6 +51,11 @@ Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/age
 | Redis modeling           | `/redis-core`                                                     |
 | API contract review      | `/api-design-reviewer`                                            |
 | Schema / migrations      | `/database-designer`, `/migration-architect`                      |
+| NestJS architecture      | `/nestjs-architecture-principles` (+ OOP/perf siblings)           |
+| Module boundary check    | `/architecture-boundary-guard`                                    |
+| Pre-merge validate       | `/quality-gates-check`                                            |
+| Docs after a phase slice | `/docs-state-maintainer`                                          |
+| Cheaper agent sessions   | `/cost-efficient-agent`                                           |
 | Security deep-dive       | `/senior-security`, `/skill-security-auditor`                     |
 | Ops / SLOs / incidents   | `/observability-designer`, `/slo-architect`, `/incident-response` |
 | Role lens (BE/FE/QA)     | `/senior-backend`, `/senior-frontend`, `/senior-qa`               |
@@ -60,9 +67,10 @@ Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/age
 - Financial and inventory paths need tests and idempotency semantics
 - Validate with `npm.cmd run validate` before claiming done
 - Prefer Graphify for code structure questions; OpenViking (optional) for doc/memory recall
+- Prefer open-source / free tools and products when they are good enough; paid only when OSS/free fails on security, reliability, ops fit, or time — see `docs/product/current-baseline.md`
 
 ## Related
 
 - `docs/engineering/ai-assisted-development.md`
-- `docs/PHASES.md`
+- `docs/PHASES.md` (living checklist; Cursor plans are historical — see `docs/agents/plan-fit.md`)
 - `.cursor/rules/00-core.mdc`

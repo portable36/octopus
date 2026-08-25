@@ -7,13 +7,23 @@ import type {
   ConfirmCodCollectionResult,
   CreatePaymentIntentInput,
   CreatePaymentIntentResult,
+  CreateRefundInput,
+  CreateRefundResult,
 } from '../../../../shared-kernel/application/ports/payment.port';
 import { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
+import { Refund } from '../../domain/aggregates/refund.aggregate';
 import {
   CodAmountMismatchError,
   CodAlreadyCollectedError,
+  RefundNotRefundableError,
 } from '../../domain/errors/payment.errors';
+import { computeMaxRefundable } from '../../domain/services/max-refundable';
+import { assertCurrencyMatch, resolveRefundMethod } from '../../domain/services/refundability';
 import { PaymentIdempotencyConflictError, PaymentNotFoundError } from '../errors/payment.errors';
+import {
+  PAYMENT_REFUND_GATEWAY,
+  type PaymentRefundGateway,
+} from '../ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY, type PaymentRepository } from '../ports/payment-repository.interface';
 import { PaymentAuthorizationService } from '../services/payment-authorization.service';
 
@@ -231,6 +241,130 @@ export class CancelCodPaymentHandler {
   }
 }
 
+@Injectable()
+export class CreateRefundHandler {
+  constructor(
+    @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
+    private readonly authz: PaymentAuthorizationService,
+    @Inject(PAYMENT_REFUND_GATEWAY) private readonly gateway: PaymentRefundGateway,
+  ) {}
+
+  public async execute(input: CreateRefundInput): Promise<CreateRefundResult> {
+    const requestHash = hashRefund(input);
+    const prior = await this.payments.findOperation(input.idempotencyKey);
+    if (prior) {
+      if (prior.requestHash !== requestHash) {
+        throw new PaymentIdempotencyConflictError();
+      }
+      return prior.responseJson as unknown as CreateRefundResult;
+    }
+
+    const reserved = await this.payments.withTransaction(async (repo) => {
+      const intent = await repo.findIntentById(input.paymentIntentId);
+      if (!intent) {
+        throw new PaymentNotFoundError();
+      }
+
+      await this.authz.requireRefundCreator(intent, input.actorUserId, input.actorRoles);
+      const currency = assertCurrencyMatch(intent.currencyCode, input.currencyCode);
+      const method = resolveRefundMethod({
+        paymentMethod: intent.paymentMethod,
+        status: intent.status,
+      });
+
+      const consumed = await repo.sumRefundedOrPendingMinor(intent.id.value);
+      const available = computeMaxRefundable({
+        capturedAmountMinor: intent.amountMinor,
+        refundedOrPendingMinor: consumed,
+      });
+
+      const refund = Refund.create({
+        paymentIntentId: intent.id.value,
+        orderId: intent.orderId,
+        vendorId: intent.vendorId,
+        storeId: intent.storeId,
+        returnId: input.returnId ?? null,
+        amountMinor: input.amountMinor,
+        currencyCode: currency,
+        method,
+        reason: input.reason ?? null,
+        availableMinor: available,
+      });
+
+      await repo.saveRefund(refund);
+      return { intent, refund, method };
+    });
+
+    const gatewayResult = await this.gateway.execute({
+      paymentIntentId: reserved.intent.id.value,
+      refundId: reserved.refund.id.value,
+      provider: reserved.intent.provider,
+      paymentMethod: reserved.intent.paymentMethod,
+      method: reserved.method,
+      amountMinor: reserved.refund.amountMinor,
+      currencyCode: reserved.refund.currencyCode,
+      idempotencyKey: input.idempotencyKey,
+    });
+
+    return this.payments.withTransaction(async (repo) => {
+      const refund = (await repo.findRefundById(reserved.refund.id.value)) ?? reserved.refund;
+
+      if (refund.status === 'SUCCEEDED') {
+        const result = toRefundResult(refund);
+        await repo.saveOperation({
+          idempotencyKey: input.idempotencyKey,
+          operationType: 'CREATE_REFUND',
+          requestHash,
+          responseJson: result as unknown as Record<string, unknown>,
+        });
+        return result;
+      }
+
+      if (!gatewayResult.ok) {
+        refund.markFailed({
+          providerResponseCode: gatewayResult.responseCode,
+          providerReceivedAt: gatewayResult.receivedAt,
+        });
+        await repo.saveRefund(refund);
+        throw new RefundNotRefundableError(
+          `Refund provider rejected the request (${gatewayResult.responseCode}).`,
+        );
+      }
+
+      refund.markSucceeded({
+        providerRefundId: gatewayResult.providerRefundId,
+        providerResponseCode: gatewayResult.responseCode,
+        providerReceivedAt: gatewayResult.receivedAt,
+      });
+      await repo.saveRefund(refund);
+
+      const result = toRefundResult(refund);
+      await repo.saveOperation({
+        idempotencyKey: input.idempotencyKey,
+        operationType: 'CREATE_REFUND',
+        requestHash,
+        responseJson: result as unknown as Record<string, unknown>,
+      });
+      return result;
+    });
+  }
+}
+
+function toRefundResult(refund: Refund): CreateRefundResult {
+  return {
+    refundId: refund.id.value,
+    paymentIntentId: refund.paymentIntentId,
+    orderId: refund.orderId,
+    amountMinor: refund.amountMinor,
+    currencyCode: refund.currencyCode,
+    method: refund.method,
+    status: refund.status,
+    returnId: refund.returnId,
+    providerRefundId: refund.providerRefundId,
+    completedAt: (refund.completedAt ?? refund.updatedAt).toISOString(),
+  };
+}
+
 function toCreateResult(intent: PaymentIntent): CreatePaymentIntentResult {
   const result: CreatePaymentIntentResult = {
     paymentIntentId: intent.id.value,
@@ -277,5 +411,19 @@ function hashCollect(input: ConfirmCodCollectionInput): string {
 function hashCancel(input: CancelPaymentIntentInput): string {
   return createHash('sha256')
     .update(JSON.stringify({ paymentIntentId: input.paymentIntentId }))
+    .digest('hex');
+}
+
+function hashRefund(input: CreateRefundInput): string {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({
+        paymentIntentId: input.paymentIntentId,
+        amountMinor: input.amountMinor,
+        currencyCode: input.currencyCode.trim().toUpperCase(),
+        returnId: input.returnId ?? null,
+        reason: input.reason ?? null,
+      }),
+    )
     .digest('hex');
 }

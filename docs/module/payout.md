@@ -1,59 +1,61 @@
-# Payout Module
+# Payout / Vendor Finance Module
 
 ## Responsibility
 
-The Payout bounded context owns vendor financial ledger entries, commission calculation results, balance projections, payout requests, and payout batch processing.
+Owns the **immutable vendor ledger**, derived pending/available balances, payout lifecycle, and audited adjustments.
 
-Payout owns:
+Does **not** own Order/Payment/Return tables, provider charge/refund APIs, or POS till cash.
 
-- Immutable ledger entries (credit/debit)
-- Commission accrual records tied to source orders/events
-- Available vs pending balance projections
-- Payout request and payout batch lifecycle
-- Payout failure and retry metadata
+## Stack
 
-Payout does not own:
+MikroORM + PostgreSQL (not Prisma/MySQL). Redis only for queues/cache.
 
-- Order or payment capture (source events from Order/Payment)
-- Customer refunds execution (Refunds/Payment)
-- Mutable `vendor.balance` as sole source of truth
-
-## Ledger model
+## Ledger
 
 ```text
-CREDIT  sale proceeds
-DEBIT   platform commission
-DEBIT   refund impact
-CREDIT  adjustment (audited)
-DEBIT   payout disbursement
+CREDIT  SALE
+DEBIT   COMMISSION
+DEBIT   REFUND
+±       ADJUSTMENT (platform, audited)
+DEBIT   PAYOUT
 ```
 
-Current balance is derived from ledger history. Any cached balance field must be reconstructible and auditable.
+Append-only. Corrections = new reversal/adjustment rows.
+
+Balance = `Σ CREDIT − Σ DEBIT` (rebuildable). Optional snapshot is derived.
+
+## Recognition
+
+- Sale/commission post from **order pricing snapshot** after payment is financially real (`PAID` / COD `COLLECTED`).
+- Uncollected COD → no SALE credit.
+- Refunds (Phase 14.2) → REFUND debit + commission adjustment per policy — never mutate original SALE/COMMISSION rows.
 
 ## Payout lifecycle
 
 ```text
-REQUESTED -> APPROVED -> PROCESSING -> COMPLETED | FAILED
+REQUESTED → UNDER_REVIEW → APPROVED → PROCESSING → COMPLETED | FAILED
 ```
 
-Failed payouts retain history and support safe retry with idempotency.
+`COMPLETED` posts exactly one `DEBIT PAYOUT` (idempotent). Concurrent requests cannot overdraw available balance.
 
-## Testing requirements
+## Boundaries
 
-- Ledger immutability
-- Commission math against order snapshots
-- Payout cannot exceed available balance
-- Vendor A ledger isolated from Vendor B
-- Idempotent payout processing
+```text
+Payment / Order events → Vendor Finance (ports + outbox)
+Return/Refund completed → Vendor Finance
+Vendor Finance → PayoutProvider port (external disbursement)
+```
 
-## Exit criteria
+## Phase 14.4 (shipped stub)
 
-- Append-only ledger with migration constraints
-- Commission rules documented in [domains/commissions.md](../domains/commissions.md)
-- Payout integration behind provider port where external disbursement exists
+- `RefundCompleted` outbox includes `allocation` (`entryType: REFUND`, amounts, vendor/store/order refs, `commissionReversalMinor: null`)
+- `LedgerPort.recordRefundAllocation` — **stub** in `PayoutModule` (Redis NX idempotency only)
+- Domain-events / payment queue consumer calls the port
+- **Do not** create a second ledger; Phase 15 replaces stub with append-only `vendor_ledger_entries`
 
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 15
+- [PHASES.md](../PHASES.md) — Phase 15.1–15.4
 - [domains/commissions.md](../domains/commissions.md)
+- [refunds.md](./refunds.md) · [payment.md](./payment.md)
 - `.cursor/rules/08-payments-finance.mdc`

@@ -1,4 +1,5 @@
 import type { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
+import type { Refund } from '../../domain/aggregates/refund.aggregate';
 import type { ConfirmCodCollectionResult } from '../../../../shared-kernel/application/ports/payment.port';
 
 export const PAYMENT_REPOSITORY = Symbol('PAYMENT_REPOSITORY');
@@ -32,6 +33,9 @@ export interface PaymentRepository {
     record: Omit<CodCollectionRecord, 'id'> & { readonly id?: string },
   ): Promise<CodCollectionRecord>;
   findCodCollectionByIdempotencyKey(idempotencyKey: string): Promise<CodCollectionRecord | null>;
+  sumRefundedOrPendingMinor(paymentIntentId: string): Promise<number>;
+  saveRefund(refund: Refund): Promise<void>;
+  findRefundById(id: string): Promise<Refund | null>;
   appendOutbox(input: {
     readonly aggregateId: string;
     readonly eventType: string;

@@ -3,6 +3,7 @@ import {
   CancelCodPaymentHandler,
   CollectCodPaymentHandler,
   CreatePaymentIntentHandler,
+  CreateRefundHandler,
 } from './payment.handlers';
 import { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
 import { CodAmountMismatchError } from '../../domain/errors/payment.errors';
@@ -231,5 +232,116 @@ describe('Payment handlers', () => {
       idempotencyKey: 'cancel-1',
     });
     expect(intent.status).toBe('CANCELLED');
+  });
+});
+
+describe('CreateRefundHandler', () => {
+  it('refunds collected COD partially and blocks over-refund / uncollected', async () => {
+    const intent = makeCodIntent();
+    intent.markCollected();
+
+    const refunds: { amountMinor: number; status: string; id: string }[] = [];
+    const ops = new Map<string, { requestHash: string; responseJson: Record<string, unknown> }>();
+    const repo = {
+      findOperation: vi.fn(async (key: string) => ops.get(key) ?? null),
+      findIntentById: vi.fn(async () => intent),
+      sumRefundedOrPendingMinor: vi.fn(async () =>
+        refunds
+          .filter((r) => r.status === 'PENDING' || r.status === 'SUCCEEDED')
+          .reduce((s, r) => s + r.amountMinor, 0),
+      ),
+      saveRefund: vi.fn(
+        async (refund: { id: { value: string }; amountMinor: number; status: string }) => {
+          const existing = refunds.find((r) => r.id === refund.id.value);
+          if (existing) {
+            existing.status = refund.status;
+            existing.amountMinor = refund.amountMinor;
+          } else {
+            refunds.push({
+              id: refund.id.value,
+              amountMinor: refund.amountMinor,
+              status: refund.status,
+            });
+          }
+        },
+      ),
+      findRefundById: vi.fn(async (id: string) => {
+        const row = refunds.find((r) => r.id === id);
+        if (!row) {
+          return null;
+        }
+        // Reconstitute via handler's in-memory path: return null so reserved.refund is used
+        return null;
+      }),
+      saveOperation: vi.fn(
+        async (input: {
+          idempotencyKey: string;
+          requestHash: string;
+          responseJson: Record<string, unknown>;
+        }) => {
+          ops.set(input.idempotencyKey, {
+            requestHash: input.requestHash,
+            responseJson: input.responseJson,
+          });
+        },
+      ),
+      withTransaction: vi.fn(async (work: (r: typeof repo) => Promise<unknown>) => work(repo)),
+    };
+    const authz = { requireRefundCreator: vi.fn(async () => undefined) };
+    const gateway = {
+      execute: vi.fn(async () => ({
+        ok: true,
+        providerRefundId: 'manual:x',
+        responseCode: 'MANUAL_OK',
+        receivedAt: new Date(),
+      })),
+    };
+    const handler = new CreateRefundHandler(repo as never, authz as never, gateway as never);
+
+    const first = await handler.execute({
+      paymentIntentId: intent.id.value,
+      amountMinor: 500,
+      currencyCode: 'BDT',
+      idempotencyKey: 'refund-1',
+      actorUserId: 'mgr-1',
+      actorRoles: ['STORE_MANAGER'],
+    });
+    expect(first.status).toBe('SUCCEEDED');
+    expect(first.method).toBe('MANUAL');
+    expect(first.amountMinor).toBe(500);
+
+    const again = await handler.execute({
+      paymentIntentId: intent.id.value,
+      amountMinor: 500,
+      currencyCode: 'BDT',
+      idempotencyKey: 'refund-1',
+      actorUserId: 'mgr-1',
+      actorRoles: ['STORE_MANAGER'],
+    });
+    expect(again.refundId).toBe(first.refundId);
+
+    await expect(
+      handler.execute({
+        paymentIntentId: intent.id.value,
+        amountMinor: 1200,
+        currencyCode: 'BDT',
+        idempotencyKey: 'refund-over',
+        actorUserId: 'mgr-1',
+        actorRoles: ['STORE_MANAGER'],
+      }),
+    ).rejects.toMatchObject({ code: 'REFUND_EXCEEDS_AVAILABLE' });
+
+    const awaiting = makeCodIntent('ord-await');
+    repo.findIntentById = vi.fn(async () => awaiting);
+    await expect(
+      handler.execute({
+        paymentIntentId: awaiting.id.value,
+        amountMinor: 100,
+        currencyCode: 'BDT',
+        idempotencyKey: 'refund-await',
+        actorUserId: 'mgr-1',
+        actorRoles: ['STORE_MANAGER'],
+      }),
+    ).rejects.toMatchObject({ code: 'PAYMENT_NOT_REFUNDABLE' });
   });
 });

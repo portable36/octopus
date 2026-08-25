@@ -835,14 +835,14 @@ Make asynchronous processing durable.
 
 ### Outbox
 
-- [ ] Outbox table
-- [ ] Aggregate ID
-- [ ] Event type
-- [ ] Payload
-- [ ] Event version
-- [ ] Created timestamp
-- [ ] Published timestamp
-- [ ] Retry count
+- [x] Outbox tables (`payment_outbox`, `fulfillment_outbox` — written with business TX)
+- [x] Aggregate ID
+- [x] Event type
+- [x] Payload
+- [x] Event version
+- [x] Created timestamp
+- [x] Published timestamp
+- [x] Retry count (dispatch attempts; migration `Migration20250824300000`)
 
 ### Dispatcher
 
@@ -851,30 +851,42 @@ DB transaction
     ↓
 Outbox
     ↓
-Dispatcher
+Dispatcher (MessagingModule poll + SKIP LOCKED)
     ↓
 BullMQ
     ↓
-Consumer
+Consumer (idempotent Redis NX by outbox id)
 ```
 
-### Queues
+- [x] `MessagingModule` polls unpublished rows and enqueues with `jobId = outbox.id`
+- [x] Marks `published_at` after successful enqueue; increments `retry_count` on failure
+- [x] Exhausted dispatch → `octopus.dead-letter` queue
+- [ ] Dedicated outbox metrics/dashboard (ops later)
 
-- [ ] Email
-- [ ] Notification
-- [ ] Search indexing
-- [ ] Payment processing
-- [ ] Webhooks
-- [ ] Payout
-- [ ] Analytics
+### Queues (names reserved; workers expand later)
+
+- [x] Domain events (`octopus.domain-events`) — log + dedupe consumer
+- [x] Payment (`octopus.payment`) — COD event consumer (idempotent; side effects later)
+- [ ] Email (`octopus.email`)
+- [ ] Notification (`octopus.notification`)
+- [ ] Search indexing (`octopus.search-indexing`)
+- [ ] Webhooks (`octopus.webhooks`)
+- [ ] Payout (`octopus.payout`)
+- [ ] Analytics (`octopus.analytics`)
+- [x] Dead-letter (`octopus.dead-letter`)
 
 ### Reliability
 
-- [ ] Retry policy
-- [ ] Exponential backoff
-- [ ] Dead-letter handling
-- [ ] Idempotent consumers
-- [ ] Queue metrics
+- [x] Retry policy (BullMQ attempts + exponential backoff)
+- [x] Exponential backoff
+- [x] Dead-letter handling (dispatch exhausted + failed jobs retained)
+- [x] Idempotent consumers (Redis `outbox:processed:{id}` NX)
+- [ ] Queue metrics (Prometheus/OpenTelemetry later)
+- [ ] Fulfillment status poller worker (Phase 13 sync API exists; poller still deferred)
+
+Config: `OUTBOX_DISPATCH_ENABLED`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_DISPATCH_RETRIES`.
+
+Product baselines (Martvill / Expo / Cloudflare / Hostinger / printers): [docs/product/current-baseline.md](./product/current-baseline.md), [docs/product/ux-parity.md](./product/ux-parity.md).
 
 ---
 
@@ -928,34 +940,53 @@ RETURNED
 
 ## Objective
 
-Implement complete post-purchase lifecycle.
+Post-purchase returns and refunds with explicit separation:
 
-### Returns
+```text
+RETURN ≠ REFUND ≠ INVENTORY RESTORATION ≠ PAYMENT ≠ LEDGER
+```
 
-- [ ] Return request
-- [ ] Return reason
-- [ ] Return items
-- [ ] Approval
-- [ ] Rejection
-- [ ] Inspection
-- [ ] Refund
+Coordinate via ports/outbox. Do not mutate Payment/Inventory tables from Return handlers.
 
-### Refund Rules
+### 14.1 — Returns domain (this slice)
 
-- [ ] Maximum refundable amount
-- [ ] Partial refund
-- [ ] Full refund
-- [ ] Payment-provider refund
-- [ ] Inventory restoration
-- [ ] Financial ledger entry
+- [x] Return request aggregate + items (historical price snapshot)
+- [x] Controlled return reasons
+- [x] State machine: REQUESTED → … → INSPECTION_* / REJECTED / CANCELLED
+- [x] Partial returns + returnable quantity
+- [x] Return window (default 7 days from fulfillment proxy timestamp)
+- [x] Approve / reject / receive / inspect / cancel
+- [x] Vendor/store/customer isolation + RBAC
+- [x] `returns_outbox` + Phase 12 dispatcher
+- [x] Unit tests (creation, qty, isolation, transitions)
+- [x] No automatic refund on request
 
-### Tests
+### 14.2 — Refunds (Payment-owned)
 
-- [ ] Duplicate refund
-- [ ] Over-refund
-- [ ] Invalid order state
-- [ ] Partial return
-- [ ] Vendor isolation
+- [x] Refund aggregate / max refundable / partial+full
+- [x] COD refund methods (no fake refund if uncollected)
+- [x] Idempotency + concurrent over-refund safety
+- [x] Gateway refund port (+ stub until live adapters)
+
+### 14.3 — Inventory restoration
+
+- [x] `InventoryPort` restore-from-return (after inspection accept)
+- [x] Sellable vs non-sellable disposition (extend Inventory; no parallel stock)
+- [x] Idempotent restore
+
+### 14.4 — Ledger hook
+
+- [x] Outbox `RefundCompleted` allocation payload
+- [x] LedgerPort stub until Phase 15 (no duplicate ledger)
+
+### Deferred
+
+- Category/product return policy (platform/vendor/store settings later)
+- Live SSLCommerz/bKash/Nagad refund webhooks
+- Customer/vendor return UIs (Phase 18 / 20)
+- Return courier shipment
+
+Product baselines: [docs/product/current-baseline.md](./product/current-baseline.md).
 
 ---
 
@@ -963,36 +994,67 @@ Implement complete post-purchase lifecycle.
 
 ## Objective
 
-Build auditable vendor accounting.
+Immutable vendor ledger as financial truth. Materialized balances are derived only.
 
-### Ledger
+**Stack (Octopus):** NestJS + **MikroORM** + **PostgreSQL** — not Prisma/MySQL. Redis/BullMQ = cache/queues only.
+
+**Prereqs:** Phase 11 COD/payment intents · Phase 12 outbox · Phase 14.1 returns · prefer **14.2 refunds** before refund ledger posts (else stub `LedgerPort` consumers).
+
+### Core model
 
 ```text
-CREDIT  Sale
-DEBIT   Commission
-DEBIT   Refund
-CREDIT  Adjustment
-DEBIT   Payout
+CREDIT  SALE
+DEBIT   COMMISSION
+DEBIT   REFUND
+CREDIT/DEBIT  ADJUSTMENT (audited)
+DEBIT   PAYOUT
 ```
 
-### Features
+Never `vendor.balance` as authority. Never UPDATE/DELETE ledger rows — reverse with new entries.
 
-- [ ] Vendor ledger
-- [ ] Commission calculation
-- [ ] Available balance
-- [ ] Pending balance
-- [ ] Payout request
-- [ ] Payout approval
-- [ ] Payout processing
-- [ ] Payout failure
-- [ ] Payout history
-- [ ] Financial statements
+### 15.1 — Ledger + balances
+
+- [ ] `vendor_ledger_entries` append-only (+ unique reference constraints)
+- [ ] Types: SALE, COMMISSION, REFUND, ADJUSTMENT, PAYOUT
+- [ ] Record sale + commission from **order pricing snapshot** on eligible recognition event (COD: only after `COLLECTED` / paid)
+- [ ] Pending vs available (configurable settlement window; default explicit)
+- [ ] `rebuildVendorBalance` + optional snapshot table
+- [ ] RBAC: `finance.ledger.read` (+ existing `payout.*` until renamed)
+- [ ] Vendor/store isolation + RLS
+- [ ] Outbox: `VendorSaleRecorded`, `CommissionRecorded`
+
+### 15.2 — Payouts
+
+- [ ] `VendorPayout` state machine: REQUESTED → … → COMPLETED | FAILED
+- [ ] Request ≤ available; concurrent over-payout impossible (TX + lock/version)
+- [ ] Approve / reject / process (provider port stub OK)
+- [ ] COMPLETED → single `DEBIT PAYOUT` (idempotent)
+- [ ] Failure releases reservation; no silent double debit
+
+### 15.3 — Adjustments + reconciliation
+
+- [ ] Platform-only financial adjustments (reason + audit)
+- [ ] Reconciliation report (derived vs snapshot, orphan refs) — report only, no auto-fix
+- [ ] Vendor statement query (server-side pagination)
+
+### 15.4 — Refund / commission integration + UI hooks
+
+- [ ] Consume `RefundCompleted` → `DEBIT REFUND` + proportional commission credit
+- [ ] Admin/vendor finance read APIs (dashboard numbers from backend)
+- [ ] FE surfaces deferred with Phase 20 / vendor portal — API-first
+
+### Deferred
+
+- Live bank/bKash payout providers · payment-provider fee ledger · tax-as-liability ledger · closed accounting periods · CSV/PDF export · full E2E UI
 
 ### Rules
 
-Never rely solely on `vendor.balance`.
+- Commission amounts from order snapshot (`commissionMinor` / `commissionRateBps`) — do not reprice
+- Uncollected COD → no SALE credit
+- POS `CASH` ≠ online COD (POS stays out of vendor ledger)
+- Prefer OSS/self-hosted; no paid finance SaaS required
 
-Use immutable ledger entries as the source of financial history.
+Docs: [docs/module/payout.md](./module/payout.md), [docs/domains/commissions.md](./domains/commissions.md).
 
 ---
 
@@ -1000,35 +1062,48 @@ Use immutable ledger entries as the source of financial history.
 
 ## Objective
 
-Build an asynchronous search read model.
+Async Meilisearch **read model**. PostgreSQL/domain remains truth (not MySQL). Redis/BullMQ = transport only.
 
-### Meilisearch
+**Prereqs:** Phase 12 Messaging · Catalog `StoreOffer` + Product · Inventory availability ports.  
+**Gap to close first:** Catalog domain events exist but are **not yet written to an outbox** — add `catalog_outbox` (same pattern as payment/returns) before indexing works.
 
-- [ ] Product index
-- [ ] Category filters
-- [ ] Brand filters
-- [ ] Vendor filters
-- [ ] Store filters
-- [ ] Price filters
-- [ ] Availability
-- [ ] Facets
-- [ ] Typo tolerance
-- [ ] Ranking
+### Index unit (Octopus-specific)
 
-### Index Pipeline
+Prefer indexing **sellable store offers** (product + variant + store + vendor + price), not a bare Product row — marketplace search is offer-scoped.
 
-```text
-Catalog mutation
-→ Domain event
-→ Outbox
-→ BullMQ
-→ Search consumer
-→ Meilisearch
-```
+### 16.1 — Contracts + Meilisearch adapter
+
+- [x] `ProductSearchIndexPort` (index/update/delete/search)
+- [x] Meilisearch adapter + index settings (searchable/filterable/sortable)
+- [x] Env: existing `MEILISEARCH_*` + `SEARCH_PRODUCTS_INDEX` (default `products`)
+- [x] Document: offerId/productId/variantId/vendorId/storeId/priceMinor/currency/availability/status — no cost/private fields
+- [x] Skip rating/reviewCount until reviews exist
+- [x] `GET /api/v1/search/products` (read against Meili; empty until 16.2 indexes)
+
+### 16.2 — Catalog outbox → `octopus.search-indexing`
+
+- [ ] Persist catalog/offer events to `catalog_outbox`
+- [ ] Dispatcher routes to search queue (Phase 12 name already reserved)
+- [ ] Worker loads authoritative offer/product; upsert or delete; idempotent by document id
+- [ ] Out-of-order guard via `updatedAt` / aggregate version
+- [ ] Inventory signal → availability field only (checkout still revalidates Inventory)
+
+### 16.3 — Search API + reindex
+
+- [ ] `GET /api/v1/search/products` allowlisted filters (q, category, vendor, store, price, availability, sort, page)
+- [ ] Facets transformed to app DTO (not raw Meili)
+- [ ] Admin `POST /admin/search/reindex` → queued batches (not inline HTTP)
+- [ ] Storefront context: store/vendor scope from server, not client trust
+
+### Deferred
+
+- Reviews-based ranking · popularity · marketing facets · full E2E UI (Phase 18) · sync status dashboard polish
 
 ### Rule
 
-Meilisearch is never the source of truth.
+Meilisearch never mutates Catalog/Inventory. Search availability is informational.
+
+Docs: [docs/module/search.md](./module/search.md).
 
 ---
 
@@ -1036,36 +1111,39 @@ Meilisearch is never the source of truth.
 
 ## Objective
 
-Create centralized notification infrastructure.
+Centralized async notifications. Domain modules emit events; Notification delivers.
 
-### Channels
+**Prereqs:** Phase 12 outbox/queues · Identity users · Order/Payment/Fulfillment events (as they exist).  
+Prefer **OSS/free**: SMTP (or console stub in dev); SMS/push adapters stubbed until a free/cheap BD provider is chosen.
 
-- [ ] Email
-- [ ] SMS
-- [ ] Push
-- [ ] In-app
+### 17.1 — Core + in-app + email stub
 
-### Events
+- [ ] Notification aggregate + delivery attempts + idempotency `(eventId, recipientId, type, channel)`
+- [ ] Templates (`key`, `channel`, `locale` en/bn) + version on send
+- [ ] `EmailProviderPort` (SMTP or log stub)
+- [ ] In-app persistence + `GET /notifications`, unread, mark-read
+- [ ] Queue `octopus.notification` (name reserved) + retry/DLQ
 
-- [ ] Account created
-- [ ] Password changed
-- [ ] Order placed
-- [ ] Payment completed
-- [ ] Payment failed
-- [ ] Order shipped
-- [ ] Order delivered
-- [ ] Refund processed
-- [ ] Vendor approved
-- [ ] Payout completed
+### 17.2 — Event consumers (transactional)
 
-### Reliability
+- [ ] Wire existing outbox events: account/order/payment/shipment/COD as available
+- [ ] Preference gate (marketing optional; security/transactional mandatory)
+- [ ] Recipient resolution in Notification module (minimal PII in events)
 
-- [ ] Queue-based delivery
-- [ ] Retry
-- [ ] Idempotency
-- [ ] Templates
-- [ ] Preferences
-- [ ] Delivery status
+### 17.3 — SMS / Push ports (adapters stub)
+
+- [ ] `SmsProviderPort` / `PushProviderPort` + device registry schema
+- [ ] Real providers later — no paid SaaS required for skeleton
+
+### Deferred
+
+- Marketing campaigns · abandoned cart · full admin notification center UI · provider webhooks · Firebase unless free tier chosen explicitly
+
+### Rules
+
+- No business logic in Notification · no double-send · no secrets in logs · vendor/customer isolation on in-app feeds
+
+Docs: [docs/module/notification.md](./module/notification.md).
 
 ---
 
@@ -1073,42 +1151,49 @@ Create centralized notification infrastructure.
 
 ## Objective
 
-Complete customer-facing commerce functionality.
+Customer-facing storefront on Next.js App Router. Backend remains authoritative for price, stock, discounts, tax, shipping, totals, and payment status.
 
-### Storefront
+**Stack:** Next 15 + Nest `api/v1` + **PostgreSQL** (not MySQL). Search via Nest only (never Meilisearch from the browser).
 
-- [ ] Homepage
-- [ ] Store pages
-- [ ] Product listing
-- [ ] Product detail
-- [ ] Search
-- [ ] Filtering
-- [ ] Sorting
-- [ ] Category navigation
-- [ ] Cart
-- [ ] Checkout
-- [ ] Order tracking
+**Prereqs:** Cart/checkout/auth/orders/returns APIs · Phase 14.1 returns · Phase 16.1 search (16.2 for filled index) · no storefront mark-paid.
 
-### Customer Account
+### 18.1 — Storefront API foundation
 
-- [ ] Profile
-- [ ] Addresses
-- [ ] Orders
-- [ ] Returns
-- [ ] Refunds
-- [ ] Wishlist
-- [ ] Reviews
-- [ ] Notifications
+- [ ] Public catalog/PLP/PDP/category/store-by-slug (`@Public`, published only)
+- [ ] `@Public` search (allowlisted filters)
+- [ ] Guest → customer **cart merge** (server-side)
+- [ ] Customer module: profile + address book (owner-scoped)
+- [ ] Public media URL for thumbnails
+- [ ] Docs: `customer.md` / `marketplace.md` aligned
 
-### SEO
+### 18.2 — Browse shell (frontend)
 
-- [ ] Metadata
-- [ ] Canonical URLs
-- [ ] Sitemap
-- [ ] Robots
-- [ ] Product structured data
-- [ ] Category structured data
-- [ ] SSR/streaming
+- [ ] `(storefront)` layout (header/nav/footer)
+- [ ] Homepage (section shells + Settings/public config — not Phase 20.3 CMS)
+- [ ] Category / store / PLP / PDP / search
+- [ ] URL-addressable filters; RSC for SEO pages; client islands for variants/cart
+
+### 18.3 — Cart + checkout + COD UX
+
+- [ ] Cart UI; checkout; COD eligibility from backend only
+- [ ] Multi-store order success; idempotency headers; no client grand totals
+
+### 18.4 — Customer account
+
+- [ ] Auth pages (login/register; Identity cookies — not `?token=`)
+- [ ] `/account` profile, addresses, orders, order detail, returns
+- [ ] Refunds display when Payment refunds exist (14.2+)
+
+### 18.5 — SEO + resilience
+
+- [ ] Metadata, canonical, sitemap, robots, Product/Breadcrumb JSON-LD (no fake ratings)
+- [ ] 404 / unavailable / checkout failure / mobile-first pass
+
+### Deferred (not Phase 18 blockers)
+
+- Wishlist · product reviews · in-app notifications (Phase 17) · flash/best-seller engines · WebSockets · Website CMS (20.3)
+
+Related: [customer.md](./module/customer.md), [marketplace.md](./module/marketplace.md), [product/ux-parity.md](./product/ux-parity.md), [frontend.md](./frontend.md) (Nike section = reference only).
 
 ---
 

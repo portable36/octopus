@@ -1,0 +1,132 @@
+import { Injectable } from '@nestjs/common';
+import { EntityManager } from '@mikro-orm/core';
+import {
+  createRequestContext,
+  runWithTenantContext,
+  setPlatformScope,
+} from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
+import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
+import type { OutboxStore } from '../../application/ports/outbox-store.interface';
+import type { OutboxRow, OutboxSource } from '../../domain/outbox.types';
+
+type SqlOutboxRow = {
+  id: string;
+  aggregate_id: string;
+  event_type: string;
+  payload_json: Record<string, unknown> | string;
+  event_version: number | string;
+  created_at: Date | string;
+  retry_count: number | string;
+};
+
+function parsePayload(raw: Record<string, unknown> | string): Record<string, unknown> {
+  if (typeof raw === 'string') {
+    return JSON.parse(raw) as Record<string, unknown>;
+  }
+  return raw;
+}
+
+function toRow(source: OutboxSource, row: SqlOutboxRow): OutboxRow {
+  return {
+    id: row.id,
+    source,
+    aggregateId: row.aggregate_id,
+    eventType: row.event_type,
+    payload: parsePayload(row.payload_json),
+    eventVersion: Number(row.event_version),
+    createdAt: new Date(row.created_at),
+    retryCount: Number(row.retry_count),
+  };
+}
+
+function outboxTable(source: OutboxSource): string {
+  if (source === 'payment') return 'payment_outbox';
+  if (source === 'fulfillment') return 'fulfillment_outbox';
+  return 'returns_outbox';
+}
+
+/**
+ * Claims unpublished outbox rows with SKIP LOCKED (no cross-module entity imports).
+ */
+@Injectable()
+export class SqlOutboxStoreAdapter implements OutboxStore {
+  constructor(private readonly em: EntityManager) {}
+
+  public async claimUnpublished(batchSize: number, maxRetries: number): Promise<OutboxRow[]> {
+    return this.withPlatformScope(async () =>
+      withRlsContext(this.em, async (tx) => {
+        const conn = tx.getConnection();
+        // SKIP LOCKED reduces overlap while the TX is open; durable dedupe is BullMQ jobId.
+        const payment = await this.selectBatch(conn, 'payment_outbox', maxRetries, batchSize);
+        const fulfillment = await this.selectBatch(
+          conn,
+          'fulfillment_outbox',
+          maxRetries,
+          batchSize,
+        );
+        const returns = await this.selectBatch(conn, 'returns_outbox', maxRetries, batchSize);
+
+        return [
+          ...payment.map((row) => toRow('payment', row)),
+          ...fulfillment.map((row) => toRow('fulfillment', row)),
+          ...returns.map((row) => toRow('returns', row)),
+        ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      }),
+    );
+  }
+
+  private async selectBatch(
+    conn: { execute: (sql: string, params?: unknown[]) => Promise<unknown> },
+    table: 'payment_outbox' | 'fulfillment_outbox' | 'returns_outbox',
+    maxRetries: number,
+    batchSize: number,
+  ): Promise<SqlOutboxRow[]> {
+    const raw = await conn.execute(
+      `
+      select id, aggregate_id, event_type, payload_json, event_version, created_at, retry_count
+      from ${table}
+      where published_at is null
+        and retry_count < ?
+      order by created_at asc
+      limit ?
+      for update skip locked
+      `,
+      [maxRetries, batchSize],
+    );
+    return Array.isArray(raw) ? (raw as SqlOutboxRow[]) : [];
+  }
+
+  public async markPublished(source: OutboxSource, id: string): Promise<void> {
+    const table = outboxTable(source);
+    await this.withPlatformScope(async () =>
+      withRlsContext(this.em, async (tx) => {
+        await tx
+          .getConnection()
+          .execute(
+            `update ${table} set published_at = now() where id = ? and published_at is null`,
+            [id],
+          );
+      }),
+    );
+  }
+
+  public async markDispatchFailure(source: OutboxSource, id: string): Promise<void> {
+    const table = outboxTable(source);
+    await this.withPlatformScope(async () =>
+      withRlsContext(this.em, async (tx) => {
+        await tx
+          .getConnection()
+          .execute(`update ${table} set retry_count = retry_count + 1 where id = ?`, [id]);
+      }),
+    );
+  }
+
+  private async withPlatformScope<T>(work: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      runWithTenantContext(createRequestContext(`outbox-${Date.now()}`), () => {
+        setPlatformScope(true);
+        work().then(resolve).catch(reject);
+      });
+    });
+  }
+}

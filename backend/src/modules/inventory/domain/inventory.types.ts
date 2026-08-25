@@ -15,7 +15,8 @@ export type InventoryOperationType =
   | 'RELEASE'
   | 'EXPIRE'
   | 'DEDUCT'
-  | 'RESTOCK';
+  | 'RESTOCK'
+  | 'RETURN_UNSELLABLE';
 
 export type InventoryReferenceType =
   'MANUAL' | 'ORDER' | 'TRANSFER' | 'RESERVATION' | 'RETURN' | 'SYSTEM';

@@ -21,6 +21,10 @@ import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { MediaModule } from './modules/media/media.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
+import { ReturnsModule } from './modules/returns/returns.module';
+import { SearchModule } from './modules/search/search.module';
+import { PayoutModule } from './modules/payout/payout.module';
 import { DatabaseModule } from './shared-kernel/infrastructure/persistence/database.module';
 import { HealthModule } from './shared-kernel/infrastructure/health/health.module';
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
@@ -88,6 +92,10 @@ import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
     SettingsModule,
     MediaModule,
     AuditModule,
+    PayoutModule,
+    MessagingModule,
+    ReturnsModule,
+    SearchModule,
   ],
   providers: [AppConfigService],
   exports: [AppConfigService],

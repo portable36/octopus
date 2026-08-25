@@ -67,6 +67,37 @@ export interface CommitInventoryInput {
   readonly correlationId?: string;
 }
 
+export type ReturnStockDispositionDto = 'SELLABLE' | 'UNSELLABLE';
+
+export interface RestoreFromReturnLineInput {
+  readonly variantId: string;
+  readonly warehouseId: string;
+  readonly quantity: number;
+}
+
+export interface RestoreFromReturnInput {
+  readonly returnId: string;
+  readonly storeId: string;
+  /** Inspection condition; Inventory maps to sellable vs unsellable. */
+  readonly condition: string;
+  readonly lines: readonly RestoreFromReturnLineInput[];
+  readonly actorUserId: string;
+  readonly idempotencyKey: string;
+  readonly correlationId?: string;
+}
+
+export interface RestoreFromReturnResult {
+  readonly returnId: string;
+  readonly disposition: ReturnStockDispositionDto;
+  readonly restoredQuantity: number;
+  readonly lineResults: readonly {
+    readonly variantId: string;
+    readonly warehouseId: string;
+    readonly quantity: number;
+    readonly inventoryItemId: string;
+  }[];
+}
+
 export interface InventoryPort {
   checkAvailability(input: AvailabilityQuery): Promise<AvailabilityResult>;
   /** Sum of available qty across active warehouse items for a store + variant. */
@@ -76,4 +107,6 @@ export interface InventoryPort {
   reserve(input: ReserveInventoryInput): Promise<ReservationResult>;
   release(input: ReleaseInventoryInput): Promise<void>;
   commit(input: CommitInventoryInput): Promise<void>;
+  /** Restock sellable or quarantine unsellable units after return inspection accept. */
+  restoreFromReturn(input: RestoreFromReturnInput): Promise<RestoreFromReturnResult>;
 }

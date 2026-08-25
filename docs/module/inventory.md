@@ -7,8 +7,8 @@ The Inventory bounded context owns stock quantities, reservations, warehouses, a
 Inventory owns:
 
 - Inventory item records keyed by variant and warehouse/store scope
-- On-hand, reserved, and available quantity projections
-- Stock receive, adjustment, and transfer commands
+- On-hand, reserved, **unsellable on-hand** (return quarantine), and available quantity projections
+- Stock receive, adjustment, transfer, and **return restore** commands
 - Reservation lifecycle: create, commit, release, expire
 - Low-stock thresholds and alerts (as events, not silent UI state)
 
@@ -44,6 +44,7 @@ Redis may coordinate contention but must never be the sole source of truth.
 - `releaseReservation` — rollback hold
 - `commitReservation` — convert hold to deduction on fulfillment/payment success
 - `expireReservations` — background job for stale holds
+- `restoreFromReturn` — after return inspection accept: sellable restock or unsellable quarantine (Phase 14.3)
 
 ## Events
 
@@ -64,10 +65,11 @@ interface InventoryPort {
   reserve(input: ReserveInventoryInput): Promise<ReservationResult>;
   release(input: ReleaseInventoryInput): Promise<void>;
   commit(input: CommitInventoryInput): Promise<void>;
+  restoreFromReturn(input: RestoreFromReturnInput): Promise<RestoreFromReturnResult>;
 }
 ```
 
-POS, Checkout, and Order call the port; they do not query inventory tables directly.
+POS, Checkout, Order, and Returns call the port; they do not query inventory tables directly.
 
 ## Testing requirements
 

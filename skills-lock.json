@@ -5,7 +5,7 @@
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
       "skillPath": "engineering/skills/api-design-reviewer/SKILL.md",
-      "computedHash": "f00785fd00ba939a8965931d9adbbe3a58b6672bd0162ef1fcd09c87ee415a19"
+      "computedHash": "47c520a763249440740d39403db4f282735a6620e102addacd1a0917be3eb7bf"
     },
     "ask-matt": {
       "source": "mattpocock/skills",
@@ -127,6 +127,42 @@
       "skillPath": "engineering/skills/migration-architect/SKILL.md",
       "computedHash": "94f12fdc590fb19b830bedbf58144b12b231443e8dc19889da98a59e32ba0451"
     },
+    "nestjs-architecture-principles": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-architecture-principles/SKILL.md",
+      "computedHash": "a631daaf47a5224200452bb968d3f78a357e02708f9f009e53f9b6b26a6b7b10"
+    },
+    "nestjs-feature-audit": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-feature-audit/SKILL.md",
+      "computedHash": "dc5583da111402855900fca541eba9adef0b8dad6a95086e74e72a25cba0a392"
+    },
+    "nestjs-features-performance": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-features-performance/SKILL.md",
+      "computedHash": "d8ca8200396a7574ac05313b516bd3e9ec77a9e0b06a57bad0602456c6247f39"
+    },
+    "nestjs-git-commit-pr-message": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-git-commit-pr-message/SKILL.md",
+      "computedHash": "dfcc34c7a888be470099b827b59a7bfceefe2aa2813f0e417b79c92abe7ae288"
+    },
+    "nestjs-oop-design-patterns": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-oop-design-patterns/SKILL.md",
+      "computedHash": "0a56429713dc60af989ac51a2c9a391c40e8a7dfa4c7d4c2f6122ec5bcae88ee"
+    },
+    "nestjs-professional-software-engineering": {
+      "source": "amirtaherkhani/nestjs-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-professional-software-engineering/SKILL.md",
+      "computedHash": "d861094e63871a3e3066684322aa7ace6a8d07b733592744c29bab5d838d5d2d"
+    },
     "observability-designer": {
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
@@ -149,7 +185,7 @@
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
       "skillPath": "engineering-team/playwright-pro/skills/pw/SKILL.md",
-      "computedHash": "b3ea857de717f39488258320773f96d71dad1a3fea5ebfb28ef30ca6b9f12359"
+      "computedHash": "71b4fcb7f2ffe226d5c436b2b4909d79cfa018e0dbf2f04eb8d669749732587c"
     },
     "ponytail": {
       "source": "DietrichGebert/ponytail",
@@ -263,7 +299,7 @@
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
       "skillPath": "engineering/skills/skill-security-auditor/SKILL.md",
-      "computedHash": "6617ef15afe50a46185fc37f1b1238c5e76482d124fb0cacd12cedcd156083bf"
+      "computedHash": "5fe83bb971a2fa12d56d289de94fb99adb470325543932e51622c709a75b8334"
     },
     "slo-architect": {
       "source": "alirezarezvani/claude-skills",

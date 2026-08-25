@@ -13,8 +13,11 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
-import { CollectCodPaymentHandler } from '../../application/commands/payment.handlers';
-import { CollectCodPaymentDto } from './dto/payment.dto';
+import {
+  CollectCodPaymentHandler,
+  CreateRefundHandler,
+} from '../../application/commands/payment.handlers';
+import { CollectCodPaymentDto, CreateRefundDto } from './dto/payment.dto';
 import { PaymentExceptionFilter } from './filters/payment-exception.filter';
 
 @ApiTags('payments')
@@ -22,7 +25,10 @@ import { PaymentExceptionFilter } from './filters/payment-exception.filter';
 @ApiBearerAuth()
 @UseFilters(PaymentExceptionFilter)
 export class PaymentController {
-  constructor(private readonly collectCod: CollectCodPaymentHandler) {}
+  constructor(
+    private readonly collectCod: CollectCodPaymentHandler,
+    private readonly createRefund: CreateRefundHandler,
+  ) {}
 
   @Post('cod/:paymentIntentId/collect')
   @HttpCode(200)
@@ -38,17 +44,7 @@ export class PaymentController {
     @Body() body: CollectCodPaymentDto,
     @Headers('idempotency-key') idempotencyHeader?: string,
   ) {
-    const idempotencyKey = idempotencyHeader?.trim();
-    if (!idempotencyKey || idempotencyKey.length < 8) {
-      throw new BadRequestException({
-        type: 'about:blank',
-        title: 'Bad Request',
-        status: 400,
-        detail: 'Idempotency-Key header is required (min 8 characters).',
-        code: 'IDEMPOTENCY_KEY_REQUIRED',
-      });
-    }
-
+    const idempotencyKey = requireIdempotencyKey(idempotencyHeader);
     return this.collectCod.execute({
       paymentIntentId,
       amountMinor: body.amountMinor,
@@ -59,4 +55,47 @@ export class PaymentController {
       ...(body.note !== undefined ? { note: body.note } : {}),
     });
   }
+
+  @Post(':paymentIntentId/refunds')
+  @HttpCode(201)
+  @ApiOperation({
+    summary: 'Create a refund against a payment intent (COD collected / gateway stub)',
+  })
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: true,
+    description: 'Required idempotency key for refund creation',
+  })
+  async refund(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('paymentIntentId') paymentIntentId: string,
+    @Body() body: CreateRefundDto,
+    @Headers('idempotency-key') idempotencyHeader?: string,
+  ) {
+    const idempotencyKey = requireIdempotencyKey(idempotencyHeader);
+    return this.createRefund.execute({
+      paymentIntentId,
+      amountMinor: body.amountMinor,
+      currencyCode: body.currency,
+      idempotencyKey,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+      ...(body.returnId !== undefined ? { returnId: body.returnId } : {}),
+      ...(body.reason !== undefined ? { reason: body.reason } : {}),
+    });
+  }
+}
+
+function requireIdempotencyKey(header?: string): string {
+  const idempotencyKey = header?.trim();
+  if (!idempotencyKey || idempotencyKey.length < 8) {
+    throw new BadRequestException({
+      type: 'about:blank',
+      title: 'Bad Request',
+      status: 400,
+      detail: 'Idempotency-Key header is required (min 8 characters).',
+      code: 'IDEMPOTENCY_KEY_REQUIRED',
+    });
+  }
+  return idempotencyKey;
 }

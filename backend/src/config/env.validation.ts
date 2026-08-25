@@ -11,6 +11,7 @@ export const envSchema = z.object({
   REFRESH_COOKIE_NAME: z.string().default('refresh_token'),
   MEILISEARCH_HOST: z.string().url(),
   MEILISEARCH_API_KEY: z.string().min(1),
+  SEARCH_PRODUCTS_INDEX: z.string().min(1).max(128).default('products'),
   S3_ENDPOINT: z.string().url(),
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
@@ -41,6 +42,13 @@ export const envSchema = z.object({
   PATHAO_PASSWORD: z.string().optional(),
   PATHAO_STORE_ID: z.coerce.number().int().positive().optional(),
   COURIER_HTTP_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(15_000),
+  OUTBOX_DISPATCH_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+  OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(500).max(60_000).default(2000),
+  OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(200).default(50),
+  OUTBOX_MAX_DISPATCH_RETRIES: z.coerce.number().int().min(1).max(50).default(10),
 });
 
 export type Env = z.infer<typeof envSchema>;

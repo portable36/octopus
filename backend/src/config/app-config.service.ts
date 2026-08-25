@@ -55,6 +55,10 @@ export class AppConfigService {
     return this.configService.get('MEILISEARCH_API_KEY', { infer: true });
   }
 
+  get searchProductsIndex(): string {
+    return this.configService.get('SEARCH_PRODUCTS_INDEX', { infer: true });
+  }
+
   get s3Endpoint(): string {
     return this.configService.get('S3_ENDPOINT', { infer: true });
   }
@@ -165,5 +169,21 @@ export class AppConfigService {
       baseUrl: this.pathaoBaseUrl,
       pathaoStoreId,
     };
+  }
+
+  get outboxDispatchEnabled(): boolean {
+    return this.configService.get('OUTBOX_DISPATCH_ENABLED', { infer: true });
+  }
+
+  get outboxPollIntervalMs(): number {
+    return this.configService.get('OUTBOX_POLL_INTERVAL_MS', { infer: true });
+  }
+
+  get outboxBatchSize(): number {
+    return this.configService.get('OUTBOX_BATCH_SIZE', { infer: true });
+  }
+
+  get outboxMaxDispatchRetries(): number {
+    return this.configService.get('OUTBOX_MAX_DISPATCH_RETRIES', { infer: true });
   }
 }

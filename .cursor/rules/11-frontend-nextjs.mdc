@@ -74,3 +74,9 @@ For indexable storefront pages:
 - structured data where appropriate
 - server-rendered product content
 - stable URL design
+
+## Storefront boundaries
+
+- Call Nest public/customer APIs only — never Meilisearch from the browser.
+- Never call `/admin/*` or vendor-scoped mutation APIs from the customer storefront.
+- Prefer route groups `(storefront)` vs `(admin)` with separate shells.

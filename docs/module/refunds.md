@@ -2,53 +2,52 @@
 
 ## Responsibility
 
-The Refunds bounded context owns return requests, return approval workflows, refund eligibility calculation, and coordination with Payment refunds and Inventory restoration.
+Owns **return requests** (Phase 14.1). Coordinates refunds and inventory via ports — does not own provider APIs, ledger posting, or stock tables.
 
-Refunds owns:
+**Payment-owned refunds** live in the Payment module (Phase 14.2): `POST /api/v1/payments/:paymentIntentId/refunds` with `payment.refund.create`.
 
-- Return request aggregate and return line items
-- Return reasons, inspection outcomes, and approval state
-- Refundable amount calculation against order/payment snapshots
-- Refund command orchestration (delegates provider execution to Payment)
+## Separation
 
-Refunds does not own:
+```text
+Return → (later) PaymentPort.createRefund / InventoryPort.restockFromReturn / LedgerPort
+```
 
-- Payment provider API adapters (Payment module)
-- Order aggregate root internals (invokes Order ports/methods)
-- Vendor ledger entries (Payout module records financial impact)
+Do not refund or restock when a customer only submits a request.
+
+## Inventory restore (14.3)
+
+After `INSPECTION_APPROVED` with `quantityAccepted > 0`, Returns calls `InventoryPort.restoreFromReturn`:
+
+- Condition `NEW` / `LIKE_NEW` / `USED` → sellable `onHand` (`RESTOCK`)
+- Other conditions → `unsellableOnHand` quarantine (`RETURN_UNSELLABLE`) — does not increase available
+- Idempotent key `return-restore:{returnId}`; FIFO allocate accepted qty across return lines (warehouse from order line snapshot)
+
+## Return state machine (14.1)
+
+```text
+REQUESTED → UNDER_REVIEW → REJECTED | APPROVED
+APPROVED → AWAITING_RETURN → RECEIVED → INSPECTING
+INSPECTING → INSPECTION_REJECTED | INSPECTION_APPROVED
+```
+
+`REFUNDING` / `REFUNDED` reserved for wiring after inspection → Payment refund (optional `returnId` on refund). Terminal: `REJECTED`, `CANCELLED`, `INSPECTION_REJECTED` (+ later `REFUNDED`).
+
+## Payment refunds (14.2)
+
+- Max refundable = captured intent amount − sum(PENDING + SUCCEEDED refunds)
+- **COD:** refundable only when `COLLECTED`; method `MANUAL` (cash return recorded — no fake refund while awaiting collection)
+- **Gateway:** refused until capture/`SUCCEEDED` ships; `PaymentRefundGateway` stub ready for adapters
+- Idempotency via `payment_operations` + outbox `RefundCompleted` (with `allocation` for LedgerPort) for Phase 14.4 / 15
 
 ## Rules
 
-- Refund amount cannot exceed refundable amount for line or order
-- Refunds are idempotent by command or provider reference
-- Partial returns and partial refunds supported with explicit line mapping
-- Inventory restoration policy documented per product type (restock vs write-off)
-
-## Workflow
-
-```text
-ReturnRequested -> UnderReview -> Approved | Rejected
-Approved -> RefundInitiated -> RefundCompleted | RefundFailed
-```
-
-Rejected returns retain audit history. Approved returns may trigger Fulfillment return shipment flows.
-
-## Testing requirements
-
-- Duplicate refund rejection
-- Over-refund prevention
-- Invalid order state for return
-- Vendor isolation
-- Partial line returns
-
-## Exit criteria
-
-- Return and refund flows integrated with Order and Payment
-- Ledger impact emitted as events for Payout consumption
+- Derive `vendorId` / `storeId` from the order — never from the client
+- Refundable money and inventory restoration are **out of scope** for 14.1
+- Returnable qty = fulfilled − qty on non-failed returns
+- Window default 7 days (fulfillment proxy = order `updatedAt` when `FULFILLED`/`COMPLETED`)
+- Integer minor units on line snapshots only (no live catalog price)
 
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 14
-- [Order Module](./order.md)
-- [Payment Module](./payment.md)
-- [Fulfillment Module](./fulfillment.md)
+- [PHASES.md](../PHASES.md) — Phase 14.1–14.4
+- [Payment](./payment.md) · [Order](./order.md) · [Fulfillment](./fulfillment.md)

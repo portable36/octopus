@@ -34,6 +34,13 @@ export class PaymentExceptionFilter implements ExceptionFilter {
       status = HttpStatus.CONFLICT;
     } else if ('code' in exception && exception.code === 'COD_AMOUNT_MISMATCH') {
       status = HttpStatus.UNPROCESSABLE_ENTITY;
+    } else if (
+      'code' in exception &&
+      (exception.code === 'PAYMENT_NOT_REFUNDABLE' ||
+        exception.code === 'REFUND_EXCEEDS_AVAILABLE' ||
+        exception.code === 'INVALID_REFUND_STATE')
+    ) {
+      status = HttpStatus.UNPROCESSABLE_ENTITY;
     }
 
     res.status(status).json({

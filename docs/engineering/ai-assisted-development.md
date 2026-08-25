@@ -144,6 +144,45 @@ npx skills@latest add alirezarezvani/claude-skills -a cursor -y --copy `
   -s docker-development -s feature-flags-architect -s slo-architect
 ```
 
+## NestJS depth (amirtaherkhani/nestjs-agent-skills)
+
+Audited before install (`skill-security-auditor`). Installed:
+
+| Skill                                       | Use for                                    |
+| ------------------------------------------- | ------------------------------------------ |
+| `/nestjs-architecture-principles`           | Modular monolith, ports, module boundaries |
+| `/nestjs-oop-design-patterns`               | SOLID / DI without over-engineering        |
+| `/nestjs-features-performance`              | Nest features, queues, caching, scale      |
+| `/nestjs-feature-audit`                     | Feature-shaped Nest audits                 |
+| `/nestjs-professional-software-engineering` | Engineering hygiene                        |
+| `/nestjs-git-commit-pr-message`             | Commit/PR message craft                    |
+
+**Skipped:** `nestjs-code-audit` (security auditor FAIL — `child_process` script).
+
+**Install:**
+
+```powershell
+npx skills@latest add amirtaherkhani/nestjs-agent-skills -a cursor -y --copy `
+  -s nestjs-architecture-principles -s nestjs-oop-design-patterns `
+  -s nestjs-features-performance -s nestjs-feature-audit `
+  -s nestjs-professional-software-engineering -s nestjs-git-commit-pr-message
+```
+
+**Precedence:** Octopus `.cursor/rules/` and `/architecture-boundary-guard` win if NestJS advice fights modular-monolith isolation.
+
+## Octopus-adapted workflow skills (Colorcom patterns)
+
+Colorcom skills that hard-bind to Colorcom docs/kits were **not** copied. Patterns rewritten for Octopus:
+
+| Skill                          | Use for                                                  |
+| ------------------------------ | -------------------------------------------------------- |
+| `/architecture-boundary-guard` | Cross-module / layer checks + `npm.cmd run architecture` |
+| `/quality-gates-check`         | Force `npm.cmd run validate` before “done”               |
+| `/docs-state-maintainer`       | PHASES / module / admin docs sync                        |
+| `/cost-efficient-agent`        | Graphify-first, search-before-read discipline            |
+
+Not adapted (wrong product surface): Colorcom `ui-ux-pro-max`, `module-conventions-generator` (use Octopus rules + `.cursor/commands/new-module.md` instead).
+
 ## Review prompts
 
 - Does the change preserve domain and module boundaries?

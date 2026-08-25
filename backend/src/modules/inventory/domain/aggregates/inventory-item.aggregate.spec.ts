@@ -59,6 +59,15 @@ describe('InventoryItem', () => {
     expect(item.reserved).toBe(0);
     expect(item.available).toBe(5);
   });
+
+  it('quarantines unsellable without increasing available', () => {
+    const item = InventoryItem.create(ids);
+    item.receive(5);
+    item.receiveUnsellable(2);
+    expect(item.onHand).toBe(5);
+    expect(item.unsellableOnHand).toBe(2);
+    expect(item.available).toBe(5);
+  });
 });
 
 describe('Warehouse + Reservation', () => {

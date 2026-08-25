@@ -1,0 +1,165 @@
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Queue, Worker, type ConnectionOptions, type JobsOptions } from 'bullmq';
+import { AppConfigService } from '../../../config/app-config.service';
+import { OUTBOX_STORE, type OutboxStore } from './ports/outbox-store.interface';
+import {
+  QUEUE_NAMES,
+  routeQueueForEvent,
+  type OutboxJobPayload,
+  type QueueName,
+} from '../domain/outbox.types';
+import { DomainEventsProcessor } from './processors/domain-events.processor';
+
+const DEFAULT_JOB_OPTIONS: JobsOptions = {
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 2_000 },
+  removeOnComplete: 1_000,
+  removeOnFail: 5_000,
+};
+
+export function isDuplicateJobIdError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /already exists|JobId/i.test(message);
+}
+
+@Injectable()
+export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(OutboxDispatcherService.name);
+  private pollTimer: NodeJS.Timeout | null = null;
+  private polling = false;
+  private readonly queues = new Map<QueueName, Queue<OutboxJobPayload>>();
+  private workers: Worker<OutboxJobPayload>[] = [];
+  private readonly connection: ConnectionOptions;
+
+  constructor(
+    private readonly config: AppConfigService,
+    @Inject(OUTBOX_STORE) private readonly outbox: OutboxStore,
+    private readonly domainEvents: DomainEventsProcessor,
+  ) {
+    // BullMQ requires maxRetriesPerRequest: null on its dedicated connection.
+    this.connection = {
+      url: this.config.redisUrl,
+      maxRetriesPerRequest: null,
+    };
+  }
+
+  public async onModuleInit(): Promise<void> {
+    if (this.config.isTest || !this.config.outboxDispatchEnabled) {
+      this.logger.log('Outbox dispatcher disabled (test or OUTBOX_DISPATCH_ENABLED=false).');
+      return;
+    }
+
+    this.ensureQueue(QUEUE_NAMES.domainEvents);
+    this.ensureQueue(QUEUE_NAMES.payment);
+    this.ensureQueue(QUEUE_NAMES.deadLetter);
+
+    this.workers.push(
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.domainEvents,
+        async (job) => this.domainEvents.handle(job.data),
+        {
+          connection: this.connection,
+          concurrency: 5,
+        },
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.payment,
+        async (job) => this.domainEvents.handle(job.data),
+        {
+          connection: this.connection,
+          concurrency: 5,
+        },
+      ),
+    );
+
+    for (const worker of this.workers) {
+      worker.on('failed', (job, err) => {
+        this.logger.warn(`Job ${job?.id ?? 'unknown'} failed on ${worker.name}: ${err.message}`);
+      });
+    }
+
+    this.pollTimer = setInterval(() => {
+      void this.pollOnce();
+    }, this.config.outboxPollIntervalMs);
+    this.pollTimer.unref?.();
+    this.logger.log(
+      `Outbox dispatcher started (poll=${this.config.outboxPollIntervalMs}ms batch=${this.config.outboxBatchSize}).`,
+    );
+  }
+
+  public async onModuleDestroy(): Promise<void> {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+    await Promise.all(this.workers.map((worker) => worker.close()));
+    await Promise.all([...this.queues.values()].map((queue) => queue.close()));
+  }
+
+  /** Exposed for unit tests / manual ops probes. */
+  public async pollOnce(): Promise<number> {
+    if (this.polling) {
+      return 0;
+    }
+    this.polling = true;
+    try {
+      const rows = await this.outbox.claimUnpublished(
+        this.config.outboxBatchSize,
+        this.config.outboxMaxDispatchRetries,
+      );
+      let published = 0;
+      for (const row of rows) {
+        const queueName = routeQueueForEvent(row.eventType);
+        const queue = this.ensureQueue(queueName);
+        const payload: OutboxJobPayload = {
+          outboxId: row.id,
+          source: row.source,
+          aggregateId: row.aggregateId,
+          eventType: row.eventType,
+          payload: row.payload,
+          eventVersion: row.eventVersion,
+        };
+        try {
+          await queue.add(row.eventType, payload, {
+            ...DEFAULT_JOB_OPTIONS,
+            jobId: row.id,
+          });
+          await this.outbox.markPublished(row.source, row.id);
+          published += 1;
+        } catch (error) {
+          // Concurrent pollers may race; stable jobId makes duplicate enqueue a success.
+          if (isDuplicateJobIdError(error)) {
+            await this.outbox.markPublished(row.source, row.id);
+            published += 1;
+            continue;
+          }
+          await this.outbox.markDispatchFailure(row.source, row.id);
+          this.logger.error(
+            `Failed to enqueue outbox ${row.id} (${row.eventType}): ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+          if (row.retryCount + 1 >= this.config.outboxMaxDispatchRetries) {
+            await this.ensureQueue(QUEUE_NAMES.deadLetter).add('dispatch-exhausted', payload, {
+              jobId: `dlq-${row.id}`,
+              removeOnComplete: false,
+            });
+          }
+        }
+      }
+      return published;
+    } finally {
+      this.polling = false;
+    }
+  }
+
+  private ensureQueue(name: QueueName): Queue<OutboxJobPayload> {
+    const existing = this.queues.get(name);
+    if (existing) {
+      return existing;
+    }
+    const queue = new Queue<OutboxJobPayload>(name, { connection: this.connection });
+    this.queues.set(name, queue);
+    return queue;
+  }
+}

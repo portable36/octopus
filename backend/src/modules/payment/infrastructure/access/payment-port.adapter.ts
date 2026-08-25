@@ -6,12 +6,15 @@ import type {
   ConfirmCodCollectionResult,
   CreatePaymentIntentInput,
   CreatePaymentIntentResult,
+  CreateRefundInput,
+  CreateRefundResult,
   PaymentPort,
 } from '../../../../shared-kernel/application/ports/payment.port';
 import {
   CancelCodPaymentHandler,
   CollectCodPaymentHandler,
   CreatePaymentIntentHandler,
+  CreateRefundHandler,
 } from '../../application/commands/payment.handlers';
 import {
   PAYMENT_REPOSITORY,
@@ -27,6 +30,8 @@ export class PaymentPortAdapter implements PaymentPort {
     private readonly collectHandler: CollectCodPaymentHandler,
     @Inject(CancelCodPaymentHandler)
     private readonly cancelHandler: CancelCodPaymentHandler,
+    @Inject(CreateRefundHandler)
+    private readonly refundHandler: CreateRefundHandler,
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
   ) {}
 
@@ -50,6 +55,10 @@ export class PaymentPortAdapter implements PaymentPort {
 
   public cancelIntent(input: CancelPaymentIntentInput): Promise<void> {
     return this.cancelHandler.execute(input);
+  }
+
+  public createRefund(input: CreateRefundInput): Promise<CreateRefundResult> {
+    return this.refundHandler.execute(input);
   }
 
   public async findCodIntentByOrderId(orderId: string): Promise<CodIntentLookupResult | null> {

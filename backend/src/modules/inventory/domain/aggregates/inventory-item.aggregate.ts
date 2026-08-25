@@ -16,6 +16,8 @@ interface InventoryItemProps {
   readonly variantId: string;
   readonly onHand: StockQuantity;
   readonly reserved: StockQuantity;
+  /** Quarantined units from returns — not part of available sellable stock. */
+  readonly unsellableOnHand: StockQuantity;
   readonly lowStockThreshold: StockQuantity;
   readonly status: InventoryItemStatus;
   readonly version: number;
@@ -46,6 +48,7 @@ export class InventoryItem extends AggregateRoot<UniqueID> {
       variantId: input.variantId,
       onHand: StockQuantity.zero(),
       reserved: StockQuantity.zero(),
+      unsellableOnHand: StockQuantity.zero(),
       lowStockThreshold: StockQuantity.of(input.lowStockThreshold ?? 0),
       status: 'ACTIVE',
       version: 1,
@@ -86,6 +89,10 @@ export class InventoryItem extends AggregateRoot<UniqueID> {
 
   get reserved(): number {
     return this.props.reserved.value;
+  }
+
+  get unsellableOnHand(): number {
+    return this.props.unsellableOnHand.value;
   }
 
   get available(): number {
@@ -326,6 +333,27 @@ export class InventoryItem extends AggregateRoot<UniqueID> {
 
   public restock(quantity: number): { before: number; after: number } {
     return this.receive(quantity);
+  }
+
+  /** Quarantine returned units that must not re-enter sellable availability. */
+  public receiveUnsellable(quantity: number): { before: number; after: number } {
+    this.assertActive();
+    const qty = StockQuantity.positive(quantity);
+    const before = this.props.unsellableOnHand.value;
+    this.props = {
+      ...this.props,
+      unsellableOnHand: this.props.unsellableOnHand.add(qty),
+      updatedAt: new Date(),
+      version: this.props.version + 1,
+    };
+    this.addEvent('InventoryUnsellableReceived', {
+      inventoryItemId: this.id.value,
+      variantId: this.variantId,
+      warehouseId: this.warehouseId,
+      quantity: qty.value,
+      unsellableOnHand: this.unsellableOnHand,
+    });
+    return { before, after: this.props.unsellableOnHand.value };
   }
 
   public toProps(): InventoryItemProps {

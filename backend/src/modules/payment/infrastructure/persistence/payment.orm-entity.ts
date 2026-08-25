@@ -131,4 +131,61 @@ export class PaymentOutboxOrmEntity {
 
   @Property({ fieldName: 'published_at', nullable: true })
   publishedAt!: Date | null;
+
+  @Property({ fieldName: 'retry_count', type: 'integer', default: 0 })
+  retryCount = 0;
+}
+
+@Entity({ tableName: 'payment_refunds' })
+export class PaymentRefundOrmEntity {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ fieldName: 'payment_intent_id', type: 'uuid' })
+  paymentIntentId!: string;
+
+  @Property({ fieldName: 'order_id', type: 'uuid' })
+  orderId!: string;
+
+  @Property({ fieldName: 'vendor_id', type: 'uuid' })
+  vendorId!: string;
+
+  @Property({ fieldName: 'store_id', type: 'uuid' })
+  storeId!: string;
+
+  @Property({ fieldName: 'return_id', type: 'uuid', nullable: true })
+  returnId!: string | null;
+
+  @Property({ fieldName: 'amount_minor', type: 'integer' })
+  amountMinor!: number;
+
+  @Property({ fieldName: 'currency_code', type: 'string', length: 3 })
+  currencyCode!: string;
+
+  @Property({ type: 'string', length: 32 })
+  method!: string;
+
+  @Property({ type: 'string', length: 32 })
+  status!: string;
+
+  @Property({ type: 'text', nullable: true })
+  reason!: string | null;
+
+  @Property({ fieldName: 'provider_refund_id', type: 'string', length: 180, nullable: true })
+  providerRefundId!: string | null;
+
+  @Property({ fieldName: 'provider_response_code', type: 'string', length: 64, nullable: true })
+  providerResponseCode!: string | null;
+
+  @Property({ fieldName: 'provider_received_at', nullable: true })
+  providerReceivedAt!: Date | null;
+
+  @Property({ fieldName: 'created_at' })
+  createdAt!: Date;
+
+  @Property({ fieldName: 'updated_at' })
+  updatedAt!: Date;
+
+  @Property({ fieldName: 'completed_at', nullable: true })
+  completedAt!: Date | null;
 }

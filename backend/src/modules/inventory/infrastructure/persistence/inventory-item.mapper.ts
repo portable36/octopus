@@ -11,6 +11,7 @@ export function inventoryItemToDomain(entity: InventoryItemOrmEntity): Inventory
     variantId: entity.variantId,
     onHand: StockQuantity.of(entity.onHand),
     reserved: StockQuantity.of(entity.reserved),
+    unsellableOnHand: StockQuantity.of(entity.unsellableOnHand ?? 0),
     lowStockThreshold: StockQuantity.of(entity.lowStockThreshold),
     status: entity.status,
     version: entity.version,
@@ -28,6 +29,7 @@ export function applyInventoryItemToOrm(item: InventoryItem, entity: InventoryIt
   entity.variantId = props.variantId;
   entity.onHand = props.onHand.value;
   entity.reserved = props.reserved.value;
+  entity.unsellableOnHand = props.unsellableOnHand.value;
   entity.lowStockThreshold = props.lowStockThreshold.value;
   entity.status = props.status;
   entity.version = props.version;

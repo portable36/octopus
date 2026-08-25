@@ -54,6 +54,30 @@ export interface CancelPaymentIntentInput {
   readonly idempotencyKey: string;
 }
 
+export interface CreateRefundInput {
+  readonly paymentIntentId: string;
+  readonly amountMinor: number;
+  readonly currencyCode: string;
+  readonly idempotencyKey: string;
+  readonly actorUserId: string;
+  readonly actorRoles: readonly string[];
+  readonly returnId?: string | null;
+  readonly reason?: string | null;
+}
+
+export interface CreateRefundResult {
+  readonly refundId: string;
+  readonly paymentIntentId: string;
+  readonly orderId: string;
+  readonly amountMinor: number;
+  readonly currencyCode: string;
+  readonly method: 'MANUAL' | 'ORIGINAL_PROVIDER';
+  readonly status: 'SUCCEEDED' | 'FAILED' | 'PENDING';
+  readonly returnId: string | null;
+  readonly providerRefundId: string | null;
+  readonly completedAt: string;
+}
+
 export interface CodIntentLookupResult {
   readonly paymentIntentId: string;
   readonly orderId: string;
@@ -73,5 +97,6 @@ export interface PaymentPort {
     },
   ): Promise<ConfirmCodCollectionResult>;
   cancelIntent(input: CancelPaymentIntentInput): Promise<void>;
+  createRefund(input: CreateRefundInput): Promise<CreateRefundResult>;
   findCodIntentByOrderId(orderId: string): Promise<CodIntentLookupResult | null>;
 }

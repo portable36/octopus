@@ -99,6 +99,38 @@ export interface OrderFulfillmentSnapshot {
   readonly lines: readonly OrderFulfillmentLineSnapshot[];
 }
 
+export interface OrderReturnLineSnapshot {
+  readonly lineId: string;
+  readonly productId: string;
+  readonly variantId: string;
+  readonly offerId: string;
+  readonly quantity: number;
+  readonly fulfilledQuantity: number;
+  readonly unitPriceMinor: number;
+  readonly lineSubtotalMinor: number;
+  readonly lineDiscountMinor: number;
+  readonly lineTaxMinor: number;
+  readonly lineTotalMinor: number;
+  readonly currencyCode: string;
+  readonly warehouseId: string;
+}
+
+export interface OrderReturnSnapshot {
+  readonly orderId: string;
+  readonly orderNumber: string;
+  readonly customerId: string | null;
+  readonly vendorId: string;
+  readonly storeId: string;
+  readonly status: string;
+  readonly paymentStatus: string;
+  readonly paymentMethod: OrderPaymentMethodDto;
+  readonly currencyCode: string;
+  readonly totalMinor: number;
+  /** ponytail: proxy until Order persists deliveredAt from Fulfillment. */
+  readonly returnWindowAnchorAt: Date;
+  readonly lines: readonly OrderReturnLineSnapshot[];
+}
+
 export interface PrepareOrderShipmentInput {
   readonly orderId: string;
   readonly actorUserId: string;
@@ -111,6 +143,7 @@ export interface OrderPort {
   /** Trusted Payment-module seam — never expose to storefront. */
   markPaidFromPayment(input: MarkOrderPaidFromPaymentInput): Promise<void>;
   getFulfillmentSnapshot(orderId: string): Promise<OrderFulfillmentSnapshot | null>;
+  getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null>;
   prepareShipment(input: PrepareOrderShipmentInput): Promise<OrderFulfillmentSnapshot>;
   fulfillShipmentLines(input: PrepareOrderShipmentInput): Promise<void>;
 }

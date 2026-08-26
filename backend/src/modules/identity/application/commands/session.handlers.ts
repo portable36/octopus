@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { InvalidRefreshTokenError, TokenReuseDetectedError } from '../errors/identity.errors';
 import {
   REFRESH_TOKEN_STORE,
@@ -13,6 +14,7 @@ export class LogoutUserHandler {
   constructor(
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
     private readonly authSession: AuthSessionService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(refreshToken: string | undefined): Promise<void> {
@@ -27,6 +29,12 @@ export class LogoutUserHandler {
     }
 
     await this.refreshTokenStore.markRevoked(tokenHash);
+    await this.audit?.append({
+      actorUserId: record.userId,
+      action: 'auth.logout',
+      resourceType: 'user',
+      resourceId: record.userId,
+    });
   }
 }
 
@@ -36,6 +44,7 @@ export class RefreshSessionHandler {
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     private readonly authSession: AuthSessionService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(refreshToken: string): Promise<AuthSession> {
@@ -48,6 +57,13 @@ export class RefreshSessionHandler {
 
     if (record.status === 'revoked') {
       await this.refreshTokenStore.revokeFamily(record.familyId);
+      await this.audit?.append({
+        actorUserId: record.userId,
+        action: 'auth.token.reuse_detected',
+        resourceType: 'user',
+        resourceId: record.userId,
+        metadata: { familyId: record.familyId },
+      });
       throw new TokenReuseDetectedError();
     }
 

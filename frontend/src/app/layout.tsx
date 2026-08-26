@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import { AppProviders } from './providers';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { getPublicAppName } from '@/lib/env';
+import { getPublicAppName, getPublicSiteUrl } from '@/lib/env';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: getPublicAppName(),
+  metadataBase: new URL(getPublicSiteUrl()),
+  title: {
+    default: getPublicAppName(),
+    template: `%s · ${getPublicAppName()}`,
+  },
   description: 'Multi-vendor, multi-store commerce platform',
 };
 

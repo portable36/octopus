@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import { User } from '../../domain/aggregates/user.aggregate';
 import {
   AccountLockedError,
@@ -16,6 +16,7 @@ describe('LoginUserHandler', () => {
       save: vi.fn(),
       findById: vi.fn(),
       existsByEmail: vi.fn(),
+      listRecent: vi.fn(),
     };
     const passwordHasher = {
       hash: vi.fn(),
@@ -50,6 +51,7 @@ describe('LoginUserHandler', () => {
       save: vi.fn().mockResolvedValue(undefined),
       findById: vi.fn(),
       existsByEmail: vi.fn(),
+      listRecent: vi.fn(),
     };
     const passwordHasher = {
       hash: vi.fn(),
@@ -81,7 +83,13 @@ describe('LoginUserHandler', () => {
     };
 
     const handler = new LoginUserHandler(
-      { findByEmail: vi.fn(), save: vi.fn(), findById: vi.fn(), existsByEmail: vi.fn() },
+      {
+        findByEmail: vi.fn(),
+        save: vi.fn(),
+        findById: vi.fn(),
+        existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
+      },
       { hash: vi.fn(), verify: vi.fn() },
       rateLimiter,
       { issueSession: vi.fn() } as never,
@@ -103,6 +111,7 @@ describe('LoginUserHandler', () => {
         save: vi.fn(),
         findById: vi.fn(),
         existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
       },
       { hash: vi.fn(), verify: vi.fn().mockResolvedValue(true) },
       { assertAllowed: vi.fn(), recordFailure: vi.fn() },

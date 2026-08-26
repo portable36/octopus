@@ -23,7 +23,15 @@ const NAV: readonly NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', permission: 'platform.dashboard.read' },
   { href: '/admin/vendors', label: 'Vendors', permission: 'platform.vendors.read' },
   { href: '/admin/stores', label: 'Stores', permission: 'platform.stores.read' },
+  { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin/payments', label: 'Payments' },
+  { href: '/admin/inventory', label: 'Inventory' },
+  { href: '/admin/users', label: 'Users' },
   { href: '/admin/system/health', label: 'System health' },
+  { href: '/admin/system/security', label: 'Security', permission: 'audit.read' },
+  { href: '/admin/system/website', label: 'Website' },
+  { href: '/admin/system/marketing', label: 'Marketing' },
+  { href: '/admin/system/commerce', label: 'Commerce' },
 ];
 
 function scopeLabel(roles: readonly string[]): string {

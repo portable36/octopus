@@ -25,6 +25,7 @@ describe('CreateProductHandler', () => {
         findByVendorId: vi.fn(),
         existsByVendorAndSku: vi.fn().mockResolvedValue(false),
         findPublishedById: vi.fn(),
+        listPublishedSitemapEntries: vi.fn(),
       },
       authz,
     );
@@ -49,6 +50,7 @@ describe('CreateProductHandler', () => {
         findByVendorId: vi.fn(),
         existsByVendorAndSku: vi.fn(),
         findPublishedById: vi.fn(),
+        listPublishedSitemapEntries: vi.fn(),
       },
       new CatalogAuthorizationService({
         findById: vi.fn().mockResolvedValue({
@@ -76,6 +78,7 @@ describe('CreateProductHandler', () => {
         findByVendorId: vi.fn(),
         existsByVendorAndSku: vi.fn(),
         findPublishedById: vi.fn(),
+        listPublishedSitemapEntries: vi.fn(),
       },
       new CatalogAuthorizationService({
         findById: vi.fn().mockResolvedValue({

@@ -10,13 +10,18 @@ import { ORDER_REPOSITORY } from './application/ports/order-repository.interface
 import { OrderAuthorizationService } from './application/services/order-authorization.service';
 import { OrderPortAdapter } from './infrastructure/access/order-port.adapter';
 import { OrderLineOrmEntity, OrderOrmEntity } from './infrastructure/persistence/order.orm-entity';
+import { OrderOutboxOrmEntity } from './infrastructure/persistence/order-outbox.orm-entity';
 import { OrderRepositoryAdapter } from './infrastructure/persistence/order.repository.adapter';
+import { AdminOrderController } from './presentation/http/admin-order.controller';
 import { OrderController } from './presentation/http/order.controller';
 
 @Global()
 @Module({
-  imports: [DatabaseModule, MikroOrmModule.forFeature([OrderOrmEntity, OrderLineOrmEntity])],
-  controllers: [OrderController],
+  imports: [
+    DatabaseModule,
+    MikroOrmModule.forFeature([OrderOrmEntity, OrderLineOrmEntity, OrderOutboxOrmEntity]),
+  ],
+  controllers: [OrderController, AdminOrderController],
   providers: [
     OrderAuthorizationService,
     CreateOrderFromCheckoutHandler,

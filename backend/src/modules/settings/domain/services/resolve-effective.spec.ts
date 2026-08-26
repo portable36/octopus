@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { resolveEffectiveBranding, resolveEffectiveGeneral } from './resolve-effective';
+import {
+  resolveEffectiveBranding,
+  resolveEffectiveGeneral,
+  resolveEffectiveMarketing,
+} from './resolve-effective';
 import type { ConfigurationDocumentRecord } from '../settings.types';
 
 function doc(
@@ -27,6 +31,14 @@ describe('resolveEffective', () => {
       supportEmail: null,
       defaultLocale: 'en',
       defaultCurrencyCode: 'BDT',
+    });
+    expect(resolveEffectiveBranding([], { kind: 'platform' })).toEqual({
+      schemaVersion: 1,
+      siteName: null,
+      tagline: null,
+      primaryColor: null,
+      logoMediaId: null,
+      faviconMediaId: null,
     });
   });
 
@@ -108,5 +120,26 @@ describe('resolveEffective', () => {
     });
     expect(effective.primaryColor).toBe('#333333');
     expect(effective.logoMediaId).toBe('media-vendor');
+  });
+
+  it('resolves marketing defaults and platform overrides', () => {
+    expect(resolveEffectiveMarketing([], { kind: 'platform' }).enabled).toBe(false);
+    const documents = [
+      doc({
+        key: 'marketing',
+        scopeKind: 'platform',
+        vendorId: null,
+        storeId: null,
+        payload: {
+          enabled: true,
+          gtmContainerId: 'GTM-1',
+          ga4MpApiSecret: 'secret',
+        },
+      }),
+    ];
+    const effective = resolveEffectiveMarketing(documents, { kind: 'platform' });
+    expect(effective.enabled).toBe(true);
+    expect(effective.gtmContainerId).toBe('GTM-1');
+    expect(effective.ga4MpApiSecret).toBe('secret');
   });
 });

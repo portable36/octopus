@@ -1,21 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { apiRequest, ApiClientError } from '@/lib/api-client';
-
-type VendorRow = {
-  id: string;
-  status: string;
-  profile: { displayName: string; slug: string };
-  contact: { email: string };
-};
+import { ApiClientError } from '@/lib/api-client';
+import { listAdminVendors, type AdminVendor } from '@/lib/admin-api';
 
 export default function AdminVendorsPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const [rows, setRows] = useState<VendorRow[]>([]);
+  const [rows, setRows] = useState<AdminVendor[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,9 +23,7 @@ export default function AdminVendorsPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiRequest<VendorRow[]>('/admin/vendors', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const data = await listAdminVendors(token);
         if (!cancelled) {
           setRows(data);
           setError(null);
@@ -50,11 +43,13 @@ export default function AdminVendorsPage() {
     };
   }, [token]);
 
+  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Vendors"
-        description="Read-only platform list over existing Vendor handlers."
+        description="Platform vendor list and lifecycle ops over existing Vendor handlers."
       />
       {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -79,7 +74,14 @@ export default function AdminVendorsPage() {
               ) : (
                 rows.map((row) => (
                   <tr key={row.id} className="border-b border-border last:border-0">
-                    <td className="px-3 py-2">{row.profile.displayName}</td>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={withToken(`/admin/vendors/${row.id}`)}
+                        className="underline underline-offset-2 hover:text-foreground"
+                      >
+                        {row.profile.displayName}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2">{row.profile.slug}</td>
                     <td className="px-3 py-2">{row.status}</td>
                     <td className="px-3 py-2">{row.contact.email}</td>

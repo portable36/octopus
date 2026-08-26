@@ -19,7 +19,11 @@ import {
 } from '../../domain/errors/payment.errors';
 import { computeMaxRefundable } from '../../domain/services/max-refundable';
 import { assertCurrencyMatch, resolveRefundMethod } from '../../domain/services/refundability';
-import { PaymentIdempotencyConflictError, PaymentNotFoundError } from '../errors/payment.errors';
+import {
+  PaymentIdempotencyConflictError,
+  PaymentNotFoundError,
+  PaymentAccessDeniedError,
+} from '../errors/payment.errors';
 import {
   PAYMENT_REFUND_GATEWAY,
   type PaymentRefundGateway,
@@ -352,6 +356,21 @@ export class CreateRefundHandler {
       });
       return result;
     });
+  }
+}
+
+@Injectable()
+export class ListPaymentIntentsHandler {
+  constructor(@Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository) {}
+
+  public async listRecentForPlatform(input: {
+    readonly actorRoles: readonly string[];
+    readonly limit?: number;
+  }): Promise<PaymentIntent[]> {
+    if (!input.actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new PaymentAccessDeniedError('Platform admin required to list payment intents.');
+    }
+    return this.payments.listRecentIntents(input.limit ?? 50);
   }
 }
 

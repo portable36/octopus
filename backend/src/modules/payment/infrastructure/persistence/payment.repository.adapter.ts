@@ -41,6 +41,18 @@ export class PaymentRepositoryAdapter implements PaymentRepository {
     });
   }
 
+  public async listRecentIntents(limit: number): Promise<PaymentIntent[]> {
+    const capped = Math.min(Math.max(limit, 1), 200);
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        PaymentIntentOrmEntity,
+        {},
+        { orderBy: { createdAt: 'DESC' }, limit: capped },
+      );
+      return entities.map(paymentIntentToDomain);
+    });
+  }
+
   public async saveIntent(intent: PaymentIntent): Promise<void> {
     await withRlsContext(this.em, async (tx) => {
       let entity = await tx.findOne(PaymentIntentOrmEntity, { id: intent.id.value });

@@ -3,12 +3,14 @@ import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-objec
 import {
   resolveEffectiveBranding,
   resolveEffectiveGeneral,
+  resolveEffectiveMarketing,
 } from '../../domain/services/resolve-effective';
 import type {
   BrandingSettings,
   ConfigurationKey,
   ConfigurationScope,
   GeneralSettings,
+  MarketingSettings,
 } from '../../domain/settings.types';
 import {
   CONFIGURATION_REPOSITORY,
@@ -29,7 +31,7 @@ export class SettingsHandlers {
     readonly actorRoles: readonly string[];
     readonly actorVendorId: string | null;
     readonly actorStoreIds: readonly string[];
-  }): Promise<GeneralSettings | BrandingSettings> {
+  }): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
     this.authz.assertCanRead(
       input.actorRoles,
       input.scope,
@@ -37,11 +39,32 @@ export class SettingsHandlers {
       input.actorStoreIds,
     );
 
-    const documents = await this.configs.findForResolution(input.key, input.scope);
-    if (input.key === 'general') {
-      return resolveEffectiveGeneral(documents, input.scope);
+    return this.resolveEffective(input.key, input.scope);
+  }
+
+  /**
+   * Public read of non-secret configuration keys (general / branding / marketing).
+   * Callers must strip marketing secrets before any public response (see toPublicMarketingConfig).
+   */
+  public async getEffectivePublic(
+    key: ConfigurationKey,
+    scope: ConfigurationScope,
+  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
+    return this.resolveEffective(key, scope);
+  }
+
+  private async resolveEffective(
+    key: ConfigurationKey,
+    scope: ConfigurationScope,
+  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
+    const documents = await this.configs.findForResolution(key, scope);
+    if (key === 'general') {
+      return resolveEffectiveGeneral(documents, scope);
     }
-    return resolveEffectiveBranding(documents, input.scope);
+    if (key === 'marketing') {
+      return resolveEffectiveMarketing(documents, scope);
+    }
+    return resolveEffectiveBranding(documents, scope);
   }
 
   public async upsert(input: {

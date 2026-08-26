@@ -8,4 +8,6 @@ export interface OrderRepository {
   findByIdempotencyKey(idempotencyKey: string): Promise<Order | null>;
   listByCustomerId(customerId: string): Promise<Order[]>;
   listByStoreId(storeId: string): Promise<Order[]>;
+  /** Recent orders platform-wide (header fields only; lines not hydrated). */
+  listRecent(limit: number): Promise<Order[]>;
 }

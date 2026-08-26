@@ -36,10 +36,10 @@ export class AuditHandlers {
     });
   }
 
-  public async listRecent(actorRoles: readonly string[], limit = 50) {
+  public async listRecent(actorRoles: readonly string[], limit = 50, actionPrefix?: string) {
     if (!actorRoles.includes('PLATFORM_ADMIN')) {
       throw new AuditAccessDeniedError('Missing permission audit.read.');
     }
-    return this.audits.listRecent(Math.min(Math.max(limit, 1), 100));
+    return this.audits.listRecent(Math.min(Math.max(limit, 1), 100), actionPrefix);
   }
 }

@@ -4,7 +4,11 @@ import type {
   CheckoutOrderCreateResult,
 } from '../../../../shared-kernel/application/ports/order.port';
 import { Order } from '../../domain/aggregates/order.aggregate';
-import { OrderNotFoundError, OrderPaymentMismatchError } from '../errors/order.errors';
+import {
+  OrderAccessDeniedError,
+  OrderNotFoundError,
+  OrderPaymentMismatchError,
+} from '../errors/order.errors';
 import { ORDER_REPOSITORY, type OrderRepository } from '../ports/order-repository.interface';
 import { OrderAuthorizationService } from '../services/order-authorization.service';
 
@@ -37,6 +41,7 @@ export class CreateOrderFromCheckoutHandler {
       appliedPromotionId: input.appliedPromotionId,
       appliedCouponCode: input.appliedCouponCode,
       pricingSnapshot: input.pricingSnapshot,
+      attribution: input.attribution ?? null,
       lines: input.lines.map((line) => ({
         lineId: line.lineId,
         productId: line.productId,
@@ -116,6 +121,16 @@ export class OrderLifecycleHandler {
       }
     }
     return readable;
+  }
+
+  public async listRecentForPlatform(input: {
+    readonly actorRoles: readonly string[];
+    readonly limit?: number;
+  }): Promise<Order[]> {
+    if (!input.actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new OrderAccessDeniedError();
+    }
+    return this.orders.listRecent(input.limit ?? 50);
   }
 
   public async markPaid(input: {

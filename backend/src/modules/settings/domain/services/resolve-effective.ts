@@ -1,11 +1,13 @@
 import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GENERAL_SETTINGS,
+  DEFAULT_MARKETING_SETTINGS,
   type BrandingSettings,
   type ConfigurationDocumentRecord,
   type ConfigurationKey,
   type ConfigurationScope,
   type GeneralSettings,
+  type MarketingSettings,
 } from '../settings.types';
 
 function matchesScope(doc: ConfigurationDocumentRecord, scope: ConfigurationScope): boolean {
@@ -80,6 +82,33 @@ export function resolveEffectiveBranding(
     ...(platform as Partial<BrandingSettings> | null),
     ...(vendor as Partial<BrandingSettings> | null),
     ...(store as Partial<BrandingSettings> | null),
+    schemaVersion: 1,
+  };
+}
+
+export function resolveEffectiveMarketing(
+  documents: readonly ConfigurationDocumentRecord[],
+  target: ConfigurationScope,
+): MarketingSettings {
+  const platform = findPayload(documents, 'marketing', { kind: 'platform' });
+  const vendor =
+    target.kind === 'vendor' || target.kind === 'store'
+      ? findPayload(documents, 'marketing', { kind: 'vendor', vendorId: target.vendorId })
+      : null;
+  const store =
+    target.kind === 'store'
+      ? findPayload(documents, 'marketing', {
+          kind: 'store',
+          vendorId: target.vendorId,
+          storeId: target.storeId,
+        })
+      : null;
+
+  return {
+    ...DEFAULT_MARKETING_SETTINGS,
+    ...(platform as Partial<MarketingSettings> | null),
+    ...(vendor as Partial<MarketingSettings> | null),
+    ...(store as Partial<MarketingSettings> | null),
     schemaVersion: 1,
   };
 }

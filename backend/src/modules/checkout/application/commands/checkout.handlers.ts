@@ -65,6 +65,19 @@ export interface SubmitCheckoutInput {
   readonly taxRateBps?: number;
   readonly commissionRateBps?: number;
   readonly couponCode?: string;
+  readonly attribution?: {
+    readonly landingPath?: string;
+    readonly referrer?: string;
+    readonly utmSource?: string;
+    readonly utmMedium?: string;
+    readonly utmCampaign?: string;
+    readonly utmTerm?: string;
+    readonly utmContent?: string;
+    readonly gclid?: string;
+    readonly fbclid?: string;
+    readonly firstTouchAt?: string;
+    readonly lastTouchAt?: string;
+  };
 }
 
 @Injectable()
@@ -230,6 +243,7 @@ export class CheckoutSubmitHandler {
           appliedPromotionId: quote.appliedPromotionId,
           appliedCouponCode: quote.appliedCouponCode,
           pricingSnapshot: quote.snapshot,
+          attribution: input.attribution ?? null,
           lines: quote.lines.map((ql) => {
             const cartLine = lines.find((l) => l.lineId === ql.lineId)!;
             const reservation = lineReservations.get(ql.lineId)!;

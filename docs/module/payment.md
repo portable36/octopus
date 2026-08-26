@@ -38,6 +38,10 @@ Payment does not own:
 - **COD:** no `clientSecret`; staff collects via `POST /api/v1/payments/cod/:paymentIntentId/collect` with `payment.cod.collect`.
 - **Gateways:** method-aware stub intents return `REQUIRES_PAYMENT` + `clientSecret` until live adapters ship.
 
+### Admin COD settings (Phase 20.4 partial)
+
+Platform admin edits vendor/store COD flags and amount limits on admin detail pages (`codEnabled`, `codMinAmountMinor`, `codMaxAmountMinor`, `codReservationTtlHours`) via `PATCH /vendors/:vendorId/settings` and `PATCH /stores/:storeId/settings`. Checkout eligibility still requires both vendor and store COD enabled. Hub: `/admin/system/commerce`.
+
 ## Online COD flow
 
 ```text

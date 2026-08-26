@@ -45,13 +45,16 @@ export class AuditRepositoryAdapter implements AuditRepository {
     });
   }
 
-  public async listRecent(limit: number): Promise<AuditEventRecord[]> {
+  public async listRecent(limit: number, actionPrefix?: string): Promise<AuditEventRecord[]> {
     return withRlsContext(this.em, async (tx) => {
-      const entities = await tx.find(
-        AuditEventOrmEntity,
-        {},
-        { orderBy: { createdAt: 'DESC' }, limit },
-      );
+      const where =
+        actionPrefix && actionPrefix.trim() !== ''
+          ? { action: { $like: `${actionPrefix.trim()}%` } }
+          : {};
+      const entities = await tx.find(AuditEventOrmEntity, where, {
+        orderBy: { createdAt: 'DESC' },
+        limit,
+      });
       return entities.map(toRecord);
     });
   }

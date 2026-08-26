@@ -11,12 +11,24 @@ Customer profile and address book distinct from Identity credentials. Order hist
 | Identity auth (register/login/refresh) | Shipped — Identity module                   |
 | Profile linked 1:1 to Identity user    | **Shipped** — `GET/PATCH /customer/profile` |
 | Address book CRUD                      | **Shipped** — `/customer/addresses`         |
-| Orders / returns UI                    | Phase 18.4 (APIs exist)                     |
+| Orders / returns UI                    | **Shipped** (Phase 18.4)                    |
 | Wishlist                               | Deferred                                    |
 | Reviews                                | Deferred                                    |
 | Notification preferences               | Phase 17 — `/notifications/preferences`     |
 
 Code: `backend/src/modules/customer`.
+
+## Storefront (Phase 18.4)
+
+| Route                       | Role                                                                |
+| --------------------------- | ------------------------------------------------------------------- |
+| `/login`, `/register`       | Auth; refresh HTTP-only cookie + access token in `sessionStorage`   |
+| `/account`                  | Profile                                                             |
+| `/account/addresses`        | Address book                                                        |
+| `/account/orders`           | `GET /orders/mine`                                                  |
+| `/account/orders/[orderId]` | Detail, payment/refund status, request refund, list/request returns |
+
+Guest cart merge runs server-side on login/register (`POST /cart/merge`). Never put tokens in `?token=`.
 
 ## HTTP
 

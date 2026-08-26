@@ -230,6 +230,25 @@ export class InventoryController {
     });
   }
 
+  @Get('stores/:storeId/items')
+  @ApiOperation({ summary: 'List inventory items for a store (authorized readers)' })
+  @ApiQuery({ name: 'limit', required: false })
+  async listItems(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('storeId') storeId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsed = Number.parseInt(limit ?? '', 10);
+    const capped = Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 200) : 50;
+    const list = await this.stock.listByStore({
+      storeId,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+      limit: capped,
+    });
+    return list.map((item) => this.itemResponse(item));
+  }
+
   private warehouseResponse(warehouse: Warehouse) {
     return {
       id: warehouse.id.value,

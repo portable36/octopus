@@ -58,4 +58,22 @@ describe('PublicCatalogQueryHandler', () => {
     );
     await expect(handler.getPublishedProduct('missing')).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('lists published product ids for sitemap from catalog repository', async () => {
+    const updatedAt = new Date('2025-01-02T00:00:00.000Z');
+    const products = {
+      findPublishedById: vi.fn(),
+      listPublishedSitemapEntries: vi.fn().mockResolvedValue([{ id: 'prod-1', updatedAt }]),
+    };
+    const handler = new PublicCatalogQueryHandler(
+      { listActive: vi.fn(), findActiveBySlug: vi.fn() } as never,
+      products as never,
+      { findByProductId: vi.fn() } as never,
+      { findActiveByProductId: vi.fn() } as never,
+      { findActiveBySlug: vi.fn() } as never,
+    );
+    await expect(handler.listSitemapProducts()).resolves.toEqual([
+      { id: 'prod-1', updatedAt: updatedAt.toISOString() },
+    ]);
+  });
 });

@@ -59,7 +59,7 @@ Balance snapshot `vendor_ledger_balances` is **derived** via `rebuildVendorBalan
 ## Refund / commission (Phase 15.4)
 
 - `RefundCompleted` → `DEBIT REFUND` + proportional commission CREDIT (`floor(commission × refund / orderTotal)` from order snapshot).
-- FE dashboards deferred to Phase 20 / vendor portal; consume `/summary` API-first.
+- Vendor portal (Phase 19.5) consumes `/summary`, `/statement`, and payout request; platform approve/reject/process stay admin-only.
 
 ## Payout lifecycle (Phase 15.2)
 

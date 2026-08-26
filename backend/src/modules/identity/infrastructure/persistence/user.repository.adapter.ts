@@ -31,4 +31,14 @@ export class UserRepositoryAdapter implements UserRepository {
     const count = await this.em.count(UserOrmEntity, { email: normalized });
     return count > 0;
   }
+
+  public async listRecent(limit: number): Promise<User[]> {
+    const capped = Math.min(Math.max(limit, 1), 200);
+    const entities = await this.em.find(
+      UserOrmEntity,
+      {},
+      { orderBy: { createdAt: 'DESC' }, limit: capped },
+    );
+    return entities.map(toDomain);
+  }
 }

@@ -51,6 +51,19 @@ export interface CheckoutOrderCreateInput {
     readonly commissionRateBps: number;
     readonly evaluatedAt: string;
   };
+  readonly attribution?: {
+    readonly landingPath?: string;
+    readonly referrer?: string;
+    readonly utmSource?: string;
+    readonly utmMedium?: string;
+    readonly utmCampaign?: string;
+    readonly utmTerm?: string;
+    readonly utmContent?: string;
+    readonly gclid?: string;
+    readonly fbclid?: string;
+    readonly firstTouchAt?: string;
+    readonly lastTouchAt?: string;
+  } | null;
 }
 
 export interface CheckoutOrderCreateResult {

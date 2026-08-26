@@ -1,21 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
-import { apiRequest, ApiClientError } from '@/lib/api-client';
-
-type StoreRow = {
-  id: string;
-  vendorId: string;
-  status: string;
-  profile: { displayName: string; slug: string };
-};
+import { ApiClientError } from '@/lib/api-client';
+import { listAdminStores, type AdminStore } from '@/lib/admin-api';
 
 export default function AdminStoresPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const [rows, setRows] = useState<StoreRow[]>([]);
+  const [rows, setRows] = useState<AdminStore[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,9 +23,7 @@ export default function AdminStoresPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiRequest<StoreRow[]>('/admin/stores', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const data = await listAdminStores(token);
         if (!cancelled) {
           setRows(data);
           setError(null);
@@ -50,11 +43,13 @@ export default function AdminStoresPage() {
     };
   }, [token]);
 
+  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Stores"
-        description="Read-only platform list over existing Store handlers."
+        description="Platform store list and lifecycle ops over existing Store handlers."
       />
       {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -79,7 +74,14 @@ export default function AdminStoresPage() {
               ) : (
                 rows.map((row) => (
                   <tr key={row.id} className="border-b border-border last:border-0">
-                    <td className="px-3 py-2">{row.profile.displayName}</td>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={withToken(`/admin/stores/${row.id}`)}
+                        className="underline underline-offset-2 hover:text-foreground"
+                      >
+                        {row.profile.displayName}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2">{row.profile.slug}</td>
                     <td className="px-3 py-2">{row.status}</td>
                     <td className="px-3 py-2 font-mono text-xs">{row.vendorId}</td>

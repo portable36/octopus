@@ -48,6 +48,8 @@ Checkout splits or orchestrates per documented order boundaries. Cart never merg
 
 Checkout receives an immutable cart snapshot ID or version. Cart lines copied into checkout must not mutate after checkout starts.
 
+Storefront (Phase 18.3): `/cart` uses guest `x-guest-token`; display line snapshots only.
+
 ## Testing requirements
 
 - Multi-vendor line isolation

@@ -22,6 +22,7 @@ import { LOGIN_RATE_LIMITER } from './application/ports/login-rate-limiter.inter
 import { PASSWORD_RESET_STORE } from './application/ports/password-reset-store.interface';
 import { AuthorizationService } from './application/services/authorization.service';
 import { AuthSessionService } from './application/services/auth-session.service';
+import { ListUsersHandler } from './application/queries/list-users.handler';
 import { Argon2PasswordHasherAdapter } from './infrastructure/crypto/argon2-password-hasher.adapter';
 import { UserRepositoryAdapter } from './infrastructure/persistence/user.repository.adapter';
 import { UserOrmEntity } from './infrastructure/persistence/user.orm-entity';
@@ -31,6 +32,7 @@ import { RedisPasswordResetStoreAdapter } from './infrastructure/redis/redis-pas
 import { JwtTokenSignerAdapter } from './infrastructure/tokens/jwt-token-signer.adapter';
 import { UserRoleAssignerAdapter } from './infrastructure/persistence/user-role-assigner.adapter';
 import { UserContactAdapter } from './infrastructure/access/user-contact.adapter';
+import { AdminUsersController } from './presentation/http/admin-users.controller';
 import { AuthController } from './presentation/http/auth.controller';
 import { JwtAuthGuard } from './presentation/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
@@ -50,7 +52,7 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminUsersController],
   providers: [
     RegisterUserHandler,
     LoginUserHandler,
@@ -59,6 +61,7 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
     ChangePasswordHandler,
     RequestPasswordResetHandler,
     ResetPasswordHandler,
+    ListUsersHandler,
     AuthorizationService,
     AuthSessionService,
     JwtAuthGuard,

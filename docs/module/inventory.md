@@ -85,8 +85,13 @@ POS, Checkout, Order, and Returns call the port; they do not query inventory tab
 - Overselling prevented by constraints and tests
 - `npm.cmd run validate` passes
 
+## Vendor portal
+
+Phase 19.2 store-scoped inventory UI (`/vendor/[vendorId]/inventory`) calls the
+existing store inventory HTTP endpoints; no parallel stock UI truth.
+
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 06
+- [PHASES.md](../PHASES.md) — Phase 06; Phase 19.2 Vendor Portal Inventory
 - [ARCHITECTURE.md](../../ARCHITECTURE.md) — Inventory section
 - `.cursor/rules/35-inventory.mdc`

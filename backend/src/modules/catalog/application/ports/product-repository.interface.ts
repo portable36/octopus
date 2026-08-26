@@ -9,4 +9,6 @@ export interface ProductRepository {
   existsByVendorAndSku(vendorId: string, sku: string): Promise<boolean>;
   /** Public storefront: published products only (RLS + status filter). */
   findPublishedById(id: string): Promise<Product | null>;
+  /** Sitemap projection — published ids only (not Meilisearch). */
+  listPublishedSitemapEntries(limit?: number): Promise<readonly { id: string; updatedAt: Date }[]>;
 }

@@ -1,5 +1,12 @@
 export type OutboxSource =
-  'payment' | 'fulfillment' | 'returns' | 'payout' | 'catalog' | 'inventory' | 'notification';
+  | 'payment'
+  | 'fulfillment'
+  | 'returns'
+  | 'payout'
+  | 'catalog'
+  | 'inventory'
+  | 'notification'
+  | 'order';
 
 export type OutboxRow = {
   readonly id: string;
@@ -21,7 +28,7 @@ export type OutboxJobPayload = {
   readonly eventVersion: number;
 };
 
-/** Stable BullMQ queue names for Phase 12. */
+/** Stable BullMQ queue names for Phase 12+. */
 export const QUEUE_NAMES = {
   domainEvents: 'octopus.domain-events',
   email: 'octopus.email',
@@ -31,12 +38,16 @@ export const QUEUE_NAMES = {
   webhooks: 'octopus.webhooks',
   payout: 'octopus.payout',
   analytics: 'octopus.analytics',
+  marketing: 'octopus.marketing',
   deadLetter: 'octopus.dead-letter',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 
 export function routeQueueForEvent(eventType: string): QueueName {
+  if (eventType === 'OrderPaid' || eventType === 'OrderCreated') {
+    return QUEUE_NAMES.marketing;
+  }
   if (
     eventType.startsWith('Cod') ||
     eventType.includes('Payment') ||

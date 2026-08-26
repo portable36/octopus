@@ -72,6 +72,41 @@ export class CheckoutController {
         ? { commissionRateBps: body.commissionRateBps }
         : {}),
       ...(body.couponCode !== undefined ? { couponCode: body.couponCode } : {}),
+      ...(body.attribution !== undefined
+        ? {
+            attribution: {
+              ...(body.attribution.landingPath !== undefined
+                ? { landingPath: body.attribution.landingPath }
+                : {}),
+              ...(body.attribution.referrer !== undefined
+                ? { referrer: body.attribution.referrer }
+                : {}),
+              ...(body.attribution.utmSource !== undefined
+                ? { utmSource: body.attribution.utmSource }
+                : {}),
+              ...(body.attribution.utmMedium !== undefined
+                ? { utmMedium: body.attribution.utmMedium }
+                : {}),
+              ...(body.attribution.utmCampaign !== undefined
+                ? { utmCampaign: body.attribution.utmCampaign }
+                : {}),
+              ...(body.attribution.utmTerm !== undefined
+                ? { utmTerm: body.attribution.utmTerm }
+                : {}),
+              ...(body.attribution.utmContent !== undefined
+                ? { utmContent: body.attribution.utmContent }
+                : {}),
+              ...(body.attribution.gclid !== undefined ? { gclid: body.attribution.gclid } : {}),
+              ...(body.attribution.fbclid !== undefined ? { fbclid: body.attribution.fbclid } : {}),
+              ...(body.attribution.firstTouchAt !== undefined
+                ? { firstTouchAt: body.attribution.firstTouchAt }
+                : {}),
+              ...(body.attribution.lastTouchAt !== undefined
+                ? { lastTouchAt: body.attribution.lastTouchAt }
+                : {}),
+            },
+          }
+        : {}),
     });
   }
 

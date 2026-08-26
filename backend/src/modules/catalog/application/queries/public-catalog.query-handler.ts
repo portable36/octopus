@@ -118,6 +118,15 @@ export class PublicCatalogQueryHandler {
       acceptsOnlineOrders: store.acceptsOnlineOrders,
     };
   }
+
+  /** Sitemap entries from catalog DB (published only) — never Meilisearch. */
+  public async listSitemapProducts() {
+    const items = await this.products.listPublishedSitemapEntries();
+    return items.map((item) => ({
+      id: item.id,
+      updatedAt: item.updatedAt.toISOString(),
+    }));
+  }
 }
 
 function slugify(value: string): string {

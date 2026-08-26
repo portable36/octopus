@@ -69,8 +69,20 @@ VendorSuspended
 - Authorization integrated with Identity roles
 - Events emitted through outbox for downstream modules
 
+## Vendor portal (frontend)
+
+Vendor ops UI lives at `/vendor` (App Router group `(vendor)`). Phase 19.1 ships a
+foundation shell over existing vendor/store/order/catalog/finance APIs using
+session auth (`authedRequest`) — not admin `?token=`. Phase 19.2 adds store-scoped
+inventory at `/vendor/[vendorId]/inventory` over Inventory HTTP APIs. Phase 19.3
+adds catalog mutations (product/variant lifecycle + store offer pricing) at
+`/vendor/[vendorId]/catalog`. Phase 19.4 deepens orders (status filters, line
+fulfill, cancel, shipment create/sync, returns) over existing Order/Fulfillment/
+Returns APIs — no admin return approve/reject in vendor UI. Phase 19.5 adds finance
+depth (payout request, statements, commission totals) at `/vendor/[vendorId]/finance`.
+
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 03
+- [PHASES.md](../PHASES.md) — Phase 03; Phase 19 Vendor Portal
 - [Store Module](./store.md)
 - `.cursor/rules/34-vendor-store.mdc`

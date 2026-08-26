@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
   NOTIFICATION_PORT,
   type NotificationPort,
@@ -37,6 +38,7 @@ export class ChangePasswordHandler {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
     @Inject(NOTIFICATION_PORT) private readonly notifications: NotificationPort,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(command: ChangePasswordCommand): Promise<void> {
@@ -68,6 +70,13 @@ export class ChangePasswordHandler {
       templateKey: 'security.password_changed',
       category: 'SECURITY',
       channels: ['IN_APP', 'EMAIL'],
+    });
+
+    await this.audit?.append({
+      actorUserId: user.id.value,
+      action: 'auth.password.changed',
+      resourceType: 'user',
+      resourceId: user.id.value,
     });
   }
 }
@@ -116,6 +125,7 @@ export class ResetPasswordHandler {
     @Inject(PASSWORD_RESET_STORE) private readonly passwordResetStore: PasswordResetStore,
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
     private readonly authSession: AuthSessionService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(command: ResetPasswordCommand): Promise<void> {
@@ -147,5 +157,11 @@ export class ResetPasswordHandler {
     user.resetFailedLogins();
     await this.users.save(user);
     await this.refreshTokenStore.revokeAllForUser(user.id.value);
+    await this.audit?.append({
+      actorUserId: user.id.value,
+      action: 'auth.password.reset',
+      resourceType: 'user',
+      resourceId: user.id.value,
+    });
   }
 }

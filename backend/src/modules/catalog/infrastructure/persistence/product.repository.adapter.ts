@@ -49,4 +49,21 @@ export class ProductRepositoryAdapter implements ProductRepository {
       return entity ? productToDomain(entity) : null;
     });
   }
+
+  public async listPublishedSitemapEntries(
+    limit = 10_000,
+  ): Promise<readonly { id: string; updatedAt: Date }[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        ProductOrmEntity,
+        { status: 'published' },
+        {
+          fields: ['id', 'updatedAt'],
+          orderBy: { updatedAt: 'DESC' },
+          limit,
+        },
+      );
+      return entities.map((entity) => ({ id: entity.id, updatedAt: entity.updatedAt }));
+    });
+  }
 }

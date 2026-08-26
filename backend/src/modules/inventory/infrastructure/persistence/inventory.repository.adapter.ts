@@ -179,6 +179,18 @@ export class InventoryRepositoryAdapter implements InventoryRepository {
     });
   }
 
+  public async findItemsByStoreId(storeId: string, limit: number): Promise<InventoryItem[]> {
+    const capped = Math.min(Math.max(limit, 1), 200);
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        InventoryItemOrmEntity,
+        { storeId },
+        { orderBy: { updatedAt: 'DESC' }, limit: capped },
+      );
+      return entities.map(inventoryItemToDomain);
+    });
+  }
+
   public async findReservationById(id: string): Promise<InventoryReservation | null> {
     return withRlsContext(this.em, async (tx) => {
       const entity = await tx.findOne(InventoryReservationOrmEntity, { id });

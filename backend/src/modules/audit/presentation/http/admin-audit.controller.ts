@@ -17,9 +17,18 @@ export class AdminAuditController {
   @Get('events')
   @ApiOperation({ summary: 'List recent append-only audit events (platform admin)' })
   @ApiQuery({ name: 'limit', required: false })
-  async list(@CurrentUser() user: RequestPrincipal, @Query('limit') limit?: string) {
+  @ApiQuery({ name: 'actionPrefix', required: false })
+  async list(
+    @CurrentUser() user: RequestPrincipal,
+    @Query('limit') limit?: string,
+    @Query('actionPrefix') actionPrefix?: string,
+  ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 50;
-    const events = await this.audit.listRecent(user.roles, Number.isFinite(parsed) ? parsed : 50);
+    const events = await this.audit.listRecent(
+      user.roles,
+      Number.isFinite(parsed) ? parsed : 50,
+      actionPrefix,
+    );
     return events.map((event) => ({
       id: event.id,
       actorUserId: event.actorUserId,

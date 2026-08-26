@@ -79,6 +79,10 @@ export class OrderOrmEntity {
   @Property({ fieldName: 'payment_method' })
   paymentMethod!: OrderPaymentMethod;
 
+  /** First/last-touch UTM / click ids captured at checkout (JSON). */
+  @Property({ fieldName: 'attribution_json', type: 'json', nullable: true })
+  attributionJson!: Record<string, unknown> | null;
+
   @Property({ type: 'integer' })
   version!: number;
 

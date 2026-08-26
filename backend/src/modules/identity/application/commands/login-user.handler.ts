@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
   AccountDisabledError as DomainAccountDisabledError,
   AccountLockedError as DomainAccountLockedError,
@@ -32,6 +33,7 @@ export class LoginUserHandler {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(LOGIN_RATE_LIMITER) private readonly rateLimiter: LoginRateLimiter,
     private readonly authSession: AuthSessionService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(command: LoginUserCommand): Promise<AuthSession> {
@@ -44,6 +46,7 @@ export class LoginUserHandler {
     const user = await this.users.findByEmail(command.email);
     if (!user) {
       await this.rateLimiter.recordFailure(command.rateLimitKey);
+      await this.recordFailedLogin({ email: command.email, reason: 'unknown_email' });
       throw new InvalidCredentialsError();
     }
 
@@ -51,12 +54,27 @@ export class LoginUserHandler {
       user.assertCanAuthenticate();
     } catch (error) {
       if (error instanceof DomainAccountLockedError) {
+        await this.recordFailedLogin({
+          email: command.email,
+          userId: user.id.value,
+          reason: 'locked',
+        });
         throw new AccountLockedError();
       }
       if (error instanceof DomainAccountDisabledError) {
+        await this.recordFailedLogin({
+          email: command.email,
+          userId: user.id.value,
+          reason: 'disabled',
+        });
         throw new AccountDisabledError();
       }
       if (error instanceof AccountNotActiveError) {
+        await this.recordFailedLogin({
+          email: command.email,
+          userId: user.id.value,
+          reason: 'not_active',
+        });
         throw new InvalidCredentialsError();
       }
       throw error;
@@ -67,11 +85,38 @@ export class LoginUserHandler {
       user.recordFailedLogin(MAX_FAILED_LOGINS, LOCK_DURATION_MS);
       await this.users.save(user);
       await this.rateLimiter.recordFailure(command.rateLimitKey);
+      await this.recordFailedLogin({
+        email: command.email,
+        userId: user.id.value,
+        reason: 'bad_password',
+      });
       throw new InvalidCredentialsError();
     }
 
     user.resetFailedLogins();
     await this.users.save(user);
-    return this.authSession.issueSession(user);
+    const session = await this.authSession.issueSession(user);
+    await this.audit?.append({
+      actorUserId: user.id.value,
+      action: 'auth.login.succeeded',
+      resourceType: 'user',
+      resourceId: user.id.value,
+      metadata: { email: user.email.value },
+    });
+    return session;
+  }
+
+  private async recordFailedLogin(input: {
+    readonly email: string;
+    readonly userId?: string;
+    readonly reason: string;
+  }): Promise<void> {
+    await this.audit?.append({
+      actorUserId: input.userId ?? null,
+      action: 'auth.login.failed',
+      resourceType: 'user',
+      resourceId: input.userId ?? null,
+      metadata: { email: input.email.trim().toLowerCase(), reason: input.reason },
+    });
   }
 }

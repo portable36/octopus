@@ -39,10 +39,11 @@ Audit does not own:
 
 ## Exit criteria
 
-- Central audit write port used by privileged commands
+- Central audit write port used by privileged commands (`AUDIT_PORT` in shared-kernel;
+  identity auth events write `auth.*` today; Phase 22 expands coverage)
 - Retention policy documented in [OPERATIONS.md](../../OPERATIONS.md)
 
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 22
+- [PHASES.md](../PHASES.md) — Phase 20.7 (security dashboard) / Phase 22
 - [SECURITY.md](../../SECURITY.md)

@@ -12,6 +12,7 @@ import type {
   OrderPaymentStatus,
   OrderShippingAddressSnapshot,
   OrderStatus,
+  OrderAttributionSnapshot,
 } from '../order.types';
 
 interface OrderLineProps {
@@ -55,6 +56,7 @@ interface OrderProps {
     readonly commissionRateBps: number;
     readonly evaluatedAt: string;
   };
+  readonly attribution: OrderAttributionSnapshot | null;
   readonly status: OrderStatus;
   readonly paymentStatus: OrderPaymentStatus;
   readonly fulfillmentStatus: OrderFulfillmentStatus;
@@ -101,6 +103,7 @@ export class Order extends AggregateRoot<UniqueID> {
       readonly commissionRateBps: number;
       readonly evaluatedAt: string;
     };
+    readonly attribution?: OrderAttributionSnapshot | null;
     readonly lines: readonly {
       readonly lineId: string;
       readonly productId: string;
@@ -173,6 +176,7 @@ export class Order extends AggregateRoot<UniqueID> {
       appliedCouponCode: input.appliedCouponCode,
       paymentMethod: input.paymentMethod,
       pricingSnapshot: { ...input.pricingSnapshot },
+      attribution: input.attribution ?? null,
       status: 'PENDING_PAYMENT',
       paymentStatus: 'PENDING',
       fulfillmentStatus: 'UNFULFILLED',
@@ -250,6 +254,9 @@ export class Order extends AggregateRoot<UniqueID> {
   }
   get pricingSnapshot(): OrderProps['pricingSnapshot'] {
     return this.props.pricingSnapshot;
+  }
+  get attribution(): OrderAttributionSnapshot | null {
+    return this.props.attribution;
   }
   get status(): OrderStatus {
     return this.props.status;

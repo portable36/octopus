@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import { User } from '../../domain/aggregates/user.aggregate';
 import { InvalidRefreshTokenError, TokenReuseDetectedError } from '../errors/identity.errors';
 import { RefreshSessionHandler } from './session.handlers';
@@ -16,7 +16,13 @@ describe('RefreshSessionHandler', () => {
         trackUserFamily: vi.fn(),
         revokeAllForUser: vi.fn(),
       },
-      { findById: vi.fn(), findByEmail: vi.fn(), save: vi.fn(), existsByEmail: vi.fn() },
+      {
+        findById: vi.fn(),
+        findByEmail: vi.fn(),
+        save: vi.fn(),
+        existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
+      },
       { hashToken: vi.fn().mockReturnValue('hash'), issueSession: vi.fn() } as never,
     );
 
@@ -40,7 +46,13 @@ describe('RefreshSessionHandler', () => {
 
     const handler = new RefreshSessionHandler(
       refreshTokenStore,
-      { findById: vi.fn(), findByEmail: vi.fn(), save: vi.fn(), existsByEmail: vi.fn() },
+      {
+        findById: vi.fn(),
+        findByEmail: vi.fn(),
+        save: vi.fn(),
+        existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
+      },
       { hashToken: vi.fn().mockReturnValue('hash'), issueSession: vi.fn() } as never,
     );
 
@@ -80,6 +92,7 @@ describe('RefreshSessionHandler', () => {
         findByEmail: vi.fn(),
         save: vi.fn(),
         existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
       },
       { hashToken: vi.fn().mockReturnValue('hash'), issueSession } as never,
     );

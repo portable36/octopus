@@ -22,16 +22,16 @@ Related: [PHASES.md](../PHASES.md) §18.5 · [marketing.md](../module/marketing.
 
 **Fit: yes**, as a **phased, rule-driven SEO bounded context** — **not** as a big-bang “SEO Automation Worker that publishes everything.”
 
-**Do not start coding the full 49-item list now.** Hard blockers:
+## Hard blockers (historical — see PHASES 18.x)
 
-1. **No public storefront** (Phase 18.1–18.2 open) — nowhere to attach `generateMetadata`, JSON-LD, or crawlable URLs.
-2. **Product has no public slug / SEO fields** — only Category has `seo_title` / `seo_description` + slug.
-3. **No Brand aggregate** — `brandId` string on Product only; `/brands/{slug}` cannot be truthful yet.
-4. **No customer product reviews** — AggregateRating / Review JSON-LD must stay **off** until a real Reviews context exists (Phase 18 deferred).
-5. **Settings** only `general` | `branding` — no SEO templates / robots / sitemap config namespace.
-6. **Internal search → opportunity engine** needs anonymized query analytics (not present; Meili is a read index only).
+1. ~~No public storefront~~ — **18.2 shipped**
+2. Product public slug still derived (`slugify(name)`); durable slug + 301 history remains **P2**
+3. No Brand aggregate — `/brands/{slug}` still blocked
+4. No customer product reviews — AggregateRating stays off
+5. Settings has no `seo` namespace yet — templates deferred to P2
+6. Internal search → opportunity engine still needs analytics (P4)
 
-Building keyword registries, AI publish loops, mass landing-page factories, or GSC dashboards **before** indexable pages exist creates orphan admin UI and empty tables.
+**P1 (18.5) shipped:** Next metadata/canonical/OG, Product+Breadcrumb JSON-LD (no ratings), `robots.ts` blocks private paths, `sitemap.xml` from categories + `GET /public/sitemap/products` (catalog DB, not Meili), facet querystrings `noindex` with clean canonical.
 
 ---
 
@@ -54,8 +54,8 @@ Building keyword registries, AI publish loops, mass landing-page factories, or G
 | 13  | Outbox               | **Present** — `catalog_outbox`, payment/fulfillment/inventory outboxes   | Reuse: Product\* / Category\* / Offer\* → SEO jobs                           |
 | 14  | BullMQ               | **Present** — `octopus.domain-events`, `notification`, `search-indexing` | Add `octopus.seo` (or sibling) — do not invent a second broker               |
 | 15  | Media                | **Present (metadata)** — upload pipeline incomplete                      | Image alt / WebP: integrate when media pipeline matures; don’t fake CDN      |
-| 16  | Frontend routing     | **Admin-only** shell; no `(storefront)`                                  | SEO serving waits on 18.2                                                    |
-| 17  | Next.js metadata     | Root `layout.tsx` static `metadata` only                                 | Per-route `generateMetadata` + `sitemap.ts` / `robots.ts` in 18.5            |
+| 16  | Frontend routing     | **`(storefront)`** browse + cart/account (18.2–18.4)                     | SEO serving on live routes (18.5)                                            |
+| 17  | Next.js metadata     | **`generateMetadata`**, `sitemap.ts`, `robots.ts`, JSON-LD (18.5)        | Deepen with SEO module projections (P2)                                      |
 | 18  | Admin dashboard      | Planned SEO-ish under content/marketing; **no SEO center**               | Don’t invent full `/seo/*` tree until 18.5+ APIs exist                       |
 | 19  | Existing SEO         | **Category SEO only**                                                    | Manual override pattern already exists for categories                        |
 | 20  | Settings             | `general` \| `branding` only                                             | Add `seo` key later (templates, robots defaults, automation toggles)         |

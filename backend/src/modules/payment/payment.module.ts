@@ -7,6 +7,7 @@ import {
   CollectCodPaymentHandler,
   CreatePaymentIntentHandler,
   CreateRefundHandler,
+  ListPaymentIntentsHandler,
 } from './application/commands/payment.handlers';
 import { PAYMENT_REFUND_GATEWAY } from './application/ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY } from './application/ports/payment-repository.interface';
@@ -21,6 +22,7 @@ import {
   PaymentTransactionOrmEntity,
 } from './infrastructure/persistence/payment.orm-entity';
 import { PaymentRepositoryAdapter } from './infrastructure/persistence/payment.repository.adapter';
+import { AdminPaymentController } from './presentation/http/admin-payment.controller';
 import { PaymentController } from './presentation/http/payment.controller';
 
 @Global()
@@ -35,13 +37,14 @@ import { PaymentController } from './presentation/http/payment.controller';
       PaymentRefundOrmEntity,
     ]),
   ],
-  controllers: [PaymentController],
+  controllers: [PaymentController, AdminPaymentController],
   providers: [
     PaymentAuthorizationService,
     CreatePaymentIntentHandler,
     CollectCodPaymentHandler,
     CancelCodPaymentHandler,
     CreateRefundHandler,
+    ListPaymentIntentsHandler,
     { provide: PAYMENT_REPOSITORY, useClass: PaymentRepositoryAdapter },
     { provide: PAYMENT_REFUND_GATEWAY, useClass: StubPaymentRefundGateway },
     { provide: PAYMENT_PORT, useClass: PaymentPortAdapter },

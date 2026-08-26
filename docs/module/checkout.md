@@ -61,6 +61,7 @@ Unified checkout may create multiple orders when fulfillment, payout, tax, or pa
 - [x] End-to-end checkout command with idempotency
 - [x] Order and Payment contracts invoked through ports only
 - [x] Unit tests cover failure and retry paths (integration tests expand with Phase 10/11)
+- [x] Storefront COD checkout UI (Phase 18.3) — eligibility + totals from API only
 
 ## Phase 09 notes
 

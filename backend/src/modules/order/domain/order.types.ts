@@ -27,6 +27,21 @@ export interface OrderShippingAddressSnapshot {
   readonly countryCode: string;
 }
 
+/** Checkout attribution snapshot (immutable after create). */
+export interface OrderAttributionSnapshot {
+  readonly landingPath?: string;
+  readonly referrer?: string;
+  readonly utmSource?: string;
+  readonly utmMedium?: string;
+  readonly utmCampaign?: string;
+  readonly utmTerm?: string;
+  readonly utmContent?: string;
+  readonly gclid?: string;
+  readonly fbclid?: string;
+  readonly firstTouchAt?: string;
+  readonly lastTouchAt?: string;
+}
+
 export interface OrderLineSnapshot {
   readonly lineId: string;
   readonly productId: string;

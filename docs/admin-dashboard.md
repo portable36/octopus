@@ -8,9 +8,20 @@ operations layer, not a second backend.
 
 Delivery is sliced in [`docs/PHASES.md`](PHASES.md) Phase 20.1–20.8. **Phase 20.1**
 ships the admin shell, granular permissions, Settings/Media/Audit foundations,
-and read-only Vendor/Store admin APIs. **Phase 20.3 Website Control Center**
-(CMS page builder, nav/footer, SEO, `storefront/config`) is deferred until
-Settings + Media + CMS modules are ready.
+and Vendor/Store admin list/detail read APIs. **Phase 20.2** adds admin detail
+UIs for vendor/store lifecycle and staff over existing `/vendors/:id/*` and
+`/stores/:id/*` mutation routes (no parallel admin mutation controllers).
+**Phase 20.4 (partial)** adds COD settings forms on vendor/store detail (same
+`PATCH …/settings` routes) plus a thin `/admin/system/commerce` hub; shipping
+courier and tax/commission admin remain open (no public courier API / engines later).
+**Phase 20.3.1** ships a Website Control Center _skeleton_: public
+`GET /storefront/config`, admin `/admin/system/website` for platform general +
+branding (Settings only). CMS page builder, menus, draft→publish, and Redis config
+cache remain deferred until Media + CMS exist.
+**Phase 20.6** adds platform ops list pages (`/admin/orders`, `/payments`,
+`/inventory`, `/users`) over thin module list APIs (no admin BFF business rules).
+**Phase 20.7** adds `/admin/system/security` over `GET /admin/audit/events`
+(login history + `auth.*` security events); identity appends via `AUDIT_PORT`.
 
 The frontend displays backend-owned state and invokes typed APIs. Business
 rules, authorization, transactions, validation, publishing, and audit behavior
@@ -48,6 +59,8 @@ frontend/src/
         vendors/
         stores/
         system/health/
+        system/marketing/
+        system/commerce/   # Phase 20.4 COD hub → vendor/store detail
         ...
     login/
   features/

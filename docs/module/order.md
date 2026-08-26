@@ -58,6 +58,8 @@ ReturnRequested
 - Customer order history (scoped)
 - Vendor/store order operations (scoped)
 - Platform admin read with explicit permission
+- Vendor portal (Phase 19.4) drives fulfill / cancel / shipment / returns UI over
+  these HTTP contracts; no vendor-only endpoints
 
 ## Testing requirements
 

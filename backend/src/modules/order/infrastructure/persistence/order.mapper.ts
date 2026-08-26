@@ -1,6 +1,9 @@
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { Order } from '../../domain/aggregates/order.aggregate';
-import type { OrderShippingAddressSnapshot } from '../../domain/order.types';
+import type {
+  OrderAttributionSnapshot,
+  OrderShippingAddressSnapshot,
+} from '../../domain/order.types';
 import { OrderLineOrmEntity, OrderOrmEntity } from './order.orm-entity';
 
 export function orderToDomain(entity: OrderOrmEntity, lines: OrderLineOrmEntity[]): Order {
@@ -28,6 +31,7 @@ export function orderToDomain(entity: OrderOrmEntity, lines: OrderLineOrmEntity[
       commissionRateBps: number;
       evaluatedAt: string;
     },
+    attribution: (entity.attributionJson as OrderAttributionSnapshot | null) ?? null,
     status: entity.status,
     paymentStatus: entity.paymentStatus,
     fulfillmentStatus: entity.fulfillmentStatus,
@@ -76,6 +80,7 @@ export function applyOrderToOrm(order: Order, entity: OrderOrmEntity): void {
   entity.appliedCouponCode = order.appliedCouponCode;
   entity.paymentMethod = order.paymentMethod;
   entity.pricingSnapshotJson = { ...order.pricingSnapshot };
+  entity.attributionJson = order.attribution ? { ...order.attribution } : null;
   entity.status = order.status;
   entity.paymentStatus = order.paymentStatus;
   entity.fulfillmentStatus = order.fulfillmentStatus;

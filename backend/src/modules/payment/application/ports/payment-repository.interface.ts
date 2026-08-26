@@ -19,6 +19,7 @@ export interface CodCollectionRecord {
 export interface PaymentRepository {
   findIntentById(id: string): Promise<PaymentIntent | null>;
   findIntentByOrderId(orderId: string): Promise<PaymentIntent | null>;
+  listRecentIntents(limit: number): Promise<PaymentIntent[]>;
   saveIntent(intent: PaymentIntent): Promise<void>;
   findOperation(
     idempotencyKey: string,

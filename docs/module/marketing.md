@@ -1,6 +1,6 @@
 # Marketing & measurement
 
-Status: **planned** — not shipped.  
+Status: **partial shipped** — Phase 18.6 measurement path (consent, public config, attribution, server purchase/refund via outbox).  
 Fit: **yes**, as a phased measurement layer after storefront + consent.  
 Truth: **PostgreSQL domain** (not MySQL). GA4 / GTM / Meta / Ads / Search Console are **read/analytics sinks only**.
 
@@ -78,13 +78,13 @@ Browser path is best-effort; server path is durable. Same `event_id` / `transact
 
 ## Prerequisites / gaps
 
-| Gap                                | Why it blocks                                       |
-| ---------------------------------- | --------------------------------------------------- |
-| Phase 18 storefront                | Nowhere to load GTM / ConsentManager                |
-| Phase 17.2 preferences             | Marketing consent                                   |
-| **Order outbox missing**           | `OrderPaid` exists on aggregate but is not outboxed |
-| Settings only `general`/`branding` | Need `marketing` (+ encrypted secrets)              |
-| No attribution on orders           | UTM / gclid / fbclid snapshot at checkout           |
+| Gap                                | Why it blocks                                       | Status                                       |
+| ---------------------------------- | --------------------------------------------------- | -------------------------------------------- |
+| Phase 18 storefront                | Nowhere to load GTM / ConsentManager                | Storefront + ConsentManager shipped          |
+| Phase 17.2 preferences             | Marketing consent                                   | Preference gate + cookie consent shipped     |
+| **Order outbox missing**           | `OrderPaid` exists on aggregate but is not outboxed | **Fixed** — `order_outbox` + marketing queue |
+| Settings only `general`/`branding` | Need `marketing` (+ encrypted secrets)              | **Fixed** — key `marketing`                  |
+| No attribution on orders           | UTM / gclid / fbclid snapshot at checkout           | **Fixed** — checkout attribution snapshot    |
 
 ORM: MikroORM + SQL migrations (not Prisma).
 

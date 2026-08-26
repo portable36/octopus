@@ -6,6 +6,10 @@ import {
   type LedgerRefundAllocation,
 } from '../../../../shared-kernel/application/ports/ledger.port';
 import {
+  MARKETING_OUTBOX_HANDLER,
+  type MarketingOutboxHandler,
+} from '../../../../shared-kernel/application/ports/marketing-outbox-handler.port';
+import {
   NOTIFICATION_OUTBOX_HANDLER,
   type NotificationOutboxHandler,
 } from '../../../../shared-kernel/application/ports/notification-outbox-handler.port';
@@ -16,6 +20,7 @@ import type { OutboxJobPayload } from '../../domain/outbox.types';
  * Idempotent domain-event consumer.
  * Phase 15: CodCollected / RefundCompleted → ledger.
  * Phase 17.2: outbox events → NotificationOutboxHandler.
+ * Phase 18.6: outbox events → MarketingOutboxHandler (CodCollected / RefundCompleted).
  */
 @Injectable()
 export class DomainEventsProcessor {
@@ -26,6 +31,8 @@ export class DomainEventsProcessor {
     @Inject(LEDGER_PORT) private readonly ledger: LedgerPort,
     @Inject(NOTIFICATION_OUTBOX_HANDLER)
     private readonly notificationEvents: NotificationOutboxHandler,
+    @Inject(MARKETING_OUTBOX_HANDLER)
+    private readonly marketingEvents: MarketingOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
@@ -48,6 +55,7 @@ export class DomainEventsProcessor {
     }
 
     await this.notificationEvents.handle(job.eventType, job.payload);
+    await this.marketingEvents.handle(job.eventType, job.payload);
   }
 
   private async handleCodCollected(payload: Record<string, unknown>): Promise<void> {

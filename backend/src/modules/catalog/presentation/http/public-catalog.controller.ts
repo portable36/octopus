@@ -42,4 +42,13 @@ export class PublicCatalogController {
   getStore(@Param('slug') slug: string, @Query() query: StoreBySlugQueryDto) {
     return this.browse.getActiveStoreBySlug(slug, query.vendorId);
   }
+
+  @Public()
+  @Get('sitemap/products')
+  @ApiOperation({
+    summary: 'Published product ids for sitemap (catalog DB; not Meilisearch)',
+  })
+  listSitemapProducts() {
+    return this.browse.listSitemapProducts();
+  }
 }

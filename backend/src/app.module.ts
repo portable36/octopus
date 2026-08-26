@@ -30,6 +30,7 @@ import { HealthModule } from './shared-kernel/infrastructure/health/health.modul
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CustomerModule } from './modules/customer/customer.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { CustomerModule } from './modules/customer/customer.module';
     NotificationModule,
     CustomerModule,
     SearchModule,
+    MarketingModule,
     MessagingModule,
     ReturnsModule,
   ],

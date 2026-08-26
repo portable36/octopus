@@ -1167,31 +1167,31 @@ Customer-facing storefront on Next.js App Router. Backend remains authoritative 
 
 ### 18.2 — Browse shell (frontend)
 
-- [ ] `(storefront)` layout (header/nav/footer)
-- [ ] Homepage (section shells + Settings/public config — not Phase 20.3 CMS)
-- [ ] Category / store / PLP / PDP / search
-- [ ] URL-addressable filters; RSC for SEO pages; client islands for variants/cart
+- [x] `(storefront)` layout (header/nav/footer)
+- [x] Homepage (section shells + Settings/public config — not Phase 20.3 CMS)
+- [x] Category / store / PLP / PDP / search
+- [x] URL-addressable filters; RSC for SEO pages; client islands for variants/cart
 
 ### 18.3 — Cart + checkout + COD UX
 
-- [ ] Cart UI; checkout; COD eligibility from backend only
-- [ ] Multi-store order success; idempotency headers; no client grand totals
+- [x] Cart UI; checkout; COD eligibility from backend only
+- [x] Multi-store order success; idempotency headers; no client grand totals
 
 ### 18.4 — Customer account
 
-- [ ] Auth pages (login/register; Identity cookies — not `?token=`)
-- [ ] `/account` profile, addresses, orders, order detail, returns
-- [ ] Refunds display when Payment refunds exist (14.2+)
+- [x] Auth pages (login/register; Identity cookies — not `?token=`)
+- [x] `/account` profile, addresses, orders, order detail, returns
+- [x] Refunds display when Payment refunds exist (14.2+)
 
 ### 18.5 — SEO + resilience
 
 Gap analysis (full engine vs repo): [engineering/seo-gap-analysis.md](./engineering/seo-gap-analysis.md).  
 **Do not** ship keyword/AI/GSC/mass landing pages here — rule-based serve first after 18.1–18.2.
 
-- [ ] Metadata, canonical, sitemap, robots, Product/Breadcrumb JSON-LD (no fake ratings)
-- [ ] Category manual SEO respected; product/store fallbacks + templates (no overwrite of manual)
-- [ ] Facet/query URLs noindex or canonical to clean category (default strict)
-- [ ] 404 / unavailable / checkout failure / mobile-first pass
+- [x] Metadata, canonical, sitemap, robots, Product/Breadcrumb JSON-LD (no fake ratings)
+- [x] Category manual SEO respected; product/store fallbacks + templates (no overwrite of manual)
+- [x] Facet/query URLs noindex or canonical to clean category (default strict)
+- [x] 404 / unavailable / checkout failure / mobile-first pass
 
 ### Deferred (not Phase 18 blockers)
 
@@ -1202,15 +1202,15 @@ Gap analysis (full engine vs repo): [engineering/seo-gap-analysis.md](./engineer
 
 GTM + GA4 + Meta Pixel/CAPI + attribution. Tags are **sinks only** (PostgreSQL domain = truth). Plan: [docs/module/marketing.md](./module/marketing.md).
 
-**Prereqs:** 18.3 checkout · 17.2 marketing consent · **order outbox** (`OrderPaid` not outboxed today).
+**Prereqs:** 18.3 checkout · 17.2 marketing consent · order outbox (`OrderPaid` outboxed).
 
-- [ ] Public marketing config (GTM/GA4/Pixel IDs; secrets server-only; env isolation)
-- [ ] ConsentManager + centralized TrackingService / dataLayer (no per-component DIY)
-- [ ] Order attribution snapshot (utm / gclid / fbclid); first + last touch
-- [ ] Server `purchase`/`refund` via outbox → GA4 MP + Meta CAPI; `transaction_id` / `event_id` dedupe
-- [ ] COD authoritative `purchase` only on `CodCollected`
-- [ ] `item_id` / `content_ids` = variant **SKU**
-- [ ] Admin Settings → Marketing (Meta, GA, GTM, Ads, Consent) + event audit log
+- [x] Public marketing config (GTM/GA4/Pixel IDs; secrets server-only; env isolation)
+- [x] ConsentManager + centralized TrackingService / dataLayer (no per-component DIY)
+- [x] Order attribution snapshot (utm / gclid / fbclid); first + last touch
+- [x] Server `purchase`/`refund` via outbox → GA4 MP + Meta CAPI; `transaction_id` / `event_id` dedupe
+- [x] COD authoritative `purchase` only on `CodCollected`
+- [x] `item_id` / `content_ids` = variant **SKU** (ponytail: variantId until Order line stores sku)
+- [x] Admin Settings → Marketing (Meta, GA, GTM via settings key; Ads/Consent UI thin) + `marketing_events` audit
 
 SEO metadata/sitemap: Phase **18.5** ([seo-gap-analysis.md](./engineering/seo-gap-analysis.md)). Keyword registry + Search Console UI: later (marketing.md M8).  
 First-party funnel/AOV/acquisition dashboards: Phase **21** (not GA4 as accounting).
@@ -1227,51 +1227,126 @@ Related: [customer.md](./module/customer.md), [marketplace.md](./module/marketpl
 
 Build complete vendor operations.
 
+### 19.1 — Foundation
+
+Thin Next.js vendor ops shell over **existing** authenticated APIs (sessionStorage
+access token via `ensureAccessToken` / `authedRequest` — never `?token=`). Routes
+under `frontend/src/app/(vendor)/vendor/`.
+
+- [x] Vendor shell (auth gate → `/login?next=…`, sidebar nav)
+- [x] Vendor picker (`GET /vendors/mine`; single-vendor redirect; thin register form)
+- [x] Store switcher (`sessionStorage` `octopus.vendor.selectedStoreId`)
+- [x] Dashboard (vendor status/name + finance summary cards + store count)
+- [x] Stores list (`GET /stores?vendorId=`)
+- [x] Store orders list (`GET /orders/stores/:storeId`) + minimal order detail
+      (start-processing / complete)
+- [x] Catalog products list (`GET /products?vendorId=`)
+- [x] Finance summary / ledger / payouts read
+      (`GET /finance/vendors/:vendorId/{summary,ledger,payouts}`)
+
+Deferred (later Phase 19 slices): returns UI, multi-store reports, payout request UI,
+low-stock alert UI, catalog media attach, etc. Catalog mutations: see 19.3.
+
+### 19.2 — Inventory
+
+Store-scoped inventory UI over existing `GET`/`POST /inventory/stores/:storeId/*`
+APIs (session auth via `authedRequest`). Route:
+`/vendor/[vendorId]/inventory`.
+
+- [x] Warehouses list + create (`GET`/`POST …/warehouses`)
+- [x] Stock lookup (`GET …/availability?variantId=`)
+- [x] Ensure item (`POST …/items`, optional low-stock threshold)
+- [x] Receive (`POST …/receive` with client `crypto.randomUUID()` idempotency)
+- [x] Adjust (`POST …/adjust` with idempotency key)
+- [x] Transfer when ≥2 warehouses (`POST …/transfer` with idempotency key)
+- [x] Store inventory nav link in vendor shell
+
+### 19.3 — Catalog mutations
+
+Vendor catalog create/lifecycle/variants/offers over **existing** Catalog HTTP APIs
+(`authedRequest` session auth). Routes: `/vendor/[vendorId]/catalog` +
+`/vendor/[vendorId]/catalog/[productId]`.
+
+- [x] Create product (`POST /products`) + category multi-select from `GET /categories`
+- [x] Product list rows link to detail (`GET /products/:productId`)
+- [x] Lifecycle: submit-review / publish / unpublish / archive
+- [x] Create variant (`POST /products/:productId/variants`) + activate/archive by id
+- [x] Store offer create (`POST /store-offers`) for selected store
+- [x] Offer activate / suspend / price update (`PATCH …/price`)
+- [ ] Media attach UI (deferred; no media mutation surface in this slice)
+
+### 19.4 — Orders depth
+
+Vendor order ops UI over **existing** Order / Fulfillment / Returns APIs (session
+auth via `authedRequest`). No new backend endpoints. Routes:
+`/vendor/[vendorId]/orders` + `/vendor/[vendorId]/orders/[orderId]`.
+
+- [x] Client status filter chips on store orders list (`order.status`)
+- [x] Start-processing / complete / cancel on order detail
+- [x] Per-line fulfill (`POST …/lines/:lineId/fulfill` with qty)
+- [x] Create shipment form (`POST /fulfillment/shipments`) + last-shipment
+      sync-status / mark-delivered (no shipment list API)
+- [x] Returns list + create (`GET`/`POST /orders/:orderId/returns`, reasons from
+      `GET /returns/reasons`); cancel return (`POST /returns/:returnId/cancel`)
+- [x] Admin approve/reject routes stay out of vendor UI
+
+### 19.5 — Finance
+
+Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
+`/vendor/[vendorId]/finance`. No platform approve/reject/process or adjustments UI.
+
+- [x] Payout request (`POST …/payouts` + Idempotency-Key; store from session switcher)
+- [x] Statements (`GET …/statement` with optional from/to + pagination)
+- [x] Commission totals from `summary.totalsByType` (COMMISSION keys)
+
 ### Dashboard
 
+- [x] Finance summary cards (19.1)
 - [ ] Sales
-- [ ] Orders
-- [ ] Revenue
+- [ ] Orders rollup
+- [ ] Revenue charts
 - [ ] Customers
 - [ ] Inventory
-- [ ] Payouts
+- [x] Payouts (request UI) — manage stays platform
 
 ### Catalog
 
-- [ ] Products
-- [ ] Variants
-- [ ] Categories
+- [x] Products list (19.1 read)
+- [x] Variants
+- [x] Categories
 - [ ] Media
-- [ ] Pricing
+- [x] Pricing
 
 ### Inventory
 
-- [ ] Stock
-- [ ] Adjustments
-- [ ] Transfers
+- [x] Stock
+- [x] Adjustments
+- [x] Transfers
 - [ ] Low-stock alerts
 
 ### Orders
 
-- [ ] Pending
-- [ ] Processing
-- [ ] Fulfillment
-- [ ] Shipping
-- [ ] Returns
+- [x] Store-scoped list + detail stubs (19.1)
+- [x] Pending filters
+- [x] Processing workflows
+- [x] Fulfillment line UI
+- [x] Shipping
+- [x] Returns
 
 ### Finance
 
-- [ ] Ledger
-- [ ] Commission
-- [ ] Statements
-- [ ] Payouts
+- [x] Ledger read (19.1)
+- [x] Payouts list (19.1)
+- [x] Commission
+- [x] Statements
+- [x] Payout request UI
 
 ### Multi-Store
 
-- [ ] Store switcher
-- [ ] Store permissions
+- [x] Store switcher (19.1)
+- [ ] Store permissions UX
 - [ ] Store-specific catalog
-- [ ] Store inventory
+- [x] Store inventory
 - [ ] Store reports
 
 ---
@@ -1290,8 +1365,9 @@ Build the platform admin **presentation layer** over existing bounded contexts
 - Thin HTTP adapters at `/api/v1/admin/*` calling existing handlers/ports
 - New modules only where missing: **settings**, **media**, **cms** (later), **audit**
 - Scope from JWT + tenancy context; ignore body/URL tenant ids for authz
-- Effective storefront config (when Website Control Center ships): single
-  `GET /api/v1/storefront/config` resolving Platform→Vendor→Store server-side
+- Effective storefront config (Phase 20.3.1 skeleton):
+  `GET /api/v1/storefront/config` resolving Platform→Vendor→Store via Settings
+  (CMS page builder still deferred)
 
 ---
 
@@ -1319,24 +1395,27 @@ Build the platform admin **presentation layer** over existing bounded contexts
 
 ## Phase 20.2 — Vendor / Store admin ops
 
-- [ ] Admin UI + thin admin APIs for vendor lifecycle (approve/suspend) over existing handlers
-- [ ] Store lifecycle admin surfaces
+- [x] Admin UI + thin admin APIs for vendor lifecycle (approve/suspend) over existing handlers
+- [x] Store lifecycle admin surfaces
 - [ ] Optional verification document fields (when domain supports them)
-- [ ] Vendor/store staff management from admin shell
+- [x] Vendor/store staff management from admin shell
 
 ---
 
-## Phase 20.3 — Website Control Center _(deferred)_
+## Phase 20.3 — Website Control Center
 
-**Deferred until Settings + Media + CMS are ready.** Do not start page builder work
-in parallel with unfinished 20.1/20.2 foundation.
+Settings-backed branding/general is ready; **CMS page builder** stays deferred
+(no CMS module). Do not start page-builder / draft→publish work until Media + CMS exist.
 
-When unblocked:
+### 20.3.1 — Storefront config + branding (skeleton)
 
-- [ ] Branding / theme / nav / footer / CMS pages + SEO
+- [x] Public `GET /api/v1/storefront/config` (effective general + branding + public marketing)
+- [x] Admin Website UI for platform general + branding (`/admin/system/website`)
+- [x] Platform→Vendor→Store resolution reused from Settings `resolveEffective`
+- [ ] CMS pages / nav / footer management
 - [ ] Draft → publish + versioning
-- [ ] Preview + `GET /api/v1/storefront/config` effective inheritance endpoint
 - [ ] Redis cache for effective config only; DB remains truth
+- [ ] Full Website Control Center (theme/nav/footer SEO beyond Settings fields)
 
 ---
 
@@ -1344,8 +1423,8 @@ When unblocked:
 
 Ship admin UIs **only after** owning domain modules exist:
 
-- [ ] Payment provider / COD admin surfaces (Payment + store/vendor COD settings)
-- [ ] Shipping / courier account admin surfaces (Fulfillment)
+- [x] Payment / COD admin surfaces — vendor + store COD settings on admin detail pages via existing `PATCH /vendors/:id/settings` and `PATCH /stores/:id/settings` (hub: `/admin/system/commerce`). Payment **provider** admin UI still deferred.
+- [ ] Shipping / courier account admin surfaces (Fulfillment) — no public courier admin API (`CourierAccountStore` is internal); engines later
 - [ ] Tax / commission admin surfaces (dedicated engines or later phases)
 
 ---
@@ -1359,15 +1438,18 @@ Ship admin UIs **only after** owning domain modules exist:
 
 ## Phase 20.6 — Operations lists
 
-- [ ] Orders / payments / inventory / users admin lists via existing modules
-- [ ] No duplicate business rules in the admin BFF
+- [x] Orders / payments / inventory / users admin lists via existing modules
+      (`GET /admin/orders`, `/admin/payments`, `/admin/users`; inventory via
+      `GET /inventory/stores/:storeId/items` + store picker)
+- [x] No duplicate business rules in the admin BFF (thin list UIs over module handlers)
 
 ---
 
 ## Phase 20.7 — Security dashboard
 
-- [ ] Login history
-- [ ] Security events (align with Phase 22 audit expansion)
+- [x] Login history — `auth.login.*` via existing `GET /admin/audit/events?actionPrefix=`
+- [x] Security events — identity writes `auth.*` through `AUDIT_PORT`; admin UI at
+      `/admin/system/security` (full Phase 22 catalog still open)
 
 ---
 
@@ -1425,10 +1507,10 @@ Make sensitive business operations traceable.
 
 ### Audit Events
 
-- [ ] Login
-- [ ] Logout
-- [ ] Failed login
-- [ ] Password change
+- [x] Login (`auth.login.succeeded` / `auth.login.failed`)
+- [x] Logout (`auth.logout`)
+- [x] Failed login (`auth.login.failed`)
+- [x] Password change (`auth.password.changed` / `auth.password.reset`)
 - [ ] Vendor approval
 - [ ] Vendor suspension
 - [ ] Product changes
@@ -1438,6 +1520,7 @@ Make sensitive business operations traceable.
 - [ ] Payout
 - [ ] Permission changes
 - [ ] Admin actions
+- [x] Token reuse (`auth.token.reuse_detected`)
 
 ### Audit Record
 

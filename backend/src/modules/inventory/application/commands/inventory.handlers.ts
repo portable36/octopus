@@ -311,6 +311,16 @@ export class StockCommandHandler {
     return result;
   }
 
+  public async listByStore(input: {
+    readonly storeId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+    readonly limit?: number;
+  }): Promise<InventoryItem[]> {
+    await this.auth.requireReader(input.storeId, input.actorUserId, input.actorRoles);
+    return this.inventory.findItemsByStoreId(input.storeId, input.limit ?? 50);
+  }
+
   public async getAvailability(input: {
     readonly storeId: string;
     readonly variantId: string;

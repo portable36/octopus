@@ -5,6 +5,7 @@ import type { OrderRepository } from '../../application/ports/order-repository.i
 import type { Order } from '../../domain/aggregates/order.aggregate';
 import { applyOrderToOrm, orderLinesToOrm, orderToDomain } from './order.mapper';
 import { OrderLineOrmEntity, OrderOrmEntity } from './order.orm-entity';
+import { appendOrderOutbox } from './append-order-outbox';
 
 @Injectable()
 export class OrderRepositoryAdapter implements OrderRepository {
@@ -34,6 +35,8 @@ export class OrderRepositoryAdapter implements OrderRepository {
         tx.persist(line);
       }
       await tx.flush();
+      await appendOrderOutbox(tx, order.id.value, order.getUncommittedEvents());
+      order.clearEvents();
     });
   }
 
@@ -78,6 +81,19 @@ export class OrderRepositoryAdapter implements OrderRepository {
         { orderBy: { createdAt: 'DESC' } },
       );
       return this.hydrateMany(tx, entities);
+    });
+  }
+
+  public async listRecent(limit: number): Promise<Order[]> {
+    const capped = Math.min(Math.max(limit, 1), 200);
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        OrderOrmEntity,
+        {},
+        { orderBy: { createdAt: 'DESC' }, limit: capped },
+      );
+      // Admin ops list does not need line snapshots.
+      return entities.map((entity) => orderToDomain(entity, []));
     });
   }
 

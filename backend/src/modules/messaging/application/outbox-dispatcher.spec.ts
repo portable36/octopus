@@ -23,6 +23,11 @@ describe('routeQueueForEvent', () => {
   it('routes shipment events to domain-events queue', () => {
     expect(routeQueueForEvent('ShipmentCreated')).toBe(QUEUE_NAMES.domainEvents);
   });
+
+  it('routes OrderPaid to marketing queue', () => {
+    expect(routeQueueForEvent('OrderPaid')).toBe(QUEUE_NAMES.marketing);
+    expect(routeQueueForEvent('OrderCreated')).toBe(QUEUE_NAMES.marketing);
+  });
 });
 
 describe('isDuplicateJobIdError', () => {
@@ -61,6 +66,7 @@ describe('parseRefundAllocation', () => {
 
 describe('DomainEventsProcessor', () => {
   const notifications = { handle: vi.fn().mockResolvedValue(undefined) };
+  const marketing = { handle: vi.fn().mockResolvedValue(undefined) };
 
   it('processes once and skips duplicates via Redis NX', async () => {
     const redis = {
@@ -74,6 +80,7 @@ describe('DomainEventsProcessor', () => {
       redis as never,
       ledger as never,
       notifications as never,
+      marketing as never,
     );
     const job = {
       outboxId: '11111111-1111-7111-8111-111111111111',
@@ -101,6 +108,7 @@ describe('DomainEventsProcessor', () => {
       redis as never,
       ledger as never,
       notifications as never,
+      marketing as never,
     );
 
     await processor.handle({
@@ -137,6 +145,7 @@ describe('DomainEventsProcessor', () => {
       }),
     );
     expect(notifications.handle).toHaveBeenCalled();
+    expect(marketing.handle).toHaveBeenCalled();
   });
 
   it('recognizes sale on CodCollected', async () => {
@@ -149,6 +158,7 @@ describe('DomainEventsProcessor', () => {
       redis as never,
       ledger as never,
       notifications as never,
+      marketing as never,
     );
     await processor.handle({
       outboxId: '44444444-4444-7444-8444-444444444444',
@@ -162,5 +172,9 @@ describe('DomainEventsProcessor', () => {
       orderId: 'ord-9',
       paymentIntentId: 'pi-1',
     });
+    expect(marketing.handle).toHaveBeenCalledWith(
+      'CodCollected',
+      expect.objectContaining({ orderId: 'ord-9' }),
+    );
   });
 });

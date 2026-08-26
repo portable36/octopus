@@ -170,6 +170,30 @@ npx skills@latest add amirtaherkhani/nestjs-agent-skills -a cursor -y --copy `
 
 **Precedence:** Octopus `.cursor/rules/` and `/architecture-boundary-guard` win if NestJS advice fights modular-monolith isolation.
 
+## Superpowers (obra/superpowers) — curated only
+
+[obra/superpowers](https://github.com/obra/superpowers) is a full agent methodology (brainstorm → plan → TDD → subagents). **Fit for Octopus: partial.**
+
+| Piece                                                               | Decision                                                                                                                                                                     |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full Cursor plugin (`/add-plugin superpowers`) + session-start hook | **Skip for repo default** — auto-forces skill checks before every reply; duplicates mattpocock `/grill-*` / `/to-tickets` / `/implement` and fights “next” PHASES + ponytail |
+| `using-superpowers` bootstrap                                       | **Do not install**                                                                                                                                                           |
+| `brainstorming` (optional local server + telemetry logo)            | **Skip** — auditor flags `child_process`; overlap with `/grill-me`                                                                                                           |
+| `test-driven-development` / `writing-plans` / worktree skills       | **Skip** — already covered by `/tdd`, `/to-tickets`, `/implement`                                                                                                            |
+| `/systematic-debugging`                                             | **Installed** — complements `/diagnosing-bugs`                                                                                                                               |
+| `/verification-before-completion`                                   | **Installed** — evidence before “done”; use with `/quality-gates-check`                                                                                                      |
+
+**Precedence:** `.cursor/rules/` > ponytail > mattpocock PHASES planning > Superpowers skills. Never weaken tenant isolation, payments, or module boundaries.
+
+**Install / refresh (curated):**
+
+```powershell
+npx skills@latest add obra/superpowers -a cursor -y --copy `
+  -s systematic-debugging -s verification-before-completion
+```
+
+Optional personal full plugin (not committed as repo policy): Cursor chat `/add-plugin superpowers`, then set `SUPERPOWERS_DISABLE_TELEMETRY=1`.
+
 ## Octopus-adapted workflow skills (Colorcom patterns)
 
 Colorcom skills that hard-bind to Colorcom docs/kits were **not** copied. Patterns rewritten for Octopus:

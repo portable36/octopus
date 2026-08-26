@@ -313,6 +313,12 @@
       "skillPath": "engineering/skills/sql-database-assistant/SKILL.md",
       "computedHash": "53b1156d13b632b7aadbc872345826b356c3930eb03b48a59677a2bdbfc23b3e"
     },
+    "systematic-debugging": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/systematic-debugging/SKILL.md",
+      "computedHash": "a2750dfbaed1690da73b120254892c4f926b4576cb82eb16fc877783941fe39b"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -348,6 +354,12 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/triage/SKILL.md",
       "computedHash": "363ca4f1b97ca5227d41d3973178ab301d7c498ba41b466dfe30b6163f6d72b5"
+    },
+    "verification-before-completion": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/verification-before-completion/SKILL.md",
+      "computedHash": "b529822bdac4b197b180fe12225cff86b930b65910435103c10622df7f041651"
     },
     "wait-what": {
       "source": "mattpocock/skills",

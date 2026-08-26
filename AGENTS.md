@@ -13,9 +13,12 @@ Installed under `.agents/skills/`:
 - [redis/agent-skills](https://github.com/redis/agent-skills/tree/main/skills/redis-core) — `/redis-core` (cache/sessions/queues only — never inventory or money truth)
 - [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) — curated engineering subset only (~20 skills; not the full ~343 pack)
 - [amirtaherkhani/nestjs-agent-skills](https://github.com/amirtaherkhani/nestjs-agent-skills) — NestJS architecture / OOP / performance (Octopus rules win on conflicts)
+- [obra/superpowers](https://github.com/obra/superpowers) — **curated only:** `/systematic-debugging`, `/verification-before-completion` (not the full plugin / session-start hook)
 - Octopus-adapted ops skills (from Colorcom patterns): `/architecture-boundary-guard`, `/quality-gates-check`, `/docs-state-maintainer`, `/cost-efficient-agent`
 
 Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.cursor/rules/` as the hard engineering contract. Third-party skills must not weaken tenant isolation, payments, authn, or module boundaries.
+
+**Do not** enable Superpowers' full Cursor plugin session-start bootstrap in this repo — it auto-forces skill checks before every reply and duplicates mattpocock + ponytail. Optional personal install: `/add-plugin superpowers` in Cursor; set `SUPERPOWERS_DISABLE_TELEMETRY=1` if you use it.
 
 ### Issue tracker
 
@@ -38,7 +41,7 @@ Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/age
 | Spec from this chat      | `/to-spec`                                                        |
 | Break into tickets       | `/to-tickets`                                                     |
 | Implement a spec/tickets | `/implement` (drives `/tdd`)                                      |
-| Hard bug                 | `/diagnosing-bugs`                                                |
+| Hard bug                 | `/diagnosing-bugs` or `/systematic-debugging`                     |
 | Architecture survey      | `/improve-codebase-architecture`                                  |
 | Session handoff          | `/handoff`                                                        |
 | Smallest fix / YAGNI     | `/ponytail` (also always-on rule)                                 |
@@ -53,7 +56,7 @@ Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/age
 | Schema / migrations      | `/database-designer`, `/migration-architect`                      |
 | NestJS architecture      | `/nestjs-architecture-principles` (+ OOP/perf siblings)           |
 | Module boundary check    | `/architecture-boundary-guard`                                    |
-| Pre-merge validate       | `/quality-gates-check`                                            |
+| Pre-merge validate       | `/quality-gates-check` + `/verification-before-completion`        |
 | Docs after a phase slice | `/docs-state-maintainer`                                          |
 | Cheaper agent sessions   | `/cost-efficient-agent`                                           |
 | Security deep-dive       | `/senior-security`, `/skill-security-auditor`                     |

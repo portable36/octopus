@@ -2,6 +2,8 @@
 
 Use this checklist for every feature that crosses a module or process boundary.
 
+Phase 30 evidence map (what is already true for the platform vs still open): [PHASES.md](../PHASES.md) — Phase 30.
+
 ## Correctness
 
 - [ ] Domain invariants are enforced by an aggregate or value object.

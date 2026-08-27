@@ -23,35 +23,6 @@ export class Migration20250822210000 extends Migration {
         on "user_memberships" ("vendor_id");
     `);
 
-    this.addSql(`alter table "user_memberships" enable row level security;`);
-    this.addSql(`alter table "user_memberships" force row level security;`);
-    this.addSql(`
-      create policy user_memberships_select on "user_memberships"
-        for select
-        using (
-          app.is_platform_scope()
-          or user_id::text = app.current_user_id()
-        );
-    `);
-
-    this.addSql(`
-      create table if not exists "tenant_isolation_samples" (
-        "id" uuid primary key,
-        "vendor_id" uuid not null,
-        "store_id" uuid null,
-        "label" varchar(200) not null,
-        "created_at" timestamptz not null
-      );
-    `);
-    this.addSql(`
-      create index if not exists "tenant_isolation_samples_vendor_id_idx"
-        on "tenant_isolation_samples" ("vendor_id");
-    `);
-    this.addSql(`
-      create index if not exists "tenant_isolation_samples_store_id_idx"
-        on "tenant_isolation_samples" ("store_id");
-    `);
-
     this.addSql(`
       create or replace function app.current_vendor_id() returns text
       language sql
@@ -86,6 +57,35 @@ export class Migration20250822210000 extends Migration {
       as $$
         select nullif(current_setting('app.user_id', true), '')
       $$;
+    `);
+
+    this.addSql(`alter table "user_memberships" enable row level security;`);
+    this.addSql(`alter table "user_memberships" force row level security;`);
+    this.addSql(`
+      create policy user_memberships_select on "user_memberships"
+        for select
+        using (
+          app.is_platform_scope()
+          or user_id::text = app.current_user_id()
+        );
+    `);
+
+    this.addSql(`
+      create table if not exists "tenant_isolation_samples" (
+        "id" uuid primary key,
+        "vendor_id" uuid not null,
+        "store_id" uuid null,
+        "label" varchar(200) not null,
+        "created_at" timestamptz not null
+      );
+    `);
+    this.addSql(`
+      create index if not exists "tenant_isolation_samples_vendor_id_idx"
+        on "tenant_isolation_samples" ("vendor_id");
+    `);
+    this.addSql(`
+      create index if not exists "tenant_isolation_samples_store_id_idx"
+        on "tenant_isolation_samples" ("store_id");
     `);
 
     this.addSql(`alter table "tenant_isolation_samples" enable row level security;`);

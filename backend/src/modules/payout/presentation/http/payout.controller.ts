@@ -121,7 +121,13 @@ export class PayoutController {
   @Post('payouts/:payoutId/approve')
   @ApiOperation({ summary: 'Platform approve a payout under review' })
   async approve(@CurrentUser() user: RequestPrincipal, @Param('payoutId') payoutId: string) {
-    return toResponse(await this.payouts.approvePayout({ payoutId, actorRoles: user.roles }));
+    return toResponse(
+      await this.payouts.approvePayout({
+        payoutId,
+        actorUserId: user.userId,
+        actorRoles: user.roles,
+      }),
+    );
   }
 
   @Post('payouts/:payoutId/reject')
@@ -134,6 +140,7 @@ export class PayoutController {
     return toResponse(
       await this.payouts.rejectPayout({
         payoutId,
+        actorUserId: user.userId,
         actorRoles: user.roles,
         reason: body.reason,
       }),
@@ -145,6 +152,12 @@ export class PayoutController {
     summary: 'Disburse an approved payout (stub provider); COMPLETED posts DEBIT PAYOUT',
   })
   async process(@CurrentUser() user: RequestPrincipal, @Param('payoutId') payoutId: string) {
-    return toResponse(await this.payouts.processPayout({ payoutId, actorRoles: user.roles }));
+    return toResponse(
+      await this.payouts.processPayout({
+        payoutId,
+        actorUserId: user.userId,
+        actorRoles: user.roles,
+      }),
+    );
   }
 }

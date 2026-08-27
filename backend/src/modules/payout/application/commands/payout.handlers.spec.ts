@@ -82,6 +82,7 @@ describe('PayoutCommandHandler', () => {
 
     const result = await handler.processPayout({
       payoutId: payout.id.value,
+      actorUserId: 'u-admin',
       actorRoles: ['PLATFORM_ADMIN'],
     });
 
@@ -115,6 +116,7 @@ describe('PayoutCommandHandler', () => {
 
     const result = await handler.processPayout({
       payoutId: payout.id.value,
+      actorUserId: 'u-admin',
       actorRoles: ['PLATFORM_ADMIN'],
     });
 

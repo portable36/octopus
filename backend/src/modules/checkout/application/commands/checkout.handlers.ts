@@ -30,6 +30,7 @@ import {
   type VendorAccessPort,
 } from '../../../../shared-kernel/application/ports/vendor-access.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
+import { recordCheckoutOutcome } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 import {
   CheckoutAccessDeniedError,
   CheckoutIdempotencyConflictError,
@@ -95,6 +96,15 @@ export class CheckoutSubmitHandler {
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {
+    try {
+      return await this.submitOnce(input);
+    } catch (error) {
+      recordCheckoutOutcome('failure');
+      throw error;
+    }
+  }
+
+  private async submitOnce(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {
     this.assertOwner(input.owner);
     this.assertShippingAddress(input.shippingAddress);
     const requestHash = hashSubmitRequest(input);
@@ -104,6 +114,7 @@ export class CheckoutSubmitHandler {
       if (existing.cartId !== input.cartId) {
         throw new CheckoutIdempotencyConflictError();
       }
+      recordCheckoutOutcome('success');
       return existing;
     }
 
@@ -352,6 +363,7 @@ export class CheckoutSubmitHandler {
         outcome,
       });
 
+      recordCheckoutOutcome('success');
       return outcome;
     } catch (error) {
       await this.releaseAll(

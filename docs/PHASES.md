@@ -1449,14 +1449,15 @@ Ship admin UIs **only after** owning domain modules exist:
 
 - [x] Login history — `auth.login.*` via existing `GET /admin/audit/events?actionPrefix=`
 - [x] Security events — identity writes `auth.*` through `AUDIT_PORT`; admin UI at
-      `/admin/system/security` (full Phase 22 catalog still open)
+      `/admin/system/security` (Phase 22 sensitive-op catalog wired)
 
 ---
 
 ## Phase 20.8 — Reports entry
 
-- [ ] Operational counts from existing APIs where safe
-- [ ] Analytical widgets deferred to Phase 21 read models
+- [x] Operational counts from existing APIs where safe (dashboard widget over vendor/store
+      lists + recent order/payment/user windows; not total aggregates)
+- [x] Analytical widgets deferred to Phase 21 read models
 
 ---
 
@@ -1467,14 +1468,26 @@ Ship admin UIs **only after** owning domain modules exist:
 Build read-optimized **first-party** reporting (orders, revenue, AOV, store/vendor/product).  
 Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as the ledger.
 
+### 21.1 — Order facts read model (foundation)
+
+- [x] `reporting_order_facts` projection table + migration
+- [x] Outbox projection on `OrderCreated` / `OrderPaid` via `REPORTING_OUTBOX_HANDLER`
+- [x] `GET /admin/reports/orders/summary` (platform admin; currency buckets)
+- [x] Admin dashboard widget over the read model (not transactional list APIs)
+
+### 21.2 — Vendor / store performance
+
+- [x] `GET /admin/reports/vendors/summary` and `/admin/reports/stores/summary` from facts
+- [x] Admin `/admin/system/reports` (vendor + store tables; IDs only — no cross-module name join)
+
 ### Reports
 
+- [x] Orders (summary counts + paid revenue from facts; detail reports later)
 - [ ] Sales
-- [ ] Orders
-- [ ] Revenue
-- [ ] Commission
-- [ ] Vendor performance
-- [ ] Store performance
+- [ ] Revenue (beyond paid-order totals in 21.1)
+- [x] Commission (paid totals + per vendor/store in 21.2; product-level later)
+- [x] Vendor performance
+- [x] Store performance
 - [ ] Product performance
 - [ ] Inventory
 - [ ] Customer
@@ -1511,15 +1524,15 @@ Make sensitive business operations traceable.
 - [x] Logout (`auth.logout`)
 - [x] Failed login (`auth.login.failed`)
 - [x] Password change (`auth.password.changed` / `auth.password.reset`)
-- [ ] Vendor approval
-- [ ] Vendor suspension
-- [ ] Product changes
-- [ ] Inventory adjustments
-- [ ] Order cancellation
-- [ ] Refund
-- [ ] Payout
-- [ ] Permission changes
-- [ ] Admin actions
+- [x] Vendor approval (`vendor.approved` / `vendor.rejected` / `vendor.activated`)
+- [x] Vendor suspension (`vendor.suspended`)
+- [x] Product changes (`catalog.product.updated`)
+- [x] Inventory adjustments (`inventory.adjusted`)
+- [x] Order cancellation (`order.cancelled`)
+- [x] Refund (`payment.refund.succeeded`)
+- [x] Payout (`payout.approved` / `payout.rejected` / `payout.completed` / `payout.failed`)
+- [x] Permission changes (`permission.vendor_staff_added` / `permission.vendor_staff_removed`)
+- [x] Admin actions (`settings.upserted` / `media.registered`; secrets redacted in audit sink)
 - [x] Token reuse (`auth.token.reuse_detected`)
 
 ### Audit Record
@@ -1551,46 +1564,73 @@ Make the production system diagnosable.
 
 ### Logging
 
-- [ ] Pino
-- [ ] JSON logs
-- [ ] Request ID
-- [ ] Trace ID
-- [ ] Actor ID
-- [ ] Vendor ID
-- [ ] Store ID
-- [ ] Operation
-- [ ] Duration
-- [ ] Error code
+- [x] Pino (`nestjs-pino` / `LoggerModule` in `app.module.ts`)
+- [x] JSON logs (production; pretty in non-prod)
+- [x] Request ID (`x-request-id` + ALS; shared with pino `req.id`)
+- [x] Trace ID (`x-trace-id` correlation header; equals requestId until OpenTelemetry)
+- [x] Actor ID (from ALS principal on access logs)
+- [x] Vendor ID (from ALS scope)
+- [x] Store ID (from ALS scope)
+- [x] Operation (`METHOD` + route path on access logs)
+- [x] Duration (`durationMs` via pino-http `responseTime`)
+- [x] Error code (domain `code` on RFC7807 + structured failure logs)
+
+### Logging notes
+
+- Slice **23.1** enriches existing Pino HTTP logs; OpenTelemetry (**23.2–23.10**) and Sentry (**23.11**) are opt-in.
 
 ### OpenTelemetry
 
-- [ ] HTTP traces
-- [ ] PostgreSQL traces
-- [ ] Redis traces
-- [ ] BullMQ traces
-- [ ] Payment provider traces
-- [ ] Search traces
+- [x] HTTP traces (opt-in `OTEL_ENABLED`; HTTP/Express/Nest; OTLP or console exporter)
+- [x] PostgreSQL traces (`@opentelemetry/instrumentation-pg` on MikroORM’s `pg` driver)
+- [x] Redis traces (`@opentelemetry/instrumentation-ioredis`; AUTH/HELLO redacted)
+- [x] BullMQ traces (official `bullmq-otel` on Queue/Worker when `OTEL_ENABLED`)
+- [x] Payment provider traces (`withExternalSpan` on refund gateway + payout disburse stubs)
+- [x] Search traces (`withExternalSpan` on Meilisearch ensure/upsert/delete/search)
+
+### OpenTelemetry notes
+
+- Slice **23.2–23.10** — set `OTEL_ENABLED=true` and optionally `OTEL_EXPORTER_OTLP_ENDPOINT`.
+  Without an endpoint, non-prod uses console spans/metrics; production requires an endpoint.
+- Active OTel `traceId` is preferred for `x-trace-id` / ALS when a span is present.
+- PG instrumentation keeps `enhancedDatabaseReporting: false` (no bound parameter values in spans).
+- Redis `db.statement` redacts AUTH/HELLO and truncates long args.
+- BullMQ uses `getBullmqTelemetry()` (no-op when OTEL is off).
+- Payment/payout provider spans use safe ids only (no secrets, no full payloads).
+- Search spans omit free-text query strings (use `has_query`, page/limit, ids only).
 
 ### Metrics
 
-- [ ] Request latency
-- [ ] Error rate
-- [ ] DB latency
-- [ ] Redis latency
-- [ ] Queue depth
-- [ ] Queue lag
-- [ ] Checkout success
-- [ ] Payment failures
-- [ ] Inventory conflicts
-- [ ] Search indexing lag
-- [ ] Payout failures
+- [x] Request latency (`octopus.http.server.duration` via `HttpMetricsInterceptor`)
+- [x] Error rate (`octopus.http.server.requests` by `http.status_class`)
+- [x] DB latency (`db.client.operation.duration` from `@opentelemetry/instrumentation-pg`)
+- [x] Redis latency (`octopus.redis.command.duration` on `REDIS_CLIENT`)
+- [x] Queue depth (`octopus.queue.depth` from outbox BullMQ queues)
+- [x] Queue lag (`octopus.queue.lag` = age of oldest waiting job)
+- [x] Checkout success (`octopus.checkout.outcomes` outcome=success|failure)
+- [x] Payment failures (`octopus.payment.failures`; refund provider rejects today)
+- [x] Inventory conflicts (`octopus.inventory.conflicts` on insufficient stock)
+- [x] Search indexing lag (`octopus.search.indexing.lag` enqueue→complete)
+- [x] Payout failures (`octopus.payout.failures` on disbursement fail)
+
+### Metrics notes
+
+- Slice **23.8** — same `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` as traces; metrics export to `/v1/metrics` (or console in non-prod without an endpoint).
+- Error rate = share of requests with `http.status_class=5xx` (and 4xx if desired) over `octopus.http.server.requests`.
+- Slice **23.9** — PG pool/query duration is automatic once the MeterProvider is registered; Redis timings wrap the app Redis client; queue gauges register from `OutboxDispatcherService`.
+- Slice **23.10** — business counters/histograms in `business-metrics.ts`; live payment gateways should call `recordPaymentFailure` on capture/callback failure.
 
 ### Sentry
 
-- [ ] Backend errors
-- [ ] Frontend errors
-- [ ] Release tracking
-- [ ] Sensitive data filtering
+- [x] Backend errors (`@sentry/nestjs`; 5xx via RFC7807 filter + Nest instrumentation)
+- [x] Frontend errors (`@sentry/nextjs`; `instrumentation` + `global-error`)
+- [x] Release tracking (`SENTRY_RELEASE` on backend/frontend init)
+- [x] Sensitive data filtering (`scrubSentryEvent` / `sendDefaultPii: false`)
+
+### Sentry notes
+
+- Slice **23.11** — set `SENTRY_DSN` (API) and/or `NEXT_PUBLIC_SENTRY_DSN` (Next). Unset = disabled.
+- Optional `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`. Source map upload needs `SENTRY_AUTH_TOKEN` in CI.
 
 ---
 

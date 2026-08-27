@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Queue, type ConnectionOptions, type JobsOptions } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
+import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import type { NotificationDeliveryEnqueuerPort } from '../../application/ports/notification-delivery-enqueuer.port';
 
 /** Match messaging QUEUE_NAMES.notification — literal avoids cross-module import. */
@@ -58,7 +59,7 @@ export class NotificationDeliveryEnqueuerAdapter
 
   private ensureQueue(): Queue {
     if (!this.queue) {
-      this.queue = new Queue(NOTIFICATION_QUEUE, { connection: this.connection });
+      this.queue = new Queue(NOTIFICATION_QUEUE, bullmqQueueOptions(this.connection));
     }
     return this.queue;
   }

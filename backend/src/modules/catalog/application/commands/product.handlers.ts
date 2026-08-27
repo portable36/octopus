@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
   VENDOR_ACCESS,
   type VendorAccessPort,
@@ -58,6 +59,7 @@ export class ProductLifecycleHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
     private readonly authz: CatalogAuthorizationService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async submitForReview(
@@ -118,6 +120,12 @@ export class ProductLifecycleHandler {
     },
   ): Promise<Product> {
     const product = await this.requireOwned(productId, actorUserId, actorRoles);
+    const before = {
+      name: product.name,
+      description: product.description,
+      brandId: product.brandId,
+      status: product.status,
+    };
     if (patch.name !== undefined) product.rename(patch.name);
     if (patch.description !== undefined) product.updateDescription(patch.description);
     if (patch.brandId !== undefined) product.assignBrand(patch.brandId);
@@ -125,6 +133,20 @@ export class ProductLifecycleHandler {
     if (patch.attributes !== undefined) product.setAttributes(patch.attributes);
     if (patch.media !== undefined) product.setMedia(patch.media);
     await this.products.save(product);
+    await this.audit?.append({
+      actorUserId,
+      action: 'catalog.product.updated',
+      resourceType: 'product',
+      resourceId: product.id.value,
+      vendorId: product.vendorId,
+      before,
+      after: {
+        name: product.name,
+        description: product.description,
+        brandId: product.brandId,
+        status: product.status,
+      },
+    });
     return product;
   }
 

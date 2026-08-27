@@ -329,3 +329,54 @@ export function listAdminAuditEvents(
     headers: authHeaders(token),
   });
 }
+
+export type AdminOrderReportCurrency = {
+  currencyCode: string;
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  commissionMinor: number;
+};
+
+export type AdminOrderReportSummary = {
+  currencies: AdminOrderReportCurrency[];
+  orderCount: number;
+  paidOrderCount: number;
+};
+
+export function getAdminOrderReportSummary(token: string): Promise<AdminOrderReportSummary> {
+  return apiRequest<AdminOrderReportSummary>('/admin/reports/orders/summary', {
+    headers: authHeaders(token),
+  });
+}
+
+export type AdminVendorPerformanceRow = {
+  vendorId: string;
+  currencies: AdminOrderReportCurrency[];
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  commissionMinor: number;
+};
+
+export type AdminStorePerformanceRow = {
+  storeId: string;
+  vendorId: string;
+  currencies: AdminOrderReportCurrency[];
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  commissionMinor: number;
+};
+
+export function getAdminVendorReportSummary(token: string): Promise<AdminVendorPerformanceRow[]> {
+  return apiRequest<AdminVendorPerformanceRow[]>('/admin/reports/vendors/summary', {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminStoreReportSummary(token: string): Promise<AdminStorePerformanceRow[]> {
+  return apiRequest<AdminStorePerformanceRow[]>('/admin/reports/stores/summary', {
+    headers: authHeaders(token),
+  });
+}

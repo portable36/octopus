@@ -21,6 +21,18 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:3001'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(10_000),
+  /** Opt-in OpenTelemetry traces + metrics (see otel-bootstrap). */
+  OTEL_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  OTEL_SERVICE_NAME: z.string().min(1).max(128).default('octopus-api'),
+  /** Base collector URL (e.g. http://localhost:4318) or full …/v1/traces|metrics URL. */
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+  /** Opt-in Sentry error reporting (see instrument.ts). */
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ENVIRONMENT: z.string().min(1).max(64).optional(),
+  SENTRY_RELEASE: z.string().min(1).max(128).optional(),
   COD_DEFAULT_ENABLED: z
     .enum(['true', 'false'])
     .default('false')

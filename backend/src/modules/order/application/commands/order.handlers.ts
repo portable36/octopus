@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import type {
   CheckoutOrderCreateInput,
   CheckoutOrderCreateResult,
@@ -80,6 +81,7 @@ export class OrderLifecycleHandler {
   constructor(
     @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepository,
     private readonly authz: OrderAuthorizationService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async get(input: {
@@ -201,12 +203,26 @@ export class OrderLifecycleHandler {
     if (!input.actorRoles.includes('PLATFORM_ADMIN') && order.customerId === input.actorUserId) {
       order.cancel();
       await this.orders.save(order);
+      await this.auditOrderCancelled(order, input.actorUserId);
       return order;
     }
     await this.authz.requireFulfiller(order, input.actorUserId, input.actorRoles);
     order.cancel();
     await this.orders.save(order);
+    await this.auditOrderCancelled(order, input.actorUserId);
     return order;
+  }
+
+  private async auditOrderCancelled(order: Order, actorUserId: string): Promise<void> {
+    await this.audit?.append({
+      actorUserId,
+      action: 'order.cancelled',
+      resourceType: 'order',
+      resourceId: order.id.value,
+      vendorId: order.vendorId,
+      storeId: order.storeId,
+      after: { status: order.status },
+    });
   }
 
   public async requestRefund(input: {

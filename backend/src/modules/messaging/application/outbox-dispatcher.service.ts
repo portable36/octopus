@@ -1,6 +1,12 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Queue, Worker, type ConnectionOptions, type JobsOptions } from 'bullmq';
 import { AppConfigService } from '../../../config/app-config.service';
+import {
+  bullmqQueueOptions,
+  bullmqWorkerOptions,
+} from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
+import { registerBullmqQueueMetrics } from '../../../shared-kernel/infrastructure/observability/queue-metrics';
+import { recordSearchIndexingLag } from '../../../shared-kernel/infrastructure/observability/business-metrics';
 import { OUTBOX_STORE, type OutboxStore } from './ports/outbox-store.interface';
 import {
   QUEUE_NAMES,
@@ -63,54 +69,43 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     this.ensureQueue(QUEUE_NAMES.marketing);
     this.ensureQueue(QUEUE_NAMES.deadLetter);
 
+    registerBullmqQueueMetrics(
+      [...this.queues.entries()].map(([name, queue]) => ({ name, queue })),
+    );
+
     this.workers.push(
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.domainEvents,
         async (job) => this.domainEvents.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 5,
-        },
+        bullmqWorkerOptions(this.connection, 5),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.payment,
         async (job) => this.domainEvents.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 5,
-        },
+        bullmqWorkerOptions(this.connection, 5),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.payout,
         async (job) => this.domainEvents.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 3,
-        },
+        bullmqWorkerOptions(this.connection, 3),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.searchIndexing,
-        async (job) => this.searchIndexing.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 5,
+        async (job) => {
+          await this.searchIndexing.handle(job.data);
+          recordSearchIndexingLag(Date.now() - job.timestamp);
         },
+        bullmqWorkerOptions(this.connection, 5),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.notification,
         async (job) => this.notifications.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 5,
-        },
+        bullmqWorkerOptions(this.connection, 5),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.marketing,
         async (job) => this.marketing.handle(job.data),
-        {
-          connection: this.connection,
-          concurrency: 5,
-        },
+        bullmqWorkerOptions(this.connection, 5),
       ),
     );
 
@@ -200,7 +195,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     if (existing) {
       return existing;
     }
-    const queue = new Queue<OutboxJobPayload>(name, { connection: this.connection });
+    const queue = new Queue<OutboxJobPayload>(name, bullmqQueueOptions(this.connection));
     this.queues.set(name, queue);
     return queue;
   }

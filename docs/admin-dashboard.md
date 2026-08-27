@@ -22,6 +22,11 @@ cache remain deferred until Media + CMS exist.
 `/inventory`, `/users`) over thin module list APIs (no admin BFF business rules).
 **Phase 20.7** adds `/admin/system/security` over `GET /admin/audit/events`
 (login history + `auth.*` security events); identity appends via `AUDIT_PORT`.
+**Phase 20.8** adds dashboard operational counts from existing list APIs
+(vendors/stores + recent orders/payments/users); Phase 21 owns real analytics.
+**Phase 21.1** adds `reporting_order_facts` + `GET /admin/reports/orders/summary`
+and a dashboard order-report widget (outbox-projected; not live transactional scans).
+**Phase 21.2** adds vendor/store performance summaries + `/admin/system/reports`.
 
 The frontend displays backend-owned state and invokes typed APIs. Business
 rules, authorization, transactions, validation, publishing, and audit behavior

@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
   MEMBERSHIP_DIRECTORY,
   type MembershipDirectory,
@@ -22,6 +23,7 @@ export class VendorLifecycleHandler {
     @Inject(VENDOR_REPOSITORY) private readonly vendors: VendorRepository,
     @Inject(MEMBERSHIP_DIRECTORY) private readonly memberships: MembershipDirectory,
     @Inject(USER_ROLE_ASSIGNER) private readonly roleAssigner: UserRoleAssigner,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async submitForReview(
@@ -45,6 +47,14 @@ export class VendorLifecycleHandler {
     const vendor = await this.requireVendor(vendorId);
     vendor.approve(actorUserId);
     await this.vendors.save(vendor);
+    await this.audit?.append({
+      actorUserId,
+      action: 'vendor.approved',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { status: vendor.status },
+    });
     return vendor;
   }
 
@@ -58,6 +68,15 @@ export class VendorLifecycleHandler {
     const vendor = await this.requireVendor(vendorId);
     vendor.reject(actorUserId, reason);
     await this.vendors.save(vendor);
+    await this.audit?.append({
+      actorUserId,
+      action: 'vendor.rejected',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { status: vendor.status },
+      metadata: { reason },
+    });
     return vendor;
   }
 
@@ -72,6 +91,14 @@ export class VendorLifecycleHandler {
     }
     vendor.activate();
     await this.vendors.save(vendor);
+    await this.audit?.append({
+      actorUserId,
+      action: 'vendor.activated',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { status: vendor.status },
+    });
     return vendor;
   }
 
@@ -87,6 +114,15 @@ export class VendorLifecycleHandler {
     }
     vendor.suspend(actorUserId, reason);
     await this.vendors.save(vendor);
+    await this.audit?.append({
+      actorUserId,
+      action: 'vendor.suspended',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { status: vendor.status },
+      metadata: reason !== undefined ? { reason } : null,
+    });
     return vendor;
   }
 
@@ -111,6 +147,14 @@ export class VendorLifecycleHandler {
     await this.vendors.save(vendor);
     await this.memberships.upsertVendorMembership(staffUserId, vendorId, []);
     await this.roleAssigner.ensureRoles(staffUserId, [role]);
+    await this.audit?.append({
+      actorUserId,
+      action: 'permission.vendor_staff_added',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { staffUserId, role },
+    });
     return vendor;
   }
 
@@ -125,6 +169,14 @@ export class VendorLifecycleHandler {
     vendor.removeStaff(staffUserId);
     await this.vendors.save(vendor);
     await this.memberships.removeVendorMembership(staffUserId, vendorId);
+    await this.audit?.append({
+      actorUserId,
+      action: 'permission.vendor_staff_removed',
+      resourceType: 'vendor',
+      resourceId: vendorId,
+      vendorId,
+      after: { staffUserId },
+    });
     return vendor;
   }
 

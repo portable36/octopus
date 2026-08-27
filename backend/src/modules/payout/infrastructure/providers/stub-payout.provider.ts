@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { withExternalSpan } from '../../../../shared-kernel/infrastructure/observability/external-span';
 import type {
   PayoutDisburseResult,
   PayoutProviderPort,
@@ -13,6 +14,21 @@ export class StubPayoutProviderAdapter implements PayoutProviderPort {
     readonly amountMinor: number;
     readonly currencyCode: string;
   }): Promise<PayoutDisburseResult> {
-    return { ok: true, providerRef: `stub:${input.payoutId}` };
+    return withExternalSpan(
+      'payout.provider.disburse',
+      {
+        'octopus.payout.id': input.payoutId,
+        'octopus.payout.vendor_id': input.vendorId,
+        'octopus.payout.currency': input.currencyCode,
+      },
+      async (span) => {
+        const result: PayoutDisburseResult = {
+          ok: true,
+          providerRef: `stub:${input.payoutId}`,
+        };
+        span.setAttribute('octopus.payout.ok', result.ok);
+        return result;
+      },
+    );
   }
 }

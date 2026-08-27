@@ -2,7 +2,11 @@ import type { INestApplication } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import type { AppConfigService } from '../../../config/app-config.service';
 
-export function registerGracefulShutdown(app: INestApplication, config: AppConfigService): void {
+export function registerGracefulShutdown(
+  app: INestApplication,
+  config: AppConfigService,
+  afterClose?: () => Promise<void>,
+): void {
   const logger = app.get(Logger);
   let shuttingDown = false;
 
@@ -22,6 +26,9 @@ export function registerGracefulShutdown(app: INestApplication, config: AppConfi
 
     try {
       await app.close();
+      if (afterClose) {
+        await afterClose();
+      }
       clearTimeout(forceExitTimer);
       logger.log('Application shut down cleanly');
       process.exit(0);

@@ -26,9 +26,52 @@ describe('Rfc7807ExceptionFilter', () => {
     expect(json.detail).toBe('An unexpected error occurred.');
     expect(json.detail).not.toContain('password');
   });
+
+  it('surfaces domain errorCode and logs via req.log', () => {
+    const logs: Array<{ level: string; payload: Record<string, unknown>; msg?: string }> = [];
+    const json = captureJson(
+      filter,
+      Object.assign(new BadRequestException('Nope'), { code: 'VENDOR_ACCESS_DENIED' }),
+      {
+        warn: (payload, msg) => {
+          const entry: { level: string; payload: Record<string, unknown>; msg?: string } = {
+            level: 'warn',
+            payload,
+          };
+          if (msg !== undefined) {
+            entry.msg = msg;
+          }
+          logs.push(entry);
+        },
+        error: (payload, msg) => {
+          const entry: { level: string; payload: Record<string, unknown>; msg?: string } = {
+            level: 'error',
+            payload,
+          };
+          if (msg !== undefined) {
+            entry.msg = msg;
+          }
+          logs.push(entry);
+        },
+      },
+    );
+
+    expect(json.errorCode).toBe('VENDOR_ACCESS_DENIED');
+    expect(logs).toHaveLength(1);
+    expect(logs[0]?.level).toBe('warn');
+    expect(logs[0]?.payload.errorCode).toBe('VENDOR_ACCESS_DENIED');
+    expect(logs[0]?.msg).toBe('request_rejected');
+  });
 });
 
-function captureJson(filter: Rfc7807ExceptionFilter, exception: unknown): Record<string, unknown> {
+function captureJson(
+  filter: Rfc7807ExceptionFilter,
+  exception: unknown,
+  log?: {
+    warn: (obj: Record<string, unknown>, msg?: string) => void;
+    error: (obj: Record<string, unknown>, msg?: string) => void;
+  },
+): Record<string, unknown> {
   let payload: Record<string, unknown> = {};
 
   const response = {
@@ -46,7 +89,7 @@ function captureJson(filter: Rfc7807ExceptionFilter, exception: unknown): Record
     },
   };
 
-  const request = { url: '/api/v1/example' };
+  const request = { url: '/api/v1/example', log };
 
   filter.catch(exception, {
     switchToHttp: () => ({

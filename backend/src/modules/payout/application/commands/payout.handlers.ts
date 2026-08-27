@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { VendorPayout } from '../../domain/aggregates/vendor-payout.aggregate';
 import {
   InsufficientPayoutBalanceError,
@@ -9,6 +10,7 @@ import { PAYOUT_PROVIDER, type PayoutProviderPort } from '../ports/payout-provid
 import { PAYOUT_REPOSITORY, type PayoutRepository } from '../ports/payout-repository.interface';
 import { PayoutAuthorizationService } from '../services/payout-authorization.service';
 import { LedgerCommandHandler } from './ledger.handlers';
+import { recordPayoutFailure } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 
 @Injectable()
 export class PayoutCommandHandler {
@@ -17,6 +19,7 @@ export class PayoutCommandHandler {
     @Inject(PAYOUT_PROVIDER) private readonly provider: PayoutProviderPort,
     private readonly ledger: LedgerCommandHandler,
     private readonly authz: PayoutAuthorizationService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async requestPayout(input: {
@@ -106,6 +109,7 @@ export class PayoutCommandHandler {
 
   public async approvePayout(input: {
     readonly payoutId: string;
+    readonly actorUserId: string;
     readonly actorRoles: readonly string[];
   }): Promise<VendorPayout> {
     this.authz.requireApprover(input.actorRoles);
@@ -124,11 +128,21 @@ export class PayoutCommandHandler {
       eventType: 'PayoutApproved',
       payload: { payoutId: payout.id.value, vendorId: payout.vendorId },
     });
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'payout.approved',
+      resourceType: 'payout',
+      resourceId: payout.id.value,
+      vendorId: payout.vendorId,
+      storeId: payout.storeId,
+      after: { status: payout.status, amountMinor: payout.amountMinor },
+    });
     return payout;
   }
 
   public async rejectPayout(input: {
     readonly payoutId: string;
+    readonly actorUserId: string;
     readonly actorRoles: readonly string[];
     readonly reason: string;
   }): Promise<VendorPayout> {
@@ -148,11 +162,22 @@ export class PayoutCommandHandler {
         reason: payout.rejectionReason,
       },
     });
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'payout.rejected',
+      resourceType: 'payout',
+      resourceId: payout.id.value,
+      vendorId: payout.vendorId,
+      storeId: payout.storeId,
+      after: { status: payout.status },
+      metadata: { reason: input.reason },
+    });
     return payout;
   }
 
   public async processPayout(input: {
     readonly payoutId: string;
+    readonly actorUserId: string;
     readonly actorRoles: readonly string[];
   }): Promise<VendorPayout> {
     this.authz.requireProcessor(input.actorRoles);
@@ -193,6 +218,17 @@ export class PayoutCommandHandler {
             reason: payout.failureReason,
           },
         });
+        await this.audit?.append({
+          actorUserId: input.actorUserId,
+          action: 'payout.failed',
+          resourceType: 'payout',
+          resourceId: payout.id.value,
+          vendorId: payout.vendorId,
+          storeId: payout.storeId,
+          after: { status: payout.status },
+          metadata: { reason: payout.failureReason },
+        });
+        recordPayoutFailure();
       }
       return payout;
     }
@@ -218,6 +254,15 @@ export class PayoutCommandHandler {
       ledgerEntryId,
     });
     await this.payouts.save(payout);
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'payout.completed',
+      resourceType: 'payout',
+      resourceId: payout.id.value,
+      vendorId: payout.vendorId,
+      storeId: payout.storeId,
+      after: { status: payout.status, amountMinor: payout.amountMinor },
+    });
     return payout;
   }
 

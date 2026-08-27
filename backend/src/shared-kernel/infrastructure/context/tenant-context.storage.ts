@@ -3,6 +3,8 @@ import type { AuthenticatedPrincipal } from './authenticated-principal';
 
 export interface TenantContext {
   readonly requestId: string;
+  /** Correlation / incoming trace id; prefers OpenTelemetry span id when SDK is on. */
+  readonly traceId?: string;
   readonly principal?: AuthenticatedPrincipal;
   readonly userId?: string;
   readonly tenantId?: string;
@@ -19,8 +21,8 @@ type MutableTenantContext = {
 
 const asyncLocalStorage = new AsyncLocalStorage<TenantContext>();
 
-export function createRequestContext(requestId: string): TenantContext {
-  return { requestId };
+export function createRequestContext(requestId: string, traceId?: string): TenantContext {
+  return { requestId, traceId: traceId ?? requestId };
 }
 
 export function runWithTenantContext<T>(context: TenantContext, fn: () => T): T {

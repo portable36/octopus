@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Queue, type ConnectionOptions, type JobsOptions } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
+import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import type {
   SearchReindexEnqueueResult,
   SearchReindexEnqueuerPort,
@@ -77,7 +78,7 @@ export class SearchReindexEnqueuerAdapter implements SearchReindexEnqueuerPort, 
 
   private ensureQueue(): Queue {
     if (!this.queue) {
-      this.queue = new Queue(SEARCH_INDEXING_QUEUE, { connection: this.connection });
+      this.queue = new Queue(SEARCH_INDEXING_QUEUE, bullmqQueueOptions(this.connection));
     }
     return this.queue;
   }

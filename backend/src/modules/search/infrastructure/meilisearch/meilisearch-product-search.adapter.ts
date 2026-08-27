@@ -9,6 +9,7 @@ import type {
 import type { ProductSearchIndexPort } from '../../../../shared-kernel/application/ports/product-search-index.port';
 import type { CatalogOfferSearchSourceDto } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import { buildOfferSearchDocument } from '../../domain/services/build-offer-search-document';
+import { withExternalSpan } from '../../../../shared-kernel/infrastructure/observability/external-span';
 
 const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug'] as const;
 const FILTERABLE = [
@@ -54,42 +55,75 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
   }
 
   public async ensureIndex(): Promise<void> {
-    try {
-      await this.client.createIndex(this.indexUid, { primaryKey: 'id' });
-    } catch {
-      // Index may already exist.
-    }
-    const index = this.index();
-    await index.updateSettings({
-      searchableAttributes: [...SEARCHABLE],
-      filterableAttributes: [...FILTERABLE],
-      sortableAttributes: [...SORTABLE],
-      displayedAttributes: ['*'],
-    });
+    return withExternalSpan(
+      'search.meili.ensure_index',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'ensure_index',
+      },
+      async () => {
+        try {
+          await this.client.createIndex(this.indexUid, { primaryKey: 'id' });
+        } catch {
+          // Index may already exist.
+        }
+        const index = this.index();
+        await index.updateSettings({
+          searchableAttributes: [...SEARCHABLE],
+          filterableAttributes: [...FILTERABLE],
+          sortableAttributes: [...SORTABLE],
+          displayedAttributes: ['*'],
+        });
+      },
+    );
   }
 
   public async upsert(document: OfferSearchDocument): Promise<void> {
-    await this.index().addDocuments([document], { primaryKey: 'id' });
+    return withExternalSpan(
+      'search.meili.upsert',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'upsert',
+        'octopus.search.offer_id': document.offerId,
+      },
+      async () => {
+        await this.index().addDocuments([document], { primaryKey: 'id' });
+      },
+    );
   }
 
   public async upsertIfNewer(document: OfferSearchDocument): Promise<'written' | 'skipped'> {
-    try {
-      const existing = await this.index().getDocument<OfferSearchDocument>(document.id);
-      if (typeof existing.version === 'number' && existing.version > document.version) {
-        return 'skipped';
-      }
-      if (
-        typeof existing.updatedAtUnix === 'number' &&
-        existing.updatedAtUnix > document.updatedAtUnix &&
-        existing.version === document.version
-      ) {
-        return 'skipped';
-      }
-    } catch {
-      // Missing document → write.
-    }
-    await this.upsert(document);
-    return 'written';
+    return withExternalSpan(
+      'search.meili.upsert_if_newer',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'upsert_if_newer',
+        'octopus.search.offer_id': document.offerId,
+        'octopus.search.version': document.version,
+      },
+      async (span) => {
+        try {
+          const existing = await this.index().getDocument<OfferSearchDocument>(document.id);
+          if (typeof existing.version === 'number' && existing.version > document.version) {
+            span.setAttribute('octopus.search.write_result', 'skipped');
+            return 'skipped';
+          }
+          if (
+            typeof existing.updatedAtUnix === 'number' &&
+            existing.updatedAtUnix > document.updatedAtUnix &&
+            existing.version === document.version
+          ) {
+            span.setAttribute('octopus.search.write_result', 'skipped');
+            return 'skipped';
+          }
+        } catch {
+          // Missing document → write.
+        }
+        await this.upsert(document);
+        span.setAttribute('octopus.search.write_result', 'written');
+        return 'written';
+      },
+    );
   }
 
   public async indexOfferSource(
@@ -105,7 +139,17 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
   }
 
   public async deleteByOfferId(offerId: string): Promise<void> {
-    await this.index().deleteDocument(offerId);
+    return withExternalSpan(
+      'search.meili.delete',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'delete',
+        'octopus.search.offer_id': offerId,
+      },
+      async () => {
+        await this.index().deleteDocument(offerId);
+      },
+    );
   }
 
   public async search(query: SearchProductsQuery): Promise<SearchProductsResult> {
@@ -143,29 +187,48 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
             : undefined;
 
     const facetKeys = ['categoryIds', 'vendorId', 'storeId', 'stockStatus'] as const;
-    const result = await this.index().search<OfferSearchDocument>(query.q ?? '', {
-      filter: filters.join(' AND '),
-      ...(sort ? { sort } : {}),
-      offset,
-      limit,
-      facets: [...facetKeys],
-    });
-
-    const distribution = result.facetDistribution ?? {};
-    return {
-      hits: result.hits,
-      query: query.q ?? '',
-      page,
-      limit,
-      estimatedTotal: result.estimatedTotalHits ?? result.hits.length,
-      processingTimeMs: result.processingTimeMs,
-      facets: {
-        categoryIds: toFacetBuckets(distribution['categoryIds']),
-        vendorId: toFacetBuckets(distribution['vendorId']),
-        storeId: toFacetBuckets(distribution['storeId']),
-        stockStatus: toFacetBuckets(distribution['stockStatus']),
+    return withExternalSpan(
+      'search.meili.search',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'search',
+        'octopus.search.page': page,
+        'octopus.search.limit': limit,
+        'octopus.search.has_query': Boolean(query.q?.trim()),
+        ...(query.vendorId ? { 'octopus.search.vendor_id': query.vendorId } : {}),
+        ...(query.storeId ? { 'octopus.search.store_id': query.storeId } : {}),
+        ...(query.sort ? { 'octopus.search.sort': query.sort } : {}),
       },
-    };
+      async (span) => {
+        const result = await this.index().search<OfferSearchDocument>(query.q ?? '', {
+          filter: filters.join(' AND '),
+          ...(sort ? { sort } : {}),
+          offset,
+          limit,
+          facets: [...facetKeys],
+        });
+
+        const estimatedTotal = result.estimatedTotalHits ?? result.hits.length;
+        span.setAttribute('octopus.search.estimated_total', estimatedTotal);
+        span.setAttribute('octopus.search.processing_time_ms', result.processingTimeMs);
+
+        const distribution = result.facetDistribution ?? {};
+        return {
+          hits: result.hits,
+          query: query.q ?? '',
+          page,
+          limit,
+          estimatedTotal,
+          processingTimeMs: result.processingTimeMs,
+          facets: {
+            categoryIds: toFacetBuckets(distribution['categoryIds']),
+            vendorId: toFacetBuckets(distribution['vendorId']),
+            storeId: toFacetBuckets(distribution['storeId']),
+            stockStatus: toFacetBuckets(distribution['stockStatus']),
+          },
+        };
+      },
+    );
   }
 
   private index(): Index<OfferSearchDocument> {

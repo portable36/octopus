@@ -28,6 +28,7 @@ const NAV: readonly NavItem[] = [
   { href: '/admin/inventory', label: 'Inventory' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/system/health', label: 'System health' },
+  { href: '/admin/system/reports', label: 'Reports' },
   { href: '/admin/system/security', label: 'Security', permission: 'audit.read' },
   { href: '/admin/system/website', label: 'Website' },
   { href: '/admin/system/marketing', label: 'Marketing' },

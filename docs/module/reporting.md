@@ -39,11 +39,12 @@ Projections may lag; UI must indicate freshness where needed.
 
 ## Exit criteria
 
-- At least one vendor sales report from projections
+- At least one vendor sales report from projections — **done in 21.2** via
+  `GET /admin/reports/vendors/summary` (and stores); platform order summary in 21.1
 - Documented lag SLO and backfill procedure
 
 ## Related
 
-- [PHASES.md](../PHASES.md) — Phase 21
+- [PHASES.md](../PHASES.md) — Phase 21 / 21.1
 - [Payout Module](./payout.md)
 - [admin-dashboard.md](../admin-dashboard.md)

@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import {
   MediaAccessDeniedError,
@@ -18,7 +19,10 @@ const MEDIA_READ_ROLES = new Set([
 
 @Injectable()
 export class MediaHandlers {
-  constructor(@Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository) {}
+  constructor(
+    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
+  ) {}
 
   public async registerMetadata(input: {
     readonly originalFilename: string;
@@ -52,6 +56,20 @@ export class MediaHandlers {
       createdAt: new Date(),
     };
     await this.media.save(asset);
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'media.registered',
+      resourceType: 'media_asset',
+      resourceId: asset.id,
+      vendorId: asset.vendorId,
+      storeId: asset.storeId,
+      after: {
+        originalFilename: asset.originalFilename,
+        contentType: asset.contentType,
+        byteSize: asset.byteSize,
+        storageKey: asset.storageKey,
+      },
+    });
     return asset;
   }
 

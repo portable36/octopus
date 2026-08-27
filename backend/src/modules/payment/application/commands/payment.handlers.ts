@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { ORDER_PORT, type OrderPort } from '../../../../shared-kernel/application/ports/order.port';
 import type {
   CancelPaymentIntentInput,
@@ -30,6 +31,7 @@ import {
 } from '../ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY, type PaymentRepository } from '../ports/payment-repository.interface';
 import { PaymentAuthorizationService } from '../services/payment-authorization.service';
+import { recordPaymentFailure } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 
 @Injectable()
 export class CreatePaymentIntentHandler {
@@ -252,6 +254,7 @@ export class CreateRefundHandler {
     private readonly authz: PaymentAuthorizationService,
     @Inject(PAYMENT_REFUND_GATEWAY) private readonly gateway: PaymentRefundGateway,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async execute(input: CreateRefundInput): Promise<CreateRefundResult> {
@@ -313,7 +316,7 @@ export class CreateRefundHandler {
 
     const finance = await this.orders.getFinanceSnapshot(reserved.refund.orderId);
 
-    return this.payments.withTransaction(async (repo) => {
+    const outcome = await this.payments.withTransaction(async (repo) => {
       const refund = (await repo.findRefundById(reserved.refund.id.value)) ?? reserved.refund;
 
       if (refund.status === 'SUCCEEDED') {
@@ -324,10 +327,11 @@ export class CreateRefundHandler {
           requestHash,
           responseJson: result as unknown as Record<string, unknown>,
         });
-        return result;
+        return { result, freshlySucceeded: false as const, refund };
       }
 
       if (!gatewayResult.ok) {
+        recordPaymentFailure('refund_provider');
         refund.markFailed({
           providerResponseCode: gatewayResult.responseCode,
           providerReceivedAt: gatewayResult.receivedAt,
@@ -354,8 +358,30 @@ export class CreateRefundHandler {
         requestHash,
         responseJson: result as unknown as Record<string, unknown>,
       });
-      return result;
+      return { result, freshlySucceeded: true as const, refund };
     });
+
+    if (outcome.freshlySucceeded) {
+      const { refund } = outcome;
+      await this.audit?.append({
+        actorUserId: input.actorUserId,
+        action: 'payment.refund.succeeded',
+        resourceType: 'refund',
+        resourceId: refund.id.value,
+        vendorId: refund.vendorId,
+        storeId: refund.storeId,
+        after: {
+          status: refund.status,
+          amountMinor: refund.amountMinor,
+          currencyCode: refund.currencyCode,
+          paymentIntentId: refund.paymentIntentId,
+          orderId: refund.orderId,
+        },
+        metadata:
+          input.reason !== undefined && input.reason !== null ? { reason: input.reason } : null,
+      });
+    }
+    return outcome.result;
   }
 }
 

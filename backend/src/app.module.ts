@@ -1,10 +1,15 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { randomUUID } from 'node:crypto';
 import { validateEnv } from './config/env.validation';
 import { AppConfigService } from './config/app-config.service';
 import { ContextMiddleware } from './shared-kernel/infrastructure/context/context.middleware';
+import { buildRequestLogBindings } from './shared-kernel/infrastructure/observability/pino-request-bindings';
+import { HttpMetricsInterceptor } from './shared-kernel/infrastructure/observability/http-metrics.interceptor';
+import { RequestLogContextInterceptor } from './shared-kernel/infrastructure/observability/request-log-context.interceptor';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
@@ -31,9 +36,11 @@ import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
+import { ReportingModule } from './modules/reporting/reporting.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
@@ -43,6 +50,15 @@ import { MarketingModule } from './modules/marketing/marketing.module';
       useFactory: (config: AppConfigService) => {
         const pinoHttp: Record<string, unknown> = {
           level: config.logLevel,
+          customAttributeKeys: {
+            responseTime: 'durationMs',
+          },
+          customProps: (req: {
+            id?: unknown;
+            method?: string;
+            url?: string;
+            route?: { path?: string };
+          }) => buildRequestLogBindings(req),
           redact: {
             paths: [
               'req.headers.authorization',
@@ -100,10 +116,15 @@ import { MarketingModule } from './modules/marketing/marketing.module';
     CustomerModule,
     SearchModule,
     MarketingModule,
+    ReportingModule,
     MessagingModule,
     ReturnsModule,
   ],
-  providers: [AppConfigService],
+  providers: [
+    AppConfigService,
+    { provide: APP_INTERCEPTOR, useClass: RequestLogContextInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: HttpMetricsInterceptor },
+  ],
   exports: [AppConfigService],
 })
 export class AppModule implements NestModule {

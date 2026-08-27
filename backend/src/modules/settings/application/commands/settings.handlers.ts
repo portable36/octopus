@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import {
   resolveEffectiveBranding,
@@ -23,6 +24,7 @@ export class SettingsHandlers {
   constructor(
     @Inject(CONFIGURATION_REPOSITORY) private readonly configs: ConfigurationRepository,
     private readonly authz: SettingsAuthorizationService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async getEffective(input: {
@@ -84,7 +86,7 @@ export class SettingsHandlers {
     );
 
     const existing = await this.configs.findByScopeKey(input.key, input.scope);
-    return this.configs.save({
+    const saved = await this.configs.save({
       id: existing?.id ?? UniqueID.create().value,
       key: input.key,
       scope: input.scope,
@@ -92,5 +94,17 @@ export class SettingsHandlers {
       payload: { ...input.payload, schemaVersion: 1 },
       updatedBy: input.actorUserId,
     });
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'settings.upserted',
+      resourceType: 'configuration',
+      resourceId: saved.id,
+      vendorId: input.scope.kind === 'platform' ? null : input.scope.vendorId,
+      storeId: input.scope.kind === 'store' ? input.scope.storeId : null,
+      before: existing ? { key: existing.key, payload: existing.payload } : null,
+      after: { key: saved.key, payload: saved.payload },
+      metadata: { scopeKind: input.scope.kind },
+    });
+    return saved;
   }
 }

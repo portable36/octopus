@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import type {
   CatalogVariantAccessPort,
   CatalogVariantAccessSnapshot,
@@ -16,6 +17,7 @@ import { createMovement } from '../../domain/entities/inventory-movement';
 import type { InventoryOperationType, InventoryReferenceType } from '../../domain/inventory.types';
 import { stockStatus } from '../../domain/inventory.types';
 import { dispositionForReturnCondition } from '../../domain/services/return-disposition';
+import { InsufficientStockError } from '../../domain/errors/inventory.errors';
 import {
   CrossStoreTransferDeniedError,
   InventoryItemNotFoundError,
@@ -24,6 +26,7 @@ import {
   WarehouseCodeTakenError,
   WarehouseNotFoundError,
 } from '../errors/inventory.errors';
+import { recordInventoryConflict } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 import {
   INVENTORY_REPOSITORY,
   type InventoryRepository,
@@ -86,6 +89,7 @@ export class StockCommandHandler {
     @Inject(WAREHOUSE_REPOSITORY) private readonly warehouses: WarehouseRepository,
     @Inject(CATALOG_VARIANT_ACCESS) private readonly variants: CatalogVariantAccessPort,
     private readonly auth: InventoryAuthorizationService,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async ensureItem(input: {
@@ -515,6 +519,9 @@ export class StockCommandHandler {
     warehouse.assertActive();
     await this.requireVariantForVendor(input.variantId, warehouse.vendorId);
 
+    const stockChangeBox: { current: { before: number; after: number } | null } = {
+      current: null,
+    };
     const item = await this.inventory.withLockedUnitOfWork(async (uow) => {
       let current = await uow.findItemByWarehouseAndVariantForUpdate(
         warehouse.id.value,
@@ -533,6 +540,7 @@ export class StockCommandHandler {
           (await uow.findItemByWarehouseAndVariantForUpdate(warehouse.id.value, input.variantId))!;
       }
       const change = input.apply(current);
+      stockChangeBox.current = change;
       await uow.saveItem(current);
       await uow.appendMovement(
         createMovement({
@@ -562,6 +570,26 @@ export class StockCommandHandler {
       referenceId: item.id.value,
       result: { inventoryItemId: item.id.value },
     });
+
+    const stockChange = stockChangeBox.current;
+    if (input.operationType === 'ADJUST' && stockChange) {
+      await this.audit?.append({
+        actorUserId: input.actorUserId,
+        action: 'inventory.adjusted',
+        resourceType: 'inventory_item',
+        resourceId: item.id.value,
+        vendorId: item.vendorId,
+        storeId: item.storeId,
+        before: { onHand: stockChange.before },
+        after: { onHand: stockChange.after },
+        metadata: {
+          warehouseId: item.warehouseId,
+          variantId: item.variantId,
+          reason: input.reason ?? null,
+          delta: stockChange.after - stockChange.before,
+        },
+      });
+    }
     return item;
   }
 
@@ -610,48 +638,56 @@ export class ReservationCommandHandler {
     const warehouse = await this.auth.requireWarehouseForStore(input.warehouseId, input.storeId);
     warehouse.assertActive();
 
-    const result = await this.inventory.withLockedUnitOfWork(async (uow) => {
-      const item = await uow.findItemByWarehouseAndVariantForUpdate(
-        warehouse.id.value,
-        input.variantId,
-      );
-      if (!item) {
-        throw new InventoryItemNotFoundError();
-      }
-      const reserved = item.reserve(input.quantity);
-      const reservation = InventoryReservation.createActive({
-        vendorId: item.vendorId,
-        storeId: item.storeId,
-        warehouseId: item.warehouseId,
-        variantId: item.variantId,
-        inventoryItemId: item.id.value,
-        orderId: input.orderId,
-        quantity: input.quantity,
-        expiresAt: input.expiresAt,
-      });
-      await uow.saveItem(item);
-      await uow.saveReservation(reservation);
-      await uow.appendMovement(
-        createMovement({
-          id: UniqueID.create().value,
+    let result: { reservationId: string; availableAfter: number };
+    try {
+      result = await this.inventory.withLockedUnitOfWork(async (uow) => {
+        const item = await uow.findItemByWarehouseAndVariantForUpdate(
+          warehouse.id.value,
+          input.variantId,
+        );
+        if (!item) {
+          throw new InventoryItemNotFoundError();
+        }
+        const reserved = item.reserve(input.quantity);
+        const reservation = InventoryReservation.createActive({
           vendorId: item.vendorId,
           storeId: item.storeId,
           warehouseId: item.warehouseId,
           variantId: item.variantId,
           inventoryItemId: item.id.value,
-          operationType: 'RESERVE',
+          orderId: input.orderId,
           quantity: input.quantity,
-          beforeQuantity: reserved.beforeReserved,
-          afterQuantity: reserved.afterReserved,
-          referenceType: 'RESERVATION',
-          referenceId: reservation.id.value,
-          actorUserId: input.actorUserId,
-          reason: null,
-          correlationId: input.correlationId ?? null,
-        }),
-      );
-      return { reservationId: reservation.id.value, availableAfter: item.available };
-    });
+          expiresAt: input.expiresAt,
+        });
+        await uow.saveItem(item);
+        await uow.saveReservation(reservation);
+        await uow.appendMovement(
+          createMovement({
+            id: UniqueID.create().value,
+            vendorId: item.vendorId,
+            storeId: item.storeId,
+            warehouseId: item.warehouseId,
+            variantId: item.variantId,
+            inventoryItemId: item.id.value,
+            operationType: 'RESERVE',
+            quantity: input.quantity,
+            beforeQuantity: reserved.beforeReserved,
+            afterQuantity: reserved.afterReserved,
+            referenceType: 'RESERVATION',
+            referenceId: reservation.id.value,
+            actorUserId: input.actorUserId,
+            reason: null,
+            correlationId: input.correlationId ?? null,
+          }),
+        );
+        return { reservationId: reservation.id.value, availableAfter: item.available };
+      });
+    } catch (error) {
+      if (error instanceof InsufficientStockError) {
+        recordInventoryConflict('insufficient_stock');
+      }
+      throw error;
+    }
 
     await this.inventory.recordCompletedOperation({
       idempotencyKey: input.idempotencyKey,

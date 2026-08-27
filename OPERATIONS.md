@@ -91,6 +91,8 @@ Backups must be:
 
 A backup that has never been restored is not a proven recovery mechanism.
 
+Concrete RTO/RPO, Redis reconstructability, object-storage lifecycle, and DR runbook: [docs/architecture/backup-disaster-recovery.md](./docs/architecture/backup-disaster-recovery.md).
+
 ## Incident readiness
 
 Maintain:

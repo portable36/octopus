@@ -25,23 +25,24 @@ Never share production secrets with development or commit them.
 
 ## Service map
 
-| Concern             | Development (compose)          | Production target                                        |
-| ------------------- | ------------------------------ | -------------------------------------------------------- |
-| Network / edge      | localhost ports                | Cloudflare proxy → Hostinger origin                      |
-| PostgreSQL          | `postgres` service             | VPS Postgres or managed PG                               |
-| Redis               | `redis` service                | VPS Redis (cache/queues only)                            |
-| Search              | `meilisearch`                  | Self-hosted Meilisearch or equivalent                    |
-| Object storage      | `minio`                        | S3-compatible (MinIO / R2 / provider)                    |
-| Application runtime | `backend` profile + local Next | Immutable API image (`backend/Dockerfile`) + Next deploy |
-| Load balancer       | n/a                            | Cloudflare as edge; host reverse proxy                   |
-| DNS / TLS           | n/a                            | Cloudflare                                               |
-| Secrets             | `.env` / `.env.example`        | Host/env secret manager; fail-closed config              |
-| Monitoring          | local logs / OTel optional     | App OTel + host/process checks (ops)                     |
-| Backups             | volume data                    | Phase 29 runbooks                                        |
+| Concern             | Development (compose)          | Production target                                            |
+| ------------------- | ------------------------------ | ------------------------------------------------------------ |
+| Network / edge      | localhost ports                | Cloudflare proxy → Hostinger origin                          |
+| PostgreSQL          | `postgres` service             | VPS Postgres or managed PG                                   |
+| Redis               | `redis` service                | VPS Redis (cache/queues only)                                |
+| Search              | `meilisearch`                  | Self-hosted Meilisearch or equivalent                        |
+| Object storage      | `minio`                        | S3-compatible (MinIO / R2 / provider)                        |
+| Application runtime | `backend` profile + local Next | Immutable API image (`backend/Dockerfile`) + Next deploy     |
+| Load balancer       | n/a                            | Cloudflare as edge; host reverse proxy                       |
+| DNS / TLS           | n/a                            | Cloudflare                                                   |
+| Secrets             | `.env` / `.env.example`        | Host/env secret manager; fail-closed config                  |
+| Monitoring          | local logs / OTel optional     | App OTel + host/process checks (ops)                         |
+| Backups             | volume data                    | [backup-disaster-recovery.md](./backup-disaster-recovery.md) |
 
 ## Related
 
 - [deployment.md](./deployment.md)
+- [backup-disaster-recovery.md](./backup-disaster-recovery.md)
 - [OPERATIONS.md](../../OPERATIONS.md)
 - [PHASES.md](../PHASES.md) — Phase 28
 - `.cursor/rules/24-production-operations.mdc`

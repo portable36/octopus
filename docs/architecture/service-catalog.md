@@ -31,3 +31,4 @@ Current code includes: `identity`, `catalog`, `pos` (partial), with additional m
 - [system-overview.md](./system-overview.md)
 - [deployment.md](./deployment.md)
 - [infrastructure.md](./infrastructure.md)
+- [backup-disaster-recovery.md](./backup-disaster-recovery.md)

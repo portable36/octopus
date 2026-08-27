@@ -34,34 +34,36 @@ Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/age
 
 ## Everyday flows
 
-| Goal                     | Skill                                                             |
-| ------------------------ | ----------------------------------------------------------------- |
-| Align before building    | `/grill-with-docs` or `/grill-me`                                 |
-| Which skill to use       | `/ask-matt`                                                       |
-| Spec from this chat      | `/to-spec`                                                        |
-| Break into tickets       | `/to-tickets`                                                     |
-| Implement a spec/tickets | `/implement` (drives `/tdd`)                                      |
-| Hard bug                 | `/diagnosing-bugs` or `/systematic-debugging`                     |
-| Architecture survey      | `/improve-codebase-architecture`                                  |
-| Session handoff          | `/handoff`                                                        |
-| Smallest fix / YAGNI     | `/ponytail` (also always-on rule)                                 |
-| Overbuilt diff review    | `/ponytail-review`                                                |
-| Find unused complexity   | `/ponytail-audit`                                                 |
-| UI / storefront polish   | `/frontend-design`, `/shadcn-ui`                                  |
-| Design system notes      | `/design-md`                                                      |
-| Browser / Playwright QA  | `/webapp-testing`, `/playwright-pro`                              |
-| PDF forms / receipts     | `/pdf`                                                            |
-| Redis modeling           | `/redis-core`                                                     |
-| API contract review      | `/api-design-reviewer`                                            |
-| Schema / migrations      | `/database-designer`, `/migration-architect`                      |
-| NestJS architecture      | `/nestjs-architecture-principles` (+ OOP/perf siblings)           |
-| Module boundary check    | `/architecture-boundary-guard`                                    |
-| Pre-merge validate       | `/quality-gates-check` + `/verification-before-completion`        |
-| Docs after a phase slice | `/docs-state-maintainer`                                          |
-| Cheaper agent sessions   | `/cost-efficient-agent`                                           |
-| Security deep-dive       | `/senior-security`, `/skill-security-auditor`                     |
-| Ops / SLOs / incidents   | `/observability-designer`, `/slo-architect`, `/incident-response` |
-| Role lens (BE/FE/QA)     | `/senior-backend`, `/senior-frontend`, `/senior-qa`               |
+| Goal                     | Skill                                                                |
+| ------------------------ | -------------------------------------------------------------------- |
+| Align before building    | `/grill-with-docs` or `/grill-me`                                    |
+| Which skill to use       | `/ask-matt`                                                          |
+| Spec from this chat      | `/to-spec`                                                           |
+| Break into tickets       | `/to-tickets`                                                        |
+| Implement a spec/tickets | `/implement` (drives `/tdd`)                                         |
+| Hard bug                 | `/diagnosing-bugs` or `/systematic-debugging`                        |
+| Architecture survey      | `/improve-codebase-architecture`                                     |
+| Session handoff          | `/handoff`                                                           |
+| Smallest fix / YAGNI     | `/ponytail` (also always-on rule)                                    |
+| Overbuilt diff review    | `/ponytail-review`                                                   |
+| Find unused complexity   | `/ponytail-audit`                                                    |
+| UI / storefront polish   | `/frontend-design`, `/shadcn-ui`                                     |
+| Design system notes      | `/design-md`                                                         |
+| Browser / Playwright QA  | `/webapp-testing`, `/playwright-pro`                                 |
+| PDF forms / receipts     | `/pdf`                                                               |
+| Redis modeling           | `/redis-core`                                                        |
+| API contract review      | `/api-design-reviewer`                                               |
+| Schema / migrations      | `/database-designer`, `/migration-architect`                         |
+| NestJS architecture      | `/nestjs-architecture-principles` (+ OOP/perf siblings)              |
+| Module boundary check    | `/architecture-boundary-guard`                                       |
+| Pre-merge validate       | `/quality-gates-check` + `/verification-before-completion`           |
+| Docs after a phase slice | `/docs-state-maintainer`                                             |
+| Phase slice done         | Commit + push immediately (`.cursor/rules/40-phase-commit-push.mdc`) |
+
+| Cheaper agent sessions | `/cost-efficient-agent` |
+| Security deep-dive | `/senior-security`, `/skill-security-auditor` |
+| Ops / SLOs / incidents | `/observability-designer`, `/slo-architect`, `/incident-response` |
+| Role lens (BE/FE/QA) | `/senior-backend`, `/senior-frontend`, `/senior-qa` |
 
 ## Non-negotiables (also in `.cursor/rules`)
 

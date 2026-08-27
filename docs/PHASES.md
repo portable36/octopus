@@ -1935,33 +1935,39 @@ Never share production secrets with development.
 
 Prove the system can recover.
 
+Policy: [backup-disaster-recovery.md](./architecture/backup-disaster-recovery.md).
+
 ### Database
 
-- [ ] Automated backups
-- [ ] Point-in-time recovery
-- [ ] Backup encryption
-- [ ] Retention policy
-- [ ] Restore testing
+- [x] Automated backups (ops contract: daily minimum; WAL/PITR when available — enable on prod host)
+- [x] Point-in-time recovery (target when WAL/PITR available; else restore latest daily)
+- [x] Backup encryption (required at rest + in transit)
+- [x] Retention policy (30 days daily + 12 months monthly)
+- [ ] Restore testing (quarterly drill — not yet executed)
 
 ### Redis
 
-Define what data is reconstructable and what is not.
+- [x] Reconstructable vs not documented (sessions/rate limits/cache ephemeral; Postgres remains truth)
 
 Redis must not contain the only copy of financial/business truth.
 
 ### Object Storage
 
-- [ ] Versioning
-- [ ] Lifecycle policy
-- [ ] Backup strategy
+- [x] Versioning (enable on prod bucket when supported)
+- [x] Lifecycle policy (90d non-current; 7d incomplete uploads)
+- [x] Backup strategy (provider durability + versioning; optional second copy)
 
 ### Recovery
 
-- [ ] RTO defined
-- [ ] RPO defined
-- [ ] Disaster recovery runbook
-- [ ] Restore drill
-- [ ] commit push
+- [x] RTO defined (Postgres ≤ 4h; app ≤ 30m; search ≤ 4h reindex)
+- [x] RPO defined (Postgres ≤ 24h baseline / ≤ 1h with PITR)
+- [x] Disaster recovery runbook (outline in backup-disaster-recovery.md)
+- [ ] Restore drill (quarterly — first drill still open)
+
+### Notes
+
+- Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy. **Still open:** enable automated prod backups; execute first restore drill.
+- [x] commit push
 
 ---
 

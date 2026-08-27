@@ -17,6 +17,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit, clampOffset } from '../../../../shared-kernel/presentation/http/pagination';
 import { LedgerCommandHandler } from '../../application/commands/ledger.handlers';
 import { LedgerAuthorizationService } from '../../application/services/ledger-authorization.service';
 import { CreateLedgerAdjustmentDto } from './dto/ledger-adjustment.dto';
@@ -97,9 +98,7 @@ export class LedgerController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ) {
     await this.authz.requireLedgerReader(vendorId, user.userId, user.roles);
-    const safeLimit = Math.min(Math.max(limit, 1), 200);
-    const safeOffset = Math.max(offset, 0);
-    return this.ledger.listVendorEntries(vendorId, safeLimit, safeOffset);
+    return this.ledger.listVendorEntries(vendorId, clampLimit(limit), clampOffset(offset));
   }
 
   @Get('vendors/:vendorId/statement')
@@ -119,8 +118,8 @@ export class LedgerController {
     const to = parseOptionalDate(toRaw, 'to');
     return this.ledger.getVendorStatement({
       vendorId,
-      limit: Math.min(Math.max(limit, 1), 200),
-      offset: Math.max(offset, 0),
+      limit: clampLimit(limit),
+      offset: clampOffset(offset),
       ...(from ? { from } : {}),
       ...(to ? { to } : {}),
     });

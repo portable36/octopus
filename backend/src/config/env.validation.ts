@@ -4,6 +4,13 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   DATABASE_URL: z.string().url(),
+  /** MikroORM / pg pool size (tune under load; do not guess beyond observed saturation). */
+  DATABASE_POOL_MIN: z.coerce.number().int().min(0).max(100).default(1),
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(10),
+  /** Log SQL when a statement takes ≥ this many ms (0 disables). */
+  DATABASE_SLOW_QUERY_MS: z.coerce.number().int().min(0).max(60_000).default(500),
+  /** Express JSON/urlencoded body size limit (e.g. 1mb). */
+  HTTP_BODY_LIMIT: z.string().min(2).max(16).default('1mb'),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('15m'),
@@ -63,6 +70,10 @@ export const envSchema = z.object({
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(500).max(60_000).default(2000),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(200).default(50),
   OUTBOX_MAX_DISPATCH_RETRIES: z.coerce.number().int().min(1).max(50).default(10),
+  BULLMQ_JOB_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(300_000).default(30_000),
+  BULLMQ_CONCURRENCY_DEFAULT: z.coerce.number().int().min(1).max(50).default(5),
+  BULLMQ_CONCURRENCY_PAYOUT: z.coerce.number().int().min(1).max(50).default(3),
+  BULLMQ_CONCURRENCY_SEARCH: z.coerce.number().int().min(1).max(50).default(3),
   LEDGER_SETTLEMENT_DAYS: z.coerce.number().int().min(0).max(365).default(7),
 });
 

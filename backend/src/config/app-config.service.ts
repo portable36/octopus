@@ -19,6 +19,22 @@ export class AppConfigService {
     return this.configService.get('DATABASE_URL', { infer: true });
   }
 
+  get databasePoolMin(): number {
+    return this.configService.get('DATABASE_POOL_MIN', { infer: true });
+  }
+
+  get databasePoolMax(): number {
+    return this.configService.get('DATABASE_POOL_MAX', { infer: true });
+  }
+
+  get databaseSlowQueryMs(): number {
+    return this.configService.get('DATABASE_SLOW_QUERY_MS', { infer: true });
+  }
+
+  get httpBodyLimit(): string {
+    return this.configService.get('HTTP_BODY_LIMIT', { infer: true });
+  }
+
   get redisUrl(): string {
     return this.configService.get('REDIS_URL', { infer: true });
   }
@@ -194,6 +210,22 @@ export class AppConfigService {
 
   get outboxMaxDispatchRetries(): number {
     return this.configService.get('OUTBOX_MAX_DISPATCH_RETRIES', { infer: true });
+  }
+
+  get bullmqJobTimeoutMs(): number {
+    return this.configService.get('BULLMQ_JOB_TIMEOUT_MS', { infer: true });
+  }
+
+  get bullmqConcurrencyDefault(): number {
+    return this.configService.get('BULLMQ_CONCURRENCY_DEFAULT', { infer: true });
+  }
+
+  get bullmqConcurrencyPayout(): number {
+    return this.configService.get('BULLMQ_CONCURRENCY_PAYOUT', { infer: true });
+  }
+
+  get bullmqConcurrencySearch(): number {
+    return this.configService.get('BULLMQ_CONCURRENCY_SEARCH', { infer: true });
   }
 
   get ledgerSettlementDays(): number {

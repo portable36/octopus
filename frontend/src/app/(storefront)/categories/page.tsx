@@ -4,6 +4,8 @@ import { ApiClientError } from '@/lib/api-client';
 import { absoluteUrl } from '@/lib/seo';
 import { fetchPublicCategories } from '@/lib/storefront-api';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: 'Categories',
   description: 'Browse active categories',

@@ -1,6 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SearchIndexingProcessor } from './search-indexing.processor';
 
+function offerSource(id: string) {
+  return {
+    offerId: id,
+    productId: 'p1',
+    variantId: 'v1',
+    vendorId: 'ven1',
+    storeId: 's1',
+    name: 'Tee',
+    slug: 'tee',
+    sku: 'TEE',
+    priceMinor: 100,
+    currencyCode: 'BDT',
+    offerStatus: 'active',
+    offerAvailable: true,
+    productStatus: 'published',
+    updatedAt: new Date('2026-08-25T00:00:00.000Z'),
+    version: 1,
+  };
+}
+
 describe('SearchIndexingProcessor', () => {
   it('indexes store offer with inventory availability', async () => {
     const index = {
@@ -8,23 +28,7 @@ describe('SearchIndexingProcessor', () => {
       deleteByOfferId: vi.fn(),
     };
     const catalog = {
-      loadOfferSource: vi.fn(async () => ({
-        offerId: 'o1',
-        productId: 'p1',
-        variantId: 'v1',
-        vendorId: 'ven1',
-        storeId: 's1',
-        name: 'Tee',
-        slug: 'tee',
-        sku: 'TEE',
-        priceMinor: 100,
-        currencyCode: 'BDT',
-        offerStatus: 'active',
-        offerAvailable: true,
-        productStatus: 'published',
-        updatedAt: new Date('2026-08-25T00:00:00.000Z'),
-        version: 1,
-      })),
+      loadOfferSources: vi.fn(async () => [offerSource('o1')]),
       listOfferIdsByProductId: vi.fn(),
       listOfferIdsByVariantId: vi.fn(),
       listOfferIdsByStoreAndVariant: vi.fn(),
@@ -54,6 +58,7 @@ describe('SearchIndexingProcessor', () => {
       eventVersion: 1,
     });
 
+    expect(catalog.loadOfferSources).toHaveBeenCalledWith(['o1']);
     expect(index.indexOfferSource).toHaveBeenCalledWith(
       expect.objectContaining({ offerId: 'o1' }),
       4,
@@ -85,23 +90,7 @@ describe('SearchIndexingProcessor', () => {
       deleteByOfferId: vi.fn(),
     };
     const catalog = {
-      loadOfferSource: vi.fn(async (id: string) => ({
-        offerId: id,
-        productId: 'p1',
-        variantId: 'v1',
-        vendorId: 'ven1',
-        storeId: 's1',
-        name: 'Tee',
-        slug: 'tee',
-        sku: 'TEE',
-        priceMinor: 100,
-        currencyCode: 'BDT',
-        offerStatus: 'active',
-        offerAvailable: true,
-        productStatus: 'published',
-        updatedAt: new Date(),
-        version: 2,
-      })),
+      loadOfferSources: vi.fn(async (ids: readonly string[]) => ids.map((id) => offerSource(id))),
       listOfferIdsByStoreAndVariant: vi.fn(async () => ['o1']),
       listOfferIdsByVariantId: vi.fn(),
       listOfferIdsByProductId: vi.fn(),
@@ -130,6 +119,7 @@ describe('SearchIndexingProcessor', () => {
     });
 
     expect(catalog.listOfferIdsByStoreAndVariant).toHaveBeenCalledWith('s1', 'v1');
+    expect(catalog.loadOfferSources).toHaveBeenCalledWith(['o1']);
     expect(index.indexOfferSource).toHaveBeenCalledTimes(1);
   });
 
@@ -139,23 +129,7 @@ describe('SearchIndexingProcessor', () => {
       deleteByOfferId: vi.fn(),
     };
     const catalog = {
-      loadOfferSource: vi.fn(async (id: string) => ({
-        offerId: id,
-        productId: 'p1',
-        variantId: 'v1',
-        vendorId: 'ven1',
-        storeId: 's1',
-        name: 'Tee',
-        slug: 'tee',
-        sku: 'TEE',
-        priceMinor: 100,
-        currencyCode: 'BDT',
-        offerStatus: 'active',
-        offerAvailable: true,
-        productStatus: 'published',
-        updatedAt: new Date(),
-        version: 1,
-      })),
+      loadOfferSources: vi.fn(async (ids: readonly string[]) => ids.map((id) => offerSource(id))),
       listOfferIdsByProductId: vi.fn(),
       listOfferIdsByVariantId: vi.fn(),
       listOfferIdsByStoreAndVariant: vi.fn(),
@@ -183,6 +157,7 @@ describe('SearchIndexingProcessor', () => {
       eventVersion: 1,
     });
 
+    expect(catalog.loadOfferSources).toHaveBeenCalledWith(['o1', 'o2']);
     expect(index.indexOfferSource).toHaveBeenCalledTimes(2);
   });
 });

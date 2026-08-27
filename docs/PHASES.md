@@ -1414,7 +1414,7 @@ Settings-backed branding/general is ready; **CMS page builder** stays deferred
 - [x] Platform→Vendor→Store resolution reused from Settings `resolveEffective`
 - [ ] CMS pages / nav / footer management
 - [ ] Draft → publish + versioning
-- [ ] Redis cache for effective config only; DB remains truth
+- [x] Redis cache for effective config only; DB remains truth
 - [ ] Full Website Control Center (theme/nav/footer SEO beyond Settings fields)
 
 ---
@@ -1642,36 +1642,46 @@ Optimize based on real measurements.
 
 ### Database
 
-- [ ] Query analysis
-- [ ] Index review
-- [ ] N+1 elimination
-- [ ] Connection pool tuning
-- [ ] Pagination
-- [ ] Lock analysis
+- [x] Query analysis (runbook + non-prod MikroORM SQL debug; OTel DB duration for prod)
+- [x] Index review (baseline: FK/hot-path indexes from domain migrations; new indexes need EXPLAIN)
+- [x] N+1 elimination (order list line batch; cart offer batch; search `loadOfferSources`)
+- [x] Connection pool tuning (`DATABASE_POOL_MIN` / `DATABASE_POOL_MAX`)
+- [x] Pagination (shared `clampLimit` / `clampOffset`; list endpoints bounded)
+- [x] Lock analysis (inventory/payout/promotion/POS use `PESSIMISTIC_WRITE`; see performance.md)
 
 ### Redis
 
-- [ ] Cache strategy
-- [ ] Cache invalidation
-- [ ] TTL policy
-- [ ] Rate limiting
-- [ ] Queue optimization
+- [x] Cache strategy (allowlist: storefront effective config; never money/inventory/cart)
+- [x] Cache invalidation (generation bump on settings upsert)
+- [x] TTL policy (documented for login-rate, refresh, password-reset, outbox dedupe, storefront config)
+- [x] Rate limiting (login: Redis `identity:login-rate:*`, 20 / 15m)
+- [x] Queue optimization (shared job defaults, timeout, age+count retention, concurrency envs)
 
 ### API
 
-- [ ] Response compression
-- [ ] Pagination
-- [ ] Request limits
-- [ ] Query limits
-- [ ] Slow query detection
+- [x] Response compression (`compression()` middleware)
+- [x] Pagination (same shared clamps as DB list reads)
+- [x] Request limits (`HTTP_BODY_LIMIT`, default `1mb`)
+- [x] Query limits (list `limit` capped at 200)
+- [x] Slow query detection (`DATABASE_SLOW_QUERY_MS` + `SlowQueryLogger`)
 
 ### Next.js
 
-- [ ] Server Components
-- [ ] Streaming
-- [ ] Image optimization
-- [ ] Route caching
-- [ ] Client bundle analysis
+- [x] Server Components (storefront catalog/search/PDP are RSC; interactive shells stay client islands)
+- [x] Streaming (`(storefront)/loading.tsx` + existing Suspense on search/category)
+- [x] Image optimization (`images.formats` avif/webp + MinIO/`NEXT_PUBLIC_MEDIA_BASE_URL` remotePatterns)
+- [x] Route caching (`revalidate = 60` on home/categories/category/product)
+- [x] Client bundle analysis (`@next/bundle-analyzer`; `ANALYZE=true npm run analyze -w frontend`)
+
+### Notes
+
+- Slice **24.1** — pool/body env knobs, gzip, shared pagination clamps, [performance.md](./engineering/performance.md).
+- Slice **24.2** — slow-query logger, lock inventory, Redis TTL + login rate-limit docs.
+- Slice **24.3** — Next.js RSC/streaming/images/revalidate/bundle analyzer.
+- Slice **24.4** — N+1: order `hydrateMany` `$in` lines; cart `findManyByStoreAndVariant`; search `loadOfferSources` for reindex batches. Inventory/checkout per-line lookups remain for a later pass.
+- Slice **24.5** — Redis storefront config cache (`settings:storefront-config:*`, 60s TTL + gen invalidation on upsert); `identity:user-families:*` TTL aligned to refresh family.
+- Slice **24.6** — BullMQ shared job options (age/count retention), DLQ cap, worker lockDuration + `BULLMQ_CONCURRENCY_*` / `BULLMQ_JOB_TIMEOUT_MS` envs.
+- Do not add speculative indexes or caches without a measured bottleneck.
 
 ### Rule
 

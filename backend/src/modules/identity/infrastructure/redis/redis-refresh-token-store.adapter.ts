@@ -63,6 +63,11 @@ export class RedisRefreshTokenStoreAdapter implements RefreshTokenStore {
   public async trackUserFamily(userId: string, familyId: string): Promise<void> {
     const key = `${USER_FAMILIES_PREFIX}${userId}`;
     await this.redis.sadd(key, familyId);
+    // Align with refresh lifetime so the set cannot grow unbounded after expiry.
+    const familyTtl = await this.redis.ttl(this.familyKey(familyId));
+    if (familyTtl > 0) {
+      await this.redis.expire(key, familyTtl);
+    }
   }
 
   public async revokeAllForUser(userId: string): Promise<void> {

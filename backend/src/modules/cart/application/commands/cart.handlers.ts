@@ -125,9 +125,15 @@ export class CartCommandHandler {
   }> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
     const issues: CartValidationIssue[] = [];
+    const offerSnapshots = await this.offers.findManyByStoreAndVariant(
+      cart.lines.map((line) => ({ storeId: line.storeId, variantId: line.variantId })),
+    );
+    const offersByPair = new Map(
+      offerSnapshots.map((offer) => [`${offer.storeId}:${offer.variantId}`, offer] as const),
+    );
 
     for (const line of cart.lines) {
-      const offer = await this.offers.findByStoreAndVariant(line.storeId, line.variantId);
+      const offer = offersByPair.get(`${line.storeId}:${line.variantId}`);
       if (!offer) {
         issues.push({
           lineId: line.lineId,
@@ -211,6 +217,13 @@ export class CartCommandHandler {
       byStore.set(line.storeId, list);
     }
 
+    const offerSnapshots = await this.offers.findManyByStoreAndVariant(
+      cart.lines.map((line) => ({ storeId: line.storeId, variantId: line.variantId })),
+    );
+    const offersByPair = new Map(
+      offerSnapshots.map((offer) => [`${offer.storeId}:${offer.variantId}`, offer] as const),
+    );
+
     const quotesByStore: Record<string, PricingQuoteResult> = {};
     let displaySubtotalMinor = 0;
     let displayDiscountMinor = 0;
@@ -220,7 +233,7 @@ export class CartCommandHandler {
       const first = lines[0]!;
       const quoteLines = [];
       for (const line of lines) {
-        const offer = await this.offers.findByStoreAndVariant(line.storeId, line.variantId);
+        const offer = offersByPair.get(`${line.storeId}:${line.variantId}`);
         const unitBase = offer?.priceMinor ?? line.unitPriceSnapshotMinor;
         if (input.refreshSnapshots && offer) {
           cart.refreshLinePriceSnapshot(line.lineId, offer.priceMinor);

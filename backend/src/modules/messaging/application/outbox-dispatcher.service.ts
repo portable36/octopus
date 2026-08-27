@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Queue, Worker, type ConnectionOptions, type JobsOptions } from 'bullmq';
+import { Queue, Worker, type ConnectionOptions } from 'bullmq';
 import { AppConfigService } from '../../../config/app-config.service';
 import {
   bullmqQueueOptions,
@@ -7,6 +7,10 @@ import {
 } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import { registerBullmqQueueMetrics } from '../../../shared-kernel/infrastructure/observability/queue-metrics';
 import { recordSearchIndexingLag } from '../../../shared-kernel/infrastructure/observability/business-metrics';
+import {
+  BULLMQ_DEFAULT_JOB_OPTIONS,
+  BULLMQ_DLQ_JOB_OPTIONS,
+} from '../../../shared-kernel/infrastructure/queues/bullmq-default-job-options';
 import { OUTBOX_STORE, type OutboxStore } from './ports/outbox-store.interface';
 import {
   QUEUE_NAMES,
@@ -18,13 +22,6 @@ import { DomainEventsProcessor } from './processors/domain-events.processor';
 import { MarketingProcessor } from './processors/marketing.processor';
 import { NotificationProcessor } from './processors/notification.processor';
 import { SearchIndexingProcessor } from './processors/search-indexing.processor';
-
-const DEFAULT_JOB_OPTIONS: JobsOptions = {
-  attempts: 5,
-  backoff: { type: 'exponential', delay: 2_000 },
-  removeOnComplete: 1_000,
-  removeOnFail: 5_000,
-};
 
 export function isDuplicateJobIdError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -73,21 +70,26 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
       [...this.queues.entries()].map(([name, queue]) => ({ name, queue })),
     );
 
+    const defaultConcurrency = this.config.bullmqConcurrencyDefault;
+    const payoutConcurrency = this.config.bullmqConcurrencyPayout;
+    const searchConcurrency = this.config.bullmqConcurrencySearch;
+    const lockDurationMs = this.config.bullmqJobTimeoutMs;
+
     this.workers.push(
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.domainEvents,
         async (job) => this.domainEvents.handle(job.data),
-        bullmqWorkerOptions(this.connection, 5),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.payment,
         async (job) => this.domainEvents.handle(job.data),
-        bullmqWorkerOptions(this.connection, 5),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.payout,
         async (job) => this.domainEvents.handle(job.data),
-        bullmqWorkerOptions(this.connection, 3),
+        bullmqWorkerOptions(this.connection, payoutConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.searchIndexing,
@@ -95,17 +97,17 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
           await this.searchIndexing.handle(job.data);
           recordSearchIndexingLag(Date.now() - job.timestamp);
         },
-        bullmqWorkerOptions(this.connection, 5),
+        bullmqWorkerOptions(this.connection, searchConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.notification,
         async (job) => this.notifications.handle(job.data),
-        bullmqWorkerOptions(this.connection, 5),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.marketing,
         async (job) => this.marketing.handle(job.data),
-        bullmqWorkerOptions(this.connection, 5),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
     );
 
@@ -120,7 +122,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     }, this.config.outboxPollIntervalMs);
     this.pollTimer.unref?.();
     this.logger.log(
-      `Outbox dispatcher started (poll=${this.config.outboxPollIntervalMs}ms batch=${this.config.outboxBatchSize}).`,
+      `Outbox dispatcher started (poll=${this.config.outboxPollIntervalMs}ms batch=${this.config.outboxBatchSize} concurrency=${defaultConcurrency}/${payoutConcurrency}/${searchConcurrency} timeout=${this.config.bullmqJobTimeoutMs}ms).`,
     );
   }
 
@@ -144,6 +146,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
         this.config.outboxBatchSize,
         this.config.outboxMaxDispatchRetries,
       );
+      const jobOptions = BULLMQ_DEFAULT_JOB_OPTIONS;
       let published = 0;
       for (const row of rows) {
         const queueName = routeQueueForEvent(row.eventType);
@@ -158,7 +161,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
         };
         try {
           await queue.add(row.eventType, payload, {
-            ...DEFAULT_JOB_OPTIONS,
+            ...jobOptions,
             jobId: row.id,
           });
           await this.outbox.markPublished(row.source, row.id);
@@ -178,8 +181,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
           );
           if (row.retryCount + 1 >= this.config.outboxMaxDispatchRetries) {
             await this.ensureQueue(QUEUE_NAMES.deadLetter).add('dispatch-exhausted', payload, {
+              ...BULLMQ_DLQ_JOB_OPTIONS,
               jobId: `dlq-${row.id}`,
-              removeOnComplete: false,
             });
           }
         }

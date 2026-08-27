@@ -12,7 +12,7 @@ import { startOpenTelemetry } from './shared-kernel/infrastructure/observability
 
 async function bootstrap(): Promise<void> {
   const otel = startOpenTelemetry();
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, bodyParser: false });
   const config = app.get(AppConfigService);
   const logger = app.get(Logger);
 

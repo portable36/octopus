@@ -4,17 +4,10 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
 import { OrderLifecycleHandler } from '../../application/commands/order.handlers';
 import type { Order } from '../../domain/aggregates/order.aggregate';
 import { OrderExceptionFilter } from './filters/order-exception.filter';
-
-function clampLimit(raw: string | undefined): number {
-  const n = Number.parseInt(raw ?? '', 10);
-  if (!Number.isFinite(n) || n < 1) {
-    return 50;
-  }
-  return Math.min(n, 200);
-}
 
 @ApiTags('admin-orders')
 @Controller('admin/orders')

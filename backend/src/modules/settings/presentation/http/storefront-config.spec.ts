@@ -4,7 +4,7 @@ import {
   DEFAULT_GENERAL_SETTINGS,
   type MarketingSettings,
 } from '../../domain/settings.types';
-import { toStorefrontPublicConfig } from './storefront-public-config';
+import { toStorefrontPublicConfig } from '../../application/mappers/storefront-public-config';
 
 describe('toStorefrontPublicConfig', () => {
   it('never includes marketing secret keys in the public response', () => {

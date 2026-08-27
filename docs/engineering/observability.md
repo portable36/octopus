@@ -55,4 +55,5 @@ Alert on sustained error rate increases, queue backlog growth, payment callback 
 
 - [OPERATIONS.md](../../OPERATIONS.md)
 - [production-readiness.md](./production-readiness.md)
+- [performance.md](./performance.md)
 - `.cursor/rules/13-observability.mdc`

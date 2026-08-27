@@ -4,6 +4,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
 import { AuditHandlers } from '../../application/commands/audit.handlers';
 import { AuditExceptionFilter } from './filters/audit-exception.filter';
 
@@ -23,12 +24,7 @@ export class AdminAuditController {
     @Query('limit') limit?: string,
     @Query('actionPrefix') actionPrefix?: string,
   ) {
-    const parsed = limit ? Number.parseInt(limit, 10) : 50;
-    const events = await this.audit.listRecent(
-      user.roles,
-      Number.isFinite(parsed) ? parsed : 50,
-      actionPrefix,
-    );
+    const events = await this.audit.listRecent(user.roles, clampLimit(limit), actionPrefix);
     return events.map((event) => ({
       id: event.id,
       actorUserId: event.actorUserId,

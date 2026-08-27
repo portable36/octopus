@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type Redis from 'ioredis';
 import {
   CATALOG_OFFER_SEARCH_SOURCE,
+  type CatalogOfferSearchSourceDto,
   type CatalogOfferSearchSourcePort,
 } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import {
@@ -39,8 +40,20 @@ export class SearchIndexingProcessor {
     }
 
     const offerIds = await this.resolveOfferIds(job);
+    if (offerIds.length === 0) {
+      return;
+    }
+
+    const sources = await this.catalog.loadOfferSources(offerIds);
+    const byId = new Map(sources.map((source) => [source.offerId, source] as const));
+
     for (const offerId of offerIds) {
-      await this.indexOffer(offerId);
+      const source = byId.get(offerId);
+      if (!source) {
+        await this.index.deleteByOfferId(offerId);
+        continue;
+      }
+      await this.indexOfferSource(source);
     }
   }
 
@@ -80,13 +93,7 @@ export class SearchIndexingProcessor {
     return [];
   }
 
-  private async indexOffer(offerId: string): Promise<void> {
-    const source = await this.catalog.loadOfferSource(offerId);
-    if (!source) {
-      await this.index.deleteByOfferId(offerId);
-      return;
-    }
-
+  private async indexOfferSource(source: CatalogOfferSearchSourceDto): Promise<void> {
     let stockAvailable: number | null = null;
     try {
       const availability = await this.inventory.checkStoreAvailability({
@@ -96,13 +103,13 @@ export class SearchIndexingProcessor {
       stockAvailable = availability.status === 'MISSING' ? null : availability.available;
     } catch (error) {
       this.logger.warn(
-        `Inventory lookup failed for offer ${offerId}: ${
+        `Inventory lookup failed for offer ${source.offerId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
     }
 
     const result = await this.index.indexOfferSource(source, stockAvailable);
-    this.logger.debug(`Indexed offer ${offerId} → ${result}`);
+    this.logger.debug(`Indexed offer ${source.offerId} → ${result}`);
   }
 }

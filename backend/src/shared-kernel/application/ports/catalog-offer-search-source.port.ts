@@ -33,6 +33,8 @@ export type CatalogOfferIdPage = {
 
 export interface CatalogOfferSearchSourcePort {
   loadOfferSource(offerId: string): Promise<CatalogOfferSearchSourceDto | null>;
+  /** Batch load for reindex; missing ids are omitted from the result. */
+  loadOfferSources(offerIds: readonly string[]): Promise<readonly CatalogOfferSearchSourceDto[]>;
   listOfferIdsByProductId(productId: string): Promise<readonly string[]>;
   listOfferIdsByVariantId(variantId: string): Promise<readonly string[]>;
   listOfferIdsByStoreAndVariant(storeId: string, variantId: string): Promise<readonly string[]>;

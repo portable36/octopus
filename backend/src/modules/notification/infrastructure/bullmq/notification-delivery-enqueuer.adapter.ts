@@ -1,19 +1,13 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Queue, type ConnectionOptions, type JobsOptions } from 'bullmq';
+import { Queue, type ConnectionOptions } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
 import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
+import { BULLMQ_DEFAULT_JOB_OPTIONS } from '../../../../shared-kernel/infrastructure/queues/bullmq-default-job-options';
 import type { NotificationDeliveryEnqueuerPort } from '../../application/ports/notification-delivery-enqueuer.port';
 
 /** Match messaging QUEUE_NAMES.notification — literal avoids cross-module import. */
 export const NOTIFICATION_QUEUE = 'octopus.notification';
-
-const JOB_OPTIONS: JobsOptions = {
-  attempts: 5,
-  backoff: { type: 'exponential', delay: 2_000 },
-  removeOnComplete: 1_000,
-  removeOnFail: 5_000,
-};
 
 @Injectable()
 export class NotificationDeliveryEnqueuerAdapter
@@ -46,7 +40,10 @@ export class NotificationDeliveryEnqueuerAdapter
         payload: { notificationId },
         eventVersion: 1,
       },
-      { ...JOB_OPTIONS, jobId: `notify-${notificationId}` },
+      {
+        ...BULLMQ_DEFAULT_JOB_OPTIONS,
+        jobId: `notify-${notificationId}`,
+      },
     );
   }
 

@@ -9,6 +9,8 @@ import { ApiClientError } from '@/lib/api-client';
 import { breadcrumbJsonLd, categoryMetadataWithFacets, hasFacetSearchParams } from '@/lib/seo';
 import { fetchPublicCategoryBySlug, isNotFound, searchProducts } from '@/lib/storefront-api';
 
+export const revalidate = 60;
+
 type Props = {
   readonly params: Promise<{ slug: string }>;
   readonly searchParams: Promise<Record<string, string | string[] | undefined>>;

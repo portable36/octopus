@@ -3,8 +3,10 @@ import { Migrator } from '@mikro-orm/migrations';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import type { AppConfigService } from '../../../config/app-config.service';
 import { PlatformSchemaLockEntity } from './platform-schema-lock.entity';
+import { SlowQueryLogger } from './slow-query-logger';
 
 export function createMikroOrmOptions(config: AppConfigService): Options {
+  const debugSql = !config.isProduction && !config.isTest;
   return {
     clientUrl: config.databaseUrl,
     driver: PostgreSqlDriver,
@@ -18,11 +20,16 @@ export function createMikroOrmOptions(config: AppConfigService): Options {
       disableForeignKeys: false,
       allOrNothing: true,
     },
-    debug: !config.isProduction && !config.isTest,
+    debug: debugSql,
+    loggerFactory: (options) =>
+      new SlowQueryLogger(config.databaseSlowQueryMs, {
+        ...options,
+        writer: options.writer ?? ((message: string) => console.warn(message)),
+      }),
     allowGlobalContext: false,
     pool: {
-      min: 1,
-      max: 10,
+      min: config.databasePoolMin,
+      max: Math.max(config.databasePoolMin, config.databasePoolMax),
     },
   };
 }

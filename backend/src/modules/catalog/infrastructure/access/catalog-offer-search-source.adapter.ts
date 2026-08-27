@@ -17,42 +17,73 @@ function slugify(value: string): string {
   return slug.length > 0 ? slug : 'offer';
 }
 
+function toSearchSource(
+  offer: StoreOfferOrmEntity,
+  product: ProductOrmEntity,
+  variant: VariantOrmEntity,
+): CatalogOfferSearchSourceDto {
+  const updatedAt = offer.updatedAt ?? product.updatedAt ?? new Date();
+  return {
+    offerId: offer.id,
+    productId: offer.productId,
+    variantId: offer.variantId,
+    vendorId: offer.vendorId,
+    storeId: offer.storeId,
+    name: product.name,
+    slug: slugify(product.name),
+    sku: variant.sku,
+    shortDescription: product.description,
+    brandId: product.brandId,
+    categoryIds: product.categoryIds ?? [],
+    priceMinor: offer.priceMinor,
+    currencyCode: offer.currencyCode,
+    offerStatus: offer.status,
+    offerAvailable: offer.isAvailable,
+    productStatus: product.status,
+    updatedAt,
+    version: Math.floor(updatedAt.getTime() / 1000),
+  };
+}
+
 @Injectable()
 export class CatalogOfferSearchSourceAdapter implements CatalogOfferSearchSourcePort {
   constructor(private readonly em: EntityManager) {}
 
   public async loadOfferSource(offerId: string): Promise<CatalogOfferSearchSourceDto | null> {
+    const [source] = await this.loadOfferSources([offerId]);
+    return source ?? null;
+  }
+
+  public async loadOfferSources(
+    offerIds: readonly string[],
+  ): Promise<readonly CatalogOfferSearchSourceDto[]> {
+    const uniqueIds = [...new Set(offerIds.filter((id) => id.length > 0))];
+    if (uniqueIds.length === 0) {
+      return [];
+    }
     return withRlsContext(this.em, async (tx) => {
-      const offer = await tx.findOne(StoreOfferOrmEntity, { id: offerId });
-      if (!offer) {
-        return null;
+      const offers = await tx.find(StoreOfferOrmEntity, { id: { $in: uniqueIds } });
+      if (offers.length === 0) {
+        return [];
       }
-      const product = await tx.findOne(ProductOrmEntity, { id: offer.productId });
-      const variant = await tx.findOne(VariantOrmEntity, { id: offer.variantId });
-      if (!product || !variant) {
-        return null;
+      const productIds = [...new Set(offers.map((offer) => offer.productId))];
+      const variantIds = [...new Set(offers.map((offer) => offer.variantId))];
+      const [products, variants] = await Promise.all([
+        tx.find(ProductOrmEntity, { id: { $in: productIds } }),
+        tx.find(VariantOrmEntity, { id: { $in: variantIds } }),
+      ]);
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      const variantsById = new Map(variants.map((variant) => [variant.id, variant]));
+      const sources: CatalogOfferSearchSourceDto[] = [];
+      for (const offer of offers) {
+        const product = productsById.get(offer.productId);
+        const variant = variantsById.get(offer.variantId);
+        if (!product || !variant) {
+          continue;
+        }
+        sources.push(toSearchSource(offer, product, variant));
       }
-      const updatedAt = offer.updatedAt ?? product.updatedAt ?? new Date();
-      return {
-        offerId: offer.id,
-        productId: offer.productId,
-        variantId: offer.variantId,
-        vendorId: offer.vendorId,
-        storeId: offer.storeId,
-        name: product.name,
-        slug: slugify(product.name),
-        sku: variant.sku,
-        shortDescription: product.description,
-        brandId: product.brandId,
-        categoryIds: product.categoryIds ?? [],
-        priceMinor: offer.priceMinor,
-        currencyCode: offer.currencyCode,
-        offerStatus: offer.status,
-        offerAvailable: offer.isAvailable,
-        productStatus: product.status,
-        updatedAt,
-        version: Math.floor(updatedAt.getTime() / 1000),
-      };
+      return sources;
     });
   }
 

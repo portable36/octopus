@@ -98,11 +98,17 @@ export class OrderRepositoryAdapter implements OrderRepository {
   }
 
   private async hydrateMany(tx: EntityManager, entities: OrderOrmEntity[]): Promise<Order[]> {
-    const result: Order[] = [];
-    for (const entity of entities) {
-      const lines = await tx.find(OrderLineOrmEntity, { orderId: entity.id });
-      result.push(orderToDomain(entity, lines));
+    if (entities.length === 0) {
+      return [];
     }
-    return result;
+    const orderIds = entities.map((entity) => entity.id);
+    const lines = await tx.find(OrderLineOrmEntity, { orderId: { $in: orderIds } });
+    const linesByOrderId = new Map<string, OrderLineOrmEntity[]>();
+    for (const line of lines) {
+      const bucket = linesByOrderId.get(line.orderId) ?? [];
+      bucket.push(line);
+      linesByOrderId.set(line.orderId, bucket);
+    }
+    return entities.map((entity) => orderToDomain(entity, linesByOrderId.get(entity.id) ?? []));
   }
 }

@@ -4,17 +4,10 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
 import { ListPaymentIntentsHandler } from '../../application/commands/payment.handlers';
 import type { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
 import { PaymentExceptionFilter } from './filters/payment-exception.filter';
-
-function clampLimit(raw: string | undefined): number {
-  const n = Number.parseInt(raw ?? '', 10);
-  if (!Number.isFinite(n) || n < 1) {
-    return 50;
-  }
-  return Math.min(n, 200);
-}
 
 @ApiTags('admin-payments')
 @Controller('admin/payments')

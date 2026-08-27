@@ -17,6 +17,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit, clampOffset } from '../../../../shared-kernel/presentation/http/pagination';
 import type { VendorPayout } from '../../domain/aggregates/vendor-payout.aggregate';
 import { PayoutCommandHandler } from '../../application/commands/payout.handlers';
 import { RejectPayoutDto, RequestPayoutDto } from './dto/payout.dto';
@@ -100,8 +101,8 @@ export class PayoutController {
       vendorId,
       actorUserId: user.userId,
       actorRoles: user.roles,
-      limit: Math.min(Math.max(limit, 1), 200),
-      offset: Math.max(offset, 0),
+      limit: clampLimit(limit),
+      offset: clampOffset(offset),
     });
     return rows.map(toResponse);
   }

@@ -4,17 +4,10 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
 import { ListUsersHandler } from '../../application/queries/list-users.handler';
 import type { User } from '../../domain/aggregates/user.aggregate';
 import { IdentityExceptionFilter } from './filters/identity-exception.filter';
-
-function clampLimit(raw: string | undefined): number {
-  const n = Number.parseInt(raw ?? '', 10);
-  if (!Number.isFinite(n) || n < 1) {
-    return 50;
-  }
-  return Math.min(n, 200);
-}
 
 @ApiTags('admin-users')
 @Controller('admin/users')

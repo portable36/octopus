@@ -1,8 +1,10 @@
 import type { INestApplication, ValidationError } from '@nestjs/common';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import { json, urlencoded } from 'express';
+import helmet from 'helmet';
 import type { AppConfigService } from '../../../config/app-config.service';
 import { Rfc7807ExceptionFilter } from '../filters/rfc7807-exception.filter';
 
@@ -13,6 +15,9 @@ export function configureApplication(app: INestApplication, config: AppConfigSer
     app.use(helmet({ contentSecurityPolicy: false }));
   }
 
+  app.use(compression());
+  app.use(json({ limit: config.httpBodyLimit }));
+  app.use(urlencoded({ extended: true, limit: config.httpBodyLimit }));
   app.use(cookieParser());
 
   app.enableCors({

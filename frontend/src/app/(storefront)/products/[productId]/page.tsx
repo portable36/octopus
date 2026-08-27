@@ -6,6 +6,8 @@ import { JsonLd } from '@/components/seo/json-ld';
 import { breadcrumbJsonLd, productJsonLd, productMetadata } from '@/lib/seo';
 import { fetchPublicProduct, formatMoney, isNotFound } from '@/lib/storefront-api';
 
+export const revalidate = 60;
+
 type Props = {
   readonly params: Promise<{ productId: string }>;
 };

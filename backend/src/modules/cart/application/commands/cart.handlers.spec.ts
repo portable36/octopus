@@ -38,21 +38,20 @@ describe('CartCommandHandler.validate', () => {
       findActiveByGuestToken: vi.fn(),
     };
     const offers = {
-      findByStoreAndVariant: vi.fn(async (storeId: string, variantId: string) => {
-        if (storeId === 'store-a' && variantId === 'var-1') {
-          return {
-            offerId: 'offer-1',
-            vendorId: 'vendor-a',
-            storeId: 'store-a',
-            productId: 'prod-1',
-            variantId: 'var-1',
-            priceMinor: 550,
-            currencyCode: 'BDT',
-            status: 'active',
-            isAvailable: true,
-          };
-        }
-        return {
+      findByStoreAndVariant: vi.fn(),
+      findManyByStoreAndVariant: vi.fn(async () => [
+        {
+          offerId: 'offer-1',
+          vendorId: 'vendor-a',
+          storeId: 'store-a',
+          productId: 'prod-1',
+          variantId: 'var-1',
+          priceMinor: 550,
+          currencyCode: 'BDT',
+          status: 'active',
+          isAvailable: true,
+        },
+        {
           offerId: 'offer-2',
           vendorId: 'vendor-b',
           storeId: 'store-b',
@@ -62,8 +61,8 @@ describe('CartCommandHandler.validate', () => {
           currencyCode: 'BDT',
           status: 'active',
           isAvailable: true,
-        };
-      }),
+        },
+      ]),
     };
     const inventory = {
       checkAvailability: vi.fn(),
@@ -97,8 +96,10 @@ describe('CartCommandHandler.validate', () => {
       'PRICE_CHANGED',
     ]);
     expect(result.cart.lines.map((l) => l.vendorId).sort()).toEqual(['vendor-a', 'vendor-b']);
-    expect(offers.findByStoreAndVariant).toHaveBeenCalledWith('store-a', 'var-1');
-    expect(offers.findByStoreAndVariant).toHaveBeenCalledWith('store-b', 'var-2');
+    expect(offers.findManyByStoreAndVariant).toHaveBeenCalledWith([
+      { storeId: 'store-a', variantId: 'var-1' },
+      { storeId: 'store-b', variantId: 'var-2' },
+    ]);
   });
 
   it('rejects access across customer ownership (vendor isolation of customer carts)', async () => {
@@ -111,7 +112,7 @@ describe('CartCommandHandler.validate', () => {
     };
     const handler = new CartCommandHandler(
       repo,
-      { findByStoreAndVariant: vi.fn() } as never,
+      { findByStoreAndVariant: vi.fn(), findManyByStoreAndVariant: vi.fn() } as never,
       { checkStoreAvailability: vi.fn() } as never,
       { quote: vi.fn() } as never,
     );

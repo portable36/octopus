@@ -37,10 +37,23 @@ export function bullmqQueueOptions(connection: ConnectionOptions): QueueOptions 
 export function bullmqWorkerOptions(
   connection: ConnectionOptions,
   concurrency: number,
+  lockDurationMs = 30_000,
 ): WorkerOptions {
   const telemetry = getBullmqTelemetry();
+  const stalledInterval = Math.max(5_000, Math.floor(lockDurationMs / 2));
   if (telemetry) {
-    return { connection, concurrency, telemetry };
+    return {
+      connection,
+      concurrency,
+      lockDuration: lockDurationMs,
+      stalledInterval,
+      telemetry,
+    };
   }
-  return { connection, concurrency };
+  return {
+    connection,
+    concurrency,
+    lockDuration: lockDurationMs,
+    stalledInterval,
+  };
 }

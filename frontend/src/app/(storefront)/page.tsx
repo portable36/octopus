@@ -5,6 +5,9 @@ import { getPublicAppName } from '@/lib/env';
 import { absoluteUrl } from '@/lib/seo';
 import { fetchPublicCategories } from '@/lib/storefront-api';
 
+/** Catalog browse data — soft cache; mutations go through admin/vendor APIs. */
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: getPublicAppName(),
   description: 'Browse published categories and sellable offers',

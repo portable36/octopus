@@ -1,8 +1,9 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Queue, type ConnectionOptions, type JobsOptions } from 'bullmq';
+import { Queue, type ConnectionOptions } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
 import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
+import { BULLMQ_DEFAULT_JOB_OPTIONS } from '../../../../shared-kernel/infrastructure/queues/bullmq-default-job-options';
 import type {
   SearchReindexEnqueueResult,
   SearchReindexEnqueuerPort,
@@ -10,13 +11,6 @@ import type {
 
 /** Must match messaging QUEUE_NAMES.searchIndexing — keep string literal to avoid cross-module import. */
 export const SEARCH_INDEXING_QUEUE = 'octopus.search-indexing';
-
-const JOB_OPTIONS: JobsOptions = {
-  attempts: 5,
-  backoff: { type: 'exponential', delay: 2_000 },
-  removeOnComplete: 1_000,
-  removeOnFail: 5_000,
-};
 
 /**
  * Enqueues SearchReindexBatch jobs onto the shared indexing queue.
@@ -61,7 +55,7 @@ export class SearchReindexEnqueuerAdapter implements SearchReindexEnqueuerPort, 
           payload: { offerIds: [...offerIdBatch] },
           eventVersion: 1,
         },
-        { ...JOB_OPTIONS, jobId: `reindex-${outboxId}` },
+        { ...BULLMQ_DEFAULT_JOB_OPTIONS, jobId: `reindex-${outboxId}` },
       );
       offerIds += offerIdBatch.length;
       batchCount += 1;

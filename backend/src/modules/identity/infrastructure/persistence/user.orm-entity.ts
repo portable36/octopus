@@ -7,36 +7,36 @@ export class UserOrmEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
 
-  @Property({ unique: true })
+  @Property({ unique: true, type: 'string', length: 320 })
   email!: string;
 
-  @Property()
+  @Property({ type: 'string', length: 120 })
   name!: string;
 
-  @Property({ fieldName: 'password_hash' })
+  @Property({ fieldName: 'password_hash', type: 'string', length: 255 })
   passwordHash!: string;
 
-  @Property()
+  @Property({ type: 'string', length: 32 })
   status!: UserStatus;
 
   @Property({ type: 'json' })
   roles!: Role[];
 
-  @Property({ fieldName: 'failed_login_attempts', default: 0 })
+  @Property({ fieldName: 'failed_login_attempts', type: 'integer', default: 0 })
   failedLoginAttempts!: number;
 
-  @Property({ fieldName: 'locked_until', nullable: true })
+  @Property({ fieldName: 'locked_until', type: 'Date', nullable: true })
   lockedUntil: Date | null = null;
 
-  @Property({ fieldName: 'mfa_enabled', default: false })
+  @Property({ fieldName: 'mfa_enabled', type: 'boolean', default: false })
   mfaEnabled!: boolean;
 
   @Property({ fieldName: 'mfa_secret_cipher', nullable: true, type: 'text' })
   mfaSecretCipher: string | null = null;
 
-  @Property({ fieldName: 'created_at' })
+  @Property({ fieldName: 'created_at', type: 'Date' })
   createdAt!: Date;
 
-  @Property({ fieldName: 'updated_at', onUpdate: () => new Date() })
+  @Property({ fieldName: 'updated_at', type: 'Date', onUpdate: () => new Date() })
   updatedAt!: Date;
 }

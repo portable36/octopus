@@ -51,6 +51,63 @@ export class ShippingAddressDto {
   countryCode!: string;
 }
 
+export class AttributionDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  landingPath?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  referrer?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  utmSource?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  utmMedium?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  utmCampaign?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  utmTerm?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  utmContent?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  gclid?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  fbclid?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  firstTouchAt?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  lastTouchAt?: string;
+}
+
 export class SubmitCheckoutDto {
   @ApiProperty()
   @IsUUID()
@@ -113,61 +170,4 @@ export class SubmitCheckoutDto {
   @ValidateNested()
   @Type(() => AttributionDto)
   attribution?: AttributionDto;
-}
-
-export class AttributionDto {
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  landingPath?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  referrer?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  utmSource?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  utmMedium?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(180)
-  utmCampaign?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  utmTerm?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  utmContent?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  gclid?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  fbclid?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  firstTouchAt?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  lastTouchAt?: string;
 }

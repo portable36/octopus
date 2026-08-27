@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
 import {
@@ -22,8 +22,7 @@ function shortId(id: string): string {
 }
 
 export default function AdminReportsPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [orders, setOrders] = useState<AdminOrderReportSummary | null>(null);
   const [vendors, setVendors] = useState<AdminVendorPerformanceRow[]>([]);
   const [stores, setStores] = useState<AdminStorePerformanceRow[]>([]);

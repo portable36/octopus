@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth-session';
 import { cn } from '@/lib/cn';
 
 type MeResponse = {
@@ -48,17 +49,30 @@ function scopeLabel(roles: readonly string[]): string {
   return 'User';
 }
 
+function canAccessAdmin(me: MeResponse): boolean {
+  if (me.roles.includes('PLATFORM_ADMIN')) {
+    return true;
+  }
+  return me.permissions.some(
+    (permission) =>
+      permission.startsWith('platform.') ||
+      permission === 'audit.read' ||
+      permission.startsWith('settings.'),
+  );
+}
+
 export function AdminShell({ children }: { readonly children: ReactNode }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token') ?? undefined;
+  const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [authState, setAuthState] = useState<'loading' | 'ok' | 'denied'>('loading');
 
   useEffect(() => {
+    const token = getAccessToken();
     if (!token) {
-      setMe(null);
-      setError('Pass ?token=<accessToken> to load admin identity.');
+      const next = pathname.startsWith('/') ? pathname : '/admin/dashboard';
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 
@@ -68,22 +82,36 @@ export function AdminShell({ children }: { readonly children: ReactNode }) {
         const profile = await apiRequest<MeResponse>('/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!cancelled) {
+        if (cancelled) {
+          return;
+        }
+        if (!canAccessAdmin(profile)) {
           setMe(profile);
-          setError(null);
+          setAuthState('denied');
+          setError('This account does not have admin access.');
+          return;
         }
+        setMe(profile);
+        setAuthState('ok');
+        setError(null);
       } catch (err) {
-        if (!cancelled) {
-          setMe(null);
-          setError(err instanceof ApiClientError ? err.message : 'Failed to load profile.');
+        if (cancelled) {
+          return;
         }
+        setMe(null);
+        setAuthState('denied');
+        if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+          router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+          return;
+        }
+        setError(err instanceof ApiClientError ? err.message : 'Failed to load profile.');
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [pathname, router]);
 
   const permissions = useMemo(() => new Set(me?.permissions ?? []), [me]);
   const isPlatformAdmin = me?.roles.includes('PLATFORM_ADMIN') === true;
@@ -92,7 +120,30 @@ export function AdminShell({ children }: { readonly children: ReactNode }) {
     (item) => !item.permission || isPlatformAdmin || permissions.has(item.permission),
   );
 
-  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
+  if (authState === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/40 text-sm text-muted-foreground">
+        Checking admin session…
+      </div>
+    );
+  }
+
+  if (authState === 'denied') {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-4 px-4">
+        <h1 className="text-xl font-semibold">Admin access required</h1>
+        <p className="text-sm text-muted-foreground">
+          {error ?? 'Sign in with a platform admin account to continue.'}
+        </p>
+        <Link href="/login?next=/admin/dashboard" className="text-sm underline">
+          Sign in
+        </Link>
+        <Link href="/" className="text-sm text-muted-foreground underline">
+          Back to storefront
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/40 text-foreground">
@@ -109,7 +160,7 @@ export function AdminShell({ children }: { readonly children: ReactNode }) {
               return (
                 <Link
                   key={item.href}
-                  href={withToken(item.href)}
+                  href={item.href}
                   className={cn(
                     'block rounded-md px-3 py-2 text-sm transition-colors',
                     active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
@@ -133,11 +184,6 @@ export function AdminShell({ children }: { readonly children: ReactNode }) {
               {scopeLabel(me?.roles ?? [])}
             </span>
           </header>
-          {error ? (
-            <div className="border-b border-border bg-background px-4 py-2 text-sm text-destructive md:px-6">
-              {error}
-            </div>
-          ) : null}
           <main className="flex-1 space-y-6 px-4 py-6 md:px-6">{children}</main>
         </div>
       </div>

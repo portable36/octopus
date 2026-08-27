@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
 import { listAdminOrders, type AdminOrderRow } from '@/lib/admin-api';
@@ -11,8 +11,7 @@ function money(minor: number, currency: string): string {
 }
 
 export default function AdminOrdersPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [rows, setRows] = useState<AdminOrderRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

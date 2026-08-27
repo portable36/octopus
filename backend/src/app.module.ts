@@ -1,11 +1,12 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { randomUUID } from 'node:crypto';
-import { validateEnv } from './config/env.validation';
+import { validateEnv, type Env } from './config/env.validation';
 import { AppConfigService } from './config/app-config.service';
+import { AppConfigModule } from './config/app-config.module';
 import { ContextMiddleware } from './shared-kernel/infrastructure/context/context.middleware';
 import { buildRequestLogBindings } from './shared-kernel/infrastructure/observability/pino-request-bindings';
 import { HttpMetricsInterceptor } from './shared-kernel/infrastructure/observability/http-metrics.interceptor';
@@ -43,13 +44,17 @@ import { ReportingModule } from './modules/reporting/reporting.module';
     SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', '../.env'],
       validate: validateEnv,
     }),
+    AppConfigModule,
     LoggerModule.forRootAsync({
-      inject: [AppConfigService],
-      useFactory: (config: AppConfigService) => {
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService<Env, true>) => {
+        const logLevel = configService.get('LOG_LEVEL', { infer: true });
+        const isProduction = configService.get('NODE_ENV', { infer: true }) === 'production';
         const pinoHttp: Record<string, unknown> = {
-          level: config.logLevel,
+          level: logLevel,
           customAttributeKeys: {
             responseTime: 'durationMs',
           },
@@ -79,7 +84,7 @@ import { ReportingModule } from './modules/reporting/reporting.module';
           },
         };
 
-        if (!config.isProduction) {
+        if (!isProduction) {
           pinoHttp.transport = {
             target: 'pino-pretty',
             options: {
@@ -121,11 +126,9 @@ import { ReportingModule } from './modules/reporting/reporting.module';
     ReturnsModule,
   ],
   providers: [
-    AppConfigService,
     { provide: APP_INTERCEPTOR, useClass: RequestLogContextInterceptor },
     { provide: APP_INTERCEPTOR, useClass: HttpMetricsInterceptor },
   ],
-  exports: [AppConfigService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,13 +1,10 @@
 import {
   ArgumentsHost,
   Catch,
-  ConflictException,
   ExceptionFilter,
-  ForbiddenException,
-  HttpException,
   HttpStatus,
-  UnauthorizedException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { PasswordPolicyViolationError } from '../../../domain/value-objects/password-policy.value-object';
 import { UserDomainError } from '../../../domain/errors/user.errors';
 import {
@@ -31,53 +28,83 @@ import {
 export class IdentityExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<{
-      status: (code: number) => { json: (body: unknown) => void };
-    }>();
-
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<{ url?: string }>();
     const mapped = this.mapException(exception);
-    response.status(mapped.getStatus()).json(mapped.getResponse());
+
+    response.status(mapped.status).type('application/problem+json').json({
+      type: `https://httpstatuses.com/${mapped.status}`,
+      title: HttpStatus[mapped.status] ?? 'Error',
+      status: mapped.status,
+      detail: mapped.detail,
+      instance: request.url ?? '',
+      ...(mapped.code ? { errorCode: mapped.code } : {}),
+    });
   }
 
-  private mapException(exception: unknown): HttpException {
+  private mapException(exception: unknown): {
+    status: number;
+    detail: string;
+    code?: string;
+  } {
     if (exception instanceof PasswordPolicyViolationError) {
-      return new HttpException(
-        { message: exception.message, code: 'PASSWORD_POLICY_VIOLATION' },
-        HttpStatus.BAD_REQUEST,
-      );
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        detail: exception.message,
+        code: 'PASSWORD_POLICY_VIOLATION',
+      };
     }
 
     if (exception instanceof UserAlreadyExistsError) {
-      return new ConflictException({ message: exception.message, code: exception.code });
+      return {
+        status: HttpStatus.CONFLICT,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (exception instanceof InvalidCredentialsError) {
-      return new UnauthorizedException({ message: exception.message, code: exception.code });
+      return {
+        status: HttpStatus.UNAUTHORIZED,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (exception instanceof InvalidMfaCodeError || exception instanceof InvalidMfaChallengeError) {
-      return new UnauthorizedException({ message: exception.message, code: exception.code });
+      return {
+        status: HttpStatus.UNAUTHORIZED,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (exception instanceof AccountLockedError) {
-      return new HttpException(
-        { message: exception.message, code: exception.code },
-        HttpStatus.LOCKED,
-      );
+      return {
+        status: HttpStatus.LOCKED,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (
       exception instanceof AccountDisabledError ||
       exception instanceof ForbiddenPermissionError
     ) {
-      return new ForbiddenException({
-        message: (exception as IdentityError).message,
-        code: (exception as IdentityError).code,
-      });
+      const err = exception as IdentityError;
+      return {
+        status: HttpStatus.FORBIDDEN,
+        detail: err.message,
+        code: err.code,
+      };
     }
 
     if (exception instanceof ForbiddenRoleError) {
-      return new ForbiddenException({ message: exception.message, code: exception.code });
+      return {
+        status: HttpStatus.FORBIDDEN,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (
@@ -85,40 +112,45 @@ export class IdentityExceptionFilter implements ExceptionFilter {
       exception instanceof TokenReuseDetectedError ||
       exception instanceof InvalidPasswordResetTokenError
     ) {
-      return new UnauthorizedException({
-        message: (exception as IdentityError).message,
-        code: (exception as IdentityError).code,
-      });
+      const err = exception as IdentityError;
+      return {
+        status: HttpStatus.UNAUTHORIZED,
+        detail: err.message,
+        code: err.code,
+      };
     }
 
     if (exception instanceof RateLimitExceededError) {
-      return new HttpException(
-        {
-          message: exception.message,
-          code: exception.code,
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+      return {
+        status: HttpStatus.TOO_MANY_REQUESTS,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (exception instanceof UserNotFoundError) {
-      return new HttpException(
-        { message: exception.message, code: exception.code },
-        HttpStatus.NOT_FOUND,
-      );
+      return {
+        status: HttpStatus.NOT_FOUND,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
     if (exception instanceof UserDomainError) {
-      return new HttpException({ message: exception.message }, HttpStatus.BAD_REQUEST);
+      return { status: HttpStatus.BAD_REQUEST, detail: exception.message };
     }
 
     if (exception instanceof IdentityError) {
-      return new HttpException(
-        { message: exception.message, code: exception.code },
-        HttpStatus.BAD_REQUEST,
-      );
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        detail: exception.message,
+        code: exception.code,
+      };
     }
 
-    return new HttpException('Unexpected identity error.', HttpStatus.INTERNAL_SERVER_ERROR);
+    return {
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      detail: 'Unexpected identity error.',
+    };
   }
 }

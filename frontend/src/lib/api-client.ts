@@ -45,20 +45,29 @@ export async function apiRequest<TResponse>(
 
   if (!response.ok) {
     let problem: ApiProblemDetails | undefined;
+    let message = `Request failed with status ${response.status}`;
     try {
       const payload: unknown = await response.json();
-      if (typeof payload === 'object' && payload !== null && 'status' in payload) {
-        problem = payload as ApiProblemDetails;
+      if (typeof payload === 'object' && payload !== null) {
+        const record = payload as Record<string, unknown>;
+        if ('status' in record && typeof record.detail === 'string') {
+          problem = payload as ApiProblemDetails;
+          message = problem.detail;
+        } else if (typeof record.message === 'string') {
+          message = record.message;
+        } else if (
+          typeof record.message === 'object' &&
+          record.message !== null &&
+          typeof (record.message as { message?: unknown }).message === 'string'
+        ) {
+          message = (record.message as { message: string }).message;
+        }
       }
     } catch {
       // ignore parse failures for non-JSON error bodies
     }
 
-    throw new ApiClientError(
-      problem?.detail ?? `Request failed with status ${response.status}`,
-      response.status,
-      problem,
-    );
+    throw new ApiClientError(message, response.status, problem);
   }
 
   if (response.status === 204) {

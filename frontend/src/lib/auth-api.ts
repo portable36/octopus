@@ -112,6 +112,13 @@ export async function refreshSession(): Promise<AuthSession> {
   return session;
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiRequest('/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
 export async function logoutAccount(): Promise<void> {
   const token = getAccessToken();
   try {

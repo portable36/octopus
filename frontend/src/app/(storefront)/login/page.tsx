@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, Suspense, useState } from 'react';
+import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AuthPanel } from '@/components/auth/auth-panel';
+import { FieldWithIcon, UserFieldIcon } from '@/components/auth/field-with-icon';
 import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/ui/password-input';
 import { ApiClientError } from '@/lib/api-client';
 import { loginAccount, MfaRequiredError, verifyMfaLogin } from '@/lib/auth-api';
+
+const REMEMBER_EMAIL_KEY = 'octopus_remember_email';
 
 function LoginForm() {
   const router = useRouter();
@@ -13,6 +18,20 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBER_EMAIL_KEY);
+      if (saved?.trim()) {
+        setEmail(saved.trim());
+        setRememberMe(true);
+      }
+    } catch {
+      // private mode / blocked storage
+    }
+  }, []);
 
   async function finishLogin(): Promise<void> {
     const next = searchParams.get('next') || '/account';
@@ -23,6 +42,7 @@ function LoginForm() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const submittedEmail = String(form.get('email') || '').trim();
     setPending(true);
     setError(null);
     try {
@@ -35,9 +55,18 @@ function LoginForm() {
         return;
       }
       await loginAccount({
-        email: String(form.get('email') || '').trim(),
+        email: submittedEmail,
         password: String(form.get('password') || ''),
       });
+      try {
+        if (rememberMe) {
+          localStorage.setItem(REMEMBER_EMAIL_KEY, submittedEmail);
+        } else {
+          localStorage.removeItem(REMEMBER_EMAIL_KEY);
+        }
+      } catch {
+        // ignore
+      }
       await finishLogin();
     } catch (err) {
       if (err instanceof MfaRequiredError) {
@@ -52,19 +81,19 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground">
-          {mfaToken
-            ? 'Enter the 6-digit code from your authenticator app.'
-            : 'Refresh token stays in an HTTP-only cookie. Access token is never put in the URL.'}
-        </p>
-      </header>
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-4 border border-border p-4">
+    <AuthPanel
+      activeTab="login"
+      title={mfaToken ? 'Verify it’s you' : 'Welcome back'}
+      description={
+        mfaToken
+          ? 'Enter the 6-digit code from your authenticator app.'
+          : 'Sign in with your email and password to continue.'
+      }
+    >
+      <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
         {mfaToken ? (
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Authenticator code</span>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Authenticator code</span>
             <input
               name="code"
               type="text"
@@ -72,31 +101,44 @@ function LoginForm() {
               autoComplete="one-time-code"
               required
               pattern="\d{6}"
-              className="h-10 rounded-md border border-border bg-background px-3"
+              className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </label>
         ) : (
           <>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">Email</span>
-              <input
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium">Email</span>
+              <FieldWithIcon
                 name="email"
                 type="email"
                 required
                 autoComplete="email"
-                className="h-10 rounded-md border border-border bg-background px-3"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                icon={<UserFieldIcon />}
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">Password</span>
-              <input
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium">Password</span>
+              <PasswordInput name="password" required autoComplete="current-password" />
             </label>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <label className="flex items-center gap-2 text-muted-foreground">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border border-border accent-foreground"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                Remember me
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </>
         )}
         {error ? (
@@ -104,23 +146,23 @@ function LoginForm() {
             {error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" className="w-full" disabled={pending}>
           {pending ? 'Signing in…' : mfaToken ? 'Verify' : 'Sign in'}
         </Button>
       </form>
-      <p className="text-sm text-muted-foreground">
-        No account?{' '}
-        <Link href="/register" className="underline">
-          Register
-        </Link>
-      </p>
-    </div>
+    </AuthPanel>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

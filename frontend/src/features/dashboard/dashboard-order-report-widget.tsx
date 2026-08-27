@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { ApiClientError } from '@/lib/api-client';
 import { getAdminOrderReportSummary, type AdminOrderReportSummary } from '@/lib/admin-api';
 
@@ -10,8 +10,7 @@ function money(minor: number, currency: string): string {
 }
 
 export function DashboardOrderReportWidget() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [summary, setSummary] = useState<AdminOrderReportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +18,7 @@ export function DashboardOrderReportWidget() {
   useEffect(() => {
     if (!token) {
       setLoading(false);
-      setError('Pass ?token= to load order report.');
+      setError('Sign in required to load order report.');
       return;
     }
     let cancelled = false;

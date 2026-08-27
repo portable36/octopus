@@ -15,8 +15,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>
+    // Extensions (e.g. Grammarly/QuillBot) inject attrs onto html/body before hydrate.
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <AppProviders>
           <ErrorBoundary>{children}</ErrorBoundary>
         </AppProviders>

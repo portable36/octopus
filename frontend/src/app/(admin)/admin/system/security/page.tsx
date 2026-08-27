@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
 import { listAdminAuditEvents, type AdminAuditEvent } from '@/lib/admin-api';
@@ -54,8 +54,7 @@ function EventTable({ rows, empty }: { readonly rows: AdminAuditEvent[]; readonl
 }
 
 export default function AdminSecurityPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [logins, setLogins] = useState<AdminAuditEvent[]>([]);
   const [security, setSecurity] = useState<AdminAuditEvent[]>([]);
   const [error, setError] = useState<string | null>(null);

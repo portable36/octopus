@@ -1,14 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 
 export default function AdminCommerceConfigPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
-
+  const token = useAccessToken();
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -23,13 +20,13 @@ export default function AdminCommerceConfigPage() {
         </p>
         <ul className="list-inside list-disc space-y-1">
           <li>
-            <Link href={withToken('/admin/vendors')} className="underline underline-offset-2">
+            <Link href={'/admin/vendors'} className="underline underline-offset-2">
               Vendors
             </Link>{' '}
             → open a vendor → COD settings
           </li>
           <li>
-            <Link href={withToken('/admin/stores')} className="underline underline-offset-2">
+            <Link href={'/admin/stores'} className="underline underline-offset-2">
               Stores
             </Link>{' '}
             → open a store → COD settings

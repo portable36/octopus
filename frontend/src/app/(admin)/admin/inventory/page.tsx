@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
 import {
@@ -12,8 +12,7 @@ import {
 } from '@/lib/admin-api';
 
 export default function AdminInventoryPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [stores, setStores] = useState<AdminStore[]>([]);
   const [storeId, setStoreId] = useState('');
   const [rows, setRows] = useState<AdminInventoryItemRow[]>([]);

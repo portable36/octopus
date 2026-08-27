@@ -1778,7 +1778,7 @@ Reach production-grade test coverage.
 - [x] RLS (same integration spec)
 - [x] Redis (`identity/.../redis.integration.spec` — login + API rate limiters when `REDIS_URL` is set; CI services Redis)
 - [x] BullMQ (default job options + search indexing processor)
-- [ ] MikroORM (full ORM integration suite later)
+- [x] MikroORM (`user.orm.integration.spec` — EntityManager persist/load when `DATABASE_URL` is set)
 - [ ] Payment adapters (live gateway adapters later; COD/stub covered in handlers)
 
 ### API
@@ -1807,7 +1807,8 @@ Reach production-grade test coverage.
 
 - Slice **26.1** — checkbox sync against existing Vitest inventory (~98 specs); refresh Playwright smokes for current storefront; coverage map in [testing.md](./engineering/testing.md).
 - Slice **26.2** — Nest+Supertest API contracts (`backend/src/test/api/`) for JWT auth, permissions, MFA gate; helper uses `APP_GUARD` factories (Vitest lacks decorator metadata).
-- Slice **26.3** — Redis integration specs for login/API rate limiters (`describe.runIf(REDIS_URL)`). **Still open:** authenticated E2E revenue journeys; MikroORM container suite; live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts.
+- Slice **26.3** — Redis integration specs for login/API rate limiters (`describe.runIf(REDIS_URL)`).
+- Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** authenticated E2E revenue journeys; live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts.
 - [x] commit push
 
 ---

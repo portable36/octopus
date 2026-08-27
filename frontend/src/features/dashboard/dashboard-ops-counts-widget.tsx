@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { ApiClientError } from '@/lib/api-client';
 import {
   listAdminOrders,
@@ -53,8 +53,7 @@ function Stat({
 }
 
 export function DashboardOpsCountsWidget() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [counts, setCounts] = useState<Counts>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +61,7 @@ export function DashboardOpsCountsWidget() {
   useEffect(() => {
     if (!token) {
       setLoading(false);
-      setError('Pass ?token= to load operational counts.');
+      setError('Sign in required to load operational counts.');
       return;
     }
     let cancelled = false;
@@ -101,8 +100,6 @@ export function DashboardOpsCountsWidget() {
     };
   }, [token]);
 
-  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
-
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading counts…</p>;
   }
@@ -116,24 +113,24 @@ export function DashboardOpsCountsWidget() {
         Counts from existing admin list APIs. Aggregates and trends stay in Phase 21.
       </p>
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-        <Stat label="Vendors" value={counts.vendors} href={withToken('/admin/vendors')} />
-        <Stat label="Stores" value={counts.stores} href={withToken('/admin/stores')} />
+        <Stat label="Vendors" value={counts.vendors} href={'/admin/vendors'} />
+        <Stat label="Stores" value={counts.stores} href={'/admin/stores'} />
         <Stat
           label="Orders"
           value={counts.ordersRecent}
-          href={withToken('/admin/orders')}
+          href={'/admin/orders'}
           note="Recent ≤50"
         />
         <Stat
           label="Payments"
           value={counts.paymentsRecent}
-          href={withToken('/admin/payments')}
+          href={'/admin/payments'}
           note="Recent ≤50"
         />
         <Stat
           label="Users"
           value={counts.usersRecent}
-          href={withToken('/admin/users')}
+          href={'/admin/users'}
           note="Recent ≤50"
         />
       </dl>

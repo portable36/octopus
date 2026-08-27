@@ -27,6 +27,7 @@ Backend Vitest lives next to code under `backend/src/**/*.spec.ts` (run via root
 | Outbox/queues   | `outbox-dispatcher`, BullMQ defaults, search indexing processor              |
 | Tenancy         | `scope-policy`, `tenant-isolation.rls.integration` (Postgres required)       |
 | Redis           | `identity/.../redis.integration` (login + API rate limiters; `REDIS_URL`)    |
+| MikroORM        | `identity/.../user.orm.integration` (persist/load; `DATABASE_URL`)           |
 | HTTP contracts  | RFC7807 filter, pagination clamps, `test/api/http-auth.contract` (Supertest) |
 
 Playwright (`e2e/smoke.spec.ts`): storefront home/browse/search/cart/login/register page smokes + admin dashboard shell. Authenticated revenue paths still open.

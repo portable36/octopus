@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
 import { listAdminStores, type AdminStore } from '@/lib/admin-api';
 
 export default function AdminStoresPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [rows, setRows] = useState<AdminStore[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,8 +42,6 @@ export default function AdminStoresPage() {
     };
   }, [token]);
 
-  const withToken = (href: string) => (token ? `${href}?token=${encodeURIComponent(token)}` : href);
-
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -76,7 +73,7 @@ export default function AdminStoresPage() {
                   <tr key={row.id} className="border-b border-border last:border-0">
                     <td className="px-3 py-2">
                       <Link
-                        href={withToken(`/admin/stores/${row.id}`)}
+                        href={`/admin/stores/${row.id}`}
                         className="underline underline-offset-2 hover:text-foreground"
                       >
                         {row.profile.displayName}

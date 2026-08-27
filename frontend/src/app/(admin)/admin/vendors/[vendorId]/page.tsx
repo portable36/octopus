@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
@@ -46,8 +47,7 @@ function syncCodForm(
 
 export default function AdminVendorDetailPage() {
   const params = useParams<{ vendorId: string }>();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const vendorId = params.vendorId;
 
   const [vendor, setVendor] = useState<AdminVendor | null>(null);
@@ -155,7 +155,7 @@ export default function AdminVendorDetailPage() {
     setStaffUserId('');
   }
 
-  const backHref = token ? `/admin/vendors?token=${encodeURIComponent(token)}` : '/admin/vendors';
+  const backHref = '/admin/vendors';
 
   return (
     <div className="space-y-6">

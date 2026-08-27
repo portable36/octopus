@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
@@ -28,8 +28,7 @@ type EffectiveResponse<T> = {
 };
 
 export default function AdminWebsiteSettingsPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = useAccessToken();
   const [general, setGeneral] = useState<GeneralSettings | null>(null);
   const [branding, setBranding] = useState<BrandingSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +37,7 @@ export default function AdminWebsiteSettingsPage() {
 
   useEffect(() => {
     if (!token) {
-      setError('Pass ?token=<accessToken> to load website settings.');
+      setError('Sign in required to load website settings.');
       return;
     }
 

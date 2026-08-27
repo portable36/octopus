@@ -37,6 +37,7 @@
     "security": "npm audit --omit=dev --audit-level=critical",
     "deps:outdated": "npm outdated || true",
     "migration:check": "node scripts/check-migrations.mjs",
+    "restore:drill": "node scripts/restore-drill.mjs",
     "graphify:extract": "graphify extract . --code-only",
     "graphify:update": "graphify update .",
     "graphify:query": "graphify query",

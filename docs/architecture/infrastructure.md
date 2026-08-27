@@ -4,12 +4,13 @@ Phase 28 policy. Prefer OSS/free; paid only when free fails (see [current-baseli
 
 ## Choice
 
-| Layer           | Tool                                                       | Status                                                                                                                   |
-| --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Local / CI deps | **Docker Compose** (`docker-compose.yml`)                  | In-repo, canonical for Postgres/Redis/Meilisearch/MinIO                                                                  |
-| Production host | **Hostinger** VPS (or equivalent) + app containers/process | Runbook / ops; not Terraformed yet                                                                                       |
-| Edge DNS/TLS    | **Cloudflare**                                             | Proxy + TLS; no Cloudflare SDK in domain code                                                                            |
-| Cloud IaC       | **Terraform** (if/when)                                    | Preferred over Pulumi when automating DNS or managed cloud resources; **do not** invent AWS VPC modules for a single VPS |
+| Layer           | Tool                                      | Status                                                                                                 |
+| --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Local / CI deps | **Docker Compose** (`docker-compose.yml`) | In-repo, canonical for Postgres/Redis/Meilisearch/MinIO. PG 18 volume mounts at `/var/lib/postgresql`. |
+
+| Production host | **Hostinger** VPS (or equivalent) + app containers/process | Runbook / ops; not Terraformed yet |
+| Edge DNS/TLS | **Cloudflare** | Proxy + TLS; no Cloudflare SDK in domain code |
+| Cloud IaC | **Terraform** (if/when) | Preferred over Pulumi when automating DNS or managed cloud resources; **do not** invent AWS VPC modules for a single VPS |
 
 No `infra/` Terraform tree until there is a concrete provider target and credentials path. Compose covers development reproducibility today.
 

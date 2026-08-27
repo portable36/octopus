@@ -63,7 +63,8 @@ Do not add durable business writes that only live in Redis.
 
 ## Restore drill
 
-- Cadence: **at least quarterly** for Postgres restore-to-empty-host.
+- Cadence: **at least quarterly** for Postgres restore-to-empty-host (production).
+- Local proof: `npm.cmd run restore:drill` (requires `docker compose up -d postgres`). Dumps `octopus`, restores into `octopus_restore_drill`, prints elapsed ms.
 - Record: backup id, start/end timestamps, measured RTO, gaps found.
 - A backup that has never been restored is not proven.
 

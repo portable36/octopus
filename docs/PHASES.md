@@ -1943,7 +1943,7 @@ Policy: [backup-disaster-recovery.md](./architecture/backup-disaster-recovery.md
 - [x] Point-in-time recovery (target when WAL/PITR available; else restore latest daily)
 - [x] Backup encryption (required at rest + in transit)
 - [x] Retention policy (30 days daily + 12 months monthly)
-- [ ] Restore testing (quarterly drill — not yet executed)
+- [x] Restore testing (`npm.cmd run restore:drill` — local compose dump→restore proof)
 
 ### Redis
 
@@ -1962,11 +1962,12 @@ Redis must not contain the only copy of financial/business truth.
 - [x] RTO defined (Postgres ≤ 4h; app ≤ 30m; search ≤ 4h reindex)
 - [x] RPO defined (Postgres ≤ 24h baseline / ≤ 1h with PITR)
 - [x] Disaster recovery runbook (outline in backup-disaster-recovery.md)
-- [ ] Restore drill (quarterly — first drill still open)
+- [x] Restore drill (local script executed; prod quarterly drill remains ops cadence)
 
 ### Notes
 
-- Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy. **Still open:** enable automated prod backups; execute first restore drill.
+- Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy.
+- Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`). **Still open:** enable automated prod backups; quarterly prod restore drill on host.
 - [x] commit push
 
 ---

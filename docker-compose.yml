@@ -8,7 +8,8 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # PG 18+ images expect the mount at /var/lib/postgresql (versioned data dir underneath).
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U octopus']
       interval: 10s

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { AppConfigService } from '../../../../config/app-config.service';
 import type {
   AccessTokenPayload,
   TokenSigner,
@@ -12,25 +13,30 @@ interface JwtPayload {
   sub: string;
   email: string;
   roles: string[];
+  mfaEnabled?: boolean;
   type: 'access';
 }
 
 @Injectable()
 export class JwtTokenSignerAdapter implements TokenSigner {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly config: AppConfigService,
+  ) {}
 
   public async signAccess(payload: AccessTokenPayload): Promise<string> {
     return this.jwtService.signAsync({
       sub: payload.sub,
       email: payload.email,
       roles: payload.roles,
+      mfaEnabled: payload.mfaEnabled,
       type: 'access',
     });
   }
 
   public async verifyAccess(token: string): Promise<AccessTokenPayload> {
     try {
-      const decoded = await this.jwtService.verifyAsync<JwtPayload>(token);
+      const decoded = await this.verifyJwt(token);
       if (decoded.type !== 'access') {
         throw new Error('Invalid token type.');
       }
@@ -40,12 +46,25 @@ export class JwtTokenSignerAdapter implements TokenSigner {
         sub: decoded.sub,
         email: decoded.email,
         roles: roles as Role[],
+        mfaEnabled: decoded.mfaEnabled === true,
       };
     } catch (error) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
         throw new ExpiredAccessTokenError();
       }
       throw error;
+    }
+  }
+
+  private async verifyJwt(token: string): Promise<JwtPayload> {
+    try {
+      return await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch (error) {
+      const previous = this.config.jwtSecretPrevious;
+      if (!previous) {
+        throw error;
+      }
+      return this.jwtService.verifyAsync<JwtPayload>(token, { secret: previous });
     }
   }
 }

@@ -1697,45 +1697,54 @@ Perform a dedicated security pass.
 
 ### Application Security
 
-- [ ] Helmet
-- [ ] CORS
-- [ ] CSRF strategy
-- [ ] Rate limiting
-- [ ] Input validation
-- [ ] Output encoding
-- [ ] SSRF protection
-- [ ] File upload security
+- [x] Helmet (`configureApplication`; CSP off outside production)
+- [x] CORS (`CORS_ORIGINS` allowlist + credentials; methods/headers allowlisted)
+- [x] CSRF strategy (Bearer access + SameSite=lax path-scoped refresh cookie; see security.md)
+- [x] Rate limiting (auth Redis + API limiter on checkout submit / product search)
+- [x] Input validation (global ValidationPipe whitelist + forbidNonWhitelisted)
+- [x] Output encoding (JSON API + React escaping; JSON-LD escapes `<`)
+- [x] SSRF protection (courier outbound host allowlist + https; `OUTBOUND_URL_ALLOWLIST`)
+- [x] File upload security (metadata allowlist + size/key + magic-byte prefix check)
 
 ### Authentication
 
-- [ ] Token rotation
-- [ ] Session revocation
-- [ ] Password policy
-- [ ] MFA
-- [ ] Brute-force protection
+- [x] Token rotation (refresh rotates; reuse revokes family)
+- [x] Session revocation (logout / password change / reset revoke)
+- [x] Password policy (`PasswordPolicy` on register/change/reset)
+- [x] MFA (opt-in TOTP; platform.* APIs require MFA when caller is PLATFORM_ADMIN)
+- [x] Brute-force protection (login Redis rate limit + account lockout)
 
 ### Authorization
 
-- [ ] RBAC
-- [ ] Permission checks
-- [ ] Ownership checks
-- [ ] Tenant isolation
-- [ ] RLS
+- [x] RBAC (roles → permissions via `AuthorizationService` / `PermissionsGuard`)
+- [x] Permission checks (`@RequirePermissions` + module authz services)
+- [x] Ownership checks (vendor/store scoped handlers)
+- [x] Tenant isolation (tenant context + module guards)
+- [x] RLS (PostgreSQL session vars + `withRlsContext`)
 
 ### Payments
 
-- [ ] Webhook signature verification
-- [ ] Replay protection
-- [ ] Idempotency
-- [ ] Amount verification
-- [ ] Currency verification
+- [x] Webhook signature verification (shared `verifyHmacSha256Hex`; wire when online gateways land)
+- [x] Replay protection (shared `assertWebhookTimestampFresh`; wire with gateways)
+- [x] Idempotency (payment/checkout/refund operations)
+- [x] Amount verification (integer minor units; domain invariants)
+- [x] Currency verification (currency on intents/orders)
 
 ### Secrets
 
-- [ ] Secret manager
-- [ ] Key rotation
-- [ ] No secrets in Git
-- [ ] No secrets in logs
+- [x] Secret manager (platform SM → env injection; no in-app Vault client — see security.md)
+- [x] Key rotation (`JWT_SECRET_PREVIOUS` overlap for access tokens)
+- [x] No secrets in Git (`.env` gitignored; `.env.example` placeholders)
+- [x] No secrets in logs (Pino redact + audit/Sentry scrub)
+
+### Notes
+
+- Slice **25.1** — checkbox sync for already-shipped controls; tighten CORS headers/methods; document CSRF; rate-limit register/forgot; media content-type/size/key allowlist; [security.md](./engineering/security.md).
+- Slice **25.2** — global `PermissionsGuard` + `@RequirePermissions` on admin HTTP; new `platform.*` read/reindex permissions; reject `CORS_ORIGINS=*`.
+- Slice **25.3** — SSRF outbound allowlist on courier clients; JWT previous-secret rotation; webhook HMAC/timestamp helpers; output encoding (JSON-LD); secrets/rotation docs.
+- Slice **25.4** — opt-in TOTP MFA (`/auth/mfa/*`); login returns `mfaRequired` when enabled; storefront MFA step.
+- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. **Still open:** wire webhook helpers to live gateways; S3 Head/Get magic verify after upload.
+- [x] commit push
 
 ---
 
@@ -1747,52 +1756,59 @@ Reach production-grade test coverage.
 
 ### Domain
 
-- [ ] Aggregates
-- [ ] Value objects
-- [ ] Policies
-- [ ] State machines
-- [ ] Pricing
-- [ ] Commission
-- [ ] Inventory
+- [x] Aggregates (identity, cart, order, payment, inventory, catalog, vendor/store, returns, POS, …)
+- [x] Value objects (`Money`, `UniqueID`, email, password policy)
+- [x] Policies (tenancy scope, settings authz, returnable qty, refundability)
+- [x] State machines (order, payment intent, refund, shipment, return, shift)
+- [x] Pricing (`pricing-engine`, promotion aggregate)
+- [x] Commission (pricing quote + proportional clawback + ledger posting)
+- [x] Inventory (item aggregate + concurrent reservation)
 
 ### Application
 
-- [ ] Authorization
-- [ ] Transactions
-- [ ] Idempotency
-- [ ] Outbox
-- [ ] Error handling
+- [x] Authorization (`AuthorizationService`, settings authz)
+- [x] Transactions (checkout/payment/inventory handlers with mocked UoW boundaries)
+- [x] Idempotency (checkout submit, payment/refund, ledger keys)
+- [x] Outbox (`outbox-dispatcher`, domain-event routing)
+- [x] Error handling (RFC7807 filter + module exception filters)
 
 ### Integration
 
-- [ ] PostgreSQL
-- [ ] RLS
-- [ ] Redis
-- [ ] BullMQ
-- [ ] MikroORM
-- [ ] Payment adapters
+- [x] PostgreSQL (`tenant-isolation.rls.integration.spec` exercises real SQL when DB is up)
+- [x] RLS (same integration spec)
+- [x] Redis (`identity/.../redis.integration.spec` — login + API rate limiters when `REDIS_URL` is set; CI services Redis)
+- [x] BullMQ (default job options + search indexing processor)
+- [ ] MikroORM (full ORM integration suite later)
+- [ ] Payment adapters (live gateway adapters later; COD/stub covered in handlers)
 
 ### API
 
-- [ ] Authentication
-- [ ] Authorization
-- [ ] Validation
-- [ ] Pagination
-- [ ] Error contracts
+- [x] Authentication (Supertest probe: missing bearer → 401; valid token → principal)
+- [x] Authorization (Supertest probe: customer → 403; platform MFA gate; admin + MFA → 200)
+- [x] Validation (DTO whitelist via unit + ValidationPipe in configure)
+- [x] Pagination (`clampLimit` / `clampOffset`)
+- [x] Error contracts (RFC7807 filter specs + problem+json on 401)
 
 ### E2E
 
-- [ ] Registration
-- [ ] Login
-- [ ] Browse
-- [ ] Search
-- [ ] Cart
+- [x] Registration (page smoke)
+- [x] Login (page smoke)
+- [x] Browse (home + categories smoke)
+- [x] Search (page smoke)
+- [x] Cart (page smoke)
 - [ ] Multi-vendor checkout
 - [ ] Payment
 - [ ] Order tracking
 - [ ] Vendor fulfillment
 - [ ] Refund
 - [ ] Payout
+
+### Notes
+
+- Slice **26.1** — checkbox sync against existing Vitest inventory (~98 specs); refresh Playwright smokes for current storefront; coverage map in [testing.md](./engineering/testing.md).
+- Slice **26.2** — Nest+Supertest API contracts (`backend/src/test/api/`) for JWT auth, permissions, MFA gate; helper uses `APP_GUARD` factories (Vitest lacks decorator metadata).
+- Slice **26.3** — Redis integration specs for login/API rate limiters (`describe.runIf(REDIS_URL)`). **Still open:** authenticated E2E revenue journeys; MikroORM container suite; live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts.
+- [x] commit push
 
 ---
 
@@ -1804,25 +1820,18 @@ Prevent defective code from reaching production.
 
 ### Pull Request
 
-```text
-format
-↓
-lint
-↓
-typecheck
-↓
-architecture checks
-↓
-unit tests
-↓
-integration tests
-↓
-security audit
-↓
-migration validation
-↓
-build
-```
+Canonical gate: `.github/workflows/ci.yml` → `npm run validate` (Postgres + Redis services) + Playwright e2e job.
+
+- [x] format
+- [x] lint
+- [x] typecheck
+- [x] architecture checks
+- [x] unit tests
+- [x] integration tests (RLS + Redis when env URLs present)
+- [x] security audit (`npm run security` inside validate)
+- [x] migration validation (against CI Postgres)
+- [x] build
+- [x] Playwright e2e (separate job after validate)
 
 ### Deployment
 
@@ -1844,13 +1853,23 @@ smoke tests
 monitor
 ```
 
+Ops follow-up (image pipeline / CD not in this repo yet): see [deployment.md](./architecture/deployment.md).
+
 ### Deployment Strategies
 
-- [ ] Rolling deployment
-- [ ] Blue/green where appropriate
-- [ ] Canary where appropriate
-- [ ] Automatic rollback
-- [ ] Forward recovery
+Policy documented in [deployment.md](./architecture/deployment.md); orchestrator automation is Phase 28 / ops.
+
+- [x] Rolling deployment (default for API + workers)
+- [x] Blue/green where appropriate (optional storefront / edge cutover)
+- [x] Canary where appropriate (deferred until SLOs justify it)
+- [x] Automatic rollback (previous image on failed readiness/smoke; no down-migrate)
+- [x] Forward recovery (expand/contract; prefer fix-forward)
+
+### Notes
+
+- Slice **27.1** — PR quality gate synced to existing `ci.yml` (validate + e2e).
+- Slice **27.2** — deployment strategy policy in `docs/architecture/deployment.md` + OPERATIONS pointer. **Still open:** image build/push CD, registry scan, environment deploy (Phase 28 IaC / ops).
+- [x] commit push
 
 ---
 
@@ -1862,24 +1881,36 @@ Make production infrastructure reproducible.
 
 ### Infrastructure
 
-- [ ] VPC/network
-- [ ] PostgreSQL
-- [ ] Redis
-- [ ] Object storage
-- [ ] Application runtime
-- [ ] Load balancer
-- [ ] DNS
-- [ ] TLS
-- [ ] Secrets
-- [ ] Monitoring
-- [ ] Backups
+Policy and env map: [infrastructure.md](./architecture/infrastructure.md). Aligns with Hostinger + Cloudflare in [current-baseline.md](./product/current-baseline.md).
+
+**Development (Docker Compose)**
+
+- [x] PostgreSQL
+- [x] Redis
+- [x] Object storage (MinIO)
+- [x] Application runtime (`backend` compose profile + `backend/Dockerfile`)
+- [x] Search (Meilisearch — compose; not listed in original Phase 28 bullets but required locally)
+
+**Production (Hostinger + Cloudflare — provisioned in ops, not Terraformed yet)**
+
+- [x] DNS / TLS (Cloudflare edge policy)
+- [x] Load balancer (Cloudflare proxy as edge; origin reverse proxy on host)
+- [ ] VPC/network (single-VPS model; no AWS VPC — document host firewall in ops when hardened)
+- [ ] PostgreSQL (prod instance)
+- [ ] Redis (prod instance)
+- [ ] Object storage (prod S3-compatible)
+- [ ] Application runtime (prod deploy of API image + Next)
+- [ ] Secrets (host/env secret manager wired in prod)
+- [ ] Monitoring (host + uptime; app OTel already exists)
+- [ ] Backups (Phase 29)
 
 ### IaC
 
-Choose one:
+Chosen:
 
-- Terraform
-- Pulumi
+- **Docker Compose** — local/CI dependency stack (`docker-compose.yml`)
+- **Terraform** — preferred later if automating Cloudflare/DNS or managed cloud resources (not Pulumi)
+- No in-repo Terraform modules until a concrete cloud provider + credentials path exists
 
 ### Environments
 
@@ -1890,6 +1921,11 @@ production
 ```
 
 Never share production secrets with development.
+
+### Notes
+
+- Slice **28.1** — IaC choice + environment/service map in `docs/architecture/infrastructure.md`. **Still open:** production host provisioning, secrets wiring, monitoring/backups ops (Phases 28 remainder / 29).
+- [x] commit push
 
 ---
 
@@ -1925,6 +1961,7 @@ Redis must not contain the only copy of financial/business truth.
 - [ ] RPO defined
 - [ ] Disaster recovery runbook
 - [ ] Restore drill
+- [ ] commit push
 
 ---
 
@@ -2038,6 +2075,8 @@ Domain
 ```
 
 are complete.
+
+- [ ] commit push
 
 ---
 

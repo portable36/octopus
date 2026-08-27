@@ -6,6 +6,7 @@ export type AuthUser = {
   userId: string;
   email: string;
   roles: readonly string[];
+  mfaEnabled?: boolean;
 };
 
 export type AuthSession = {
@@ -13,6 +14,24 @@ export type AuthSession = {
   expiresInSeconds: number;
   user: AuthUser;
 };
+
+export type MfaRequired = {
+  mfaRequired: true;
+  mfaToken: string;
+  expiresInSeconds: number;
+};
+
+export class MfaRequiredError extends Error {
+  readonly mfaToken: string;
+  readonly expiresInSeconds: number;
+
+  constructor(challenge: MfaRequired) {
+    super('MFA code required.');
+    this.name = 'MfaRequiredError';
+    this.mfaToken = challenge.mfaToken;
+    this.expiresInSeconds = challenge.expiresInSeconds;
+  }
+}
 
 export type MeResponse = AuthUser & {
   permissions: readonly string[];
@@ -56,7 +75,25 @@ export async function loginAccount(input: {
   email: string;
   password: string;
 }): Promise<AuthSession> {
-  const session = await apiRequest<AuthSession>('/auth/login', {
+  const result = await apiRequest<AuthSession | MfaRequired>('/auth/login', {
+    method: 'POST',
+    credentials: 'include',
+    body: input,
+  });
+  if ('mfaRequired' in result && result.mfaRequired) {
+    throw new MfaRequiredError(result);
+  }
+  const session = result as AuthSession;
+  setAccessToken(session.accessToken);
+  await mergeGuestCart(session.accessToken);
+  return session;
+}
+
+export async function verifyMfaLogin(input: {
+  mfaToken: string;
+  code: string;
+}): Promise<AuthSession> {
+  const session = await apiRequest<AuthSession>('/auth/mfa/verify', {
     method: 'POST',
     credentials: 'include',
     body: input,

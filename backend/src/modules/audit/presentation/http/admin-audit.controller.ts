@@ -5,12 +5,14 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { AuditHandlers } from '../../application/commands/audit.handlers';
 import { AuditExceptionFilter } from './filters/audit-exception.filter';
 
 @ApiTags('admin-audit')
 @Controller('admin/audit')
 @ApiBearerAuth()
+@RequirePermissions('audit.read')
 @UseFilters(AuditExceptionFilter)
 export class AdminAuditController {
   constructor(private readonly audit: AuditHandlers) {}

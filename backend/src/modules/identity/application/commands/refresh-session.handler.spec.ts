@@ -82,7 +82,12 @@ describe('RefreshSessionHandler', () => {
       accessToken: 'access',
       refreshToken: 'refresh',
       expiresInSeconds: 900,
-      user: { userId: user.id.value, email: user.email.value, roles: user.roles },
+      user: {
+        userId: user.id.value,
+        email: user.email.value,
+        roles: user.roles,
+        mfaEnabled: false,
+      },
     });
 
     const handler = new RefreshSessionHandler(

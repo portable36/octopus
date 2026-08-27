@@ -6,6 +6,7 @@ import type {
   GetCourierConsignmentStatusInput,
   GetCourierConsignmentStatusResult,
 } from '../../../../shared-kernel/application/ports/courier.port';
+import { resolveAllowedBaseUrl } from '../../../../shared-kernel/infrastructure/security/assert-allowed-outbound-url';
 import { CourierProviderError } from '../../application/errors/fulfillment.errors';
 import { mapSteadfastStatus, minorToMajorUnits } from '../../domain/services/courier-status.mapper';
 import {
@@ -112,7 +113,7 @@ export class SteadfastCourierClient {
     path: string,
     body?: unknown,
   ): Promise<T> {
-    const base = (creds.baseUrl ?? this.config.steadfastBaseUrl).replace(/\/$/, '');
+    const base = this.resolveBase(creds.baseUrl);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.config.courierHttpTimeoutMs);
     try {
@@ -145,6 +146,22 @@ export class SteadfastCourierClient {
       );
     } finally {
       clearTimeout(timer);
+    }
+  }
+
+  private resolveBase(candidate: string | undefined): string {
+    try {
+      return resolveAllowedBaseUrl(
+        candidate,
+        this.config.steadfastBaseUrl,
+        this.config.outboundUrlAllowlistHosts,
+      );
+    } catch (error) {
+      throw new CourierProviderError(
+        error instanceof Error ? error.message : 'Steadfast base URL rejected.',
+        'STEADFAST_BASE_URL_BLOCKED',
+        false,
+      );
     }
   }
 }

@@ -11,6 +11,8 @@ export function toOrmEntity(user: User, existing?: UserOrmEntity): UserOrmEntity
   entity.roles = [...user.roles];
   entity.failedLoginAttempts = user.failedLoginAttempts;
   entity.lockedUntil = user.lockedUntil;
+  entity.mfaEnabled = user.mfaEnabled;
+  entity.mfaSecretCipher = user.mfaSecretCipher;
   if (!existing) {
     entity.createdAt = new Date();
   }
@@ -28,5 +30,7 @@ export function toDomain(entity: UserOrmEntity): User {
     entity.roles,
     entity.failedLoginAttempts,
     entity.lockedUntil,
+    entity.mfaEnabled,
+    entity.mfaSecretCipher,
   );
 }

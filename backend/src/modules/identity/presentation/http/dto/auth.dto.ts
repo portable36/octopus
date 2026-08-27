@@ -76,7 +76,61 @@ export class AuthSessionResponseDto {
     userId: string;
     email: string;
     roles: readonly Role[];
+    mfaEnabled: boolean;
   };
+}
+
+export class MfaRequiredResponseDto {
+  @ApiProperty({ enum: [true] })
+  mfaRequired!: true;
+
+  @ApiProperty()
+  mfaToken!: string;
+
+  @ApiProperty()
+  expiresInSeconds!: number;
+}
+
+export class MfaCodeRequestDto {
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(8)
+  code!: string;
+}
+
+export class MfaVerifyLoginRequestDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  mfaToken!: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(8)
+  code!: string;
+}
+
+export class MfaDisableRequestDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  password!: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(8)
+  code!: string;
+}
+
+export class MfaSetupResponseDto {
+  @ApiProperty()
+  secret!: string;
+
+  @ApiProperty()
+  otpauthUrl!: string;
 }
 
 export class MeResponseDto {
@@ -88,6 +142,9 @@ export class MeResponseDto {
 
   @ApiProperty({ enum: ROLES, isArray: true })
   roles!: readonly Role[];
+
+  @ApiProperty()
+  mfaEnabled!: boolean;
 
   @ApiProperty({ type: [String] })
   permissions!: readonly string[];

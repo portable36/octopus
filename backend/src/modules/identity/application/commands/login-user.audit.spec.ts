@@ -4,6 +4,7 @@ import { InvalidCredentialsError } from '../errors/identity.errors';
 import { LoginUserHandler } from './login-user.handler';
 
 const PASSWORD_HASH = '$argon2id$v=19$m=19456,t=2,p=1$hash';
+const mfaStub = { issueChallenge: vi.fn() };
 
 describe('LoginUserHandler audit', () => {
   it('records auth.login.failed for unknown email', async () => {
@@ -22,6 +23,7 @@ describe('LoginUserHandler audit', () => {
         recordFailure: vi.fn().mockResolvedValue(undefined),
       },
       { issueSession: vi.fn() } as never,
+      mfaStub as never,
       audit,
     );
 
@@ -63,8 +65,15 @@ describe('LoginUserHandler audit', () => {
           accessToken: 'a',
           refreshToken: 'r',
           expiresInSeconds: 900,
+          user: {
+            userId: user.id.value,
+            email: user.email.value,
+            roles: user.roles,
+            mfaEnabled: false,
+          },
         }),
       } as never,
+      mfaStub as never,
       audit,
     );
 

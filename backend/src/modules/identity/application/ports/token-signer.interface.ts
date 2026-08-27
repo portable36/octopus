@@ -4,6 +4,7 @@ export interface AccessTokenPayload {
   readonly sub: string;
   readonly email: string;
   readonly roles: readonly Role[];
+  readonly mfaEnabled: boolean;
 }
 
 export const TOKEN_SIGNER = Symbol('TOKEN_SIGNER');

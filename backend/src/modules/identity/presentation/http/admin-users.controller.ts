@@ -5,6 +5,7 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { ListUsersHandler } from '../../application/queries/list-users.handler';
 import type { User } from '../../domain/aggregates/user.aggregate';
 import { IdentityExceptionFilter } from './filters/identity-exception.filter';
@@ -12,6 +13,7 @@ import { IdentityExceptionFilter } from './filters/identity-exception.filter';
 @ApiTags('admin-users')
 @Controller('admin/users')
 @ApiBearerAuth()
+@RequirePermissions('platform.users.read')
 @UseFilters(IdentityExceptionFilter)
 export class AdminUsersController {
   constructor(private readonly listUsers: ListUsersHandler) {}

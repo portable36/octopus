@@ -19,6 +19,8 @@ interface UserProps {
   roles: readonly Role[];
   failedLoginAttempts: number;
   lockedUntil: Date | null;
+  mfaEnabled: boolean;
+  mfaSecretCipher: string | null;
 }
 
 const ALLOWED_TRANSITIONS: Record<UserStatus, UserStatus[]> = {
@@ -50,6 +52,8 @@ export class User extends AggregateRoot<UniqueID> {
       roles,
       failedLoginAttempts: 0,
       lockedUntil: null,
+      mfaEnabled: false,
+      mfaSecretCipher: null,
     });
     user.addEvent('UserRegistered', {
       userId: user.id.value,
@@ -67,6 +71,8 @@ export class User extends AggregateRoot<UniqueID> {
     roles: readonly Role[],
     failedLoginAttempts: number,
     lockedUntil: Date | null,
+    mfaEnabled = false,
+    mfaSecretCipher: string | null = null,
   ): User {
     return new User(UniqueID.from(id), {
       email: EmailAddress.create(email),
@@ -76,6 +82,8 @@ export class User extends AggregateRoot<UniqueID> {
       roles,
       failedLoginAttempts,
       lockedUntil,
+      mfaEnabled,
+      mfaSecretCipher,
     });
   }
 
@@ -105,6 +113,32 @@ export class User extends AggregateRoot<UniqueID> {
 
   get lockedUntil(): Date | null {
     return this.props.lockedUntil;
+  }
+
+  get mfaEnabled(): boolean {
+    return this.props.mfaEnabled;
+  }
+
+  get mfaSecretCipher(): string | null {
+    return this.props.mfaSecretCipher;
+  }
+
+  public enableMfa(secretCipher: string): void {
+    this.props = {
+      ...this.props,
+      mfaEnabled: true,
+      mfaSecretCipher: secretCipher,
+    };
+    this.addEvent('UserMfaEnabled', { userId: this.id.value });
+  }
+
+  public disableMfa(): void {
+    this.props = {
+      ...this.props,
+      mfaEnabled: false,
+      mfaSecretCipher: null,
+    };
+    this.addEvent('UserMfaDisabled', { userId: this.id.value });
   }
 
   public activate(): void {

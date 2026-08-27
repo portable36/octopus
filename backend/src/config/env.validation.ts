@@ -13,6 +13,8 @@ export const envSchema = z.object({
   HTTP_BODY_LIMIT: z.string().min(2).max(16).default('1mb'),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
+  /** Previous signing secret for overlap during rotation; verify-only. */
+  JWT_SECRET_PREVIOUS: z.string().min(32).optional(),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   REFRESH_COOKIE_NAME: z.string().default('refresh_token'),
@@ -25,7 +27,17 @@ export const envSchema = z.object({
   S3_BUCKET: z.string().min(1),
   /** Public CDN/base URL for media thumbnails (no trailing slash required). Defaults to S3 endpoint + bucket. */
   MEDIA_PUBLIC_BASE_URL: z.string().url().optional(),
-  CORS_ORIGINS: z.string().default('http://localhost:3001'),
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:3001')
+    .refine(
+      (raw) =>
+        !raw
+          .split(',')
+          .map((origin) => origin.trim())
+          .includes('*'),
+      { message: 'CORS_ORIGINS must not include * when credentials are enabled' },
+    ),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(10_000),
   /** Opt-in OpenTelemetry traces + metrics (see otel-bootstrap). */
@@ -63,6 +75,8 @@ export const envSchema = z.object({
   PATHAO_PASSWORD: z.string().optional(),
   PATHAO_STORE_ID: z.coerce.number().int().positive().optional(),
   COURIER_HTTP_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(15_000),
+  /** Extra outbound hosts (comma-separated) for SSRF allowlist; courier env base URLs are always included. */
+  OUTBOUND_URL_ALLOWLIST: z.string().optional(),
   OUTBOX_DISPATCH_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

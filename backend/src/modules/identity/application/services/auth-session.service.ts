@@ -35,6 +35,7 @@ export class AuthSessionService {
       sub: user.id.value,
       email: user.email.value,
       roles: user.roles,
+      mfaEnabled: user.mfaEnabled,
     });
 
     return {
@@ -45,6 +46,7 @@ export class AuthSessionService {
         userId: user.id.value,
         email: user.email.value,
         roles: user.roles,
+        mfaEnabled: user.mfaEnabled,
       },
     };
   }

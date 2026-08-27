@@ -1,7 +1,4 @@
-import { SetMetadata } from '@nestjs/common';
-import type { Permission } from '../../../domain/enums/permission.enum';
-
-export const PERMISSIONS_KEY = 'permissions';
-
-export const RequirePermissions = (...permissions: Permission[]) =>
-  SetMetadata(PERMISSIONS_KEY, permissions);
+export {
+  PERMISSIONS_KEY,
+  RequirePermissions,
+} from '../../../../../shared-kernel/presentation/http/require-permissions.decorator';

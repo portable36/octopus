@@ -43,6 +43,10 @@ export class AppConfigService {
     return this.configService.get('JWT_SECRET', { infer: true });
   }
 
+  get jwtSecretPrevious(): string | undefined {
+    return this.configService.get('JWT_SECRET_PREVIOUS', { infer: true });
+  }
+
   get jwtExpiresIn(): string {
     return this.configService.get('JWT_EXPIRES_IN', { infer: true });
   }
@@ -147,6 +151,26 @@ export class AppConfigService {
 
   get courierHttpTimeoutMs(): number {
     return this.configService.get('COURIER_HTTP_TIMEOUT_MS', { infer: true });
+  }
+
+  /** Hostnames allowed for server-side outbound HTTP (SSRF). Includes courier base URL hosts. */
+  get outboundUrlAllowlistHosts(): string[] {
+    const hosts = new Set<string>();
+    const extra = this.configService.get('OUTBOUND_URL_ALLOWLIST', { infer: true }) ?? '';
+    for (const part of extra.split(',')) {
+      const host = part.trim().toLowerCase();
+      if (host) {
+        hosts.add(host);
+      }
+    }
+    for (const raw of [this.pathaoBaseUrl, this.steadfastBaseUrl]) {
+      try {
+        hosts.add(new URL(raw).hostname.toLowerCase());
+      } catch {
+        // Invalid base URL is rejected at env validation; skip here.
+      }
+    }
+    return [...hosts];
   }
 
   get steadfastBaseUrl(): string {

@@ -14,14 +14,23 @@ import {
 import { PASSWORD_HASHER, type PasswordHasher } from '../ports/password-hasher.interface';
 import { LOGIN_RATE_LIMITER, type LoginRateLimiter } from '../ports/login-rate-limiter.interface';
 import { USER_REPOSITORY, type UserRepository } from '../ports/user-repository.interface';
-import { AuthSessionService } from '../services/auth-session.service';
 import type { AuthSession } from '../dto/auth-session.dto';
+import { AuthSessionService } from '../services/auth-session.service';
+import { MfaHandlers } from './mfa.handlers';
 
 export interface LoginUserCommand {
   readonly email: string;
   readonly password: string;
   readonly rateLimitKey: string;
 }
+
+export type LoginResult =
+  | { readonly kind: 'session'; readonly session: AuthSession }
+  | {
+      readonly kind: 'mfa_required';
+      readonly mfaToken: string;
+      readonly expiresInSeconds: number;
+    };
 
 const MAX_FAILED_LOGINS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000;
@@ -33,10 +42,11 @@ export class LoginUserHandler {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(LOGIN_RATE_LIMITER) private readonly rateLimiter: LoginRateLimiter,
     private readonly authSession: AuthSessionService,
+    private readonly mfa: MfaHandlers,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
-  public async execute(command: LoginUserCommand): Promise<AuthSession> {
+  public async execute(command: LoginUserCommand): Promise<LoginResult> {
     try {
       await this.rateLimiter.assertAllowed(command.rateLimitKey);
     } catch {
@@ -95,6 +105,23 @@ export class LoginUserHandler {
 
     user.resetFailedLogins();
     await this.users.save(user);
+
+    if (user.mfaEnabled) {
+      const challenge = await this.mfa.issueChallenge(user.id.value);
+      await this.audit?.append({
+        actorUserId: user.id.value,
+        action: 'auth.login.mfa_required',
+        resourceType: 'user',
+        resourceId: user.id.value,
+        metadata: { email: user.email.value },
+      });
+      return {
+        kind: 'mfa_required',
+        mfaToken: challenge.mfaToken,
+        expiresInSeconds: challenge.expiresInSeconds,
+      };
+    }
+
     const session = await this.authSession.issueSession(user);
     await this.audit?.append({
       actorUserId: user.id.value,
@@ -103,7 +130,7 @@ export class LoginUserHandler {
       resourceId: user.id.value,
       metadata: { email: user.email.value },
     });
-    return session;
+    return { kind: 'session', session };
   }
 
   private async recordFailedLogin(input: {

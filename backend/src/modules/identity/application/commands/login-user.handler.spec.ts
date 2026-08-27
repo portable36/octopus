@@ -8,6 +8,13 @@ import {
 import { LoginUserHandler } from './login-user.handler';
 
 const PASSWORD_HASH = '$argon2id$v=19$m=19456,t=2,p=1$hash';
+const mfaStub = {
+  issueChallenge: vi.fn(),
+  beginSetup: vi.fn(),
+  confirmEnable: vi.fn(),
+  disable: vi.fn(),
+  verifyLogin: vi.fn(),
+};
 
 describe('LoginUserHandler', () => {
   it('rejects invalid credentials for unknown email', async () => {
@@ -30,7 +37,13 @@ describe('LoginUserHandler', () => {
       issueSession: vi.fn(),
     };
 
-    const handler = new LoginUserHandler(users, passwordHasher, rateLimiter, authSession as never);
+    const handler = new LoginUserHandler(
+      users,
+      passwordHasher,
+      rateLimiter,
+      authSession as never,
+      mfaStub as never,
+    );
 
     await expect(
       handler.execute({
@@ -62,9 +75,13 @@ describe('LoginUserHandler', () => {
       recordFailure: vi.fn().mockResolvedValue(undefined),
     };
 
-    const handler = new LoginUserHandler(users, passwordHasher, rateLimiter, {
-      issueSession: vi.fn(),
-    } as never);
+    const handler = new LoginUserHandler(
+      users,
+      passwordHasher,
+      rateLimiter,
+      { issueSession: vi.fn() } as never,
+      mfaStub as never,
+    );
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       await expect(
@@ -93,6 +110,7 @@ describe('LoginUserHandler', () => {
       { hash: vi.fn(), verify: vi.fn() },
       rateLimiter,
       { issueSession: vi.fn() } as never,
+      mfaStub as never,
     );
 
     await expect(
@@ -116,10 +134,44 @@ describe('LoginUserHandler', () => {
       { hash: vi.fn(), verify: vi.fn().mockResolvedValue(true) },
       { assertAllowed: vi.fn(), recordFailure: vi.fn() },
       { issueSession: vi.fn() } as never,
+      mfaStub as never,
     );
 
     await expect(
       handler.execute({ email: 'u@e.co', password: 'Str0ng!Passw0rd', rateLimitKey: 'k' }),
     ).rejects.toBeInstanceOf(AccountLockedError);
+  });
+
+  it('returns mfa_required when MFA is enabled', async () => {
+    const user = User.register('u@e.co', 'User', PASSWORD_HASH);
+    user.activate();
+    user.enableMfa('cipher');
+    const mfa = {
+      issueChallenge: vi.fn().mockResolvedValue({ mfaToken: 'tok', expiresInSeconds: 300 }),
+    };
+    const handler = new LoginUserHandler(
+      {
+        findByEmail: vi.fn().mockResolvedValue(user),
+        save: vi.fn().mockResolvedValue(undefined),
+        findById: vi.fn(),
+        existsByEmail: vi.fn(),
+        listRecent: vi.fn(),
+      },
+      { hash: vi.fn(), verify: vi.fn().mockResolvedValue(true) },
+      { assertAllowed: vi.fn().mockResolvedValue(undefined), recordFailure: vi.fn() },
+      { issueSession: vi.fn() } as never,
+      mfa as never,
+    );
+
+    const result = await handler.execute({
+      email: 'u@e.co',
+      password: 'Str0ng!Passw0rd',
+      rateLimitKey: 'k',
+    });
+    expect(result).toEqual({
+      kind: 'mfa_required',
+      mfaToken: 'tok',
+      expiresInSeconds: 300,
+    });
   });
 });

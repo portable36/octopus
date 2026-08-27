@@ -1,7 +1,12 @@
-import { BadGatewayException, Controller, Get, Inject, Query } from '@nestjs/common';
+import { BadGatewayException, Controller, Get, Inject, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import type { Request } from 'express';
+import {
+  API_RATE_LIMITER,
+  type ApiRateLimiter,
+} from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import {
   PRODUCT_SEARCH_INDEX,
   type ProductSearchIndexPort,
@@ -64,12 +69,16 @@ class SearchProductsQueryDto {
 @ApiTags('search')
 @Controller('search')
 export class SearchController {
-  constructor(@Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort) {}
+  constructor(
+    @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
+    @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
+  ) {}
 
   @Public()
   @Get('products')
   @ApiOperation({ summary: 'Search sellable store offers (Meilisearch read model)' })
-  async searchProducts(@Query() query: SearchProductsQueryDto) {
+  async searchProducts(@Query() query: SearchProductsQueryDto, @Req() req: Request) {
+    await this.rateLimiter.consume(`search:products:${req.ip ?? 'unknown'}`, 60, 60);
     const scoped = applyServerScope(query);
     try {
       return await this.searchIndex.search(scoped);

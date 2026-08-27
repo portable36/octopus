@@ -65,6 +65,7 @@ export class JwtAuthGuard implements CanActivate {
       userId: payload.sub,
       email: payload.email,
       roles: payload.roles,
+      mfaEnabled: payload.mfaEnabled,
     };
     setAuthenticatedPrincipal({
       userId: payload.sub,

@@ -6,6 +6,7 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { tryGetTenantContext } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { SettingsHandlers } from '../../application/commands/settings.handlers';
 import { SettingsAccessDeniedError } from '../../application/errors/settings.errors';
 import type { ConfigurationKey, ConfigurationScope } from '../../domain/settings.types';
@@ -84,6 +85,7 @@ export class AdminSettingsController {
   constructor(private readonly settings: SettingsHandlers) {}
 
   @Get('effective')
+  @RequirePermissions('settings.read')
   @ApiOperation({ summary: 'Resolve effective settings with Platform→Vendor→Store inheritance' })
   @ApiQuery({ name: 'key', required: true, enum: ['general', 'branding', 'marketing'] })
   @ApiQuery({ name: 'scopeKind', required: true, enum: ['platform', 'vendor', 'store'] })
@@ -114,6 +116,7 @@ export class AdminSettingsController {
   }
 
   @Patch()
+  @RequirePermissions('settings.write')
   @ApiOperation({ summary: 'Upsert a typed configuration document at a scope' })
   async upsert(@CurrentUser() user: RequestPrincipal, @Body() body: UpsertSettingsDto) {
     assertSettingsWrite(user.roles);

@@ -4,6 +4,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { GetStoreHandler } from '../../application/queries/get-store.handler';
 import type { Store } from '../../domain/aggregates/store.aggregate';
 import { StoreExceptionFilter } from './filters/store-exception.filter';
@@ -11,6 +12,7 @@ import { StoreExceptionFilter } from './filters/store-exception.filter';
 @ApiTags('admin-stores')
 @Controller('admin/stores')
 @ApiBearerAuth()
+@RequirePermissions('platform.stores.read')
 @UseFilters(StoreExceptionFilter)
 export class AdminStoreController {
   constructor(private readonly getStore: GetStoreHandler) {}

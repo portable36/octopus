@@ -1,5 +1,6 @@
-import { Body, Controller, Headers, HttpCode, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, Inject, Post, Req, UseFilters } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
 import {
   CurrentUser,
   type RequestPrincipal,
@@ -7,6 +8,10 @@ import {
 import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
 import { setGuestToken } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
 import type { CartOwnerRef } from '../../../../shared-kernel/application/ports/cart.port';
+import {
+  API_RATE_LIMITER,
+  type ApiRateLimiter,
+} from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { CheckoutSubmitHandler } from '../../application/commands/checkout.handlers';
 import { CheckoutAccessDeniedError } from '../../application/errors/checkout.errors';
 import { SubmitCheckoutDto } from './dto/checkout.dto';
@@ -23,7 +28,10 @@ import { CheckoutExceptionFilter } from './filters/checkout-exception.filter';
 })
 @UseFilters(CheckoutExceptionFilter)
 export class CheckoutController {
-  constructor(private readonly checkout: CheckoutSubmitHandler) {}
+  constructor(
+    private readonly checkout: CheckoutSubmitHandler,
+    @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
+  ) {}
 
   @Public()
   @Post('submit')
@@ -37,7 +45,9 @@ export class CheckoutController {
     @Headers('x-guest-token') guestToken: string | undefined,
     @Headers('idempotency-key') idempotencyHeader: string | undefined,
     @Body() body: SubmitCheckoutDto,
+    @Req() req: Request,
   ) {
+    await this.rateLimiter.consume(`checkout:submit:${req.ip ?? 'unknown'}`, 20, 60);
     const owner = this.resolveOwner(user, guestToken);
     if (owner.guestToken) {
       setGuestToken(owner.guestToken);

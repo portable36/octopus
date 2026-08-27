@@ -17,6 +17,8 @@ import {
   ForbiddenRoleError,
   IdentityError,
   InvalidCredentialsError,
+  InvalidMfaChallengeError,
+  InvalidMfaCodeError,
   InvalidPasswordResetTokenError,
   InvalidRefreshTokenError,
   RateLimitExceededError,
@@ -50,6 +52,10 @@ export class IdentityExceptionFilter implements ExceptionFilter {
     }
 
     if (exception instanceof InvalidCredentialsError) {
+      return new UnauthorizedException({ message: exception.message, code: exception.code });
+    }
+
+    if (exception instanceof InvalidMfaCodeError || exception instanceof InvalidMfaChallengeError) {
       return new UnauthorizedException({ message: exception.message, code: exception.code });
     }
 

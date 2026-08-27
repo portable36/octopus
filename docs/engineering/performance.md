@@ -11,7 +11,7 @@ Phase 24 rule: optimize from measurements, never by weakening correctness.
 | HTTP body    | `HTTP_BODY_LIMIT=1mb`                         | Express JSON + urlencoded                                                       |
 | Compression  | `compression()`                               | gzip/deflate for compressible responses                                         |
 | List limits  | default 50, max 200                           | `clampLimit` / `clampOffset` in `shared-kernel/presentation/http/pagination.ts` |
-| Login rate   | 20 failures / 15m per key                     | Redis `identity:login-rate:*`                                                   |
+| Login rate   | 20 failures / 15m per key                     | Redis `identity:login-rate:*` (login/register/forgot)                           |
 
 ## Indexes
 

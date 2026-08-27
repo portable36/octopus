@@ -6,6 +6,7 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { tryGetTenantContext } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { MediaHandlers } from '../../application/commands/media.handlers';
 import { MediaExceptionFilter } from './filters/media-exception.filter';
 
@@ -22,6 +23,10 @@ class RegisterMediaDto {
 
   @IsString()
   storageKey!: string;
+
+  /** First ≥12 bytes of the uploaded object (base64) for magic-byte verification. */
+  @IsString()
+  contentPrefixBase64!: string;
 }
 
 @ApiTags('admin-media')
@@ -32,6 +37,7 @@ export class AdminMediaController {
   constructor(private readonly media: MediaHandlers) {}
 
   @Post()
+  @RequirePermissions('media.write')
   @ApiOperation({
     summary: 'Register media asset metadata (MediaId source of truth; no public URL)',
   })
@@ -58,6 +64,7 @@ export class AdminMediaController {
   }
 
   @Get(':mediaId')
+  @RequirePermissions('media.read')
   @ApiOperation({ summary: 'Get media asset metadata by MediaId' })
   async getOne(@CurrentUser() user: RequestPrincipal, @Param('mediaId') mediaId: string) {
     const asset = await this.media.getById(mediaId, user.roles);

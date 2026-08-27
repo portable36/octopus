@@ -6,6 +6,7 @@ import type {
   GetCourierConsignmentStatusInput,
   GetCourierConsignmentStatusResult,
 } from '../../../../shared-kernel/application/ports/courier.port';
+import { resolveAllowedBaseUrl } from '../../../../shared-kernel/infrastructure/security/assert-allowed-outbound-url';
 import { CourierProviderError } from '../../application/errors/fulfillment.errors';
 import { mapPathaoStatus, minorToMajorUnits } from '../../domain/services/courier-status.mapper';
 import { CourierAccountStore, type PathaoCredentials } from '../persistence/courier-account.store';
@@ -127,7 +128,7 @@ export class PathaoCourierClient {
     vendorId: string,
     grant: Record<string, string>,
   ): Promise<string> {
-    const base = (creds.baseUrl ?? this.config.pathaoBaseUrl).replace(/\/$/, '');
+    const base = this.resolveBase(creds.baseUrl);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.config.courierHttpTimeoutMs);
     try {
@@ -176,7 +177,7 @@ export class PathaoCourierClient {
     path: string,
     body?: unknown,
   ): Promise<T> {
-    const base = (creds.baseUrl ?? this.config.pathaoBaseUrl).replace(/\/$/, '');
+    const base = this.resolveBase(creds.baseUrl);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.config.courierHttpTimeoutMs);
     try {
@@ -208,6 +209,22 @@ export class PathaoCourierClient {
       );
     } finally {
       clearTimeout(timer);
+    }
+  }
+
+  private resolveBase(candidate: string | undefined): string {
+    try {
+      return resolveAllowedBaseUrl(
+        candidate,
+        this.config.pathaoBaseUrl,
+        this.config.outboundUrlAllowlistHosts,
+      );
+    } catch (error) {
+      throw new CourierProviderError(
+        error instanceof Error ? error.message : 'Pathao base URL rejected.',
+        'PATHAO_BASE_URL_BLOCKED',
+        false,
+      );
     }
   }
 }

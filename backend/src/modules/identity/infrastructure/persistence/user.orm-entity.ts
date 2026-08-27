@@ -28,6 +28,12 @@ export class UserOrmEntity {
   @Property({ fieldName: 'locked_until', nullable: true })
   lockedUntil: Date | null = null;
 
+  @Property({ fieldName: 'mfa_enabled', default: false })
+  mfaEnabled!: boolean;
+
+  @Property({ fieldName: 'mfa_secret_cipher', nullable: true, type: 'text' })
+  mfaSecretCipher: string | null = null;
+
   @Property({ fieldName: 'created_at' })
   createdAt!: Date;
 

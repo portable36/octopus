@@ -4,6 +4,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { GetVendorHandler } from '../../application/queries/get-vendor.handler';
 import type { Vendor } from '../../domain/aggregates/vendor.aggregate';
 import { VendorExceptionFilter } from './filters/vendor-exception.filter';
@@ -11,6 +12,7 @@ import { VendorExceptionFilter } from './filters/vendor-exception.filter';
 @ApiTags('admin-vendors')
 @Controller('admin/vendors')
 @ApiBearerAuth()
+@RequirePermissions('platform.vendors.read')
 @UseFilters(VendorExceptionFilter)
 export class AdminVendorController {
   constructor(private readonly getVendor: GetVendorHandler) {}

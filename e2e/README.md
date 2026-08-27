@@ -36,9 +36,9 @@ npx.cmd playwright show-report
 
 ## Layout
 
-| Path                   | Role                                   |
-| ---------------------- | -------------------------------------- |
-| `playwright.config.ts` | baseURL, Chromium project, `webServer` |
-| `e2e/*.spec.ts`        | specs (role/label locators)            |
+| Path                   | Role                                                      |
+| ---------------------- | --------------------------------------------------------- |
+| `playwright.config.ts` | baseURL, Chromium project, `webServer`                    |
+| `e2e/smoke.spec.ts`    | Storefront + admin shell smokes (Phase 26.1 page renders) |
 
 `PLAYWRIGHT_BASE_URL` overrides the default `http://127.0.0.1:3001`.

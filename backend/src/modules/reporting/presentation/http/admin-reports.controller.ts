@@ -4,12 +4,14 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { ReportingQueryHandler } from '../../application/queries/reporting-query.handler';
 import { ReportingExceptionFilter } from './filters/reporting-exception.filter';
 
 @ApiTags('admin-reports')
 @Controller('admin/reports')
 @ApiBearerAuth()
+@RequirePermissions('platform.reports.read')
 @UseFilters(ReportingExceptionFilter)
 export class AdminReportsController {
   constructor(private readonly queries: ReportingQueryHandler) {}

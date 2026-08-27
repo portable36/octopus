@@ -4,11 +4,13 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { SearchReindexHandler } from '../../application/commands/search-reindex.handler';
 
 @ApiTags('admin-search')
 @Controller('admin/search')
 @ApiBearerAuth()
+@RequirePermissions('platform.search.reindex')
 export class AdminSearchController {
   constructor(private readonly reindex: SearchReindexHandler) {}
 

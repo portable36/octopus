@@ -85,3 +85,33 @@ export class UserNotFoundError extends IdentityError {
     super('User not found.', 'USER_NOT_FOUND');
   }
 }
+
+export class InvalidMfaCodeError extends IdentityError {
+  constructor() {
+    super('Invalid MFA code.', 'INVALID_MFA_CODE');
+  }
+}
+
+export class InvalidMfaChallengeError extends IdentityError {
+  constructor() {
+    super('MFA challenge is invalid or expired.', 'INVALID_MFA_CHALLENGE');
+  }
+}
+
+export class MfaAlreadyEnabledError extends IdentityError {
+  constructor() {
+    super('MFA is already enabled.', 'MFA_ALREADY_ENABLED');
+  }
+}
+
+export class MfaNotEnabledError extends IdentityError {
+  constructor() {
+    super('MFA is not enabled.', 'MFA_NOT_ENABLED');
+  }
+}
+
+export class MfaSetupRequiredError extends IdentityError {
+  constructor() {
+    super('Start MFA setup before confirming.', 'MFA_SETUP_REQUIRED');
+  }
+}

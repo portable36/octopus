@@ -23,7 +23,10 @@ export function configureApplication(app: INestApplication, config: AppConfigSer
   app.enableCors({
     origin: config.corsOrigins,
     credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'X-Request-Id', 'Idempotency-Key'],
     exposedHeaders: ['x-request-id'],
+    maxAge: 86_400,
   });
 
   app.useGlobalPipes(

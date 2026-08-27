@@ -5,6 +5,7 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { ListPaymentIntentsHandler } from '../../application/commands/payment.handlers';
 import type { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
 import { PaymentExceptionFilter } from './filters/payment-exception.filter';
@@ -12,6 +13,7 @@ import { PaymentExceptionFilter } from './filters/payment-exception.filter';
 @ApiTags('admin-payments')
 @Controller('admin/payments')
 @ApiBearerAuth()
+@RequirePermissions('platform.payments.read')
 @UseFilters(PaymentExceptionFilter)
 export class AdminPaymentController {
   constructor(private readonly listIntents: ListPaymentIntentsHandler) {}

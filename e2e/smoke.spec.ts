@@ -1,10 +1,49 @@
 import { expect, test } from '@playwright/test';
 
+/**
+ * Phase 26.1 — storefront + admin shell smokes (page renders; no authenticated flows yet).
+ * Full revenue journeys land when seed data + API are available in CI.
+ */
+
 test.describe('storefront home', () => {
-  test('renders Octopus foundation landing', async ({ page }) => {
+  test('renders marketplace landing', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: 'Octopus' })).toBeVisible();
-    await expect(page.getByText(/Next\.js App Router foundation/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Search offers' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'All categories' })).toBeVisible();
+  });
+});
+
+test.describe('browse and search', () => {
+  test('categories page loads', async ({ page }) => {
+    await page.goto('/categories');
+    await expect(page.getByRole('heading', { level: 1, name: 'Categories' })).toBeVisible();
+  });
+
+  test('search page loads', async ({ page }) => {
+    await page.goto('/search');
+    await expect(page.getByRole('heading', { level: 1, name: /search/i })).toBeVisible();
+  });
+});
+
+test.describe('cart', () => {
+  test('cart page loads', async ({ page }) => {
+    await page.goto('/cart');
+    await expect(page.getByRole('heading', { level: 1, name: /cart/i })).toBeVisible();
+  });
+});
+
+test.describe('auth pages', () => {
+  test('login page loads', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
+    await expect(page.getByLabel('Email')).toBeVisible();
+    await expect(page.getByLabel('Password')).toBeVisible();
+  });
+
+  test('register page loads', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.getByRole('heading', { level: 1, name: 'Create account' })).toBeVisible();
   });
 });
 

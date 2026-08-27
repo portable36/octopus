@@ -2,6 +2,10 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import {
+  decodeContentPrefixBase64,
+  sniffImageContentType,
+} from '../../domain/services/sniff-image-content-type';
+import {
   MediaAccessDeniedError,
   MediaDomainError,
   MediaNotFoundError,
@@ -17,6 +21,64 @@ const MEDIA_READ_ROLES = new Set([
   'STORE_STAFF',
 ]);
 
+export const MEDIA_ALLOWED_CONTENT_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
+
+export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+
+function assertSafeStorageKey(storageKey: string): void {
+  const key = storageKey.trim();
+  if (!key) {
+    throw new MediaDomainError('storageKey is required.', 'MEDIA_INVALID_KEY');
+  }
+  if (key.includes('..') || key.includes('\\') || key.includes('\0')) {
+    throw new MediaDomainError('storageKey path is invalid.', 'MEDIA_INVALID_KEY');
+  }
+  if (/^[a-z][a-z0-9+.-]*:/i.test(key)) {
+    throw new MediaDomainError('storageKey must be an object key, not a URL.', 'MEDIA_INVALID_KEY');
+  }
+}
+
+function assertAllowedMediaMetadata(contentType: string, byteSize: number): void {
+  const normalized = contentType.trim().toLowerCase();
+  if (!MEDIA_ALLOWED_CONTENT_TYPES.has(normalized)) {
+    throw new MediaDomainError(
+      `contentType not allowed: ${normalized}`,
+      'MEDIA_INVALID_CONTENT_TYPE',
+    );
+  }
+  if (byteSize <= 0) {
+    throw new MediaDomainError('byteSize must be positive.', 'MEDIA_INVALID_SIZE');
+  }
+  if (byteSize > MEDIA_MAX_BYTES) {
+    throw new MediaDomainError(`byteSize exceeds ${MEDIA_MAX_BYTES} bytes.`, 'MEDIA_INVALID_SIZE');
+  }
+}
+
+function assertMagicMatchesDeclared(contentType: string, contentPrefixBase64: string): void {
+  let prefix: Buffer;
+  try {
+    prefix = decodeContentPrefixBase64(contentPrefixBase64);
+  } catch (error) {
+    throw new MediaDomainError(
+      error instanceof Error ? error.message : 'Invalid content prefix.',
+      'MEDIA_INVALID_PREFIX',
+    );
+  }
+  const sniffed = sniffImageContentType(prefix);
+  const declared = contentType.trim().toLowerCase();
+  if (!sniffed || sniffed !== declared) {
+    throw new MediaDomainError(
+      'File header does not match declared contentType.',
+      'MEDIA_MAGIC_MISMATCH',
+    );
+  }
+}
+
 @Injectable()
 export class MediaHandlers {
   constructor(
@@ -29,6 +91,7 @@ export class MediaHandlers {
     readonly contentType: string;
     readonly byteSize: number;
     readonly storageKey: string;
+    readonly contentPrefixBase64: string;
     readonly actorUserId: string;
     readonly actorRoles: readonly string[];
     readonly vendorId: string | null;
@@ -37,17 +100,14 @@ export class MediaHandlers {
     if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
       throw new MediaAccessDeniedError('Missing permission media.write.');
     }
-    if (input.byteSize <= 0) {
-      throw new MediaDomainError('byteSize must be positive.', 'MEDIA_INVALID_SIZE');
-    }
-    if (!input.storageKey.trim()) {
-      throw new MediaDomainError('storageKey is required.', 'MEDIA_INVALID_KEY');
-    }
+    assertAllowedMediaMetadata(input.contentType, input.byteSize);
+    assertSafeStorageKey(input.storageKey);
+    assertMagicMatchesDeclared(input.contentType, input.contentPrefixBase64);
 
     const asset = {
       id: UniqueID.create().value,
       originalFilename: input.originalFilename.trim(),
-      contentType: input.contentType.trim(),
+      contentType: input.contentType.trim().toLowerCase(),
       byteSize: input.byteSize,
       storageKey: input.storageKey.trim(),
       uploadedBy: input.actorUserId,

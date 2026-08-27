@@ -5,6 +5,7 @@ export interface RequestPrincipal {
   readonly userId: string;
   readonly email: string;
   readonly roles: readonly string[];
+  readonly mfaEnabled?: boolean;
 }
 
 export const CurrentUser = createParamDecorator(

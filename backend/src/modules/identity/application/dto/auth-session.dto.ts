@@ -4,6 +4,7 @@ export interface AuthPrincipal {
   readonly userId: string;
   readonly email: string;
   readonly roles: readonly Role[];
+  readonly mfaEnabled: boolean;
 }
 
 export interface AuthSession {

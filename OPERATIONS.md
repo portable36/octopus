@@ -77,6 +77,8 @@ build
 
 For schema changes use expand/contract migrations.
 
+Deployment **strategy** defaults (rolling first; blue/green optional; canary deferred; rollback = previous image, not down-migrate; prefer forward recovery): [docs/architecture/deployment.md](./docs/architecture/deployment.md). Environments / IaC: [docs/architecture/infrastructure.md](./docs/architecture/infrastructure.md).
+
 ## Backups
 
 Backups must be:

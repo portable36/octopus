@@ -5,6 +5,7 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { clampLimit } from '../../../../shared-kernel/presentation/http/pagination';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { OrderLifecycleHandler } from '../../application/commands/order.handlers';
 import type { Order } from '../../domain/aggregates/order.aggregate';
 import { OrderExceptionFilter } from './filters/order-exception.filter';
@@ -12,6 +13,7 @@ import { OrderExceptionFilter } from './filters/order-exception.filter';
 @ApiTags('admin-orders')
 @Controller('admin/orders')
 @ApiBearerAuth()
+@RequirePermissions('platform.orders.read')
 @UseFilters(OrderExceptionFilter)
 export class AdminOrderController {
   constructor(private readonly lifecycle: OrderLifecycleHandler) {}

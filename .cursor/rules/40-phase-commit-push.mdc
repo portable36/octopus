@@ -1,14 +1,15 @@
 ---
-description: After each PHASES.md slice, commit and push without waiting to be asked
+description: After each completed PHASES.md phase (not every slice), commit and push
 alwaysApply: true
 ---
 
-# Phase slice delivery
+# Phase delivery (commit / push)
 
-When the user says **next** (or otherwise completes a `docs/PHASES.md` slice):
+When a **whole phase** in `docs/PHASES.md` is complete (e.g. Phase 25 done, not merely slice 25.3):
 
-1. Finish the slice (code/docs + PHASES notes; mark that phase’s `commit push` checkbox `[x]`).
+1. Mark that phase’s `commit push` checkbox `[x]`.
 2. **Immediately commit and push** to the tracked branch — do not wait for a separate “commit push” request.
-3. Exclude `graphify-out/`, `.env`, secrets, and build artifacts from the commit.
-4. Follow the repo git safety protocol (no force-push to main, no hook bypass, no amend unless the usual amend conditions apply).
-5. One commit per completed slice is preferred; message style: `Ship Phase X.Y: …` matching recent history.
+3. Do **not** auto-commit after individual slices (`25.1`, `26.2`, …) unless the user asks or the phase itself is finished in that turn.
+4. Exclude `graphify-out/`, `.env`, secrets, and build artifacts.
+5. Follow the repo git safety protocol (no force-push to main, no hook bypass, no amend unless the usual amend conditions apply).
+6. Prefer one commit covering the finished phase: `Ship Phase N: …` (or `Ship Phases N–M: …` if several close together).

@@ -14,6 +14,7 @@ Installed under `.agents/skills/`:
 - [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) — curated engineering subset only (~20 skills; not the full ~343 pack)
 - [amirtaherkhani/nestjs-agent-skills](https://github.com/amirtaherkhani/nestjs-agent-skills) — NestJS architecture / OOP / performance (Octopus rules win on conflicts)
 - [obra/superpowers](https://github.com/obra/superpowers) — **curated only:** `/systematic-debugging`, `/verification-before-completion` (not the full plugin / session-start hook)
+- [mukul975/anthropic-cybersecurity-skills](https://github.com/mukul975/anthropic-cybersecurity-skills) — `/detecting-malicious-npm-packages` only (audited, defensive use)
 - Octopus-adapted ops skills (from Colorcom patterns): `/architecture-boundary-guard`, `/quality-gates-check`, `/docs-state-maintainer`, `/cost-efficient-agent`
 
 Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.cursor/rules/` as the hard engineering contract. Third-party skills must not weaken tenant isolation, payments, authn, or module boundaries.

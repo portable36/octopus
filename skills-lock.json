@@ -49,6 +49,12 @@
       "skillPath": "plugins/stitch-utilities/skills/design-md/SKILL.md",
       "computedHash": "44af3e6e89a42a765d9cebf943f1e2ff3cdf43d1958341eb43fb7b74116f6691"
     },
+    "detecting-malicious-npm-packages": {
+      "source": "mukul975/anthropic-cybersecurity-skills",
+      "sourceType": "github",
+      "skillPath": "skills/detecting-malicious-npm-packages/SKILL.md",
+      "computedHash": "39991d14195d1e346efdf25fcb03dbbce82bab37416cd3af83439188540e2441"
+    },
     "diagnosing-bugs": {
       "source": "mattpocock/skills",
       "sourceType": "github",

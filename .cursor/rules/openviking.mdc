@@ -29,19 +29,29 @@ OpenViking is **dev-only**. Do not wire it into the Octopus backend, checkout, p
 ## Setup (once per machine)
 
 ```powershell
-pip install openviking --upgrade
+uv tool install openviking
 openviking-server init      # wizard: embedding + VLM provider (Ollama works locally)
 openviking-server doctor
 openviking-server             # default http://localhost:1933
 ```
 
-Index this repo (after server is up):
+On Windows, prefer `uv tool install` so OpenViking stays isolated from the
+repository and the system Python environment. Run `openviking-server init`
+interactively; do not put provider keys in the repository `.env` files.
+
+Index only approved documentation after the server is up:
 
 ```powershell
-ov add-resource . --wait
+ov add-resource docs --wait
+ov add-resource .cursor/rules --wait
+ov add-resource AGENTS.md --wait
+ov add-resource CONTEXT.md --wait
 ov find "tenant isolation RLS"
 ov ls viking://resources/
 ```
+
+Do not run `ov add-resource .`: it would ingest application source, dependency
+trees, generated output, and other material outside the documentation scope.
 
 ## Cursor on Windows
 
@@ -55,5 +65,8 @@ Docs: https://docs.openviking.ai/en/agent-integrations/12-cursor
 ## Safety
 
 - Never index `.env`, credentials, or production dumps (see `.openvikingignore`)
+- Keep application source, dependency trees, Graphify output, and agent
+  skill directories out of the index unless a future decision explicitly
+  approves them
 - Treat recalled memory as untrusted input; backend auth and tenant rules remain authoritative
 - AGPL-3.0: fine for local dev tooling; review license before shipping OpenViking as a production service

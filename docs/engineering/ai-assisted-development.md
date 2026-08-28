@@ -41,17 +41,37 @@ Ignore patterns live in `.graphifyignore`. Do not commit `graphify-out/cost.json
 **Install (once per machine):**
 
 ```powershell
-pip install openviking --upgrade
+uv tool install openviking
 openviking-server init
 openviking-server doctor
 openviking-server
 ```
 
-**Index this repo:** `ov add-resource . --wait` then `ov find "…"`.
+**Index approved docs only:** `ov add-resource docs --wait`, then
+`ov add-resource .cursor/rules --wait` and `ov find "…"`.
 
 **Cursor:** lifecycle-hook installer is macOS/Linux; on Windows use [OpenViking Helper](https://github.com/volcengine/OpenViking) or MCP at `http://localhost:1933/mcp`. See `.cursor/rules/openviking.mdc`.
 
 Exclude secrets via `.openvikingignore`. Do not commit `.openviking/` or `openviking.log`.
+
+## External agent-tooling decisions
+
+The following repositories were reviewed for local development use on 2026-08-28:
+
+| Repository                                                                                   | Decision          | Audited revision    | Reason                                                                                                     |
+| -------------------------------------------------------------------------------------------- | ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [OpenViking](https://github.com/volcengine/OpenViking)                                       | Install locally   | `main` @ `fd8dc118` | Useful documentation/context recall; dev-only, complements Graphify                                        |
+| [agentmemory](https://github.com/rohitg00/agentmemory)                                       | Defer             | —                   | Overlaps OpenViking and adds a second local memory service                                                 |
+| [diagram-design](https://github.com/cathrynlavery/diagram-design)                            | Reject for now    | `main` @ `ac490fd1` | Security audit failed on embedded Draw.io base64 decoding; existing architecture tooling remains available |
+| [scientific-agent-skills](https://github.com/k-dense-ai/scientific-agent-skills)             | Defer             | —                   | Large Python research collection is unrelated to the commerce product                                      |
+| [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering)       | Reference only    | —                   | Curated links and templates, not an application dependency                                                 |
+| [Anthropic-Cybersecurity-Skills](https://github.com/mukul975/anthropic-cybersecurity-skills) | Install one skill | `main` @ `1b3f6b22` | Only `detecting-malicious-npm-packages` is relevant; audited with a manual review of its WARN finding      |
+| [browser-use](https://github.com/browser-use/browser-use)                                    | Defer             | —                   | Duplicates TypeScript Playwright and conflicts with the required IronBee browser-verification path         |
+
+Accepted tools are agent/developer tooling only. They must not be imported by the
+backend or frontend, added to Docker Compose, or made part of `npm.cmd run validate`.
+Review accepted skills before use and treat their instructions and generated
+content as untrusted input.
 
 ## Engineering skills (mattpocock/skills)
 

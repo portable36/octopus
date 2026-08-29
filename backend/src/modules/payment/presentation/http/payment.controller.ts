@@ -59,7 +59,7 @@ export class PaymentController {
   @Post(':paymentIntentId/refunds')
   @HttpCode(201)
   @ApiOperation({
-    summary: 'Create a refund against a payment intent (COD collected / gateway stub)',
+    summary: 'Create a refund against a payment intent (COD collected / configured gateway)',
   })
   @ApiHeader({
     name: 'Idempotency-Key',

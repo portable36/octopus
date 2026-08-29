@@ -15,6 +15,7 @@ import {
 } from '../../../../shared-kernel/application/ports/product-search-index.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
+import { runOutboxDelivery } from '../outbox-delivery';
 
 /**
  * Idempotent search indexer for octopus.search-indexing.
@@ -32,28 +33,26 @@ export class SearchIndexingProcessor {
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
-    const dedupeKey = `outbox:processed:${job.outboxId}`;
-    const claimed = await this.redis.set(dedupeKey, '1', 'EX', 60 * 60 * 24 * 14, 'NX');
-    if (claimed !== 'OK') {
-      this.logger.debug(`Skipping duplicate search job ${job.outboxId} (${job.eventType})`);
-      return;
-    }
-
-    const offerIds = await this.resolveOfferIds(job);
-    if (offerIds.length === 0) {
-      return;
-    }
-
-    const sources = await this.catalog.loadOfferSources(offerIds);
-    const byId = new Map(sources.map((source) => [source.offerId, source] as const));
-
-    for (const offerId of offerIds) {
-      const source = byId.get(offerId);
-      if (!source) {
-        await this.index.deleteByOfferId(offerId);
-        continue;
+    const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
+      const offerIds = await this.resolveOfferIds(job);
+      if (offerIds.length === 0) {
+        return;
       }
-      await this.indexOfferSource(source);
+
+      const sources = await this.catalog.loadOfferSources(offerIds);
+      const byId = new Map(sources.map((source) => [source.offerId, source] as const));
+
+      for (const offerId of offerIds) {
+        const source = byId.get(offerId);
+        if (!source) {
+          await this.index.deleteByOfferId(offerId);
+          continue;
+        }
+        await this.indexOfferSource(source);
+      }
+    });
+    if (!processed) {
+      this.logger.debug(`Skipping duplicate search job ${job.outboxId} (${job.eventType})`);
     }
   }
 

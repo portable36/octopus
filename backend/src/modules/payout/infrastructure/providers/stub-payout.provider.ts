@@ -5,7 +5,7 @@ import type {
   PayoutProviderPort,
 } from '../../application/ports/payout-provider.port';
 
-/** Phase 15.2 stub — always succeeds. Replace with bank/bKash adapter later. */
+/** Phase 15.2 stub — fails closed until a bank/bKash adapter is configured. */
 @Injectable()
 export class StubPayoutProviderAdapter implements PayoutProviderPort {
   public async disburse(input: {
@@ -23,8 +23,8 @@ export class StubPayoutProviderAdapter implements PayoutProviderPort {
       },
       async (span) => {
         const result: PayoutDisburseResult = {
-          ok: true,
-          providerRef: `stub:${input.payoutId}`,
+          ok: false,
+          reason: 'PAYOUT_PROVIDER_NOT_CONFIGURED',
         };
         span.setAttribute('octopus.payout.ok', result.ok);
         return result;

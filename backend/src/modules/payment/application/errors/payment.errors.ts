@@ -21,3 +21,12 @@ export class PaymentIdempotencyConflictError extends Error {
     this.name = 'PaymentIdempotencyConflictError';
   }
 }
+
+export class PaymentProviderUnavailableError extends Error {
+  readonly code = 'PAYMENT_PROVIDER_UNAVAILABLE';
+
+  constructor(message = 'Online payment providers are not configured.') {
+    super(message);
+    this.name = 'PaymentProviderUnavailableError';
+  }
+}

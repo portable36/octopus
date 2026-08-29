@@ -9,6 +9,7 @@ Checkout owns:
 - Checkout session aggregate and idempotency key binding
 - Shipping address snapshot and shipping method selection
 - Server-side total calculation pipeline
+- Server-owned tax, shipping, and commission policy inputs
 - Checkout submission command and result
 - Handoff references to created orders and payment intents
 
@@ -35,7 +36,9 @@ validate user/session
 
 ## Idempotency
 
-Checkout submission requires `Idempotency-Key`. Retries return the same outcome without duplicate orders or duplicate reservations.
+Checkout submission requires `Idempotency-Key`. A durable claim is acquired before inventory
+or order side effects. Retries return the same completed outcome; a concurrent request with
+the same key receives `CHECKOUT_IN_PROGRESS` and can retry after the first request finishes.
 
 ## Multi-vendor checkout
 
@@ -44,6 +47,7 @@ Unified checkout may create multiple orders when fulfillment, payout, tax, or pa
 ## Invariants
 
 - Browser-calculated totals are never authoritative
+- Client-supplied shipping, tax-rate, and commission-rate overrides are ignored and excluded from the checkout contract
 - Inventory reservation precedes or accompanies order creation per documented transaction boundary
 - Failed payment does not leave orphaned reservations without compensating release
 - Address and shipping snapshots are immutable on the created order

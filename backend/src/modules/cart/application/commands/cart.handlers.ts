@@ -15,6 +15,7 @@ import {
 import { Cart } from '../../domain/aggregates/cart.aggregate';
 import type { CartLineProps } from '../../domain/aggregates/cart.aggregate';
 import type { CartValidationIssue } from '../../domain/cart.types';
+import { CartDomainError } from '../../domain/errors/cart.errors';
 import {
   CartAccessDeniedError,
   CartNotFoundError,
@@ -281,9 +282,14 @@ export class CartCommandHandler {
     readonly owner: CartOwner;
   }): Promise<Cart> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
-    cart.markCheckedOut(input.expectedVersion);
-    await this.carts.save(cart);
-    return cart;
+    const checkedOut = await this.carts.markCheckedOut(cart.id.value, input.expectedVersion);
+    if (!checkedOut) {
+      throw new CartDomainError(
+        'Cart version conflict or cart is no longer active.',
+        'CART_VERSION_CONFLICT',
+      );
+    }
+    return checkedOut;
   }
 
   /**

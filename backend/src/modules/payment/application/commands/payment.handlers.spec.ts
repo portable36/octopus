@@ -10,6 +10,7 @@ import { CodAmountMismatchError } from '../../domain/errors/payment.errors';
 import {
   PaymentAccessDeniedError,
   PaymentIdempotencyConflictError,
+  PaymentProviderUnavailableError,
 } from '../errors/payment.errors';
 
 function makeCodIntent(orderId = 'ord-a') {
@@ -91,19 +92,19 @@ describe('Payment handlers', () => {
       }),
     ).rejects.toBeInstanceOf(PaymentIdempotencyConflictError);
 
-    const gateway = await handler.execute({
-      checkoutId: 'chk-1',
-      orderId: 'ord-gw',
-      vendorId: 'v-1',
-      storeId: 's-1',
-      idempotencyKey: 'create-gw',
-      customerId: null,
-      currencyCode: 'BDT',
-      amountMinor: 1000,
-      paymentMethod: 'NAGAD',
-    });
-    expect(gateway.status).toBe('REQUIRES_PAYMENT');
-    expect(gateway.clientSecret).toBeTruthy();
+    await expect(
+      handler.execute({
+        checkoutId: 'chk-1',
+        orderId: 'ord-gw',
+        vendorId: 'v-1',
+        storeId: 's-1',
+        idempotencyKey: 'create-gw',
+        customerId: null,
+        currencyCode: 'BDT',
+        amountMinor: 1000,
+        paymentMethod: 'NAGAD',
+      }),
+    ).rejects.toBeInstanceOf(PaymentProviderUnavailableError);
   });
 
   it('collect success, amount mismatch, authz, and multi-store isolation', async () => {

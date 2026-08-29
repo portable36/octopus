@@ -8,6 +8,7 @@ import type {
   CreatePaymentIntentResult,
   CreateRefundInput,
   CreateRefundResult,
+  PaymentMethodDto,
   PaymentPort,
 } from '../../../../shared-kernel/application/ports/payment.port';
 import {
@@ -34,6 +35,10 @@ export class PaymentPortAdapter implements PaymentPort {
     private readonly refundHandler: CreateRefundHandler,
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
   ) {}
+
+  public isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): boolean {
+    return paymentMethod === 'COD';
+  }
 
   public createIntent(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult> {
     return this.createHandler.execute(input);

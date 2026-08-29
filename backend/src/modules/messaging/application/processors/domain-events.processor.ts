@@ -15,6 +15,7 @@ import {
 } from '../../../../shared-kernel/application/ports/notification-outbox-handler.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
+import { runOutboxDelivery } from '../outbox-delivery';
 
 /**
  * Idempotent domain-event consumer.
@@ -36,26 +37,24 @@ export class DomainEventsProcessor {
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
-    const dedupeKey = `outbox:processed:${job.outboxId}`;
-    const claimed = await this.redis.set(dedupeKey, '1', 'EX', 60 * 60 * 24 * 14, 'NX');
-    if (claimed !== 'OK') {
+    const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
+      if (job.eventType === 'CodCollected') {
+        await this.handleCodCollected(job.payload);
+      }
+      if (job.eventType === 'RefundCompleted') {
+        await this.handleRefundCompleted(job.payload);
+      }
+
+      await this.notificationEvents.handle(job.eventType, job.payload);
+      await this.marketingEvents.handle(job.eventType, job.payload);
+    });
+    if (!processed) {
       this.logger.debug(`Skipping duplicate outbox delivery ${job.outboxId} (${job.eventType})`);
       return;
     }
-
     this.logger.log(
       `Processed ${job.source} event ${job.eventType} aggregate=${job.aggregateId} v${job.eventVersion}`,
     );
-
-    if (job.eventType === 'CodCollected') {
-      await this.handleCodCollected(job.payload);
-    }
-    if (job.eventType === 'RefundCompleted') {
-      await this.handleRefundCompleted(job.payload);
-    }
-
-    await this.notificationEvents.handle(job.eventType, job.payload);
-    await this.marketingEvents.handle(job.eventType, job.payload);
   }
 
   private async handleCodCollected(payload: Record<string, unknown>): Promise<void> {

@@ -41,7 +41,11 @@ describe('SearchIndexingProcessor', () => {
         status: 'ACTIVE' as const,
       })),
     };
-    const redis = { set: vi.fn(async () => 'OK') };
+    const redis = {
+      get: vi.fn(async () => null),
+      set: vi.fn(async () => 'OK'),
+      del: vi.fn(async () => 1),
+    };
     const processor = new SearchIndexingProcessor(
       redis as never,
       index as never,
@@ -65,10 +69,61 @@ describe('SearchIndexingProcessor', () => {
     );
   });
 
+  it('does not permanently deduplicate a failed indexing attempt', async () => {
+    const index = {
+      indexOfferSource: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('temporary search outage'))
+        .mockResolvedValue('written' as const),
+      deleteByOfferId: vi.fn(),
+    };
+    const catalog = {
+      loadOfferSources: vi.fn(async () => [offerSource('o1')]),
+      listOfferIdsByProductId: vi.fn(),
+      listOfferIdsByVariantId: vi.fn(),
+      listOfferIdsByStoreAndVariant: vi.fn(),
+    };
+    const redis = {
+      get: vi.fn(async () => null),
+      set: vi.fn(async () => 'OK'),
+      del: vi.fn(async () => 1),
+    };
+    const processor = new SearchIndexingProcessor(
+      redis as never,
+      index as never,
+      catalog as never,
+      {
+        checkStoreAvailability: vi.fn(async () => ({
+          storeId: 's1',
+          variantId: 'v1',
+          available: 4,
+          status: 'ACTIVE' as const,
+        })),
+      } as never,
+    );
+    const job = {
+      outboxId: 'out-retry',
+      source: 'catalog' as const,
+      aggregateId: 'o1',
+      eventType: 'StoreOfferActivated',
+      payload: { offerId: 'o1' },
+      eventVersion: 1,
+    };
+
+    await expect(processor.handle(job)).rejects.toThrow('temporary search outage');
+    await expect(processor.handle(job)).resolves.toBeUndefined();
+
+    expect(index.indexOfferSource).toHaveBeenCalledTimes(2);
+  });
+
   it('skips duplicate deliveries', async () => {
     const index = { indexOfferSource: vi.fn(), deleteByOfferId: vi.fn() };
     const processor = new SearchIndexingProcessor(
-      { set: vi.fn(async () => null) } as never,
+      {
+        get: vi.fn(async () => '1'),
+        set: vi.fn(async () => null),
+        del: vi.fn(),
+      } as never,
       index as never,
       {} as never,
       {} as never,
@@ -96,7 +151,11 @@ describe('SearchIndexingProcessor', () => {
       listOfferIdsByProductId: vi.fn(),
     };
     const processor = new SearchIndexingProcessor(
-      { set: vi.fn(async () => 'OK') } as never,
+      {
+        get: vi.fn(async () => null),
+        set: vi.fn(async () => 'OK'),
+        del: vi.fn(async () => 1),
+      } as never,
       index as never,
       catalog as never,
       {
@@ -135,7 +194,11 @@ describe('SearchIndexingProcessor', () => {
       listOfferIdsByStoreAndVariant: vi.fn(),
     };
     const processor = new SearchIndexingProcessor(
-      { set: vi.fn(async () => 'OK') } as never,
+      {
+        get: vi.fn(async () => null),
+        set: vi.fn(async () => 'OK'),
+        del: vi.fn(async () => 1),
+      } as never,
       index as never,
       catalog as never,
       {

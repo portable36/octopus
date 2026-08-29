@@ -10,6 +10,7 @@ import {
 } from '../../../../shared-kernel/application/ports/reporting-outbox-handler.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
+import { runOutboxDelivery } from '../outbox-delivery';
 
 /**
  * BullMQ worker for octopus.marketing (OrderCreated / OrderPaid from order outbox).
@@ -27,19 +28,17 @@ export class MarketingProcessor {
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
-    const dedupeKey = `outbox:processed:${job.outboxId}`;
-    const claimed = await this.redis.set(dedupeKey, '1', 'EX', 60 * 60 * 24 * 14, 'NX');
-    if (claimed !== 'OK') {
+    const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
+      await this.reporting.handle(job.eventType, job.payload);
+
+      if (job.eventType === 'OrderCreated') {
+        return;
+      }
+
+      await this.marketing.handle(job.eventType, job.payload);
+    });
+    if (!processed) {
       this.logger.debug(`Skipping duplicate marketing job ${job.outboxId} (${job.eventType})`);
-      return;
     }
-
-    await this.reporting.handle(job.eventType, job.payload);
-
-    if (job.eventType === 'OrderCreated') {
-      return;
-    }
-
-    await this.marketing.handle(job.eventType, job.payload);
   }
 }

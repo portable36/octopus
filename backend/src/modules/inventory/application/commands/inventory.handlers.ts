@@ -627,20 +627,21 @@ export class ReservationCommandHandler {
   }): Promise<{ reservationId: string; availableAfter: number }> {
     await this.auth.requireMutator(input.storeId, input.actorUserId, input.actorRoles);
 
-    const prior = await this.inventory.findCompletedOperation(input.idempotencyKey);
-    if (prior?.['reservationId']) {
-      return {
-        reservationId: String(prior['reservationId']),
-        availableAfter: Number(prior['availableAfter'] ?? 0),
-      };
-    }
-
     const warehouse = await this.auth.requireWarehouseForStore(input.warehouseId, input.storeId);
     warehouse.assertActive();
 
     let result: { reservationId: string; availableAfter: number };
     try {
       result = await this.inventory.withLockedUnitOfWork(async (uow) => {
+        await uow.lockIdempotencyKey(input.idempotencyKey);
+        const prior = await uow.findCompletedOperation(input.idempotencyKey);
+        if (prior?.['reservationId']) {
+          return {
+            reservationId: String(prior['reservationId']),
+            availableAfter: Number(prior['availableAfter'] ?? 0),
+          };
+        }
+
         const item = await uow.findItemByWarehouseAndVariantForUpdate(
           warehouse.id.value,
           input.variantId,
@@ -680,7 +681,14 @@ export class ReservationCommandHandler {
             correlationId: input.correlationId ?? null,
           }),
         );
-        return { reservationId: reservation.id.value, availableAfter: item.available };
+        const result = { reservationId: reservation.id.value, availableAfter: item.available };
+        await uow.recordCompletedOperation({
+          idempotencyKey: input.idempotencyKey,
+          operationType: 'RESERVE',
+          referenceId: result.reservationId,
+          result,
+        });
+        return result;
       });
     } catch (error) {
       if (error instanceof InsufficientStockError) {
@@ -689,12 +697,6 @@ export class ReservationCommandHandler {
       throw error;
     }
 
-    await this.inventory.recordCompletedOperation({
-      idempotencyKey: input.idempotencyKey,
-      operationType: 'RESERVE',
-      referenceId: result.reservationId,
-      result,
-    });
     return result;
   }
 
@@ -705,12 +707,13 @@ export class ReservationCommandHandler {
     readonly idempotencyKey: string;
     readonly correlationId?: string;
   }): Promise<void> {
-    const prior = await this.inventory.findCompletedOperation(input.idempotencyKey);
-    if (prior) {
-      return;
-    }
-
     await this.inventory.withLockedUnitOfWork(async (uow) => {
+      await uow.lockIdempotencyKey(input.idempotencyKey);
+      const prior = await uow.findCompletedOperation(input.idempotencyKey);
+      if (prior) {
+        return;
+      }
+
       const reservation = await uow.findReservationByIdForUpdate(input.reservationId);
       if (!reservation) {
         throw new ReservationNotFoundError();
@@ -743,13 +746,12 @@ export class ReservationCommandHandler {
           correlationId: input.correlationId ?? null,
         }),
       );
-    });
-
-    await this.inventory.recordCompletedOperation({
-      idempotencyKey: input.idempotencyKey,
-      operationType: 'RELEASE',
-      referenceId: input.reservationId,
-      result: { ok: true },
+      await uow.recordCompletedOperation({
+        idempotencyKey: input.idempotencyKey,
+        operationType: 'RELEASE',
+        referenceId: input.reservationId,
+        result: { ok: true },
+      });
     });
   }
 
@@ -760,12 +762,13 @@ export class ReservationCommandHandler {
     readonly idempotencyKey: string;
     readonly correlationId?: string;
   }): Promise<void> {
-    const prior = await this.inventory.findCompletedOperation(input.idempotencyKey);
-    if (prior) {
-      return;
-    }
-
     await this.inventory.withLockedUnitOfWork(async (uow) => {
+      await uow.lockIdempotencyKey(input.idempotencyKey);
+      const prior = await uow.findCompletedOperation(input.idempotencyKey);
+      if (prior) {
+        return;
+      }
+
       const reservation = await uow.findReservationByIdForUpdate(input.reservationId);
       if (!reservation) {
         throw new ReservationNotFoundError();
@@ -798,13 +801,12 @@ export class ReservationCommandHandler {
           correlationId: input.correlationId ?? null,
         }),
       );
-    });
-
-    await this.inventory.recordCompletedOperation({
-      idempotencyKey: input.idempotencyKey,
-      operationType: 'DEDUCT',
-      referenceId: input.reservationId,
-      result: { ok: true },
+      await uow.recordCompletedOperation({
+        idempotencyKey: input.idempotencyKey,
+        operationType: 'DEDUCT',
+        referenceId: input.reservationId,
+        result: { ok: true },
+      });
     });
   }
 

@@ -13,3 +13,12 @@ export class CheckoutIdempotencyConflictError extends Error {
     this.name = 'CheckoutIdempotencyConflictError';
   }
 }
+
+export class CheckoutInProgressError extends Error {
+  readonly code = 'CHECKOUT_IN_PROGRESS';
+
+  constructor(message = 'Checkout with this idempotency key is already in progress.') {
+    super(message);
+    this.name = 'CheckoutInProgressError';
+  }
+}

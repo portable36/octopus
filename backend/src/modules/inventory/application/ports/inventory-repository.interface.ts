@@ -5,6 +5,14 @@ import type { InventoryMovementRecord } from '../../domain/entities/inventory-mo
 export const INVENTORY_REPOSITORY = Symbol('INVENTORY_REPOSITORY');
 
 export interface InventoryMutationUnitOfWork {
+  lockIdempotencyKey(idempotencyKey: string): Promise<void>;
+  findCompletedOperation(idempotencyKey: string): Promise<Record<string, unknown> | null>;
+  recordCompletedOperation(input: {
+    readonly idempotencyKey: string;
+    readonly operationType: string;
+    readonly referenceId?: string | null;
+    readonly result: Record<string, unknown>;
+  }): Promise<void>;
   saveItem(item: InventoryItem): Promise<void>;
   saveReservation(reservation: InventoryReservation): Promise<void>;
   appendMovement(movement: InventoryMovementRecord): Promise<void>;

@@ -21,14 +21,20 @@ export class CheckoutSubmissionOrmEntity {
   @Property({ fieldName: 'cart_id', type: 'uuid' })
   cartId!: string;
 
-  @Property({ fieldName: 'outcome_json', type: 'json' })
-  outcomeJson!: Record<string, unknown>;
+  @Property({ fieldName: 'outcome_json', type: 'json', nullable: true })
+  outcomeJson!: Record<string, unknown> | null;
 
   @Property()
-  status!: 'COMPLETED';
+  status!: 'IN_PROGRESS' | 'COMPLETED';
+
+  @Property({ fieldName: 'processing_token', type: 'string', length: 64, nullable: true })
+  processingToken!: string | null;
 
   @Property({ fieldName: 'created_at' })
   createdAt!: Date;
+
+  @Property({ fieldName: 'updated_at' })
+  updatedAt!: Date;
 }
 
 /** Temporary payment intent records until Phase 11 Payment module replaces PaymentPort adapter. */

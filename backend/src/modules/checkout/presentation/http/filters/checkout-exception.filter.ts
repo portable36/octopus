@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import {
   CheckoutAccessDeniedError,
   CheckoutIdempotencyConflictError,
+  CheckoutInProgressError,
 } from '../../../application/errors/checkout.errors';
 import {
   CheckoutCartConflictError,
@@ -16,6 +17,7 @@ import {
   CheckoutDomainError,
   CheckoutAccessDeniedError,
   CheckoutIdempotencyConflictError,
+  CheckoutInProgressError,
   CheckoutValidationError,
   CheckoutCartConflictError,
   CheckoutInventoryError,
@@ -23,7 +25,11 @@ import {
 )
 export class CheckoutExceptionFilter implements ExceptionFilter {
   catch(
-    exception: CheckoutDomainError | CheckoutAccessDeniedError | CheckoutIdempotencyConflictError,
+    exception:
+      | CheckoutDomainError
+      | CheckoutAccessDeniedError
+      | CheckoutIdempotencyConflictError
+      | CheckoutInProgressError,
     host: ArgumentsHost,
   ): void {
     const res = host.switchToHttp().getResponse<Response>();
@@ -32,7 +38,8 @@ export class CheckoutExceptionFilter implements ExceptionFilter {
       status = HttpStatus.FORBIDDEN;
     } else if (
       exception instanceof CheckoutCartConflictError ||
-      exception instanceof CheckoutIdempotencyConflictError
+      exception instanceof CheckoutIdempotencyConflictError ||
+      exception instanceof CheckoutInProgressError
     ) {
       status = HttpStatus.CONFLICT;
     } else if (exception instanceof CheckoutInventoryError) {

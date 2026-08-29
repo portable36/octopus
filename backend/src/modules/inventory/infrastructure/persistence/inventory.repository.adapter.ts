@@ -20,6 +20,39 @@ import { InventoryReservationOrmEntity } from './inventory-reservation.orm-entit
 class MikroInventoryUnitOfWork implements InventoryMutationUnitOfWork {
   constructor(private readonly tx: EntityManager) {}
 
+  public async lockIdempotencyKey(idempotencyKey: string): Promise<void> {
+    await this.tx
+      .getConnection()
+      .execute(`select pg_advisory_xact_lock(hashtextextended(?, 0))`, [idempotencyKey]);
+  }
+
+  public async findCompletedOperation(
+    idempotencyKey: string,
+  ): Promise<Record<string, unknown> | null> {
+    const entity = await this.tx.findOne(InventoryOperationOrmEntity, {
+      idempotencyKey,
+      status: 'COMPLETED',
+    });
+    return entity?.resultJson ?? null;
+  }
+
+  public async recordCompletedOperation(input: {
+    readonly idempotencyKey: string;
+    readonly operationType: string;
+    readonly referenceId?: string | null;
+    readonly result: Record<string, unknown>;
+  }): Promise<void> {
+    const entity = new InventoryOperationOrmEntity();
+    entity.id = UniqueID.create().value;
+    entity.idempotencyKey = input.idempotencyKey;
+    entity.operationType = input.operationType;
+    entity.referenceId = input.referenceId ?? null;
+    entity.resultJson = input.result;
+    entity.status = 'COMPLETED';
+    entity.createdAt = new Date();
+    await this.tx.persist(entity).flush();
+  }
+
   public async saveItem(item: InventoryItem): Promise<void> {
     const existing = await this.tx.findOne(InventoryItemOrmEntity, { id: item.id.value });
     const entity = existing ?? new InventoryItemOrmEntity();

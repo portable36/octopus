@@ -36,7 +36,7 @@ Payment does not own:
 `COD | SSLCOMMERZ | BKASH | NAGAD` — one method per checkout; one intent per store order.
 
 - **COD:** no `clientSecret`; staff collects via `POST /api/v1/payments/cod/:paymentIntentId/collect` with `payment.cod.collect`.
-- **Gateways:** method-aware stub intents return `REQUIRES_PAYMENT` + `clientSecret` until live adapters ship.
+- **Gateways:** unavailable until live provider adapters ship; checkout fails before creating orders or reservations.
 
 ### Admin COD settings (Phase 20.4 partial)
 
@@ -64,7 +64,7 @@ PaymentPort
   createRefund({ paymentIntentId, amountMinor, ... })
 ```
 
-Implement SSLCommerz, bKash, and Nagad behind adapters in infrastructure. Domain code never imports provider SDKs. Refunds use `PaymentRefundGateway` (stub until live).
+Implement SSLCommerz, bKash, and Nagad behind adapters in infrastructure. Domain code never imports provider SDKs. Until then, online intent creation and provider refunds fail closed; COD manual refunds remain local.
 
 ## Refunds (Phase 14.2)
 

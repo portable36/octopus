@@ -33,6 +33,7 @@ describe('CartCommandHandler.validate', () => {
     const cart = seedCart();
     const repo: CartRepository = {
       save: vi.fn(),
+      markCheckedOut: vi.fn(),
       findById: vi.fn(async () => cart),
       findActiveByCustomerId: vi.fn(),
       findActiveByGuestToken: vi.fn(),
@@ -106,6 +107,7 @@ describe('CartCommandHandler.validate', () => {
     const cart = seedCart();
     const repo: CartRepository = {
       save: vi.fn(),
+      markCheckedOut: vi.fn(),
       findById: vi.fn(async () => cart),
       findActiveByCustomerId: vi.fn(),
       findActiveByGuestToken: vi.fn(),
@@ -120,5 +122,35 @@ describe('CartCommandHandler.validate', () => {
     await expect(
       handler.get(cart.id.value, { customerId: 'other-customer' }),
     ).rejects.toMatchObject({ code: 'CART_ACCESS_DENIED' });
+  });
+});
+
+describe('CartCommandHandler.markCheckedOut', () => {
+  it('surfaces an atomic version conflict without falling back to an overwrite save', async () => {
+    const cart = seedCart();
+    const save = vi.fn();
+    const markCheckedOut = vi.fn(async () => null);
+    const handler = new CartCommandHandler(
+      {
+        save,
+        markCheckedOut,
+        findById: vi.fn(async () => cart),
+        findActiveByCustomerId: vi.fn(),
+        findActiveByGuestToken: vi.fn(),
+      } as never,
+      { findByStoreAndVariant: vi.fn() } as never,
+      { getAvailability: vi.fn() } as never,
+      { quote: vi.fn() } as never,
+    );
+
+    await expect(
+      handler.markCheckedOut({
+        cartId: cart.id.value,
+        expectedVersion: cart.version,
+        owner: { customerId: 'customer-1' },
+      }),
+    ).rejects.toMatchObject({ code: 'CART_VERSION_CONFLICT' });
+    expect(markCheckedOut).toHaveBeenCalledWith(cart.id.value, cart.version);
+    expect(save).not.toHaveBeenCalled();
   });
 });

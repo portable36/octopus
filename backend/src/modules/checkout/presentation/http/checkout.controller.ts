@@ -76,11 +76,6 @@ export class CheckoutController {
           : {}),
       },
       shippingMethod: body.shippingMethod,
-      ...(body.shippingMinor !== undefined ? { shippingMinor: body.shippingMinor } : {}),
-      ...(body.taxRateBps !== undefined ? { taxRateBps: body.taxRateBps } : {}),
-      ...(body.commissionRateBps !== undefined
-        ? { commissionRateBps: body.commissionRateBps }
-        : {}),
       ...(body.couponCode !== undefined ? { couponCode: body.couponCode } : {}),
       ...(body.attribution !== undefined
         ? {

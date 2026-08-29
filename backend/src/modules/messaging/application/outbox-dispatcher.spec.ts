@@ -70,7 +70,8 @@ describe('DomainEventsProcessor', () => {
 
   it('processes once and skips duplicates via Redis NX', async () => {
     const redis = {
-      set: vi.fn().mockResolvedValueOnce('OK').mockResolvedValueOnce(null),
+      get: vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce('1'),
+      set: vi.fn().mockResolvedValue('OK'),
     };
     const ledger = {
       recordRefundAllocation: vi.fn(),
@@ -94,12 +95,67 @@ describe('DomainEventsProcessor', () => {
     await processor.handle(job);
     await processor.handle(job);
 
-    expect(redis.set).toHaveBeenCalledTimes(2);
+    expect(redis.set).toHaveBeenCalledTimes(1);
     expect(ledger.recordRefundAllocation).not.toHaveBeenCalled();
   });
 
+  it('does not permanently deduplicate a failed delivery', async () => {
+    const redis = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue('OK'),
+    };
+    const ledger = {
+      recordRefundAllocation: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('temporary ledger outage'))
+        .mockResolvedValue(undefined),
+      recordSaleRecognition: vi.fn(),
+    };
+    const processor = new DomainEventsProcessor(
+      redis as never,
+      ledger as never,
+      notifications as never,
+      marketing as never,
+    );
+    const job = {
+      outboxId: '55555555-5555-7555-8555-555555555555',
+      source: 'payment' as const,
+      aggregateId: 'refund-2',
+      eventType: 'RefundCompleted',
+      payload: {
+        allocation: {
+          refundId: 'refund-2',
+          paymentIntentId: 'pi-2',
+          orderId: 'ord-2',
+          vendorId: 'vendor-2',
+          storeId: 'store-2',
+          amountMinor: 100,
+          currencyCode: 'BDT',
+          method: 'MANUAL',
+        },
+      },
+      eventVersion: 1,
+    };
+
+    await expect(processor.handle(job)).rejects.toThrow('temporary ledger outage');
+    await expect(processor.handle(job)).resolves.toBeUndefined();
+
+    expect(ledger.recordRefundAllocation).toHaveBeenCalledTimes(2);
+    expect(redis.set).toHaveBeenNthCalledWith(
+      1,
+      `outbox:processed:${job.outboxId}`,
+      '1',
+      'EX',
+      60 * 60 * 24 * 14,
+      'NX',
+    );
+  });
+
   it('posts RefundCompleted allocation to LedgerPort', async () => {
-    const redis = { set: vi.fn().mockResolvedValue('OK') };
+    const redis = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue('OK'),
+    };
     const ledger = {
       recordRefundAllocation: vi.fn().mockResolvedValue(undefined),
       recordSaleRecognition: vi.fn().mockResolvedValue(undefined),
@@ -149,7 +205,10 @@ describe('DomainEventsProcessor', () => {
   });
 
   it('recognizes sale on CodCollected', async () => {
-    const redis = { set: vi.fn().mockResolvedValue('OK') };
+    const redis = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue('OK'),
+    };
     const ledger = {
       recordRefundAllocation: vi.fn(),
       recordSaleRecognition: vi.fn().mockResolvedValue(undefined),

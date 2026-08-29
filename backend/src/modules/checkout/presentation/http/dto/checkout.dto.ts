@@ -5,7 +5,6 @@ import {
   IsOptional,
   IsString,
   IsUUID,
-  Max,
   MaxLength,
   Min,
   MinLength,
@@ -138,26 +137,6 @@ export class SubmitCheckoutDto {
   @MinLength(1)
   @MaxLength(64)
   shippingMethod!: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  shippingMinor?: number;
-
-  @ApiPropertyOptional({ description: 'Tax rate in basis points' })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Max(100_000)
-  taxRateBps?: number;
-
-  @ApiPropertyOptional({ description: 'Commission rate in basis points' })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Max(100_000)
-  commissionRateBps?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

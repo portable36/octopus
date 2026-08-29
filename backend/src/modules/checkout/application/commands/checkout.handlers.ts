@@ -34,6 +34,7 @@ import { recordCheckoutOutcome } from '../../../../shared-kernel/infrastructure/
 import {
   CheckoutAccessDeniedError,
   CheckoutIdempotencyConflictError,
+  CheckoutInProgressError,
 } from '../errors/checkout.errors';
 import {
   CheckoutCartConflictError,
@@ -62,9 +63,6 @@ export interface SubmitCheckoutInput {
   readonly paymentMethod: PaymentMethodDto;
   readonly shippingAddress: ShippingAddress;
   readonly shippingMethod: string;
-  readonly shippingMinor?: number;
-  readonly taxRateBps?: number;
-  readonly commissionRateBps?: number;
   readonly couponCode?: string;
   readonly attribution?: {
     readonly landingPath?: string;
@@ -109,13 +107,13 @@ export class CheckoutSubmitHandler {
     this.assertShippingAddress(input.shippingAddress);
     const requestHash = hashSubmitRequest(input);
 
-    const existing = await this.checkouts.findCompletedByIdempotencyKey(input.idempotencyKey);
-    if (existing) {
-      if (existing.cartId !== input.cartId) {
-        throw new CheckoutIdempotencyConflictError();
-      }
-      recordCheckoutOutcome('success');
-      return existing;
+    if (!this.payments.isPaymentMethodAvailable(input.paymentMethod)) {
+      throw new CheckoutValidationError('The selected payment method is currently unavailable.', [
+        {
+          code: 'PAYMENT_METHOD_UNAVAILABLE',
+          message: 'Online payment providers are not configured.',
+        },
+      ]);
     }
 
     const validation = await this.carts.validate(input.cartId, input.owner);
@@ -138,9 +136,6 @@ export class CheckoutSubmitHandler {
     const checkoutId = UniqueID.create().value;
     const byStore = groupLinesByStore(cart.lines);
     const quotes = new Map<string, PricingQuoteResult>();
-    const shippingMinor = input.shippingMinor ?? 0;
-    const taxRateBps = input.taxRateBps ?? 0;
-    const commissionRateBps = input.commissionRateBps ?? 0;
     const reservationTtlMs = await this.resolveReservationTtlMs(input.paymentMethod, byStore);
 
     try {
@@ -159,9 +154,8 @@ export class CheckoutSubmitHandler {
               quantity: line.quantity,
               unitBasePriceMinor: line.unitPriceSnapshotMinor,
             })),
+            // Pricing policy is server-owned; client financial overrides are not accepted.
             shippingMinor: 0,
-            taxRateBps,
-            commissionRateBps,
             ...(input.couponCode !== undefined ? { couponCode: input.couponCode } : {}),
             ...(input.owner.customerId !== undefined ? { customerId: input.owner.customerId } : {}),
           });
@@ -180,20 +174,34 @@ export class CheckoutSubmitHandler {
     }
 
     const storeIds = [...byStore.keys()];
-    const primaryStoreId = storeIds[0]!;
-    const primaryQuote = quotes.get(primaryStoreId)!;
-    quotes.set(primaryStoreId, {
-      ...primaryQuote,
-      shippingMinor,
-      totalMinor: primaryQuote.totalMinor - primaryQuote.shippingMinor + shippingMinor,
-    });
 
     if (input.paymentMethod === 'COD') {
       await this.assertCodEligibility(byStore, quotes);
     }
 
+    const claimToken = UniqueID.create().value;
+    const claim = await this.checkouts.claim({
+      idempotencyKey: input.idempotencyKey,
+      requestHash,
+      customerId: input.owner.customerId ?? null,
+      guestToken: input.owner.guestToken ?? null,
+      cartId: input.cartId,
+      claimToken,
+    });
+    if (claim.status !== 'CLAIMED' && claim.requestHash !== requestHash) {
+      throw new CheckoutIdempotencyConflictError();
+    }
+    if (claim.status === 'COMPLETED') {
+      recordCheckoutOutcome('success');
+      return claim.outcome;
+    }
+    if (claim.status === 'IN_PROGRESS') {
+      throw new CheckoutInProgressError();
+    }
+
     const reservationIds: string[] = [];
     const lineReservations = new Map<string, { reservationId: string; warehouseId: string }>();
+    let ordersCreated = false;
 
     try {
       for (const line of cart.lines) {
@@ -227,6 +235,7 @@ export class CheckoutSubmitHandler {
       const paymentRefs: CheckoutPaymentRef[] = [];
       let subtotalMinor = 0;
       let discountMinor = 0;
+      let shippingMinor = 0;
       let taxMinor = 0;
       let commissionMinor = 0;
       let grandTotalMinor = 0;
@@ -277,6 +286,7 @@ export class CheckoutSubmitHandler {
             };
           }),
         });
+        ordersCreated = true;
         orderRefs.push({
           orderId: order.orderId,
           orderNumber: order.orderNumber,
@@ -315,6 +325,7 @@ export class CheckoutSubmitHandler {
 
         subtotalMinor += quote.subtotalMinor;
         discountMinor += quote.discountMinor;
+        shippingMinor += quote.shippingMinor;
         taxMinor += quote.taxMinor;
         commissionMinor += quote.commissionMinor;
         grandTotalMinor += quote.totalMinor;
@@ -329,7 +340,7 @@ export class CheckoutSubmitHandler {
         }
       }
 
-      await this.carts.markCheckedOut({
+      const checkedOutCart = await this.carts.markCheckedOut({
         cartId: cart.cartId,
         expectedVersion: cart.version,
         owner: input.owner,
@@ -338,7 +349,7 @@ export class CheckoutSubmitHandler {
       const outcome: CheckoutOutcome = {
         checkoutId,
         cartId: cart.cartId,
-        cartVersion: cart.version,
+        cartVersion: checkedOutCart.version,
         status: 'COMPLETED',
         paymentMethod: input.paymentMethod,
         totals: {
@@ -355,22 +366,29 @@ export class CheckoutSubmitHandler {
         reservationIds,
       };
 
-      await this.checkouts.saveCompleted({
+      await this.checkouts.complete({
         idempotencyKey: input.idempotencyKey,
-        requestHash,
-        customerId: input.owner.customerId ?? null,
-        guestToken: input.owner.guestToken ?? null,
+        claimToken,
         outcome,
       });
 
       recordCheckoutOutcome('success');
       return outcome;
     } catch (error) {
-      await this.releaseAll(
+      const reservationsReleased = await this.releaseAll(
         reservationIds,
         input.owner.customerId ?? 'guest',
         input.idempotencyKey,
       );
+      if (!ordersCreated && reservationsReleased) {
+        await this.checkouts.release({
+          idempotencyKey: input.idempotencyKey,
+          claimToken,
+        });
+      }
+      if (isCartVersionConflict(error)) {
+        throw new CheckoutCartConflictError('Cart was checked out by another request.');
+      }
       throw error;
     }
   }
@@ -466,7 +484,8 @@ export class CheckoutSubmitHandler {
     reservationIds: readonly string[],
     actorUserId: string,
     idempotencyKey: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
+    let released = true;
     for (const [index, reservationId] of reservationIds.entries()) {
       try {
         await this.inventory.release({
@@ -475,9 +494,10 @@ export class CheckoutSubmitHandler {
           idempotencyKey: `${idempotencyKey}:release:${index}`,
         });
       } catch {
-        // Best-effort compensation; reservations expire by TTL.
+        released = false;
       }
     }
+    return released;
   }
 
   private assertOwner(owner: CartOwnerRef): void {
@@ -485,6 +505,15 @@ export class CheckoutSubmitHandler {
       throw new CheckoutAccessDeniedError();
     }
   }
+}
+
+function isCartVersionConflict(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'CART_VERSION_CONFLICT'
+  );
 }
 
 function groupLinesByStore<T extends { readonly storeId: string }>(
@@ -506,9 +535,6 @@ function hashSubmitRequest(input: SubmitCheckoutInput): string {
     paymentMethod: input.paymentMethod,
     shippingMethod: input.shippingMethod,
     shippingAddress: input.shippingAddress,
-    shippingMinor: input.shippingMinor ?? 0,
-    taxRateBps: input.taxRateBps ?? 0,
-    commissionRateBps: input.commissionRateBps ?? 0,
     couponCode: input.couponCode ?? null,
   });
   return createHash('sha256').update(payload).digest('hex');

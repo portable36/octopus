@@ -6,6 +6,7 @@ import {
 } from '../../../../shared-kernel/application/ports/notification.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
+import { runOutboxDelivery } from '../outbox-delivery';
 
 @Injectable()
 export class NotificationProcessor {
@@ -17,22 +18,20 @@ export class NotificationProcessor {
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
-    const dedupeKey = `outbox:processed:${job.outboxId}`;
-    const claimed = await this.redis.set(dedupeKey, '1', 'EX', 60 * 60 * 24 * 14, 'NX');
-    if (claimed !== 'OK') {
+    const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
+      if (job.eventType !== 'NotificationDeliver') {
+        this.logger.debug(`Ignoring non-delivery notification job ${job.eventType}`);
+        return;
+      }
+
+      const notificationId = String(job.payload['notificationId'] ?? job.aggregateId);
+      if (!notificationId) {
+        return;
+      }
+      await this.notifications.processQueuedDelivery(notificationId);
+    });
+    if (!processed) {
       this.logger.debug(`Skipping duplicate notification job ${job.outboxId}`);
-      return;
     }
-
-    if (job.eventType !== 'NotificationDeliver') {
-      this.logger.debug(`Ignoring non-delivery notification job ${job.eventType}`);
-      return;
-    }
-
-    const notificationId = String(job.payload['notificationId'] ?? job.aggregateId);
-    if (!notificationId) {
-      return;
-    }
-    await this.notifications.processQueuedDelivery(notificationId);
   }
 }

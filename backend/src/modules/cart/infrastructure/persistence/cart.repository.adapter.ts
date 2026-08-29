@@ -10,6 +10,32 @@ import { CartLineOrmEntity, CartOrmEntity } from './cart.orm-entity';
 export class CartRepositoryAdapter implements CartRepository {
   constructor(private readonly em: EntityManager) {}
 
+  public async markCheckedOut(cartId: string, expectedVersion: number): Promise<Cart | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.getConnection().execute(
+        `update "carts"
+         set "status" = 'CHECKED_OUT',
+             "version" = "version" + 1,
+             "updated_at" = now()
+         where "id" = ?
+           and "status" = 'ACTIVE'
+           and "version" = ?
+         returning "id"`,
+        [cartId, expectedVersion],
+      );
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return null;
+      }
+
+      const entity = await tx.findOne(CartOrmEntity, { id: cartId });
+      if (!entity) {
+        return null;
+      }
+      const lines = await tx.find(CartLineOrmEntity, { cartId });
+      return cartToDomain(entity, lines);
+    });
+  }
+
   public async save(cart: Cart): Promise<void> {
     await withRlsContext(this.em, async (tx) => {
       const existing = await tx.findOne(CartOrmEntity, { id: cart.id.value });

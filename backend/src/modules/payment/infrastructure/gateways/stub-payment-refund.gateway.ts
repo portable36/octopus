@@ -37,11 +37,11 @@ export class StubPaymentRefundGateway implements PaymentRefundGateway {
           return result;
         }
 
-        // ponytail: always-succeed stub; real adapters verify capture + provider signatures.
+        // Fail closed until a provider adapter verifies capture, signatures, and idempotency.
         const result: PaymentRefundGatewayResult = {
-          ok: true,
-          providerRefundId: `stub-refund:${input.provider}:${input.refundId.slice(0, 8)}`,
-          responseCode: 'STUB_OK',
+          ok: false,
+          providerRefundId: null,
+          responseCode: 'PROVIDER_NOT_CONFIGURED',
           receivedAt,
         };
         span.setAttribute('octopus.payment.response_code', result.responseCode);

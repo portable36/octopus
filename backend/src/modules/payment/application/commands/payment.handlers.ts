@@ -24,6 +24,7 @@ import {
   PaymentIdempotencyConflictError,
   PaymentNotFoundError,
   PaymentAccessDeniedError,
+  PaymentProviderUnavailableError,
 } from '../errors/payment.errors';
 import {
   PAYMENT_REFUND_GATEWAY,
@@ -38,6 +39,11 @@ export class CreatePaymentIntentHandler {
   constructor(@Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository) {}
 
   public async execute(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult> {
+    if (input.paymentMethod !== 'COD') {
+      recordPaymentFailure('provider_unavailable');
+      throw new PaymentProviderUnavailableError();
+    }
+
     const requestHash = hashCreateIntent(input);
     const prior = await this.payments.findOperation(input.idempotencyKey);
     if (prior) {

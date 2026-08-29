@@ -4,6 +4,7 @@ import {
   PaymentAccessDeniedError,
   PaymentIdempotencyConflictError,
   PaymentNotFoundError,
+  PaymentProviderUnavailableError,
 } from '../../../application/errors/payment.errors';
 import { PaymentDomainError } from '../../../domain/errors/payment.errors';
 
@@ -12,6 +13,7 @@ import { PaymentDomainError } from '../../../domain/errors/payment.errors';
   PaymentAccessDeniedError,
   PaymentNotFoundError,
   PaymentIdempotencyConflictError,
+  PaymentProviderUnavailableError,
 )
 export class PaymentExceptionFilter implements ExceptionFilter {
   catch(
@@ -19,7 +21,8 @@ export class PaymentExceptionFilter implements ExceptionFilter {
       | PaymentDomainError
       | PaymentAccessDeniedError
       | PaymentNotFoundError
-      | PaymentIdempotencyConflictError,
+      | PaymentIdempotencyConflictError
+      | PaymentProviderUnavailableError,
     host: ArgumentsHost,
   ): void {
     const res = host.switchToHttp().getResponse<Response>();
@@ -30,6 +33,8 @@ export class PaymentExceptionFilter implements ExceptionFilter {
       status = HttpStatus.NOT_FOUND;
     } else if (exception instanceof PaymentIdempotencyConflictError) {
       status = HttpStatus.CONFLICT;
+    } else if (exception instanceof PaymentProviderUnavailableError) {
+      status = HttpStatus.SERVICE_UNAVAILABLE;
     } else if ('code' in exception && exception.code === 'COD_ALREADY_COLLECTED') {
       status = HttpStatus.CONFLICT;
     } else if ('code' in exception && exception.code === 'COD_AMOUNT_MISMATCH') {

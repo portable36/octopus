@@ -32,6 +32,7 @@ Default roles: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human
 ### Domain docs
 
 Single-context glossary in root `CONTEXT.md`; ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+Durable verified agent context is maintained in root `memory.md`; read it before substantive work and keep it free of secrets and transient chat history.
 
 ## Everyday flows
 

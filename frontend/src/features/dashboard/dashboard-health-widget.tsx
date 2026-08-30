@@ -12,6 +12,7 @@ type ReadyResponse = {
 export function DashboardHealthWidget() {
   const [status, setStatus] = useState<string>('loading');
   const [detail, setDetail] = useState<string>('');
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,7 +40,7 @@ export function DashboardHealthWidget() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
   return (
     <div className="space-y-1 text-sm">
@@ -47,6 +48,15 @@ export function DashboardHealthWidget() {
         Status: <span className="font-medium">{status}</span>
       </p>
       <p className="text-muted-foreground">{detail}</p>
+      {status === 'error' ? (
+        <button
+          type="button"
+          className="mt-2 min-h-11 rounded-md border border-border px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => setRetryCount((count) => count + 1)}
+        >
+          Retry
+        </button>
+      ) : null}
     </div>
   );
 }

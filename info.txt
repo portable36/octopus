@@ -1,0 +1,12 @@
+some tools for ai codding
+https://github.com/volcengine/OpenViking
+https://github.com/rohitg00/agentmemory
+https://github.com/cathrynlavery/diagram-design
+https://github.com/k-dense-ai/scientific-agent-skills
+https://github.com/ai-boost/awesome-harness-engineering
+https://github.com/mukul975/anthropic-cybersecurity-skills
+https://github.com/browser-use/browser-use
+https://github.com/github/spec-kit
+
+@octopus/frontend@0.1.0 dev
+> next dev --port 3001

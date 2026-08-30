@@ -20,8 +20,9 @@ function SuccessBody() {
 
   if (!outcome) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Order placed</h1>
+      <div className="sf-panel space-y-4">
+        <p className="sf-eyebrow">Checkout complete</p>
+        <h1 className="text-3xl font-semibold tracking-tight">Order placed</h1>
         <p className="text-sm text-muted-foreground">
           Checkout completed{checkoutId ? ` (${checkoutId.slice(0, 8)}…)` : ''}, but the result is
           not in this browser session. Sign in later (Phase 18.4) to view orders from the account
@@ -37,14 +38,15 @@ function SuccessBody() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Order confirmed</h1>
+        <p className="sf-eyebrow">Checkout complete</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Order confirmed</h1>
         <p className="text-sm text-muted-foreground">
           Server checkout {outcome.checkoutId.slice(0, 8)}… · {outcome.paymentMethod} ·{' '}
           {outcome.orders.length} store order(s)
         </p>
       </header>
 
-      <section className="space-y-2 border border-border p-4" aria-labelledby="totals">
+      <section className="sf-panel space-y-2" aria-labelledby="totals">
         <h2 id="totals" className="text-sm font-medium">
           Authoritative totals (server)
         </h2>
@@ -76,7 +78,7 @@ function SuccessBody() {
         <h2 id="orders" className="text-lg font-semibold">
           Orders by store
         </h2>
-        <ul className="divide-y divide-border border border-border">
+        <ul className="sf-order-list">
           {outcome.orders.map((order) => (
             <li key={order.orderId} className="space-y-1 px-4 py-3 text-sm">
               <p className="font-medium">{order.orderNumber}</p>

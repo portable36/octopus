@@ -46,6 +46,7 @@ ov add-resource docs --wait
 ov add-resource .cursor/rules --wait
 ov add-resource AGENTS.md --wait
 ov add-resource CONTEXT.md --wait
+ov add-resource memory.md --wait
 ov find "tenant isolation RLS"
 ov ls viking://resources/
 ```

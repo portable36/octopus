@@ -1,11 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 
 export default function AdminCommerceConfigPage() {
-  const token = useAccessToken();
   return (
     <div className="space-y-6">
       <AdminPageHeader

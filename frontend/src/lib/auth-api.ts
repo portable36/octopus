@@ -37,6 +37,8 @@ export type MeResponse = AuthUser & {
   permissions: readonly string[];
 };
 
+let refreshInFlight: Promise<AuthSession> | null = null;
+
 async function mergeGuestCart(accessToken: string): Promise<void> {
   try {
     const guestToken = getOrCreateGuestToken();
@@ -103,13 +105,37 @@ export async function verifyMfaLogin(input: {
   return session;
 }
 
-export async function refreshSession(): Promise<AuthSession> {
-  const session = await apiRequest<AuthSession>('/auth/refresh', {
+export type MfaSetup = {
+  secret: string;
+  otpauthUrl: string;
+};
+
+export function beginMfaSetup(): Promise<MfaSetup> {
+  return authedRequest<MfaSetup>('/auth/mfa/setup', { method: 'POST' });
+}
+
+export function enableMfa(code: string): Promise<void> {
+  return authedRequest<void>('/auth/mfa/enable', {
     method: 'POST',
-    credentials: 'include',
+    body: { code },
   });
-  setAccessToken(session.accessToken);
-  return session;
+}
+
+export async function refreshSession(): Promise<AuthSession> {
+  if (!refreshInFlight) {
+    refreshInFlight = apiRequest<AuthSession>('/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((session) => {
+        setAccessToken(session.accessToken);
+        return session;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {

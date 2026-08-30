@@ -60,10 +60,12 @@ export default async function SearchPage({ searchParams }: Props) {
 
       <div className="sf-browse-grid">
         <aside className="sf-filter-panel">
-          <p className="sf-eyebrow mb-3">Refine results</p>
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
-            <SearchFiltersForm />
-          </Suspense>
+          <details className="sf-filter-details" open>
+            <summary>Refine results</summary>
+            <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
+              <SearchFiltersForm />
+            </Suspense>
+          </details>
         </aside>
         <section className="min-w-0" aria-labelledby="search-results">
           <div className="sf-section-heading mb-5">

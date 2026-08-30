@@ -14,8 +14,10 @@ export function DashboardOrderReportWidget() {
   const [summary, setSummary] = useState<AdminOrderReportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
     if (!token) {
       setLoading(false);
       setError('Sign in required to load order report.');
@@ -42,16 +44,29 @@ export function DashboardOrderReportWidget() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [retryCount, token]);
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading report…</p>;
   }
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-md border border-border px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => setRetryCount((count) => count + 1)}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
   if (!summary) {
-    return null;
+    return <p className="text-sm text-muted-foreground">No report data yet.</p>;
   }
 
   return (

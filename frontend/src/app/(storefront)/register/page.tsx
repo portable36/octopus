@@ -63,12 +63,7 @@ export default function RegisterPage() {
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">Password</span>
-          <PasswordInput
-            name="password"
-            required
-            minLength={12}
-            autoComplete="new-password"
-          />
+          <PasswordInput name="password" required minLength={12} autoComplete="new-password" />
           <span className="text-xs text-muted-foreground">
             At least 12 characters, with upper, lower, number, and symbol.
           </span>

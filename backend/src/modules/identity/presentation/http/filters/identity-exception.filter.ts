@@ -1,9 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { PasswordPolicyViolationError } from '../../../domain/value-objects/password-policy.value-object';
 import { UserDomainError } from '../../../domain/errors/user.errors';
@@ -32,14 +27,17 @@ export class IdentityExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<{ url?: string }>();
     const mapped = this.mapException(exception);
 
-    response.status(mapped.status).type('application/problem+json').json({
-      type: `https://httpstatuses.com/${mapped.status}`,
-      title: HttpStatus[mapped.status] ?? 'Error',
-      status: mapped.status,
-      detail: mapped.detail,
-      instance: request.url ?? '',
-      ...(mapped.code ? { errorCode: mapped.code } : {}),
-    });
+    response
+      .status(mapped.status)
+      .type('application/problem+json')
+      .json({
+        type: `https://httpstatuses.com/${mapped.status}`,
+        title: HttpStatus[mapped.status] ?? 'Error',
+        status: mapped.status,
+        detail: mapped.detail,
+        instance: request.url ?? '',
+        ...(mapped.code ? { errorCode: mapped.code } : {}),
+      });
   }
 
   private mapException(exception: unknown): {

@@ -9,14 +9,12 @@ import { PASSWORD_HASHER, type PasswordHasher } from '../ports/password-hasher.i
 import { USER_REPOSITORY, type UserRepository } from '../ports/user-repository.interface';
 import { AuthSessionService } from '../services/auth-session.service';
 import { User } from '../../domain/aggregates/user.aggregate';
-import type { Role } from '../../domain/enums/role.enum';
 import type { AuthSession } from '../dto/auth-session.dto';
 
 export interface RegisterUserCommand {
   readonly email: string;
   readonly name: string;
   readonly password: string;
-  readonly roles?: readonly Role[];
 }
 
 @Injectable()
@@ -36,7 +34,7 @@ export class RegisterUserHandler {
     }
 
     const passwordHash = await this.passwordHasher.hash(command.password);
-    const user = User.register(command.email, command.name, passwordHash, command.roles);
+    const user = User.register(command.email, command.name, passwordHash);
     user.activate();
 
     await this.users.save(user);

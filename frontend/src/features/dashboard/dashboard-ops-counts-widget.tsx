@@ -57,8 +57,10 @@ export function DashboardOpsCountsWidget() {
   const [counts, setCounts] = useState<Counts>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
     if (!token) {
       setLoading(false);
       setError('Sign in required to load operational counts.');
@@ -98,13 +100,26 @@ export function DashboardOpsCountsWidget() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [retryCount, token]);
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading counts…</p>;
   }
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-md border border-border px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => setRetryCount((count) => count + 1)}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -115,24 +130,14 @@ export function DashboardOpsCountsWidget() {
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
         <Stat label="Vendors" value={counts.vendors} href={'/admin/vendors'} />
         <Stat label="Stores" value={counts.stores} href={'/admin/stores'} />
-        <Stat
-          label="Orders"
-          value={counts.ordersRecent}
-          href={'/admin/orders'}
-          note="Recent ≤50"
-        />
+        <Stat label="Orders" value={counts.ordersRecent} href={'/admin/orders'} note="Recent ≤50" />
         <Stat
           label="Payments"
           value={counts.paymentsRecent}
           href={'/admin/payments'}
           note="Recent ≤50"
         />
-        <Stat
-          label="Users"
-          value={counts.usersRecent}
-          href={'/admin/users'}
-          note="Recent ≤50"
-        />
+        <Stat label="Users" value={counts.usersRecent} href={'/admin/users'} note="Recent ≤50" />
       </dl>
     </div>
   );

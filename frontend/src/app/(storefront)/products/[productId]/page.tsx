@@ -48,7 +48,7 @@ export default async function ProductDetailPage({ params }: Props) {
       />
       <JsonLd data={productJsonLd(product)} />
       <header className="space-y-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="sf-breadcrumb">
           <Link href="/search" className="hover:underline">
             Search
           </Link>
@@ -59,6 +59,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <section className="sf-product-layout" aria-labelledby="product-title">
         <div className="sf-product-stage" aria-label={`${product.name} product image placeholder`}>
+          <span className="sf-product-stage-label">Product</span>
           {product.name.trim().charAt(0).toUpperCase() || 'O'}
         </div>
         <div className="sf-product-details">
@@ -67,9 +68,21 @@ export default async function ProductDetailPage({ params }: Props) {
             <h1 id="product-title" className="text-4xl font-semibold tracking-tight md:text-5xl">
               {product.name}
             </h1>
-            {product.description ? (
-              <p className="whitespace-pre-wrap text-muted-foreground">{product.description}</p>
-            ) : null}
+            <div className="sf-disclosures">
+              <details open>
+                <summary>Product details</summary>
+                <p className="whitespace-pre-wrap text-muted-foreground">
+                  {product.description ?? 'Product details will be updated by the store.'}
+                </p>
+              </details>
+              <details>
+                <summary>Delivery and returns</summary>
+                <p className="text-muted-foreground">
+                  Delivery options, availability, and the final total are confirmed at checkout.
+                  Review the order details before placing your order.
+                </p>
+              </details>
+            </div>
           </div>
           <div className="sf-panel space-y-4">
             <div>

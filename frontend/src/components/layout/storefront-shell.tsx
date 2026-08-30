@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ConsentManager } from '@/components/marketing/consent-manager';
 import { TrackingService } from '@/components/marketing/tracking-service';
 import { AccountNavLink } from '@/components/storefront/account-nav-link';
@@ -18,9 +18,11 @@ const NAV = [
 
 export function StorefrontShell({ children }: { readonly children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [siteName, setSiteName] = useState(getPublicAppName());
   const [brandStyle, setBrandStyle] = useState<CSSProperties | undefined>(undefined);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -54,9 +56,13 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
     >
       <header className="sf-header border-b border-border">
         <div className="sf-announcement">
-          <span>Delivery across Bangladesh</span>
-          <span aria-hidden="true">·</span>
-          <span>Server-confirmed prices at checkout</span>
+          <div className="sf-utility-inner">
+            <span>Delivery across Bangladesh</span>
+            <span className="sf-utility-links">
+              <Link href="/account/orders">Track order</Link>
+              <Link href="/vendor">Sell on Octopus</Link>
+            </span>
+          </div>
         </div>
         <div className="sf-header-main">
           <button
@@ -77,6 +83,31 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
               <small>Marketplace</small>
             </span>
           </Link>
+          <form
+            className="sf-search-form"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const query = searchQuery.trim();
+              router.push(query ? `/search?q=${encodeURIComponent(query)}` : '/search');
+              setMenuOpen(false);
+            }}
+          >
+            <label className="sr-only" htmlFor="storefront-search">
+              Search products
+            </label>
+            <input
+              id="storefront-search"
+              className="sf-search-input"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search products"
+            />
+            <button className="sf-search-submit" type="submit">
+              Search
+            </button>
+          </form>
           <nav className="sf-nav" aria-label="Primary">
             {NAV.map((item) => (
               <Link
@@ -93,8 +124,38 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             <CartNavLink />
           </div>
         </div>
+        <nav className="sf-category-nav" aria-label="Browse">
+          <Link href="/categories">Shop all categories</Link>
+          <Link href="/search?stockStatus=IN_STOCK">In stock now</Link>
+          <Link href="/search?sort=newest">New arrivals</Link>
+        </nav>
         {menuOpen ? (
           <nav id="storefront-mobile-nav" className="sf-mobile-nav" aria-label="Mobile primary">
+            <form
+              className="sf-mobile-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const query = searchQuery.trim();
+                router.push(query ? `/search?q=${encodeURIComponent(query)}` : '/search');
+                setMenuOpen(false);
+              }}
+            >
+              <label className="sr-only" htmlFor="storefront-mobile-search">
+                Search products
+              </label>
+              <input
+                id="storefront-mobile-search"
+                className="sf-search-input"
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search products"
+              />
+              <button className="sf-search-submit" type="submit">
+                Search
+              </button>
+            </form>
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -117,6 +178,22 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
               A multi-vendor marketplace built for confident browsing, clear delivery, and
               server-confirmed checkout.
             </p>
+          </div>
+          <div className="sf-footer-links">
+            <div>
+              <p className="sf-footer-heading">Shop</p>
+              <Link href="/categories">Categories</Link>
+              <Link href="/search">All offers</Link>
+            </div>
+            <div>
+              <p className="sf-footer-heading">Help</p>
+              <Link href="/account/orders">Track order</Link>
+              <Link href="/account">Account</Link>
+            </div>
+            <div>
+              <p className="sf-footer-heading">Sell</p>
+              <Link href="/vendor">Open vendor portal</Link>
+            </div>
           </div>
           <div className="sf-footer-meta">
             <span>

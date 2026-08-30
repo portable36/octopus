@@ -5,7 +5,6 @@ import { LoggerModule } from 'nestjs-pino';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { randomUUID } from 'node:crypto';
 import { validateEnv, type Env } from './config/env.validation';
-import { AppConfigService } from './config/app-config.service';
 import { AppConfigModule } from './config/app-config.module';
 import { ContextMiddleware } from './shared-kernel/infrastructure/context/context.middleware';
 import { buildRequestLogBindings } from './shared-kernel/infrastructure/observability/pino-request-bindings';

@@ -48,7 +48,8 @@ openviking-server
 ```
 
 **Index approved docs only:** `ov add-resource docs --wait`, then
-`ov add-resource .cursor/rules --wait` and `ov find "…"`.
+`ov add-resource .cursor/rules --wait`, `ov add-resource memory.md --wait`, and
+`ov find "…"`.
 
 **Cursor:** lifecycle-hook installer is macOS/Linux; on Windows use [OpenViking Helper](https://github.com/volcengine/OpenViking) or MCP at `http://localhost:1933/mcp`. See `.cursor/rules/openviking.mdc`.
 

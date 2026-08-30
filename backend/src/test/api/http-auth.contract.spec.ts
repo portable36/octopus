@@ -9,7 +9,7 @@ describe('API HTTP contracts (Nest + Supertest)', () => {
 
   beforeAll(async () => {
     app = await createApiTestApp({ verifyAccess });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await app.close();

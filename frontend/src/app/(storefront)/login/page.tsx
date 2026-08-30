@@ -8,7 +8,9 @@ import { FieldWithIcon, UserFieldIcon } from '@/components/auth/field-with-icon'
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { ApiClientError } from '@/lib/api-client';
-import { loginAccount, MfaRequiredError, verifyMfaLogin } from '@/lib/auth-api';
+import { loginAccount, MfaRequiredError, type AuthUser, verifyMfaLogin } from '@/lib/auth-api';
+import { resolvePostLoginDestination } from '@/lib/auth-destination';
+import { listMyVendors } from '@/lib/vendor-api';
 
 const REMEMBER_EMAIL_KEY = 'octopus_remember_email';
 
@@ -33,9 +35,24 @@ function LoginForm() {
     }
   }, []);
 
-  async function finishLogin(): Promise<void> {
-    const next = searchParams.get('next') || '/account';
-    router.push(next.startsWith('/') ? next : '/account');
+  async function finishLogin(user: AuthUser): Promise<void> {
+    const isVendor = user.roles.some((role) => role === 'VENDOR_OWNER' || role === 'VENDOR_STAFF');
+    let vendorIds: readonly string[] = [];
+    if (isVendor) {
+      try {
+        const vendors = await listMyVendors();
+        vendorIds = vendors.map((vendor) => vendor.id);
+      } catch {
+        // The vendor picker can surface the retriable membership error.
+      }
+    }
+    router.push(
+      resolvePostLoginDestination({
+        user,
+        vendorIds,
+        next: searchParams.get('next'),
+      }),
+    );
     router.refresh();
   }
 
@@ -47,14 +64,14 @@ function LoginForm() {
     setError(null);
     try {
       if (mfaToken) {
-        await verifyMfaLogin({
+        const session = await verifyMfaLogin({
           mfaToken,
           code: String(form.get('code') || '').trim(),
         });
-        await finishLogin();
+        await finishLogin(session.user);
         return;
       }
-      await loginAccount({
+      const session = await loginAccount({
         email: submittedEmail,
         password: String(form.get('password') || ''),
       });
@@ -67,7 +84,7 @@ function LoginForm() {
       } catch {
         // ignore
       }
-      await finishLogin();
+      await finishLogin(session.user);
     } catch (err) {
       if (err instanceof MfaRequiredError) {
         setMfaToken(err.mfaToken);

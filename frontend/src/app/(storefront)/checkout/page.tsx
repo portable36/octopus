@@ -107,6 +107,20 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
+      <ol className="sf-checkout-steps" aria-label="Checkout progress">
+        <li className="sf-checkout-step-complete">
+          <span>1</span>
+          Cart
+        </li>
+        <li className="sf-checkout-step-active" aria-current="step">
+          <span>2</span>
+          Delivery
+        </li>
+        <li>
+          <span>3</span>
+          Confirmation
+        </li>
+      </ol>
       <header className="space-y-2">
         <p className="sf-eyebrow">Almost yours</p>
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Checkout</h1>

@@ -25,7 +25,7 @@ export class CreateStoreOfferHandler {
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
     @Inject(VARIANT_REPOSITORY) private readonly variants: VariantRepository,
     @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
   public async execute(input: {
@@ -81,7 +81,7 @@ export class CreateStoreOfferHandler {
 export class StoreOfferLifecycleHandler {
   constructor(
     @Inject(STORE_OFFER_REPOSITORY) private readonly offers: StoreOfferRepository,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
   public async activate(

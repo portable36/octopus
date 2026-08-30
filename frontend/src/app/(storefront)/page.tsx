@@ -28,59 +28,60 @@ export default async function StorefrontHomePage() {
   const roots = categories.filter((c) => c.parentId === null).slice(0, 12);
 
   return (
-    <div className="space-y-10">
-      <section className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">Marketplace</p>
-        <h1 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">{appName}</h1>
-        <p className="max-w-xl text-muted-foreground">
-          Browse published categories and sellable offers. Checkout totals always come from the
-          server.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/search"
-            className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >
-            Search offers
-          </Link>
-          <Link
-            href="/categories"
-            className="inline-flex h-10 items-center rounded-md border border-border px-4 text-sm font-medium hover:bg-muted"
-          >
-            All categories
-          </Link>
+    <div className="space-y-12">
+      <section className="sf-hero" aria-labelledby="home-title">
+        <div className="sf-hero-copy">
+          <p className="sf-eyebrow text-white/70">A marketplace for everyday finds</p>
+          <h1 id="home-title" className="sf-display">
+            Find your next favourite.
+          </h1>
+          <p>
+            Browse independent stores and published offers. Your final price and availability are
+            confirmed at checkout.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/search" className="sf-button-accent">
+              Explore offers
+            </Link>
+            <Link href="/categories" className="sf-button-secondary">
+              Browse categories
+            </Link>
+          </div>
         </div>
+        <div className="sf-hero-art" aria-label={`${appName} marketplace artwork`} />
       </section>
 
-      <section className="space-y-4" aria-labelledby="home-categories">
-        <div className="flex items-end justify-between gap-4">
-          <h2 id="home-categories" className="text-xl font-semibold tracking-tight">
-            Categories
-          </h2>
-          <Link href="/categories" className="text-sm text-muted-foreground hover:underline">
+      <section className="space-y-5" aria-labelledby="home-categories">
+        <div className="sf-section-heading">
+          <div>
+            <p className="sf-eyebrow">Start with a category</p>
+            <h2 id="home-categories" className="mt-1">
+              Shop by interest
+            </h2>
+          </div>
+          <Link href="/categories" className="text-sm font-semibold underline underline-offset-4">
             View all
           </Link>
         </div>
         {loadError ? (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="sf-panel text-sm text-destructive" role="alert">
             {loadError}
           </p>
         ) : roots.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active categories yet.</p>
+          <p className="sf-panel text-sm text-muted-foreground">
+            Categories will appear here as stores publish their first collections.
+          </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="sf-category-grid">
             {roots.map((category) => (
               <li key={category.id}>
-                <Link
-                  href={`/categories/${category.slug}`}
-                  className="block border border-border p-4 hover:bg-muted/50"
-                >
-                  <span className="font-medium">{category.name}</span>
+                <Link href={`/categories/${category.slug}`} className="sf-category-card">
+                  <span className="text-lg font-semibold tracking-tight">{category.name}</span>
                   {category.seo.description ? (
-                    <span className="mt-1 block text-sm text-muted-foreground line-clamp-2">
-                      {category.seo.description}
-                    </span>
-                  ) : null}
+                    <span className="line-clamp-2">{category.seo.description}</span>
+                  ) : (
+                    <span>Explore this collection →</span>
+                  )}
                 </Link>
               </li>
             ))}

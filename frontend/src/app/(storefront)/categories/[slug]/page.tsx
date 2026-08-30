@@ -65,7 +65,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: 'Home', path: '/' },
@@ -73,7 +73,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
           { name: category.name, path: `/categories/${category.slug}` },
         ])}
       />
-      <header className="space-y-2">
+      <header className="space-y-3">
         <p className="text-sm text-muted-foreground">
           <Link href="/categories" className="hover:underline">
             Categories
@@ -81,7 +81,8 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
           <span aria-hidden="true"> / </span>
           {category.name}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <p className="sf-eyebrow">Collection</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
           {category.seo.title ?? category.name}
         </h1>
         {category.seo.description ? (
@@ -89,28 +90,40 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
         ) : null}
       </header>
 
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
-        <SearchFiltersForm actionPath={`/categories/${category.slug}`} />
-      </Suspense>
-
-      {offersError ? (
-        <p className="text-sm text-destructive" role="alert">
-          {offersError}
-        </p>
-      ) : result && result.hits.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No offers in this category yet.</p>
-      ) : result ? (
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Showing {result.hits.length} of ~{result.estimatedTotal}
-          </p>
-          <div className="sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            {result.hits.map((hit) => (
-              <OfferCard key={hit.id} hit={hit} />
-            ))}
+      <div className="sf-browse-grid">
+        <aside className="sf-filter-panel">
+          <p className="sf-eyebrow mb-3">Refine results</p>
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
+            <SearchFiltersForm actionPath={`/categories/${category.slug}`} />
+          </Suspense>
+        </aside>
+        <section className="min-w-0" aria-labelledby="category-offers">
+          <div className="sf-section-heading mb-5">
+            <h2 id="category-offers">Offers in this collection</h2>
+            {result ? (
+              <span className="text-sm text-muted-foreground">
+                {result.hits.length} of ~{result.estimatedTotal}
+              </span>
+            ) : null}
           </div>
-        </div>
-      ) : null}
+
+          {offersError ? (
+            <p className="sf-panel text-sm text-destructive" role="alert">
+              {offersError}
+            </p>
+          ) : result && result.hits.length === 0 ? (
+            <p className="sf-panel text-sm text-muted-foreground">
+              This collection has no matching offers yet.
+            </p>
+          ) : result ? (
+            <div className="sf-results-grid">
+              {result.hits.map((hit) => (
+                <OfferCard key={hit.id} hit={hit} />
+              ))}
+            </div>
+          ) : null}
+        </section>
+      </div>
     </div>
   );
 }

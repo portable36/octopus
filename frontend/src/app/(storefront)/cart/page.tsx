@@ -65,17 +65,18 @@ export default function CartPage() {
     cart?.lines.reduce((sum, line) => sum + line.unitPriceSnapshotMinor * line.quantity, 0) ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Cart</h1>
+        <p className="sf-eyebrow">Your selection</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Cart</h1>
         <p className="text-sm text-muted-foreground">
-          Line prices are display snapshots. Checkout recalculates authoritative totals on the
+          Review your items before checkout. Final prices and availability are confirmed by the
           server.
         </p>
       </header>
 
       {loadError ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="sf-panel text-sm text-destructive" role="alert">
           {loadError}
         </p>
       ) : null}
@@ -83,35 +84,35 @@ export default function CartPage() {
       {!cart ? (
         <p className="text-sm text-muted-foreground">Loading cart…</p>
       ) : cart.lines.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Cart is empty.{' '}
-          <Link href="/search" className="underline">
+        <div className="sf-panel space-y-3">
+          <h2 className="text-lg font-semibold">Your cart is waiting</h2>
+          <p className="text-sm text-muted-foreground">
+            Add an offer from the marketplace to start your order.
+          </p>
+          <Link href="/search" className="sf-button-primary w-fit">
             Browse offers
           </Link>
-        </p>
+        </div>
       ) : (
-        <>
-          <ul className="divide-y divide-border border border-border">
+        <div className="sf-cart-layout">
+          <ul className="sf-cart-list" aria-label="Cart items">
             {cart.lines.map((line) => (
-              <li
-                key={line.lineId}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-              >
+              <li key={line.lineId} className="sf-cart-line">
                 <div className="min-w-0 space-y-1">
                   <Link
                     href={`/products/${line.productId}`}
-                    className="font-medium hover:underline"
+                    className="font-semibold hover:underline"
                   >
                     Product {line.productId.slice(0, 8)}…
                   </Link>
                   <p className="text-xs text-muted-foreground">
                     Store {line.storeId.slice(0, 8)}… · variant {line.variantId.slice(0, 8)}…
                   </p>
-                  <p className="text-sm tabular-nums">
+                  <p className="sf-price text-sm tabular-nums">
                     {formatMoney(line.unitPriceSnapshotMinor, line.currencyCode)} × {line.quantity}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="sf-cart-controls">
                   <label className="sr-only" htmlFor={`qty-${line.lineId}`}>
                     Quantity
                   </label>
@@ -128,11 +129,11 @@ export default function CartPage() {
                         void onQuantity(line.lineId, next);
                       }
                     }}
-                    className="h-9 w-16 rounded-md border border-border bg-background px-2 text-sm"
                   />
                   <Button
                     type="button"
                     variant="outline"
+                    className="min-h-11 rounded-full"
                     disabled={busyLineId === line.lineId}
                     onClick={() => void onRemove(line.lineId)}
                   >
@@ -143,22 +144,22 @@ export default function CartPage() {
             ))}
           </ul>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border border-border p-4">
-            <p className="text-sm text-muted-foreground">
-              Display subtotal hint:{' '}
-              <span className="font-medium text-foreground tabular-nums">
+          <aside className="sf-panel sf-cart-summary" aria-label="Cart summary">
+            <p className="sf-eyebrow">Summary</p>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-muted-foreground">Display subtotal</span>
+              <span className="sf-price tabular-nums">
                 {formatMoney(hintTotal, cart.currencyCode)}
-              </span>{' '}
-              (not checkout truth)
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This is a display hint, not the final checkout total.
             </p>
-            <Link
-              href="/checkout"
-              className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              Checkout
+            <Link href="/checkout" className="sf-button-primary">
+              Continue to checkout
             </Link>
-          </div>
-        </>
+          </aside>
+        </div>
       )}
     </div>
   );

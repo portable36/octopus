@@ -35,7 +35,7 @@ export class CreateReceiptHandler {
     @Inject(RECEIPT_REPOSITORY) private readonly receipts: ReceiptRepository,
     @Inject(RECEIPT_TEMPLATE_REPOSITORY)
     private readonly templates: ReceiptTemplateRepository,
-    private readonly auth: PosAuthorizationService,
+    @Inject(PosAuthorizationService) private readonly auth: PosAuthorizationService,
     private readonly templateHandler: ReceiptTemplateHandler,
   ) {}
 

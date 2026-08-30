@@ -39,7 +39,12 @@ export function AddToCartButton({ storeId, variantId, disabled }: Props) {
 
   return (
     <div className="space-y-2">
-      <Button type="button" disabled={disabled || pending} onClick={() => void onAdd()}>
+      <Button
+        type="button"
+        className="sf-button-primary border-0"
+        disabled={disabled || pending}
+        onClick={() => void onAdd()}
+      >
         {pending ? 'Adding…' : 'Add to cart'}
       </Button>
       {error ? (

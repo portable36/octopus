@@ -41,8 +41,8 @@ export class LoginUserHandler {
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(LOGIN_RATE_LIMITER) private readonly rateLimiter: LoginRateLimiter,
-    private readonly authSession: AuthSessionService,
-    private readonly mfa: MfaHandlers,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
+    @Inject(MfaHandlers) private readonly mfa: MfaHandlers,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

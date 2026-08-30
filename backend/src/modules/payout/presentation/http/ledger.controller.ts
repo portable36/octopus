@@ -6,6 +6,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -61,7 +62,7 @@ function parseOptionalDate(value: string | undefined, label: string): Date | und
 export class LedgerController {
   constructor(
     private readonly ledger: LedgerCommandHandler,
-    private readonly authz: LedgerAuthorizationService,
+    @Inject(LedgerAuthorizationService) private readonly authz: LedgerAuthorizationService,
   ) {}
 
   @Get('vendors/:vendorId/balance')

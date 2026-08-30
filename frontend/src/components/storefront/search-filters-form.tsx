@@ -53,69 +53,56 @@ export function SearchFiltersForm({ actionPath = '/search' }: Props) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-col gap-3 border border-border p-4 md:flex-row md:flex-wrap md:items-end"
-      aria-label="Search filters"
-    >
-      <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm">
-        <span className="text-muted-foreground">Query</span>
+    <form onSubmit={onSubmit} className="sf-form" aria-label="Search filters">
+      <label>
+        <span>Search</span>
         <input
           name="q"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="h-10 rounded-md border border-border bg-background px-3"
           placeholder="Search products"
         />
       </label>
-      <label className="flex w-full flex-col gap-1 text-sm md:w-40">
-        <span className="text-muted-foreground">Sort</span>
-        <select
-          name="sort"
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="h-10 rounded-md border border-border bg-background px-3"
-        >
+      <label>
+        <span>Sort by</span>
+        <select name="sort" value={sort} onChange={(e) => setSort(e.target.value)}>
           <option value="relevance">Relevance</option>
           <option value="price_asc">Price ↑</option>
           <option value="price_desc">Price ↓</option>
           <option value="newest">Newest</option>
         </select>
       </label>
-      <label className="flex w-full flex-col gap-1 text-sm md:w-36">
-        <span className="text-muted-foreground">Min (minor)</span>
+      <label>
+        <span>Minimum price</span>
         <input
           name="minPriceMinor"
           inputMode="numeric"
           value={minPrice}
           onChange={(e) => setMinPrice(e.target.value)}
-          className="h-10 rounded-md border border-border bg-background px-3"
         />
       </label>
-      <label className="flex w-full flex-col gap-1 text-sm md:w-36">
-        <span className="text-muted-foreground">Max (minor)</span>
+      <label>
+        <span>Maximum price</span>
         <input
           name="maxPriceMinor"
           inputMode="numeric"
           value={maxPrice}
           onChange={(e) => setMaxPrice(e.target.value)}
-          className="h-10 rounded-md border border-border bg-background px-3"
         />
       </label>
-      <label className="flex w-full flex-col gap-1 text-sm md:w-44">
-        <span className="text-muted-foreground">Stock</span>
+      <label>
+        <span>Availability</span>
         <select
           name="stockStatus"
           value={stockStatus}
           onChange={(e) => setStockStatus(e.target.value)}
-          className="h-10 rounded-md border border-border bg-background px-3"
         >
           <option value="">Any</option>
           <option value="IN_STOCK">In stock</option>
           <option value="OUT_OF_STOCK">Out of stock</option>
         </select>
       </label>
-      <Button type="submit" className="md:mb-0">
+      <Button type="submit" className="sf-button-primary border-0">
         Apply
       </Button>
     </form>

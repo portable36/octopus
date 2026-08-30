@@ -22,32 +22,31 @@ export default async function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
-        <p className="text-sm text-muted-foreground">Active category tree for browsing.</p>
+    <div className="space-y-8">
+      <header className="space-y-3">
+        <p className="sf-eyebrow">Find your lane</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Categories</h1>
+        <p className="max-w-xl text-muted-foreground">
+          Explore collections from independent stores across the marketplace.
+        </p>
       </header>
       {loadError ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="sf-panel text-sm text-destructive" role="alert">
           {loadError}
         </p>
       ) : categories.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No categories published.</p>
+        <p className="sf-panel text-sm text-muted-foreground">
+          No categories are published yet. Check back soon for new collections.
+        </p>
       ) : (
-        <ul className="divide-y divide-border border border-border">
+        <ul className="sf-category-grid">
           {categories.map((category) => (
-            <li key={category.id} className="flex items-center justify-between gap-4 px-4 py-3">
-              <div>
-                <Link href={`/categories/${category.slug}`} className="font-medium hover:underline">
-                  {category.name}
-                </Link>
-                <p className="text-xs text-muted-foreground">/{category.slug}</p>
-              </div>
-              <Link
-                href={`/search?categoryId=${encodeURIComponent(category.id)}`}
-                className="text-sm text-muted-foreground hover:underline"
-              >
-                Offers
+            <li key={category.id}>
+              <Link href={`/categories/${category.slug}`} className="sf-category-card">
+                <span className="text-lg font-semibold tracking-tight">{category.name}</span>
+                <span>
+                  View offers <span aria-hidden="true">→</span>
+                </span>
               </Link>
             </li>
           ))}

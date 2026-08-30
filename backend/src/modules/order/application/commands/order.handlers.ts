@@ -80,7 +80,7 @@ export class CreateOrderFromCheckoutHandler {
 export class OrderLifecycleHandler {
   constructor(
     @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepository,
-    private readonly authz: OrderAuthorizationService,
+    @Inject(OrderAuthorizationService) private readonly authz: OrderAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

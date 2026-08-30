@@ -50,7 +50,7 @@ export class CreateVariantHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
     @Inject(VARIANT_REPOSITORY) private readonly variants: VariantRepository,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
   public async execute(command: CreateVariantCommand): Promise<Variant> {
@@ -114,7 +114,7 @@ export class VariantLifecycleHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
     @Inject(VARIANT_REPOSITORY) private readonly variants: VariantRepository,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
   public async activate(

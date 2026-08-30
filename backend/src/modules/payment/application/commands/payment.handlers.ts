@@ -86,7 +86,7 @@ export class CreatePaymentIntentHandler {
 export class CollectCodPaymentHandler {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
-    private readonly authz: PaymentAuthorizationService,
+    @Inject(PaymentAuthorizationService) private readonly authz: PaymentAuthorizationService,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
   ) {}
 
@@ -224,7 +224,7 @@ export class CollectCodPaymentHandler {
 export class CancelCodPaymentHandler {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
-    private readonly authz: PaymentAuthorizationService,
+    @Inject(PaymentAuthorizationService) private readonly authz: PaymentAuthorizationService,
   ) {}
 
   public async execute(input: CancelPaymentIntentInput): Promise<void> {
@@ -257,7 +257,7 @@ export class CancelCodPaymentHandler {
 export class CreateRefundHandler {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
-    private readonly authz: PaymentAuthorizationService,
+    @Inject(PaymentAuthorizationService) private readonly authz: PaymentAuthorizationService,
     @Inject(PAYMENT_REFUND_GATEWAY) private readonly gateway: PaymentRefundGateway,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,

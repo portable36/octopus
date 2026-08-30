@@ -48,72 +48,90 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Search</h1>
-        <p className="text-sm text-muted-foreground">
-          Offer search via Nest API (never Meilisearch from the browser). Filters live in the URL.
+    <div className="space-y-8">
+      <header className="space-y-3">
+        <p className="sf-eyebrow">Browse the marketplace</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Search offers</h1>
+        <p className="max-w-2xl text-muted-foreground">
+          Search published products across stores. Filters stay in the URL so you can share or
+          revisit a result.
         </p>
       </header>
 
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
-        <SearchFiltersForm />
-      </Suspense>
-
-      {query.categoryId || query.storeId || query.vendorId ? (
-        <p className="text-xs text-muted-foreground">
-          Scoped
-          {query.categoryId ? ` · category ${query.categoryId}` : ''}
-          {query.storeId ? ` · store ${query.storeId}` : ''}
-          {query.vendorId ? ` · vendor ${query.vendorId}` : ''}
-          {' · '}
-          <Link href="/search" className="underline">
-            clear scope
-          </Link>
-        </p>
-      ) : null}
-
-      {loadError ? (
-        <p className="text-sm text-destructive" role="alert">
-          {loadError}
-        </p>
-      ) : result && result.hits.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No matching offers.</p>
-      ) : result ? (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Showing {result.hits.length} of ~{result.estimatedTotal}
-            {result.query ? ` for “${result.query}”` : ''}
-          </p>
-          <div className="sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            {result.hits.map((hit) => (
-              <OfferCard key={hit.id} hit={hit} />
-            ))}
+      <div className="sf-browse-grid">
+        <aside className="sf-filter-panel">
+          <p className="sf-eyebrow mb-3">Refine results</p>
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading filters…</p>}>
+            <SearchFiltersForm />
+          </Suspense>
+        </aside>
+        <section className="min-w-0" aria-labelledby="search-results">
+          <div className="sf-section-heading mb-5">
+            <h2 id="search-results">Latest offers</h2>
+            {result ? (
+              <span className="text-sm text-muted-foreground">
+                {result.hits.length} of ~{result.estimatedTotal}
+              </span>
+            ) : null}
           </div>
-          {result.estimatedTotal > result.limit * result.page ? (
-            <Link
-              href={`/search?${new URLSearchParams({
-                ...(query.q ? { q: query.q } : {}),
-                ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-                ...(query.storeId ? { storeId: query.storeId } : {}),
-                ...(query.vendorId ? { vendorId: query.vendorId } : {}),
-                ...(query.sort ? { sort: query.sort } : {}),
-                ...(query.minPriceMinor !== undefined
-                  ? { minPriceMinor: String(query.minPriceMinor) }
-                  : {}),
-                ...(query.maxPriceMinor !== undefined
-                  ? { maxPriceMinor: String(query.maxPriceMinor) }
-                  : {}),
-                ...(query.stockStatus ? { stockStatus: query.stockStatus } : {}),
-                page: String(page + 1),
-              }).toString()}`}
-              className="inline-flex text-sm font-medium hover:underline"
-            >
-              Next page
-            </Link>
+
+          {query.categoryId || query.storeId || query.vendorId ? (
+            <p className="mb-4 text-xs text-muted-foreground">
+              Scoped
+              {query.categoryId ? ` · category ${query.categoryId}` : ''}
+              {query.storeId ? ` · store ${query.storeId}` : ''}
+              {query.vendorId ? ` · vendor ${query.vendorId}` : ''}
+              {' · '}
+              <Link href="/search" className="font-semibold underline underline-offset-4">
+                clear scope
+              </Link>
+            </p>
           ) : null}
-        </div>
-      ) : null}
+
+          {loadError ? (
+            <p className="sf-panel text-sm text-destructive" role="alert">
+              {loadError}
+            </p>
+          ) : result && result.hits.length === 0 ? (
+            <p className="sf-panel text-sm text-muted-foreground">
+              No matching offers yet. Try a wider search or clear a filter.
+            </p>
+          ) : result ? (
+            <div className="space-y-4">
+              {result.query ? (
+                <p className="text-sm text-muted-foreground">Results for “{result.query}”</p>
+              ) : null}
+              <div className="sf-results-grid">
+                {result.hits.map((hit) => (
+                  <OfferCard key={hit.id} hit={hit} />
+                ))}
+              </div>
+              {result.estimatedTotal > result.limit * result.page ? (
+                <Link
+                  href={`/search?${new URLSearchParams({
+                    ...(query.q ? { q: query.q } : {}),
+                    ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+                    ...(query.storeId ? { storeId: query.storeId } : {}),
+                    ...(query.vendorId ? { vendorId: query.vendorId } : {}),
+                    ...(query.sort ? { sort: query.sort } : {}),
+                    ...(query.minPriceMinor !== undefined
+                      ? { minPriceMinor: String(query.minPriceMinor) }
+                      : {}),
+                    ...(query.maxPriceMinor !== undefined
+                      ? { maxPriceMinor: String(query.maxPriceMinor) }
+                      : {}),
+                    ...(query.stockStatus ? { stockStatus: query.stockStatus } : {}),
+                    page: String(page + 1),
+                  }).toString()}`}
+                  className="sf-button-secondary"
+                >
+                  Next page
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      </div>
     </div>
   );
 }

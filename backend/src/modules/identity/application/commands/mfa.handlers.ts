@@ -33,7 +33,7 @@ export class MfaHandlers {
     @Inject(MFA_CHALLENGE_STORE) private readonly challenges: MfaChallengeStore,
     @Inject(MFA_SETUP_STORE) private readonly setups: MfaSetupStore,
     @Inject(MFA_SECRET_BOX) private readonly secrets: MfaSecretBox,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

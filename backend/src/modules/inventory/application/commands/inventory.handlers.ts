@@ -41,7 +41,7 @@ import { InventoryAuthorizationService } from '../services/inventory-authorizati
 export class WarehouseCommandHandler {
   constructor(
     @Inject(WAREHOUSE_REPOSITORY) private readonly warehouses: WarehouseRepository,
-    private readonly auth: InventoryAuthorizationService,
+    @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
   ) {}
 
   public async create(input: {
@@ -88,7 +88,7 @@ export class StockCommandHandler {
     @Inject(INVENTORY_REPOSITORY) private readonly inventory: InventoryRepository,
     @Inject(WAREHOUSE_REPOSITORY) private readonly warehouses: WarehouseRepository,
     @Inject(CATALOG_VARIANT_ACCESS) private readonly variants: CatalogVariantAccessPort,
-    private readonly auth: InventoryAuthorizationService,
+    @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
@@ -610,7 +610,7 @@ export class ReservationCommandHandler {
   constructor(
     @Inject(INVENTORY_REPOSITORY) private readonly inventory: InventoryRepository,
     @Inject(WAREHOUSE_REPOSITORY) private readonly warehouses: WarehouseRepository,
-    private readonly auth: InventoryAuthorizationService,
+    @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
   ) {}
 
   public async reserve(input: {

@@ -38,7 +38,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const variantsById = new Map(product.variants.map((v) => [v.id, v]));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: 'Home', path: '/' },
@@ -55,62 +55,73 @@ export default async function ProductDetailPage({ params }: Props) {
           <span aria-hidden="true"> / </span>
           Product
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-        {product.description ? (
-          <p className="max-w-2xl text-muted-foreground whitespace-pre-wrap">
-            {product.description}
-          </p>
-        ) : null}
       </header>
 
-      <section className="space-y-3" aria-labelledby="pdp-offers">
-        <h2 id="pdp-offers" className="text-lg font-semibold">
-          Available offers
-        </h2>
-        {product.offers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active store offers for this product.</p>
-        ) : (
-          <ul className="divide-y divide-border border border-border">
-            {product.offers.map((offer) => {
-              const variant = variantsById.get(offer.variantId);
-              return (
-                <li
-                  key={offer.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div>
-                    <p className="font-medium">{variant?.name ?? offer.variantId}</p>
-                    <p className="text-xs text-muted-foreground">
-                      SKU {variant?.sku ?? '—'} · store{' '}
-                      <Link
-                        href={`/search?storeId=${encodeURIComponent(offer.storeId)}`}
-                        className="underline"
-                      >
-                        {offer.storeId.slice(0, 8)}…
-                      </Link>
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <p className="font-medium tabular-nums">
-                      {formatMoney(offer.priceMinor, offer.currencyCode)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {offer.isAvailable ? 'Available' : 'Unavailable'}
-                    </p>
-                    <AddToCartButton
-                      storeId={offer.storeId}
-                      variantId={offer.variantId}
-                      disabled={!offer.isAvailable}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <p className="text-sm text-muted-foreground">
-          Offer prices are display snapshots; checkout totals are always server-authoritative.
-        </p>
+      <section className="sf-product-layout" aria-labelledby="product-title">
+        <div className="sf-product-stage" aria-label={`${product.name} product image placeholder`}>
+          {product.name.trim().charAt(0).toUpperCase() || 'O'}
+        </div>
+        <div className="sf-product-details">
+          <div className="space-y-3">
+            <p className="sf-eyebrow">Product</p>
+            <h1 id="product-title" className="text-4xl font-semibold tracking-tight md:text-5xl">
+              {product.name}
+            </h1>
+            {product.description ? (
+              <p className="whitespace-pre-wrap text-muted-foreground">{product.description}</p>
+            ) : null}
+          </div>
+          <div className="sf-panel space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Choose a store offer</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Prices shown here are snapshots. Checkout confirms the final total and availability.
+              </p>
+            </div>
+            {product.offers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No active store offers for this product.
+              </p>
+            ) : (
+              <ul className="sf-offer-list">
+                {product.offers.map((offer) => {
+                  const variant = variantsById.get(offer.variantId);
+                  return (
+                    <li key={offer.id} className="sf-offer-row">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {variant?.name ?? offer.variantId}
+                        </p>
+                        <p>
+                          SKU {variant?.sku ?? '—'} ·{' '}
+                          <Link
+                            href={`/search?storeId=${encodeURIComponent(offer.storeId)}`}
+                            className="underline underline-offset-4"
+                          >
+                            View store
+                          </Link>
+                        </p>
+                        <p className={offer.isAvailable ? 'sf-stock-ok' : 'sf-stock-out'}>
+                          {offer.isAvailable ? 'Available now' : 'Currently unavailable'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <p className="sf-price tabular-nums">
+                          {formatMoney(offer.priceMinor, offer.currencyCode)}
+                        </p>
+                        <AddToCartButton
+                          storeId={offer.storeId}
+                          variantId={offer.variantId}
+                          disabled={!offer.isAvailable}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
       </section>
     </div>
   );

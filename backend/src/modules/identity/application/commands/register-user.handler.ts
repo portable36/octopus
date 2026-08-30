@@ -24,7 +24,7 @@ export class RegisterUserHandler {
   constructor(
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Inject(NOTIFICATION_PORT) private readonly notifications: NotificationPort,
   ) {}
 

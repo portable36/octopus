@@ -14,7 +14,7 @@ import { PricingAuthorizationService } from '../services/pricing-authorization.s
 export class PromotionCommandHandler {
   constructor(
     @Inject(PROMOTION_REPOSITORY) private readonly promotions: PromotionRepository,
-    private readonly authz: PricingAuthorizationService,
+    @Inject(PricingAuthorizationService) private readonly authz: PricingAuthorizationService,
   ) {}
 
   public async create(input: {

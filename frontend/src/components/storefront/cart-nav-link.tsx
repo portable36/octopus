@@ -27,10 +27,7 @@ export function CartNavLink() {
   }, []);
 
   return (
-    <Link
-      href="/cart"
-      className="ml-1 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
-    >
+    <Link href="/cart" className="sf-action-link border border-border">
       Cart{count !== null && count > 0 ? ` (${count})` : ''}
     </Link>
   );

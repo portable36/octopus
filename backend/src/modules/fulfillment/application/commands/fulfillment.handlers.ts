@@ -58,6 +58,7 @@ export class CreateShipmentHandler {
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Inject(PAYMENT_PORT) private readonly payments: PaymentPort,
     @Inject(COURIER_PORT) private readonly courier: CourierPort,
+    @Inject(FulfillmentAuthorizationService)
     private readonly authz: FulfillmentAuthorizationService,
   ) {}
 
@@ -196,6 +197,7 @@ export class SyncShipmentStatusHandler {
     @Inject(FULFILLMENT_REPOSITORY) private readonly shipments: FulfillmentRepository,
     @Inject(COURIER_PORT) private readonly courier: CourierPort,
     @Inject(PAYMENT_PORT) private readonly payments: PaymentPort,
+    @Inject(FulfillmentAuthorizationService)
     private readonly authz: FulfillmentAuthorizationService,
   ) {}
 
@@ -254,6 +256,7 @@ export class MarkShipmentDeliveredManualHandler {
   constructor(
     @Inject(FULFILLMENT_REPOSITORY) private readonly shipments: FulfillmentRepository,
     @Inject(PAYMENT_PORT) private readonly payments: PaymentPort,
+    @Inject(FulfillmentAuthorizationService)
     private readonly authz: FulfillmentAuthorizationService,
   ) {}
 

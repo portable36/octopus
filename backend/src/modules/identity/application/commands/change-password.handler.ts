@@ -95,7 +95,7 @@ export class RequestPasswordResetHandler {
   constructor(
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_RESET_STORE) private readonly passwordResetStore: PasswordResetStore,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
   ) {}
 
   public async execute(command: RequestPasswordResetCommand): Promise<string | null> {
@@ -124,7 +124,7 @@ export class ResetPasswordHandler {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(PASSWORD_RESET_STORE) private readonly passwordResetStore: PasswordResetStore,
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

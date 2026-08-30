@@ -23,7 +23,7 @@ export function AccountNavLink() {
 
   if (authed === null) {
     return (
-      <span className="rounded-md px-3 py-2 text-sm text-muted-foreground" aria-hidden>
+      <span className="sf-action-link text-muted-foreground" aria-hidden>
         …
       </span>
     );
@@ -31,10 +31,7 @@ export function AccountNavLink() {
 
   if (!authed) {
     return (
-      <Link
-        href="/login"
-        className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-      >
+      <Link href="/login" className="sf-action-link">
         Sign in
       </Link>
     );
@@ -42,15 +39,12 @@ export function AccountNavLink() {
 
   return (
     <span className="flex items-center gap-1">
-      <Link
-        href="/account"
-        className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-      >
+      <Link href="/account" className="sf-action-link">
         Account
       </Link>
       <button
         type="button"
-        className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="sf-action-link"
         onClick={() => {
           void (async () => {
             try {

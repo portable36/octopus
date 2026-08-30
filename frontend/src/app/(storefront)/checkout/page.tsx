@@ -106,101 +106,86 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
+        <p className="sf-eyebrow">Almost yours</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Checkout</h1>
         <p className="text-sm text-muted-foreground">
-          {cart.lines.length} line(s) · version {cart.version}. Payment method is COD; store/vendor
-          eligibility and order totals come only from the API response.
+          {cart.lines.length} item(s) · Cash on delivery. Store eligibility and order totals are
+          confirmed by the API.
         </p>
       </header>
 
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-4 border border-border p-4">
+      <form onSubmit={(e) => void onSubmit(e)} className="sf-panel sf-form">
         <fieldset className="space-y-3">
-          <legend className="text-sm font-medium">Shipping address</legend>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Address line 1</span>
-            <input
-              name="line1"
-              required
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
+          <legend className="text-lg font-semibold">Where should we deliver?</legend>
+          <label>
+            <span>Address line 1</span>
+            <input name="line1" required />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Address line 2</span>
-            <input
-              name="line2"
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
+          <label>
+            <span>
+              Address line 2 <span className="font-normal text-muted-foreground">(optional)</span>
+            </span>
+            <input name="line2" />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">City</span>
-              <input
-                name="city"
-                required
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+            <label>
+              <span>City</span>
+              <input name="city" required />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">Region</span>
-              <input
-                name="region"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+            <label>
+              <span>
+                Region <span className="font-normal text-muted-foreground">(optional)</span>
+              </span>
+              <input name="region" />
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">Postal code</span>
-              <input
-                name="postalCode"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+            <label>
+              <span>
+                Postal code <span className="font-normal text-muted-foreground">(optional)</span>
+              </span>
+              <input name="postalCode" />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">Country</span>
-              <input
-                name="countryCode"
-                defaultValue="BD"
-                required
-                maxLength={2}
-                className="h-10 rounded-md border border-border bg-background px-3 uppercase"
-              />
+            <label>
+              <span>Country</span>
+              <input name="countryCode" defaultValue="BD" required maxLength={2} />
             </label>
           </div>
         </fieldset>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Shipping method</span>
-          <select
-            name="shippingMethod"
-            defaultValue="STANDARD"
-            className="h-10 rounded-md border border-border bg-background px-3"
-          >
+        <label>
+          <span>Shipping method</span>
+          <select name="shippingMethod" defaultValue="STANDARD">
             <option value="STANDARD">Standard</option>
           </select>
         </label>
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Payment</legend>
-          <label className="flex items-center gap-2 text-sm">
+          <legend className="text-lg font-semibold">Payment</legend>
+          <label className="flex items-center gap-2 rounded-xl border border-border p-3">
             <input type="radio" name="paymentMethod" value="COD" defaultChecked readOnly />
-            Cash on delivery (COD) — eligibility enforced by backend
+            <span>
+              <strong className="block">Cash on delivery</strong>
+              <small className="font-normal text-muted-foreground">
+                Eligibility is checked when you place the order.
+              </small>
+            </span>
           </label>
         </fieldset>
 
         {submitError ? (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="sf-panel text-sm text-destructive" role="alert">
             {submitError}
           </p>
         ) : null}
 
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" className="sf-button-primary border-0" disabled={pending}>
             {pending ? 'Placing order…' : 'Place COD order'}
           </Button>
-          <Link href="/cart" className="inline-flex h-10 items-center text-sm underline">
+          <Link href="/cart" className="sf-button-secondary">
             Back to cart
           </Link>
         </div>

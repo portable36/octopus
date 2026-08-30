@@ -13,7 +13,7 @@ export class ReceiptTemplateHandler {
   constructor(
     @Inject(RECEIPT_TEMPLATE_REPOSITORY)
     private readonly templates: ReceiptTemplateRepository,
-    private readonly auth: PosAuthorizationService,
+    @Inject(PosAuthorizationService) private readonly auth: PosAuthorizationService,
   ) {}
 
   public async getOrCreate(

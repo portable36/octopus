@@ -31,7 +31,7 @@ import { SettingsAuthorizationService } from '../services/settings-authorization
 export class SettingsHandlers {
   constructor(
     @Inject(CONFIGURATION_REPOSITORY) private readonly configs: ConfigurationRepository,
-    private readonly authz: SettingsAuthorizationService,
+    @Inject(SettingsAuthorizationService) private readonly authz: SettingsAuthorizationService,
     @Inject(STOREFRONT_CONFIG_CACHE) private readonly storefrontCache: StorefrontConfigCachePort,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}

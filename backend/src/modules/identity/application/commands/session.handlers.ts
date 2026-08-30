@@ -13,7 +13,7 @@ import type { AuthSession } from '../dto/auth-session.dto';
 export class LogoutUserHandler {
   constructor(
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
@@ -43,7 +43,7 @@ export class RefreshSessionHandler {
   constructor(
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
-    private readonly authSession: AuthSessionService,
+    @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

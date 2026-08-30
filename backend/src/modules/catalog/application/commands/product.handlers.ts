@@ -29,7 +29,7 @@ export interface CreateProductCommand {
 export class CreateProductHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
   public async execute(command: CreateProductCommand): Promise<Product> {
@@ -58,7 +58,7 @@ export class CreateProductHandler {
 export class ProductLifecycleHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
-    private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

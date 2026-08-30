@@ -1,10 +1,12 @@
 ---
-version: alpha
-name: Nike-design-analysis
+version: 1
+name: Octopus-storefront-design
 description: |
-  REFERENCE ONLY — not Octopus brand law. Nike storefront moodboard for inspiration.
-  Octopus branding follows docs/product/, Phase 18, and .cursor/rules/11|21|30-frontend.
-  A photography-first commerce system built on extreme typographic contrast — towering uppercase Futura display lockups burned into editorial campaign imagery, sitting above a dense, neutral, near-monochrome retail chrome of pill-shaped black CTAs, gray search and tag pills, and tight 8px-grid product cards. The brand's voice is athletic, kinetic, and absolute: pure black, pure white, a single soft surface gray, and a deliberately small set of semantic accents (sale red, success green, restrained category tints) — every chromatic moment is reserved for editorial photography or pricing signal, never decorative chrome.
+  CANONICAL Octopus storefront design contract. Adapted from Colorcom's marketplace
+  patterns and Nike's photo-first retail references; use source projects for journeys only.
+  The system is neutral retail chrome with Octopus amber brand moments, pill commerce
+  actions, flat product stages, dense catalog layouts, dynamic branding, and readable en/bn
+  content. Octopus branding also follows docs/product/, Phase 18, and frontend rules.
 
 colors:
   primary: '#111111'

@@ -47,7 +47,7 @@ export class ReturnsHandlers {
     @Inject(RETURNS_REPOSITORY) private readonly returns: ReturnsRepository,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Inject(INVENTORY_PORT) private readonly inventory: InventoryPort,
-    private readonly authz: ReturnsAuthorizationService,
+    @Inject(ReturnsAuthorizationService) private readonly authz: ReturnsAuthorizationService,
   ) {}
 
   public async requestReturn(input: {

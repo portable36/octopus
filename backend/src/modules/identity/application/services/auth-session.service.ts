@@ -12,7 +12,7 @@ import { TOKEN_SIGNER, type TokenSigner } from '../ports/token-signer.interface'
 @Injectable()
 export class AuthSessionService {
   constructor(
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
     @Inject(TOKEN_SIGNER) private readonly tokenSigner: TokenSigner,
     @Inject(REFRESH_TOKEN_STORE) private readonly refreshTokenStore: RefreshTokenStore,
   ) {}

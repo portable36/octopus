@@ -17,8 +17,8 @@ export class PayoutCommandHandler {
   constructor(
     @Inject(PAYOUT_REPOSITORY) private readonly payouts: PayoutRepository,
     @Inject(PAYOUT_PROVIDER) private readonly provider: PayoutProviderPort,
-    private readonly ledger: LedgerCommandHandler,
-    private readonly authz: PayoutAuthorizationService,
+    @Inject(LedgerCommandHandler) private readonly ledger: LedgerCommandHandler,
+    @Inject(PayoutAuthorizationService) private readonly authz: PayoutAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 

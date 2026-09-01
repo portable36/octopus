@@ -60,6 +60,13 @@ export type VendorProduct = {
   brandId: string | null;
   categoryIds: readonly string[];
   status: string;
+  attributes: readonly { code: string; value: string | number | boolean | readonly string[] }[];
+  media: readonly {
+    mediaId: string;
+    mediaType: 'IMAGE' | 'VIDEO' | 'DOCUMENT' | '360_VIEW';
+    isPrimary: boolean;
+    sortOrder: number;
+  }[];
   variantIds: readonly string[];
 };
 
@@ -179,6 +186,12 @@ export function registerVendor(input: {
   return authedRequest<VendorSummary>('/vendors', { method: 'POST', body: input });
 }
 
+export function submitVendorForReview(vendorId: string): Promise<VendorSummary> {
+  return authedRequest<VendorSummary>(`/vendors/${encodeURIComponent(vendorId)}/submit-review`, {
+    method: 'POST',
+  });
+}
+
 export function listStoresForVendor(vendorId: string): Promise<StoreSummary[]> {
   return authedRequest<StoreSummary[]>(`/stores?vendorId=${encodeURIComponent(vendorId)}`);
 }
@@ -241,6 +254,39 @@ export function listVendorProducts(vendorId: string): Promise<VendorProduct[]> {
 
 export function getVendorProduct(productId: string): Promise<VendorProduct> {
   return authedRequest<VendorProduct>(`/products/${encodeURIComponent(productId)}`);
+}
+
+export function updateVendorProduct(
+  productId: string,
+  input: {
+    name?: string;
+    description?: string | null;
+    brandId?: string | null;
+    categoryIds?: string[];
+    media?: {
+      mediaId: string;
+      mediaType: 'IMAGE' | 'VIDEO' | 'DOCUMENT' | '360_VIEW';
+      isPrimary: boolean;
+      sortOrder: number;
+    }[];
+  },
+): Promise<VendorProduct> {
+  return authedRequest<VendorProduct>(`/products/${encodeURIComponent(productId)}`, {
+    method: 'PATCH',
+    body: input,
+  });
+}
+
+export function listProductVariants(productId: string): Promise<VendorVariant[]> {
+  return authedRequest<VendorVariant[]>(`/products/${encodeURIComponent(productId)}/variants`);
+}
+
+export function listStoreOffers(storeId: string, productId?: string): Promise<StoreOffer[]> {
+  const params = new URLSearchParams({ storeId });
+  if (productId) {
+    params.set('productId', productId);
+  }
+  return authedRequest<StoreOffer[]>(`/store-offers?${params.toString()}`);
 }
 
 export function createVendorProduct(input: {

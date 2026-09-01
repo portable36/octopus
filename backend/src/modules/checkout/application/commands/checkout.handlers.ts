@@ -90,7 +90,7 @@ export class CheckoutSubmitHandler {
     @Inject(PAYMENT_PORT) private readonly payments: PaymentPort,
     @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {

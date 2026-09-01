@@ -27,6 +27,7 @@ describe('StorefrontConfigCache', () => {
         supportEmail: null,
         defaultLocale: 'en',
         defaultCurrencyCode: 'BDT',
+        vendorRegistrationEnabled: false,
       },
       branding: {
         schemaVersion: 1 as const,

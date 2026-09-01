@@ -41,7 +41,8 @@ export class CatalogExceptionFilter implements ExceptionFilter {
       exception instanceof VariantNotFoundError ||
       exception instanceof CategoryNotFoundError ||
       exception instanceof StoreOfferNotFoundError ||
-      exception instanceof VendorNotFoundForCatalogError
+      exception instanceof VendorNotFoundForCatalogError ||
+      (exception instanceof CatalogApplicationError && exception.code === 'STORE_NOT_FOUND')
     ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }

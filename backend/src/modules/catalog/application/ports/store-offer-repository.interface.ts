@@ -6,6 +6,7 @@ export interface StoreOfferRepository {
   save(offer: StoreOffer): Promise<void>;
   findById(id: string): Promise<StoreOffer | null>;
   findByStoreId(storeId: string): Promise<StoreOffer[]>;
+  findByStoreAndProductId(storeId: string, productId: string): Promise<StoreOffer[]>;
   findByStoreAndVariant(storeId: string, variantId: string): Promise<StoreOffer | null>;
   existsByStoreAndVariant(storeId: string, variantId: string): Promise<boolean>;
   findActiveByProductId(productId: string): Promise<StoreOffer[]>;

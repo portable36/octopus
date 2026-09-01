@@ -8,9 +8,11 @@ import { expect, test } from '@playwright/test';
 test.describe('storefront home', () => {
   test('renders marketplace landing', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: 'Octopus' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Search offers' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'All categories' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Good finds. Close to home.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Explore offers' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Browse categories' })).toBeVisible();
   });
 });
 
@@ -36,21 +38,21 @@ test.describe('cart', () => {
 test.describe('auth pages', () => {
   test('login page loads', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
-    await expect(page.getByLabel('Email')).toBeVisible();
-    await expect(page.getByLabel('Password')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Password' })).toBeVisible();
   });
 
   test('register page loads', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.getByRole('heading', { level: 1, name: 'Create account' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Create your account' })).toBeVisible();
   });
 });
 
 test.describe('admin shell', () => {
-  test('dashboard page loads', async ({ page }) => {
+  test('redirects unauthenticated visitors to login', async ({ page }) => {
     await page.goto('/admin/dashboard');
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-    await expect(page.getByText(/Operational overview/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeVisible();
   });
 });

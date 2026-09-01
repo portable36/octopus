@@ -9,6 +9,7 @@ import {
   getVendor,
   getVendorFinanceSummary,
   listStoresForVendor,
+  submitVendorForReview,
   type VendorFinanceSummary,
   type VendorSummary,
 } from '@/lib/vendor-api';
@@ -21,21 +22,30 @@ export default function VendorDashboardPage() {
   const [storeCount, setStoreCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [actionPending, setActionPending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
     void (async () => {
       try {
-        const [v, finance, stores] = await Promise.all([
-          getVendor(vendorId),
+        const v = await getVendor(vendorId);
+        if (cancelled) {
+          return;
+        }
+        setVendor(v);
+        if (v.status !== 'active') {
+          setSummary(null);
+          setStoreCount(null);
+          return;
+        }
+        const [finance, stores] = await Promise.all([
           getVendorFinanceSummary(vendorId),
           listStoresForVendor(vendorId),
         ]);
         if (cancelled) {
           return;
         }
-        setVendor(v);
         setSummary(finance);
         setStoreCount(stores.length);
         setError(null);
@@ -49,6 +59,22 @@ export default function VendorDashboardPage() {
       cancelled = true;
     };
   }, [retryCount, vendorId]);
+
+  async function onSubmitForReview(): Promise<void> {
+    if (actionPending) {
+      return;
+    }
+    setActionPending(true);
+    setError(null);
+    try {
+      const updated = await submitVendorForReview(vendorId);
+      setVendor(updated);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Could not submit for review.');
+    } finally {
+      setActionPending(false);
+    }
+  }
 
   if (!vendor && !error) {
     return <p className="text-sm text-muted-foreground">Loading dashboard…</p>;
@@ -70,6 +96,27 @@ export default function VendorDashboardPage() {
           Manage your stores, published catalog, inventory, orders, and vendor finance from one
           scoped workspace.
         </p>
+        {vendor?.status === 'pending' ? (
+          <div className="space-y-3 rounded-md border border-border bg-background p-4">
+            <p className="text-sm text-muted-foreground">
+              Complete the review step before using vendor operations.
+            </p>
+            <button
+              type="button"
+              className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => void onSubmitForReview()}
+              disabled={actionPending}
+            >
+              {actionPending ? 'Submitting…' : 'Submit for review'}
+            </button>
+          </div>
+        ) : null}
+        {vendor && vendor.status !== 'active' && vendor.status !== 'pending' ? (
+          <p className="rounded-md border border-border bg-background p-4 text-sm text-muted-foreground">
+            Vendor operations become available after the Platform activates this vendor. Current
+            status: <span className="font-medium uppercase">{vendor.status}</span>.
+          </p>
+        ) : null}
       </header>
 
       {error ? (
@@ -123,12 +170,14 @@ export default function VendorDashboardPage() {
           </>
         ) : null}
       </div>
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Vendor actions">
-        <DashboardLink href={`/vendor/${vendorId}/orders`} label="Review orders" />
-        <DashboardLink href={`/vendor/${vendorId}/catalog`} label="Manage catalog" />
-        <DashboardLink href={`/vendor/${vendorId}/inventory`} label="Check inventory" />
-        <DashboardLink href={`/vendor/${vendorId}/finance`} label="View finance" />
-      </section>
+      {vendor?.status === 'active' ? (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Vendor actions">
+          <DashboardLink href={`/vendor/${vendorId}/orders`} label="Review orders" />
+          <DashboardLink href={`/vendor/${vendorId}/catalog`} label="Manage catalog" />
+          <DashboardLink href={`/vendor/${vendorId}/inventory`} label="Check inventory" />
+          <DashboardLink href={`/vendor/${vendorId}/finance`} label="View finance" />
+        </section>
+      ) : null}
     </div>
   );
 }

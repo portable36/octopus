@@ -12,6 +12,7 @@ export type GeneralSettings = {
   readonly supportEmail: string | null;
   readonly defaultLocale: string;
   readonly defaultCurrencyCode: string;
+  readonly vendorRegistrationEnabled: boolean;
 };
 
 export type BrandingSettings = {
@@ -40,6 +41,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   supportEmail: null,
   defaultLocale: 'en',
   defaultCurrencyCode: 'BDT',
+  vendorRegistrationEnabled: false,
 };
 
 export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {

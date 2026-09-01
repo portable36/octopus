@@ -32,6 +32,7 @@ export function buildOfferSearchDocument(source: OfferSearchSource): OfferSearch
     stockStatus: resolveStockStatus(source.stockAvailable),
     offerStatus: source.offerStatus,
     productStatus: source.productStatus,
+    primaryImageMediaId: source.primaryImageMediaId ?? null,
     searchable,
     updatedAtUnix: Math.floor(source.updatedAt.getTime() / 1000),
     version: source.version,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type {
   CreateCourierConsignmentInput,
@@ -14,8 +14,8 @@ import { CourierAccountStore, type PathaoCredentials } from '../persistence/cour
 @Injectable()
 export class PathaoCourierClient {
   constructor(
-    private readonly accounts: CourierAccountStore,
-    private readonly config: AppConfigService,
+    @Inject(CourierAccountStore) private readonly accounts: CourierAccountStore,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async createConsignment(

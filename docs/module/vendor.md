@@ -28,6 +28,17 @@ PENDING -> UNDER_REVIEW -> APPROVED -> ACTIVE -> SUSPENDED
 
 Rejection returns to a terminal or rework state documented in application policy. Suspension blocks new commercial activity without deleting historical records.
 
+## Onboarding
+
+Customer vendor applications are available at `/vendor/register` only when the
+platform `general.vendorRegistrationEnabled` setting is enabled. Applications
+start in `PENDING`, are submitted for review, and require platform approval and
+activation before vendor operations become available.
+
+Platform administrators can create a pending vendor for any existing User from
+the admin Vendors page. This path is also subject to the same lifecycle and
+server-side ownership and membership checks; it does not bypass approval.
+
 ## Architecture
 
 Module path: `backend/src/modules/vendor/`. Cross-module access uses application ports and domain events only.
@@ -55,6 +66,8 @@ VendorSuspended
 - Lookup vendor by ID for authorized actors
 - Resolve vendor status for gating checkout and catalog publication
 - List vendor staff for admin and vendor-owner portals
+- Enforce the platform vendor-registration policy through the shared
+  `VENDOR_REGISTRATION_POLICY` port
 
 ## Testing requirements
 
@@ -62,6 +75,7 @@ VendorSuspended
 - Vendor A cannot read or mutate Vendor B
 - Staff permission boundaries
 - Admin-only approval paths
+- Registration-disabled and admin-created onboarding paths
 
 ## Exit criteria
 

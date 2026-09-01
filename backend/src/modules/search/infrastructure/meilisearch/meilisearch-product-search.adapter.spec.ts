@@ -22,6 +22,7 @@ describe('MeilisearchProductSearchAdapter', () => {
     offerStatus: 'active',
     productStatus: 'published',
     searchable: true,
+    primaryImageMediaId: null,
     updatedAtUnix: 1000,
     version: 2,
   };

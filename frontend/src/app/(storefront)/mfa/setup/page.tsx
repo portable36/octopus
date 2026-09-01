@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiClientError } from '@/lib/api-client';
 import { beginMfaSetup, enableMfa } from '@/lib/auth-api';
@@ -11,12 +11,18 @@ export default function MfaSetupPage() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const setupRequested = useRef(false);
 
   useEffect(() => {
+    if (setupRequested.current) {
+      return;
+    }
+    setupRequested.current = true;
     void (async () => {
       try {
         setSetup(await beginMfaSetup());
       } catch (err) {
+        setupRequested.current = false;
         setError(err instanceof ApiClientError ? err.message : 'Could not start MFA setup.');
       }
     })();

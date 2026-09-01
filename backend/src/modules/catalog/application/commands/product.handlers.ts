@@ -13,6 +13,7 @@ import {
 } from '../errors/catalog.errors';
 import { PRODUCT_REPOSITORY, type ProductRepository } from '../ports/product-repository.interface';
 import { CatalogAuthorizationService } from '../services/catalog-authorization.service';
+import { CatalogMediaGuardService } from '../services/catalog-media-guard.service';
 
 export interface CreateProductCommand {
   readonly vendorId: string;
@@ -59,6 +60,7 @@ export class ProductLifecycleHandler {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
     @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
+    @Inject(CatalogMediaGuardService) private readonly mediaGuard: CatalogMediaGuardService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
@@ -131,7 +133,10 @@ export class ProductLifecycleHandler {
     if (patch.brandId !== undefined) product.assignBrand(patch.brandId);
     if (patch.categoryIds !== undefined) product.setCategories(patch.categoryIds);
     if (patch.attributes !== undefined) product.setAttributes(patch.attributes);
-    if (patch.media !== undefined) product.setMedia(patch.media);
+    if (patch.media !== undefined) {
+      await this.mediaGuard.assertVendorOwnsMedia(product.vendorId, patch.media, actorRoles);
+      product.setMedia(patch.media);
+    }
     await this.products.save(product);
     await this.audit?.append({
       actorUserId,

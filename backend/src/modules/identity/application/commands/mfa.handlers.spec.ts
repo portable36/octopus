@@ -10,6 +10,28 @@ describe('MfaHandlers', () => {
     open: vi.fn((c: string) => c.replace(/^sealed:/, '')),
   };
 
+  it('reuses the active setup secret for concurrent setup requests', async () => {
+    const user = User.register('a@b.co', 'A', 'hash');
+    user.activate();
+    const activeSecret = 'JBSWY3DPEHPK3PXP';
+    const putIfAbsent = vi.fn().mockResolvedValue(activeSecret);
+    const handlers = new MfaHandlers(
+      { findById: vi.fn().mockResolvedValue(user) } as never,
+      { verify: vi.fn(), hash: vi.fn() } as never,
+      { create: vi.fn(), consume: vi.fn() } as never,
+      { putIfAbsent, put: vi.fn(), take: vi.fn() } as never,
+      secrets as never,
+      { issueSession: vi.fn() } as never,
+      null,
+    );
+
+    const result = await handlers.beginSetup(user.id.value);
+
+    expect(result.secret).toBe(activeSecret);
+    expect(result.otpauthUrl).toContain(`secret=${activeSecret}`);
+    expect(putIfAbsent).toHaveBeenCalledOnce();
+  });
+
   it('confirms enable after a valid TOTP', async () => {
     const user = User.register('a@b.co', 'A', 'hash');
     user.activate();

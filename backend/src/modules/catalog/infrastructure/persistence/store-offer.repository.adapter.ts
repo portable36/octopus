@@ -36,6 +36,13 @@ export class StoreOfferRepositoryAdapter implements StoreOfferRepository {
     });
   }
 
+  public async findByStoreAndProductId(storeId: string, productId: string): Promise<StoreOffer[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(StoreOfferOrmEntity, { storeId, productId });
+      return entities.map(offerToDomain);
+    });
+  }
+
   public async findByStoreAndVariant(
     storeId: string,
     variantId: string,

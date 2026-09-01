@@ -27,7 +27,7 @@ export class LedgerCommandHandler {
     @Inject(LEDGER_REPOSITORY) private readonly ledger: LedgerRepository,
     @Inject(PAYOUT_REPOSITORY) private readonly payouts: PayoutRepository,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async recordSaleRecognition(input: LedgerSaleRecognitionInput): Promise<void> {

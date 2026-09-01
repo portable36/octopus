@@ -19,6 +19,8 @@ import {
 } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -26,7 +28,9 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import {
   CurrentUser,
   type RequestPrincipal,
@@ -49,11 +53,68 @@ import {
   CreateStoreOfferHandler,
   StoreOfferLifecycleHandler,
 } from '../../application/commands/store-offer.handlers';
-import type { Product } from '../../domain/aggregates/product.aggregate';
-import type { Variant } from '../../domain/aggregates/variant.aggregate';
-import type { Category } from '../../domain/aggregates/category.aggregate';
-import type { StoreOffer } from '../../domain/aggregates/store-offer.aggregate';
+import {
+  ListProductVariantsHandler,
+  ListStoreOffersHandler,
+} from '../../application/queries/catalog-vendor.query-handler';
+import {
+  toAuthoringProductDto,
+  toAuthoringStoreOfferDto,
+  toAuthoringVariantDto,
+} from '../../application/mappers/catalog-response.mapper';
 import { CatalogExceptionFilter } from './filters/catalog-exception.filter';
+import type { Category } from '../../domain/aggregates/category.aggregate';
+
+class CatalogMediaRefDto {
+  @ApiProperty()
+  @IsUUID()
+  mediaId!: string;
+
+  @ApiProperty({ enum: ['IMAGE', 'VIDEO', 'DOCUMENT', '360_VIEW'] })
+  @IsIn(['IMAGE', 'VIDEO', 'DOCUMENT', '360_VIEW'])
+  mediaType!: 'IMAGE' | 'VIDEO' | 'DOCUMENT' | '360_VIEW';
+
+  @ApiProperty()
+  @IsBoolean()
+  isPrimary!: boolean;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(0)
+  sortOrder!: number;
+}
+
+class UpdateProductDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(200)
+  name?: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsUUID()
+  brandId?: string | null;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  categoryIds?: string[];
+
+  @ApiPropertyOptional({ type: [CatalogMediaRefDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CatalogMediaRefDto)
+  media?: CatalogMediaRefDto[];
+}
 
 class CreateProductDto {
   @ApiProperty()
@@ -182,6 +243,8 @@ export class CatalogController {
     private readonly createProduct: CreateProductHandler,
     private readonly productLifecycle: ProductLifecycleHandler,
     private readonly getProduct: GetProductHandler,
+    private readonly listProductVariants: ListProductVariantsHandler,
+    private readonly listStoreOffers: ListStoreOffersHandler,
     private readonly createVariant: CreateVariantHandler,
     private readonly variantLifecycle: VariantLifecycleHandler,
     private readonly createCategory: CreateCategoryHandler,
@@ -204,14 +267,14 @@ export class CatalogController {
       ...(body.brandId !== undefined ? { brandId: body.brandId } : {}),
       ...(body.categoryIds !== undefined ? { categoryIds: body.categoryIds } : {}),
     });
-    return this.productResponse(product);
+    return toAuthoringProductDto(product);
   }
 
   @Get('products')
   @ApiQuery({ name: 'vendorId', required: true })
   async listProducts(@CurrentUser() user: RequestPrincipal, @Query('vendorId') vendorId: string) {
     const products = await this.getProduct.forVendor(vendorId, user.userId, user.roles);
-    return products.map((product) => this.productResponse(product));
+    return products.map((product) => toAuthoringProductDto(product));
   }
 
   @Get('products/:productId')
@@ -220,13 +283,58 @@ export class CatalogController {
     @Param('productId') productId: string,
   ) {
     const product = await this.getProduct.byId(productId, user.userId, user.roles);
-    return this.productResponse(product);
+    return toAuthoringProductDto(product);
+  }
+
+  @Patch('products/:productId')
+  @ApiOperation({ summary: 'Update product fields (vendor-scoped, validated)' })
+  async updateProductRoute(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('productId') productId: string,
+    @Body() body: UpdateProductDto,
+  ) {
+    const product = await this.productLifecycle.update(productId, user.userId, user.roles, {
+      ...(body.name !== undefined ? { name: body.name } : {}),
+      ...(body.description !== undefined ? { description: body.description } : {}),
+      ...(body.brandId !== undefined ? { brandId: body.brandId } : {}),
+      ...(body.categoryIds !== undefined ? { categoryIds: body.categoryIds } : {}),
+      ...(body.media !== undefined ? { media: body.media } : {}),
+    });
+    return toAuthoringProductDto(product);
+  }
+
+  @Get('products/:productId/variants')
+  @ApiOperation({ summary: 'List variants for a product (vendor or platform admin)' })
+  async listVariantsRoute(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('productId') productId: string,
+  ) {
+    const variants = await this.listProductVariants.execute(productId, user.userId, user.roles);
+    return variants.map((variant) => toAuthoringVariantDto(variant));
+  }
+
+  @Get('store-offers')
+  @ApiQuery({ name: 'storeId', required: true })
+  @ApiQuery({ name: 'productId', required: false })
+  @ApiOperation({ summary: 'List store offers for a store (optional product filter)' })
+  async listStoreOffersRoute(
+    @CurrentUser() user: RequestPrincipal,
+    @Query('storeId') storeId: string,
+    @Query('productId') productId?: string,
+  ) {
+    const offers = await this.listStoreOffers.execute({
+      storeId,
+      ...(productId ? { productId } : {}),
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+    });
+    return offers.map((offer) => toAuthoringStoreOfferDto(offer));
   }
 
   @Post('products/:productId/submit-review')
   @HttpCode(200)
   async submitReview(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
-    return this.productResponse(
+    return toAuthoringProductDto(
       await this.productLifecycle.submitForReview(productId, user.userId, user.roles),
     );
   }
@@ -234,7 +342,7 @@ export class CatalogController {
   @Post('products/:productId/publish')
   @HttpCode(200)
   async publish(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
-    return this.productResponse(
+    return toAuthoringProductDto(
       await this.productLifecycle.publish(productId, user.userId, user.roles),
     );
   }
@@ -242,7 +350,7 @@ export class CatalogController {
   @Post('products/:productId/unpublish')
   @HttpCode(200)
   async unpublish(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
-    return this.productResponse(
+    return toAuthoringProductDto(
       await this.productLifecycle.unpublish(productId, user.userId, user.roles),
     );
   }
@@ -253,7 +361,7 @@ export class CatalogController {
     @CurrentUser() user: RequestPrincipal,
     @Param('productId') productId: string,
   ) {
-    return this.productResponse(
+    return toAuthoringProductDto(
       await this.productLifecycle.archive(productId, user.userId, user.roles),
     );
   }
@@ -274,7 +382,7 @@ export class CatalogController {
       ...(body.basePriceMinor !== undefined ? { basePriceMinor: body.basePriceMinor } : {}),
       ...(body.currencyCode !== undefined ? { currencyCode: body.currencyCode } : {}),
     });
-    return this.variantResponse(variant);
+    return toAuthoringVariantDto(variant);
   }
 
   @Post('variants/:variantId/activate')
@@ -283,7 +391,7 @@ export class CatalogController {
     @CurrentUser() user: RequestPrincipal,
     @Param('variantId') variantId: string,
   ) {
-    return this.variantResponse(
+    return toAuthoringVariantDto(
       await this.variantLifecycle.activate(variantId, user.userId, user.roles),
     );
   }
@@ -294,7 +402,7 @@ export class CatalogController {
     @CurrentUser() user: RequestPrincipal,
     @Param('variantId') variantId: string,
   ) {
-    return this.variantResponse(
+    return toAuthoringVariantDto(
       await this.variantLifecycle.archive(variantId, user.userId, user.roles),
     );
   }
@@ -339,19 +447,23 @@ export class CatalogController {
       priceMinor: body.priceMinor,
       currencyCode: body.currencyCode,
     });
-    return this.offerResponse(offer);
+    return toAuthoringStoreOfferDto(offer);
   }
 
   @Post('store-offers/:offerId/activate')
   @HttpCode(200)
   async activateOffer(@CurrentUser() user: RequestPrincipal, @Param('offerId') offerId: string) {
-    return this.offerResponse(await this.offerLifecycle.activate(offerId, user.userId, user.roles));
+    return toAuthoringStoreOfferDto(
+      await this.offerLifecycle.activate(offerId, user.userId, user.roles),
+    );
   }
 
   @Post('store-offers/:offerId/suspend')
   @HttpCode(200)
   async suspendOffer(@CurrentUser() user: RequestPrincipal, @Param('offerId') offerId: string) {
-    return this.offerResponse(await this.offerLifecycle.suspend(offerId, user.userId, user.roles));
+    return toAuthoringStoreOfferDto(
+      await this.offerLifecycle.suspend(offerId, user.userId, user.roles),
+    );
   }
 
   @Patch('store-offers/:offerId/price')
@@ -360,7 +472,7 @@ export class CatalogController {
     @Param('offerId') offerId: string,
     @Body() body: UpdateOfferPriceDto,
   ) {
-    return this.offerResponse(
+    return toAuthoringStoreOfferDto(
       await this.offerLifecycle.updatePrice(
         offerId,
         user.userId,
@@ -369,37 +481,6 @@ export class CatalogController {
         body.currencyCode,
       ),
     );
-  }
-
-  private productResponse(product: Product) {
-    return {
-      id: product.id.value,
-      vendorId: product.vendorId,
-      sku: product.sku,
-      name: product.name,
-      description: product.description,
-      brandId: product.brandId,
-      categoryIds: product.categoryIds,
-      status: product.status,
-      attributes: product.attributes,
-      media: product.media,
-      variantIds: product.variantIds,
-    };
-  }
-
-  private variantResponse(variant: Variant) {
-    return {
-      id: variant.id.value,
-      productId: variant.productId,
-      sku: variant.sku,
-      name: variant.name,
-      status: variant.status,
-      barcode: variant.barcode ?? null,
-      basePriceMinor: variant.basePrice?.amountMinorUnits ?? null,
-      currencyCode: variant.currency ?? null,
-      attributes: variant.attributes,
-      media: variant.media,
-    };
   }
 
   private categoryResponse(category: Category) {
@@ -411,20 +492,6 @@ export class CatalogController {
       status: category.status,
       sortOrder: category.sortOrder,
       seo: category.seo,
-    };
-  }
-
-  private offerResponse(offer: StoreOffer) {
-    return {
-      id: offer.id.value,
-      vendorId: offer.vendorId,
-      storeId: offer.storeId,
-      productId: offer.productId,
-      variantId: offer.variantId,
-      priceMinor: offer.priceMinor,
-      currencyCode: offer.currencyCode,
-      status: offer.status,
-      isAvailable: offer.isAvailable,
     };
   }
 }

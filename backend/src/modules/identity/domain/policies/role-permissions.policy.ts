@@ -32,6 +32,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'settings.read',
     'settings.write',
     'media.read',
+    'media.write',
     'website.read',
   ],
   VENDOR_STAFF: [
@@ -52,6 +53,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'pos.receipt.view',
     'settings.read',
     'media.read',
+    'media.write',
   ],
   STORE_MANAGER: [
     'catalog.product.read',

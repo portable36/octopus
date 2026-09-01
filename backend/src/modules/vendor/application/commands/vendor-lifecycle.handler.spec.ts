@@ -79,6 +79,40 @@ describe('VendorLifecycleHandler authorization', () => {
     expect(save).toHaveBeenCalled();
   });
 
+  it('moves pending vendors through review before admin approval', async () => {
+    const vendor = Vendor.register({
+      displayName: 'Pending Shop',
+      legalName: 'Pending Shop Ltd',
+      contactEmail: 'pending@example.com',
+      ownerUserId: OWNER,
+    });
+    const save = vi.fn().mockResolvedValue(undefined);
+    const handler = new VendorLifecycleHandler(
+      {
+        findById: vi.fn().mockResolvedValue(vendor),
+        save,
+        findBySlug: vi.fn(),
+        findByOwnerUserId: vi.fn(),
+        findByStaffUserId: vi.fn(),
+        existsBySlug: vi.fn(),
+        listAll: vi.fn(),
+      },
+      {
+        findByUserId: vi.fn(),
+        upsertVendorMembership: vi.fn(),
+        removeVendorMembership: vi.fn(),
+        assignStoreMembership: vi.fn(),
+        revokeStoreMembership: vi.fn(),
+      },
+      { ensureRoles: vi.fn() },
+    );
+
+    const approved = await handler.approve(vendor.id.value, ADMIN, ['PLATFORM_ADMIN']);
+
+    expect(approved.status).toBe('approved');
+    expect(save).toHaveBeenCalledOnce();
+  });
+
   it('denies customer approval attempts', async () => {
     const vendor = Vendor.register({
       displayName: 'Blocked Shop',

@@ -13,6 +13,8 @@ import {
   VendorAccessDeniedError,
   VendorApplicationError,
   VendorNotFoundError,
+  VendorOwnerNotFoundError,
+  VendorRegistrationDisabledError,
   VendorSlugTakenError,
 } from '../../../application/errors/vendor.errors';
 
@@ -32,6 +34,12 @@ export class VendorExceptionFilter implements ExceptionFilter {
     }
     if (exception instanceof VendorSlugTakenError) {
       return new ConflictException({ message: exception.message, code: exception.code });
+    }
+    if (exception instanceof VendorOwnerNotFoundError) {
+      return new NotFoundException({ message: exception.message, code: exception.code });
+    }
+    if (exception instanceof VendorRegistrationDisabledError) {
+      return new ForbiddenException({ message: exception.message, code: exception.code });
     }
     if (exception instanceof VendorAccessDeniedError) {
       return new ForbiddenException({ message: exception.message, code: exception.code });

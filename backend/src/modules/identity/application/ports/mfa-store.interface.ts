@@ -13,6 +13,8 @@ export interface MfaChallengeStore {
 export const MFA_SETUP_STORE = Symbol('MFA_SETUP_STORE');
 
 export interface MfaSetupStore {
+  /** Creates a setup secret only when none is active, returning the active secret. */
+  putIfAbsent(userId: string, secretBase32: string, ttlSeconds: number): Promise<string>;
   put(userId: string, secretBase32: string, ttlSeconds: number): Promise<void>;
   take(userId: string): Promise<string | null>;
 }

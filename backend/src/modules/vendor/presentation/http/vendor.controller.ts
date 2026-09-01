@@ -46,6 +46,7 @@ export class VendorController {
   async register(@CurrentUser() user: RequestPrincipal, @Body() body: RegisterVendorRequestDto) {
     const vendor = await this.registerVendor.execute({
       actorUserId: user.userId,
+      actorRoles: user.roles,
       displayName: body.displayName,
       legalName: body.legalName,
       contactEmail: body.contactEmail,

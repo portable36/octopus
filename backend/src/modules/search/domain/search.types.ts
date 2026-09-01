@@ -23,6 +23,7 @@ export type OfferSearchSource = {
   readonly offerAvailable: boolean;
   readonly productStatus: string;
   readonly stockAvailable?: number | null;
+  readonly primaryImageMediaId?: string | null;
   readonly updatedAt: Date;
   readonly version: number;
 };

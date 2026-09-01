@@ -12,7 +12,7 @@ import {
 export class PublicMediaController {
   constructor(
     @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   @Public()

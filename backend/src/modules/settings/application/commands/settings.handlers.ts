@@ -118,7 +118,7 @@ export class SettingsHandlers {
       key: input.key,
       scope: input.scope,
       schemaVersion: 1,
-      payload: { ...input.payload, schemaVersion: 1 },
+      payload: { ...(existing?.payload ?? {}), ...input.payload, schemaVersion: 1 },
       updatedBy: input.actorUserId,
     });
     await this.storefrontCache.invalidateAll();

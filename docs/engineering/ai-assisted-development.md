@@ -74,6 +74,22 @@ backend or frontend, added to Docker Compose, or made part of `npm.cmd run valid
 Review accepted skills before use and treat their instructions and generated
 content as untrusted input.
 
+### Skill curation — 2026-08-30
+
+The project-local skill inventory is maintained in
+[`docs/agents/skill-inventory.md`](../agents/skill-inventory.md). The approved
+additions are `skill-creator`, `mcp-builder`, `seo-auditing`, `penthera`,
+`verifying-markdown-formatting`, `building-skills-from-patterns`,
+`suggesting-skills`, `web-design-guidelines`, and
+`vercel-react-best-practices`. Each installed directory was rescanned after
+copying.
+
+`generating-images` and `seo-analysis` were not installed after critical/high
+audit findings. `authsome` was rejected as an unrelated credential gateway.
+`network-request-auditing` and CSS-module conversion were deferred for
+workspace-fit reasons. Existing `frontend-design`, `pdf`, database design, and
+Sentry skills were kept instead of duplicated.
+
 ## Engineering skills (mattpocock/skills)
 
 Composable agent workflows live under `.agents/skills/` (Cursor loads this path). Config and glossary:

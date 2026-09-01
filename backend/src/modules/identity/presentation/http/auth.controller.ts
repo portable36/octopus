@@ -66,7 +66,7 @@ export class AuthController {
     private readonly resetPassword: ResetPasswordHandler,
     private readonly mfa: MfaHandlers,
     private readonly authorization: AuthorizationService,
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
     @Inject(LOGIN_RATE_LIMITER) private readonly rateLimiter: LoginRateLimiter,
   ) {}
 

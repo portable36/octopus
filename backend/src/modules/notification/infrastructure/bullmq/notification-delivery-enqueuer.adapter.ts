@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Queue, type ConnectionOptions } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
@@ -17,7 +17,7 @@ export class NotificationDeliveryEnqueuerAdapter
   private queue: Queue | null = null;
   private readonly connection: ConnectionOptions;
 
-  constructor(private readonly config: AppConfigService) {
+  constructor(@Inject(AppConfigService) private readonly config: AppConfigService) {
     this.connection = {
       url: this.config.redisUrl,
       maxRetriesPerRequest: null,

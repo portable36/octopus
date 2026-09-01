@@ -38,7 +38,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
   private readonly connection: ConnectionOptions;
 
   constructor(
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
     @Inject(OUTBOX_STORE) private readonly outbox: OutboxStore,
     private readonly domainEvents: DomainEventsProcessor,
     private readonly searchIndexing: SearchIndexingProcessor,

@@ -65,6 +65,22 @@ export function listAdminVendors(token: string): Promise<AdminVendor[]> {
   return apiRequest<AdminVendor[]>('/admin/vendors', { headers: authHeaders(token) });
 }
 
+export function createAdminVendor(
+  token: string,
+  input: {
+    ownerUserId: string;
+    displayName: string;
+    legalName: string;
+    contactEmail: string;
+  },
+): Promise<AdminVendor> {
+  return apiRequest<AdminVendor>('/admin/vendors', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: input,
+  });
+}
+
 export function getAdminVendor(token: string, vendorId: string): Promise<AdminVendor> {
   return apiRequest<AdminVendor>(`/admin/vendors/${encodeURIComponent(vendorId)}`, {
     headers: authHeaders(token),

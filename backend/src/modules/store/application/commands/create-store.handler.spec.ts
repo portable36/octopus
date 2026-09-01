@@ -5,6 +5,15 @@ import {
   VendorNotActiveForStoreError,
   VendorNotFoundForStoreError,
 } from '../errors/store.errors';
+import type { VendorAccessPort } from '../../../../shared-kernel/application/ports/vendor-access.port';
+
+function vendorAccessMock(findById: VendorAccessPort['findById']): VendorAccessPort {
+  return {
+    findById,
+    findActivePublicById: vi.fn().mockResolvedValue(null),
+    findActivePublicBySlug: vi.fn().mockResolvedValue(null),
+  };
+}
 
 const OWNER = '01900000-0000-7000-8000-000000000010';
 const OTHER = '01900000-0000-7000-8000-000000000011';
@@ -22,7 +31,7 @@ describe('CreateStoreHandler', () => {
         listAll: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
-      { findById: vi.fn().mockResolvedValue(null) },
+      vendorAccessMock(vi.fn().mockResolvedValue(null)),
       {
         assignStoreMembership: vi.fn(),
         findByUserId: vi.fn(),
@@ -54,14 +63,14 @@ describe('CreateStoreHandler', () => {
         listAll: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
-      {
-        findById: vi.fn().mockResolvedValue({
+      vendorAccessMock(
+        vi.fn().mockResolvedValue({
           vendorId: VENDOR_ID,
           status: 'pending',
           ownerUserId: OWNER,
           staffUserIds: [OWNER],
         }),
-      },
+      ),
       {
         assignStoreMembership: vi.fn(),
         findByUserId: vi.fn(),
@@ -93,14 +102,14 @@ describe('CreateStoreHandler', () => {
         listAll: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
-      {
-        findById: vi.fn().mockResolvedValue({
+      vendorAccessMock(
+        vi.fn().mockResolvedValue({
           vendorId: VENDOR_ID,
           status: 'active',
           ownerUserId: OWNER,
           staffUserIds: [OWNER],
         }),
-      },
+      ),
       {
         assignStoreMembership: vi.fn(),
         findByUserId: vi.fn(),
@@ -135,14 +144,14 @@ describe('CreateStoreHandler', () => {
         listAll: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
-      {
-        findById: vi.fn().mockResolvedValue({
+      vendorAccessMock(
+        vi.fn().mockResolvedValue({
           vendorId: VENDOR_ID,
           status: 'active',
           ownerUserId: OWNER,
           staffUserIds: [OWNER],
         }),
-      },
+      ),
       {
         assignStoreMembership,
         findByUserId: vi.fn(),

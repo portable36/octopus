@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
@@ -28,8 +28,8 @@ export interface PathaoCredentials {
 @Injectable()
 export class CourierAccountStore {
   constructor(
-    private readonly em: EntityManager,
-    private readonly config: AppConfigService,
+    @Inject(EntityManager) private readonly em: EntityManager,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   private keyMaterial(): string {

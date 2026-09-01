@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MeiliSearch, type Index } from 'meilisearch';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type {
@@ -32,7 +32,7 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
   private readonly client: MeiliSearch;
   private readonly indexUid: string;
 
-  constructor(private readonly config: AppConfigService) {
+  constructor(@Inject(AppConfigService) private readonly config: AppConfigService) {
     this.client = new MeiliSearch({
       host: this.config.meilisearchHost,
       apiKey: this.config.meilisearchApiKey,

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppConfigService } from '../../config/app-config.service';
 import { USER_ROLE_ASSIGNER } from '../../shared-kernel/application/ports/user-role-assigner.port';
+import { USER_DIRECTORY } from '../../shared-kernel/application/ports/user-directory.port';
 import { USER_CONTACT_PORT } from '../../shared-kernel/application/ports/user-contact.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import { RegisterUserHandler } from './application/commands/register-user.handler';
@@ -39,6 +40,7 @@ import {
 } from './infrastructure/redis/redis-mfa-store.adapter';
 import { JwtTokenSignerAdapter } from './infrastructure/tokens/jwt-token-signer.adapter';
 import { UserRoleAssignerAdapter } from './infrastructure/persistence/user-role-assigner.adapter';
+import { UserDirectoryAdapter } from './infrastructure/persistence/user-directory.adapter';
 import { UserContactAdapter } from './infrastructure/access/user-contact.adapter';
 import { AdminUsersController } from './presentation/http/admin-users.controller';
 import { AuthController } from './presentation/http/auth.controller';
@@ -124,6 +126,10 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
       useClass: UserRoleAssignerAdapter,
     },
     {
+      provide: USER_DIRECTORY,
+      useClass: UserDirectoryAdapter,
+    },
+    {
       provide: USER_CONTACT_PORT,
       useClass: UserContactAdapter,
     },
@@ -135,6 +141,7 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
     TOKEN_SIGNER,
     USER_REPOSITORY,
     USER_ROLE_ASSIGNER,
+    USER_DIRECTORY,
     USER_CONTACT_PORT,
   ],
 })

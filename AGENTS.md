@@ -16,6 +16,7 @@ Installed under `.agents/skills/`:
 - [obra/superpowers](https://github.com/obra/superpowers) — **curated only:** `/systematic-debugging`, `/verification-before-completion` (not the full plugin / session-start hook)
 - [mukul975/anthropic-cybersecurity-skills](https://github.com/mukul975/anthropic-cybersecurity-skills) — `/detecting-malicious-npm-packages` only (audited, defensive use)
 - Octopus-adapted ops skills (from Colorcom patterns): `/architecture-boundary-guard`, `/quality-gates-check`, `/docs-state-maintainer`, `/cost-efficient-agent`
+- Additional reviewed skills: `/skill-creator`, `/mcp-builder`, `/seo-auditing`, `/penthera`, `/verifying-markdown-formatting`, `/building-skills-from-patterns`, `/suggesting-skills`, `/web-design-guidelines`, and `/vercel-react-best-practices`
 
 Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.cursor/rules/` as the hard engineering contract. Third-party skills must not weaken tenant isolation, payments, authn, or module boundaries.
 
@@ -79,5 +80,6 @@ Durable verified agent context is maintained in root `memory.md`; read it before
 ## Related
 
 - `docs/engineering/ai-assisted-development.md`
+- `docs/agents/skill-inventory.md` (reviewed project-local skill decisions)
 - `docs/PHASES.md` (living checklist; Cursor plans are historical — see `docs/agents/plan-fit.md`)
 - `.cursor/rules/00-core.mdc`

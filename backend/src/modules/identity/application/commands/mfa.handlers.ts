@@ -45,8 +45,7 @@ export class MfaHandlers {
     if (user.mfaEnabled) {
       throw new MfaAlreadyEnabledError();
     }
-    const secret = generateTotpSecret();
-    await this.setups.put(userId, secret, MFA_SETUP_TTL_SEC);
+    const secret = await this.setups.putIfAbsent(userId, generateTotpSecret(), MFA_SETUP_TTL_SEC);
     return {
       secret,
       otpauthUrl: buildOtpAuthUrl({ secretBase32: secret, accountName: user.email.value }),

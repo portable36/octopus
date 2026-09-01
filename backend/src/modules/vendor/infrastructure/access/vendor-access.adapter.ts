@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import type {
   VendorAccessPort,
   VendorAccessSnapshot,
+  VendorPublicSnapshot,
 } from '../../../../shared-kernel/application/ports/vendor-access.port';
 import {
   VENDOR_REPOSITORY,
@@ -30,4 +31,32 @@ export class VendorAccessAdapter implements VendorAccessPort {
       codReservationTtlHours: vendor.settings.codReservationTtlHours,
     };
   }
+
+  public async findActivePublicBySlug(slug: string): Promise<VendorPublicSnapshot | null> {
+    const vendor = await this.vendors.findBySlug(slug);
+    if (!vendor || vendor.status !== 'active') {
+      return null;
+    }
+    return toPublicSnapshot(vendor);
+  }
+
+  public async findActivePublicById(vendorId: string): Promise<VendorPublicSnapshot | null> {
+    const vendor = await this.vendors.findById(vendorId);
+    if (!vendor || vendor.status !== 'active') {
+      return null;
+    }
+    return toPublicSnapshot(vendor);
+  }
+}
+
+function toPublicSnapshot(vendor: {
+  id: { value: string };
+  profile: { slug: string; displayName: string; description: string | null };
+}): VendorPublicSnapshot {
+  return {
+    vendorId: vendor.id.value,
+    slug: vendor.profile.slug,
+    displayName: vendor.profile.displayName,
+    description: vendor.profile.description,
+  };
 }

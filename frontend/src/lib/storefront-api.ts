@@ -12,11 +12,35 @@ export type PublicCategory = {
 export type PublicStore = {
   id: string;
   vendorId: string;
+  vendorSlug: string | null;
   slug: string;
   displayName: string;
   description: string | null;
   currencyCode: string;
   acceptsOnlineOrders: boolean;
+};
+
+export type PublicVendorShop = {
+  id: string;
+  slug: string;
+  displayName: string;
+  description: string | null;
+  stores: readonly {
+    id: string;
+    slug: string;
+    displayName: string;
+    description: string | null;
+    currencyCode: string;
+    acceptsOnlineOrders: boolean;
+  }[];
+};
+
+export type CatalogMediaRef = {
+  mediaId: string;
+  mediaType: 'IMAGE' | 'VIDEO' | 'DOCUMENT' | '360_VIEW';
+  isPrimary: boolean;
+  sortOrder: number;
+  url: string | null;
 };
 
 export type PublicProduct = {
@@ -26,14 +50,15 @@ export type PublicProduct = {
   description: string | null;
   brandId: string | null;
   categoryIds: readonly string[];
-  media: readonly { mediaId: string; mediaType: string; isPrimary: boolean; sortOrder: number }[];
+  media: readonly CatalogMediaRef[];
   slug: string;
   variants: readonly {
     id: string;
     sku: string;
     name: string;
     status: string;
-    media: readonly unknown[];
+    attributes: readonly { code: string; value: string | number | boolean | readonly string[] }[];
+    media: readonly CatalogMediaRef[];
   }[];
   offers: readonly {
     id: string;
@@ -59,6 +84,7 @@ export type SearchHit = {
   priceMinor: number;
   currencyCode: string;
   stockStatus: string;
+  primaryImageUrl: string | null;
 };
 
 export type SearchResult = {
@@ -118,6 +144,10 @@ export async function fetchPublicStoreBySlug(
 ): Promise<PublicStore> {
   const qs = vendorId ? `?vendorId=${encodeURIComponent(vendorId)}` : '';
   return apiRequest<PublicStore>(`/public/stores/by-slug/${encodeURIComponent(slug)}${qs}`);
+}
+
+export async function fetchPublicVendorShopBySlug(slug: string): Promise<PublicVendorShop> {
+  return apiRequest<PublicVendorShop>(`/public/vendors/by-slug/${encodeURIComponent(slug)}`);
 }
 
 export async function searchProducts(query: SearchQuery): Promise<SearchResult> {

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from './env.validation';
 import { parseDurationToMs, parseDurationToSeconds } from './duration';
 
 @Injectable()
 export class AppConfigService {
-  constructor(private readonly configService: ConfigService<Env, true>) {}
+  constructor(@Inject(ConfigService) private readonly configService: ConfigService<Env, true>) {}
 
   get nodeEnv(): Env['NODE_ENV'] {
     return this.configService.get('NODE_ENV', { infer: true });

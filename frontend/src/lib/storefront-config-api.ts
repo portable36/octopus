@@ -10,6 +10,7 @@ export type StorefrontPublicConfig = {
     supportEmail: string | null;
     defaultLocale: string;
     defaultCurrencyCode: string;
+    vendorRegistrationEnabled: boolean;
   };
   branding: {
     schemaVersion: 1;

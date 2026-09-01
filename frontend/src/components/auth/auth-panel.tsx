@@ -16,7 +16,7 @@ export function AuthPanel({
   readonly children: ReactNode;
 }) {
   return (
-    <div className="-mx-4 flex min-h-[calc(100vh-12rem)] items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-10 md:-mx-6 md:px-6">
+    <div className="-mx-4 flex min-h-[calc(100vh-12rem)] items-center justify-center bg-background px-4 py-10 md:-mx-6 md:px-6">
       <div className="w-full max-w-[440px] rounded-lg border border-border bg-background p-6 shadow-sm sm:p-8">
         <div className="mb-6 grid grid-cols-2 text-center text-sm font-semibold">
           <Link

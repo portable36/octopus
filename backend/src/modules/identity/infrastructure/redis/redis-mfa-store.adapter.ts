@@ -49,6 +49,19 @@ export class RedisMfaChallengeStoreAdapter implements MfaChallengeStore {
 export class RedisMfaSetupStoreAdapter implements MfaSetupStore {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
+  public async putIfAbsent(
+    userId: string,
+    secretBase32: string,
+    ttlSeconds: number,
+  ): Promise<string> {
+    const key = `${SETUP_PREFIX}${userId}`;
+    const result = await this.redis.set(key, secretBase32, 'EX', Math.max(1, ttlSeconds), 'NX');
+    if (result === 'OK') {
+      return secretBase32;
+    }
+    return (await this.redis.get(key)) ?? secretBase32;
+  }
+
   public async put(userId: string, secretBase32: string, ttlSeconds: number): Promise<void> {
     await this.redis.set(`${SETUP_PREFIX}${userId}`, secretBase32, 'EX', Math.max(1, ttlSeconds));
   }

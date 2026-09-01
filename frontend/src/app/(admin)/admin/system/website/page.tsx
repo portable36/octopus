@@ -11,6 +11,7 @@ type GeneralSettings = {
   supportEmail: string | null;
   defaultLocale: string;
   defaultCurrencyCode: string;
+  vendorRegistrationEnabled: boolean;
 };
 
 type BrandingSettings = {
@@ -90,6 +91,7 @@ export default function AdminWebsiteSettingsPage() {
         supportEmail: String(form.get('supportEmail') || '').trim() || null,
         defaultLocale: String(form.get('defaultLocale') || '').trim() || 'en',
         defaultCurrencyCode: String(form.get('defaultCurrencyCode') || '').trim() || 'BDT',
+        vendorRegistrationEnabled: general.vendorRegistrationEnabled,
       };
       await apiRequest('/admin/settings', {
         method: 'PATCH',

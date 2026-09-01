@@ -45,6 +45,9 @@ export class VendorLifecycleHandler {
   ): Promise<Vendor> {
     this.assertPlatformAdmin(actorRoles);
     const vendor = await this.requireVendor(vendorId);
+    if (vendor.status === 'pending') {
+      vendor.submitForReview();
+    }
     vendor.approve(actorUserId);
     await this.vendors.save(vendor);
     await this.audit?.append({

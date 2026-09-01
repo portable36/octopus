@@ -12,6 +12,15 @@ export interface VendorAccessSnapshot {
   readonly codReservationTtlHours: number;
 }
 
+export interface VendorPublicSnapshot {
+  readonly vendorId: string;
+  readonly slug: string;
+  readonly displayName: string;
+  readonly description: string | null;
+}
+
 export interface VendorAccessPort {
   findById(vendorId: string): Promise<VendorAccessSnapshot | null>;
+  findActivePublicById(vendorId: string): Promise<VendorPublicSnapshot | null>;
+  findActivePublicBySlug(slug: string): Promise<VendorPublicSnapshot | null>;
 }

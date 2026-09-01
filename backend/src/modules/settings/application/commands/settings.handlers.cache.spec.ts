@@ -73,4 +73,52 @@ describe('SettingsHandlers storefront cache', () => {
 
     expect(cache.invalidateAll).toHaveBeenCalledTimes(1);
   });
+
+  it('merges partial updates so unrelated general settings are preserved', async () => {
+    const configs = {
+      findForResolution: vi.fn(),
+      findByScopeKey: vi.fn(async () => ({
+        id: 'config-1',
+        key: 'general',
+        scopeKind: 'platform',
+        vendorId: null,
+        storeId: null,
+        schemaVersion: 1,
+        payload: { vendorRegistrationEnabled: true },
+        updatedAt: new Date(),
+        updatedBy: 'user-1',
+      })),
+      save: vi.fn(async (doc: unknown) => doc),
+    };
+    const cache = {
+      get: vi.fn(),
+      set: vi.fn(),
+      invalidateAll: vi.fn(async () => undefined),
+    };
+    const handlers = new SettingsHandlers(
+      configs as never,
+      { assertCanRead: vi.fn(), assertCanWrite: vi.fn() } as never,
+      cache as never,
+    );
+
+    await handlers.upsert({
+      key: 'general',
+      scope: { kind: 'platform' },
+      payload: { defaultLocale: 'bn' },
+      actorUserId: 'user-1',
+      actorRoles: ['PLATFORM_ADMIN'],
+      actorVendorId: null,
+      actorStoreIds: [],
+    });
+
+    expect(configs.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: {
+          vendorRegistrationEnabled: true,
+          defaultLocale: 'bn',
+          schemaVersion: 1,
+        },
+      }),
+    );
+  });
 });

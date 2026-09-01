@@ -44,6 +44,13 @@ export class PublicCatalogController {
   }
 
   @Public()
+  @Get('vendors/by-slug/:slug')
+  @ApiOperation({ summary: 'Get active vendor shop profile and storefront stores' })
+  getVendorShop(@Param('slug') slug: string) {
+    return this.browse.getActiveVendorShopBySlug(slug);
+  }
+
+  @Public()
   @Get('sitemap/products')
   @ApiOperation({
     summary: 'Published product ids for sitemap (catalog DB; not Meilisearch)',

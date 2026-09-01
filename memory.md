@@ -82,12 +82,20 @@ graphify update .
 ```
 
 - Use Graphify for symbols, imports, and code paths.
+- Reviewed project-local skills include `skill-creator`, `mcp-builder`,
+  `seo-auditing`, `penthera`, `verifying-markdown-formatting`,
+  `building-skills-from-patterns`, `suggesting-skills`,
+  `web-design-guidelines`, and `vercel-react-best-practices`. See
+  `docs/agents/skill-inventory.md` for the audit record.
 - OpenViking is optional local tooling for approved documentation and memory
   only; index `docs/`, `.cursor/rules/`, `AGENTS.md`, and this file—not the
   application tree. Never wire it into runtime or CI.
 - `agentmemory` is deferred because it overlaps with OpenViking.
 - `browser-use` is deferred; browser verification follows the workspace's
   required IronBee DevTools path when that MCP is available.
+- `generating-images` and the `notfair-plugin` `seo-analysis` skill are not
+  installed after security audit findings. `authsome` is also not installed
+  because it is a separate credential gateway, not an Octopus skill.
 
 ## Memory maintenance
 

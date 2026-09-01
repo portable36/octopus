@@ -18,6 +18,7 @@ export type CatalogOfferSearchSourceDto = {
   readonly offerStatus: string;
   readonly offerAvailable: boolean;
   readonly productStatus: string;
+  readonly primaryImageMediaId?: string | null;
   readonly updatedAt: Date;
   readonly version: number;
 };

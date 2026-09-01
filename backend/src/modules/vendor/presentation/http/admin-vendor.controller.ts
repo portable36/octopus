@@ -1,12 +1,14 @@
-import { Controller, Get, Param, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseFilters } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
+import { RegisterVendorHandler } from '../../application/commands/register-vendor.handler';
 import { GetVendorHandler } from '../../application/queries/get-vendor.handler';
 import type { Vendor } from '../../domain/aggregates/vendor.aggregate';
+import { AdminRegisterVendorRequestDto } from './dto/vendor.dto';
 import { VendorExceptionFilter } from './filters/vendor-exception.filter';
 
 @ApiTags('admin-vendors')
@@ -15,7 +17,32 @@ import { VendorExceptionFilter } from './filters/vendor-exception.filter';
 @RequirePermissions('platform.vendors.read')
 @UseFilters(VendorExceptionFilter)
 export class AdminVendorController {
-  constructor(private readonly getVendor: GetVendorHandler) {}
+  constructor(
+    private readonly getVendor: GetVendorHandler,
+    private readonly registerVendor: RegisterVendorHandler,
+  ) {}
+
+  @Post()
+  @RequirePermissions('platform.vendors.write')
+  @ApiOperation({ summary: 'Platform admin: create a pending vendor for an existing user' })
+  async create(@CurrentUser() user: RequestPrincipal, @Body() body: AdminRegisterVendorRequestDto) {
+    const vendor = await this.registerVendor.createForPlatformAdmin({
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+      ownerUserId: body.ownerUserId,
+      displayName: body.displayName,
+      legalName: body.legalName,
+      contactEmail: body.contactEmail,
+      ...(body.countryCode !== undefined ? { countryCode: body.countryCode } : {}),
+      ...(body.phone !== undefined ? { phone: body.phone } : {}),
+      ...(body.description !== undefined ? { description: body.description } : {}),
+      ...(body.registrationNumber !== undefined
+        ? { registrationNumber: body.registrationNumber }
+        : {}),
+      ...(body.taxId !== undefined ? { taxId: body.taxId } : {}),
+    });
+    return this.toResponse(vendor);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Platform admin: list all vendors (read)' })

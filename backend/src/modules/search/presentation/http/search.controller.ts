@@ -7,10 +7,7 @@ import {
   API_RATE_LIMITER,
   type ApiRateLimiter,
 } from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
-import {
-  PRODUCT_SEARCH_INDEX,
-  type ProductSearchIndexPort,
-} from '../../application/ports/product-search-index.port';
+import { SearchProductsQueryHandler } from '../../application/queries/search-products.query-handler';
 import type { SearchStockStatus } from '../../domain/search.types';
 import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
 import { tryGetTenantContext } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
@@ -70,7 +67,7 @@ class SearchProductsQueryDto {
 @Controller('search')
 export class SearchController {
   constructor(
-    @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
+    private readonly searchProductsQuery: SearchProductsQueryHandler,
     @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
   ) {}
 
@@ -81,7 +78,7 @@ export class SearchController {
     await this.rateLimiter.consume(`search:products:${req.ip ?? 'unknown'}`, 60, 60);
     const scoped = applyServerScope(query);
     try {
-      return await this.searchIndex.search(scoped);
+      return await this.searchProductsQuery.execute(scoped);
     } catch {
       throw new BadGatewayException({
         type: 'about:blank',

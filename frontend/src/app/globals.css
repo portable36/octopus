@@ -695,6 +695,49 @@ body {
   color: var(--cf-sale) !important;
 }
 
+.sf-quick-view-dialog {
+  width: min(56rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  margin: auto;
+  border: 1px solid var(--cf-line);
+  background: var(--cf-canvas);
+  padding: 0;
+  color: var(--cf-ink);
+}
+
+.sf-quick-view-dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.sf-quick-view-shell {
+  display: grid;
+  max-height: calc(100vh - 2rem);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.sf-quick-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--cf-line);
+  padding: 1rem 1.25rem;
+}
+
+.sf-quick-view-body {
+  display: grid;
+  gap: 1.5rem;
+  overflow: auto;
+  padding: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.9fr);
+  align-items: start;
+}
+
+.sf-offer-row-highlight {
+  border-color: var(--cf-ink);
+  box-shadow: inset 0 0 0 1px var(--cf-ink);
+}
+
 .sf-panel {
   border: 1px solid var(--cf-line);
   background: var(--cf-canvas);
@@ -1012,6 +1055,10 @@ body {
   }
 
   .sf-product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sf-quick-view-body {
     grid-template-columns: 1fr;
   }
 

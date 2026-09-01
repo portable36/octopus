@@ -8,6 +8,8 @@ import { withRlsContext } from '../../../../shared-kernel/infrastructure/persist
 import { ProductOrmEntity } from '../persistence/product.orm-entity';
 import { StoreOfferOrmEntity } from '../persistence/store-offer.orm-entity';
 import { VariantOrmEntity } from '../persistence/variant.orm-entity';
+import { resolvePrimaryImageMediaId } from '../../domain/services/resolve-primary-image-media-id';
+import type { CatalogMediaReference } from '../../domain/catalog.types';
 
 function slugify(value: string): string {
   const slug = value
@@ -40,6 +42,9 @@ function toSearchSource(
     offerStatus: offer.status,
     offerAvailable: offer.isAvailable,
     productStatus: product.status,
+    primaryImageMediaId: resolvePrimaryImageMediaId(
+      (product.media ?? []) as readonly CatalogMediaReference[],
+    ),
     updatedAt,
     version: Math.floor(updatedAt.getTime() / 1000),
   };

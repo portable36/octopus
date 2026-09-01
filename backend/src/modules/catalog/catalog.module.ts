@@ -36,6 +36,11 @@ import { StoreOfferRepositoryAdapter } from './infrastructure/persistence/store-
 import { CatalogController } from './presentation/http/catalog.controller';
 import { PublicCatalogController } from './presentation/http/public-catalog.controller';
 import { PublicCatalogQueryHandler } from './application/queries/public-catalog.query-handler';
+import {
+  ListProductVariantsHandler,
+  ListStoreOffersHandler,
+} from './application/queries/catalog-vendor.query-handler';
+import { CatalogMediaGuardService } from './application/services/catalog-media-guard.service';
 import { CatalogVariantAccessAdapter } from './infrastructure/access/catalog-variant-access.adapter';
 import { CatalogStoreOfferAccessAdapter } from './infrastructure/access/catalog-store-offer-access.adapter';
 import { CATALOG_VARIANT_ACCESS } from '../../shared-kernel/application/ports/catalog-variant-access.port';
@@ -58,6 +63,7 @@ import { CatalogOfferSearchSourceAdapter } from './infrastructure/access/catalog
   controllers: [CatalogController, PublicCatalogController],
   providers: [
     CatalogAuthorizationService,
+    CatalogMediaGuardService,
     CreateProductHandler,
     ProductLifecycleHandler,
     GetProductHandler,
@@ -69,6 +75,8 @@ import { CatalogOfferSearchSourceAdapter } from './infrastructure/access/catalog
     CreateStoreOfferHandler,
     StoreOfferLifecycleHandler,
     PublicCatalogQueryHandler,
+    ListProductVariantsHandler,
+    ListStoreOffersHandler,
     { provide: PRODUCT_REPOSITORY, useClass: ProductRepositoryAdapter },
     { provide: VARIANT_REPOSITORY, useClass: VariantRepositoryAdapter },
     { provide: CATEGORY_REPOSITORY, useClass: CategoryRepositoryAdapter },

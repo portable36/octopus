@@ -54,10 +54,12 @@ describe('buildOfferSearchDocument', () => {
       offerAvailable: true,
       productStatus: 'published',
       stockAvailable: 0,
+      primaryImageMediaId: 'media-1',
       updatedAt: new Date('2026-08-25T00:00:00.000Z'),
       version: 1,
     });
     expect(doc.searchable).toBe(true);
     expect(doc.stockStatus).toBe('OUT_OF_STOCK');
+    expect(doc.primaryImageMediaId).toBe('media-1');
   });
 });

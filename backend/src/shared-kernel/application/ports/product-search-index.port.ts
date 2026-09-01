@@ -23,6 +23,7 @@ export type OfferSearchDocumentDto = {
   readonly offerStatus: string;
   readonly productStatus: string;
   readonly searchable: boolean;
+  readonly primaryImageMediaId: string | null;
   readonly updatedAtUnix: number;
   readonly version: number;
 };
@@ -61,6 +62,11 @@ export type SearchProductsResultDto = {
   readonly estimatedTotal: number;
   readonly processingTimeMs: number;
   readonly facets: SearchFacetsDto;
+};
+
+/** Storefront search hit — index fields plus resolved image URL at read time. */
+export type SearchProductHitDto = OfferSearchDocumentDto & {
+  readonly primaryImageUrl: string | null;
 };
 
 export interface ProductSearchIndexPort {

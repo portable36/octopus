@@ -124,7 +124,7 @@ export default function AccountProfilePage() {
           </button>
         </div>
       ) : null}
-      <section className="grid gap-4 sm:grid-cols-3" aria-label="Account overview">
+      <section className="grid gap-4 sm:grid-cols-4" aria-label="Account overview">
         <Link href="/account/orders" className="sf-panel block hover:border-foreground">
           <p className="sf-eyebrow">Orders</p>
           <p className="mt-2 text-3xl font-semibold tabular-nums">{orders?.length ?? '—'}</p>
@@ -139,6 +139,11 @@ export default function AccountProfilePage() {
           <p className="sf-eyebrow">Next action</p>
           <p className="mt-2 text-lg font-semibold">Find something new</p>
           <p className="mt-1 text-sm text-muted-foreground">Browse live marketplace offers</p>
+        </Link>
+        <Link href="/vendor/register" className="sf-panel block hover:border-foreground">
+          <p className="sf-eyebrow">Sell with us</p>
+          <p className="mt-2 text-lg font-semibold">Apply as a vendor</p>
+          <p className="mt-1 text-sm text-muted-foreground">Submit your business for review</p>
         </Link>
       </section>
 

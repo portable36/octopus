@@ -1,10 +1,12 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
+import { getPublicMediaUrl, uploadVendorImage } from '@/lib/vendor-media-upload';
 import {
   activateStoreOffer,
   activateVariant,
@@ -14,13 +16,17 @@ import {
   createStoreOffer,
   formatVendorMoney,
   getVendorProduct,
+  listProductVariants,
+  listStoreOffers,
   publishProduct,
   submitProductReview,
   suspendStoreOffer,
   unpublishProduct,
   updateStoreOfferPrice,
+  updateVendorProduct,
   type StoreOffer,
   type VendorProduct,
+  type VendorVariant,
 } from '@/lib/vendor-api';
 import { getSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
 
@@ -40,11 +46,17 @@ export default function VendorProductDetailPage() {
   const params = useParams<{ vendorId: string; productId: string }>();
   const { vendorId, productId } = params;
   const [product, setProduct] = useState<VendorProduct | null>(null);
+  const [variants, setVariants] = useState<VendorVariant[]>([]);
+  const [offers, setOffers] = useState<StoreOffer[]>([]);
   const [storeId, setStoreId] = useState<string | null>(null);
   const [lastOffer, setLastOffer] = useState<StoreOffer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [primaryMediaId, setPrimaryMediaId] = useState('');
+  const [primaryImageUrl, setPrimaryImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const sync = () => setStoreId(getSelectedStoreId());
@@ -55,6 +67,17 @@ export default function VendorProductDetailPage() {
   const reload = useCallback(async () => {
     const row = await getVendorProduct(productId);
     setProduct(row);
+    const variantRows = await listProductVariants(productId).catch(() => [] as VendorVariant[]);
+    setVariants(variantRows);
+    const activeStoreId = getSelectedStoreId();
+    if (activeStoreId) {
+      const offerRows = await listStoreOffers(activeStoreId, productId).catch(
+        () => [] as StoreOffer[],
+      );
+      setOffers(offerRows);
+    } else {
+      setOffers([]);
+    }
   }, [productId]);
 
   useEffect(() => {
@@ -77,6 +100,31 @@ export default function VendorProductDetailPage() {
     };
   }, [reload]);
 
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+    const existingPrimary = product.media.find((item) => item.isPrimary)?.mediaId ?? '';
+    setPrimaryMediaId(existingPrimary);
+  }, [product]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!primaryMediaId) {
+      setPrimaryImageUrl(null);
+      return;
+    }
+    void (async () => {
+      const snapshot = await getPublicMediaUrl(primaryMediaId);
+      if (!cancelled) {
+        setPrimaryImageUrl(snapshot?.url ?? null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [primaryMediaId]);
+
   async function runMutation(action: () => Promise<void>) {
     setPending(true);
     setError(null);
@@ -96,6 +144,53 @@ export default function VendorProductDetailPage() {
       setProduct(updated);
       setMessage(okMessage);
     });
+  }
+
+  async function onUpdateProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const description = formString(form, 'description');
+    await runMutation(async () => {
+      const updated = await updateVendorProduct(productId, {
+        name: formString(form, 'name'),
+        description: description || null,
+        ...(primaryMediaId
+          ? {
+              media: [
+                {
+                  mediaId: primaryMediaId,
+                  mediaType: 'IMAGE' as const,
+                  isPrimary: true,
+                  sortOrder: 0,
+                },
+              ],
+            }
+          : {}),
+      });
+      setProduct(updated);
+      setMessage('Product updated.');
+    });
+  }
+
+  async function onPrimaryImageSelected(file: File | null) {
+    if (!file) {
+      return;
+    }
+    setUploadingImage(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const asset = await uploadVendorImage(vendorId, file);
+      setPrimaryMediaId(asset.id);
+      setMessage('Image uploaded. Save changes to attach it to the product.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image upload failed.');
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   }
 
   async function onCreateVariant(event: FormEvent<HTMLFormElement>) {
@@ -135,6 +230,7 @@ export default function VendorProductDetailPage() {
         currencyCode: formString(form, 'currencyCode') || 'BDT',
       });
       setLastOffer(offer);
+      setOffers((current) => [...current, offer]);
       setMessage('Store offer created.');
       el.reset();
     });
@@ -201,6 +297,83 @@ export default function VendorProductDetailPage() {
         </p>
       ) : null}
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+
+      <form className={formClass} onSubmit={onUpdateProduct}>
+        <h3 className="text-sm font-medium">Edit product</h3>
+        <label className={labelClass}>
+          Name
+          <input
+            className={fieldClass}
+            name="name"
+            required
+            defaultValue={product.name}
+            disabled={pending}
+          />
+        </label>
+        <label className={labelClass}>
+          Description
+          <textarea
+            className="min-h-24 rounded-md border border-border bg-background px-3 py-2"
+            name="description"
+            defaultValue={product.description ?? ''}
+            disabled={pending}
+          />
+        </label>
+        <div className="space-y-2">
+          <span className="text-sm">Primary image</span>
+          {primaryImageUrl ? (
+            <div className="relative h-40 w-40 overflow-hidden rounded-md border border-border bg-muted">
+              <Image
+                src={primaryImageUrl}
+                alt="Product primary"
+                fill
+                className="object-cover"
+                sizes="160px"
+                unoptimized
+              />
+            </div>
+          ) : primaryMediaId ? (
+            <p className="text-xs text-muted-foreground font-mono">{primaryMediaId}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No image attached.</p>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              disabled={pending || uploadingImage}
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0] ?? null;
+                void onPrimaryImageSelected(file);
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || uploadingImage}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploadingImage ? 'Uploading…' : primaryMediaId ? 'Replace image' : 'Upload image'}
+            </Button>
+            {primaryMediaId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={pending || uploadingImage}
+                onClick={() => setPrimaryMediaId('')}
+              >
+                Remove
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        <Button type="submit" disabled={pending}>
+          Save changes
+        </Button>
+      </form>
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Lifecycle</h3>
@@ -282,16 +455,21 @@ export default function VendorProductDetailPage() {
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Variants</h3>
-        {product.variantIds.length === 0 ? (
+        {variants.length === 0 ? (
           <p className="text-sm text-muted-foreground">No variants yet.</p>
         ) : (
           <ul className="space-y-2">
-            {product.variantIds.map((variantId) => (
+            {variants.map((variant) => (
               <li
-                key={variantId}
+                key={variant.id}
                 className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
-                <span className="font-mono text-xs">{variantId}</span>
+                <span className="font-medium">{variant.name}</span>
+                <span className="font-mono text-xs">{variant.sku}</span>
+                <span className="text-muted-foreground">{variant.status}</span>
+                {variant.basePriceMinor != null && variant.currencyCode ? (
+                  <span>{formatVendorMoney(variant.basePriceMinor, variant.currencyCode)}</span>
+                ) : null}
                 <Button
                   type="button"
                   size="sm"
@@ -299,8 +477,9 @@ export default function VendorProductDetailPage() {
                   disabled={pending}
                   onClick={() =>
                     void runMutation(async () => {
-                      await activateVariant(variantId);
-                      setMessage(`Variant ${variantId} activated.`);
+                      await activateVariant(variant.id);
+                      await reload();
+                      setMessage(`Variant ${variant.name} activated.`);
                     })
                   }
                 >
@@ -313,8 +492,9 @@ export default function VendorProductDetailPage() {
                   disabled={pending}
                   onClick={() =>
                     void runMutation(async () => {
-                      await archiveVariant(variantId);
-                      setMessage(`Variant ${variantId} archived.`);
+                      await archiveVariant(variant.id);
+                      await reload();
+                      setMessage(`Variant ${variant.name} archived.`);
                     })
                   }
                 >
@@ -337,7 +517,28 @@ export default function VendorProductDetailPage() {
             Selected store: <span className="font-mono text-xs">{storeId}</span>
           </p>
         )}
-        {/* ponytail: no list-offers-by-store API — show last created response only */}
+        {offers.length > 0 ? (
+          <ul className="space-y-2 text-sm">
+            {offers.map((offer) => {
+              const variant = variants.find((row) => row.id === offer.variantId);
+              return (
+                <li
+                  key={offer.id}
+                  className="rounded-md border border-border bg-background px-3 py-2"
+                >
+                  <span className="font-medium">{variant?.name ?? offer.variantId}</span>
+                  {' · '}
+                  {formatVendorMoney(offer.priceMinor, offer.currencyCode)}
+                  {' · '}
+                  {offer.status}
+                  {offer.isAvailable ? '' : ' · unavailable'}
+                </li>
+              );
+            })}
+          </ul>
+        ) : storeId ? (
+          <p className="text-sm text-muted-foreground">No offers for this product in this store.</p>
+        ) : null}
         <form className={formClass} onSubmit={onCreateOffer}>
           <label className={labelClass}>
             Variant ID
@@ -349,8 +550,10 @@ export default function VendorProductDetailPage() {
               disabled={pending || !storeId}
             />
             <datalist id="product-variant-ids">
-              {product.variantIds.map((id) => (
-                <option key={id} value={id} />
+              {variants.map((variant) => (
+                <option key={variant.id} value={variant.id}>
+                  {variant.name}
+                </option>
               ))}
             </datalist>
           </label>

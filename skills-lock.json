@@ -13,6 +13,12 @@
       "skillPath": "skills/engineering/ask-matt/SKILL.md",
       "computedHash": "e5404aef8525ca0c8fc76692567a38dfdd5d0cc1a9f8d47c02c18f29f60d92a6"
     },
+    "building-skills-from-patterns": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/building-skills-from-patterns/SKILL.md",
+      "computedHash": "a1bf84b309a6f93ad8806c3e580cc9d43b97b5642694fd0ad071bd7b02e001cf"
+    },
     "ci-cd-pipeline-builder": {
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
@@ -127,6 +133,12 @@
       "skillPath": "engineering-team/skills/incident-response/SKILL.md",
       "computedHash": "59cfeb88994981b4c85a5257c971996839359b709e865829835e9203363871bc"
     },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "computedHash": "6498a736a8dc5c645047c8a875b8ea7417e2ad97146f005200e50d20a9337ada"
+    },
     "migration-architect": {
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
@@ -180,6 +192,12 @@
       "sourceType": "github",
       "skillPath": "skills/pdf/SKILL.md",
       "computedHash": "37226d4220d844377e6b2a386c51a011df4cd130855ff0b80bcc22f9c28abd57"
+    },
+    "penthera": {
+      "source": "danoszz/penthera",
+      "sourceType": "github",
+      "skillPath": "skills/penthera/SKILL.md",
+      "computedHash": "7efc7e6fc2b8a2a4d4e7d80afa3b68aeb953a58d9cf5b26561b298a86d6b9a50"
     },
     "performance-profiler": {
       "source": "alirezarezvani/claude-skills",
@@ -289,6 +307,12 @@
       "skillPath": "engineering-team/skills/senior-security/SKILL.md",
       "computedHash": "e977f06e4af118da072743d5ca4bc37adfbd483bb43aee103991fbdb6c857d35"
     },
+    "seo-auditing": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/seo-auditing/SKILL.md",
+      "computedHash": "3fab77832fe4885054067add4c2f3d1059b7ac3c566fbaf1466665b4d3e82484"
+    },
     "setup-matt-pocock-skills": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -300,6 +324,12 @@
       "sourceType": "github",
       "skillPath": "plugins/stitch-build/skills/shadcn-ui/SKILL.md",
       "computedHash": "57e2cc881eb395418d28f1529e2d453b85f1d77a8de000c8af59512fab7b318d"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "7e3c9cd74e9e2b4828527a857170e86310f2dab5ea8030a9043df2c7e6c88857"
     },
     "skill-security-auditor": {
       "source": "alirezarezvani/claude-skills",
@@ -318,6 +348,12 @@
       "sourceType": "github",
       "skillPath": "engineering/skills/sql-database-assistant/SKILL.md",
       "computedHash": "53b1156d13b632b7aadbc872345826b356c3930eb03b48a59677a2bdbfc23b3e"
+    },
+    "suggesting-skills": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/suggesting-skills/SKILL.md",
+      "computedHash": "59d86ac6664abb2b928efa22ed0cac530dafeccdb97cd13b39a9e952a2950b25"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",
@@ -361,11 +397,23 @@
       "skillPath": "skills/engineering/triage/SKILL.md",
       "computedHash": "363ca4f1b97ca5227d41d3973178ab301d7c498ba41b466dfe30b6163f6d72b5"
     },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "6b526d013e28073246a36f99b529bc43745d30832ecfa8217b359c34f260ca6b"
+    },
     "verification-before-completion": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "skillPath": "skills/verification-before-completion/SKILL.md",
       "computedHash": "b529822bdac4b197b180fe12225cff86b930b65910435103c10622df7f041651"
+    },
+    "verifying-markdown-formatting": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/verifying-markdown-formatting/SKILL.md",
+      "computedHash": "8c8e929893c0aa005c853cae13e647be742f2b60ff3ff7fdc51ece10ea380319"
     },
     "wait-what": {
       "source": "mattpocock/skills",
@@ -378,6 +426,12 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/wayfinder/SKILL.md",
       "computedHash": "f53b17850d8d4d68e8b861cfc7de69580335851d7fe7bc3acdf37505f46c9940"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
     },
     "webapp-testing": {
       "source": "anthropics/skills",

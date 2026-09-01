@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 import { getPublicAppName, getPublicSiteUrl } from '@/lib/env';
-import type { PublicCategory, PublicProduct, PublicStore } from '@/lib/storefront-api';
+import type {
+  PublicCategory,
+  PublicProduct,
+  PublicStore,
+  PublicVendorShop,
+} from '@/lib/storefront-api';
 
 export function absoluteUrl(path: string): string {
   const base = getPublicSiteUrl();
@@ -61,6 +66,33 @@ export function storeMetadata(store: PublicStore): Metadata {
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, type: 'website' },
+  };
+}
+
+export function vendorShopMetadata(vendor: PublicVendorShop): Metadata {
+  const title = vendor.displayName;
+  const description =
+    vendor.description?.trim().slice(0, 300) || `${vendor.displayName} on ${getPublicAppName()}`;
+  const url = absoluteUrl(`/shops/${vendor.slug}`);
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+  };
+}
+
+export function vendorShopMetadataWithFacets(
+  vendor: PublicVendorShop,
+  hasFacetQuery: boolean,
+): Metadata {
+  const base = vendorShopMetadata(vendor);
+  if (!hasFacetQuery) {
+    return base;
+  }
+  return {
+    ...base,
+    robots: { index: false, follow: true },
   };
 }
 

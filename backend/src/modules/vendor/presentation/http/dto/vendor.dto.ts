@@ -60,6 +60,12 @@ export class RegisterVendorRequestDto {
   taxId?: string;
 }
 
+export class AdminRegisterVendorRequestDto extends RegisterVendorRequestDto {
+  @ApiProperty({ format: 'uuid' })
+  @IsUUID()
+  ownerUserId!: string;
+}
+
 export class RejectVendorRequestDto {
   @ApiProperty()
   @IsString()

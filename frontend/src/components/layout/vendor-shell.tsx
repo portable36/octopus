@@ -38,6 +38,7 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stores, setStores] = useState<StoreSummary[]>([]);
+  const [vendorStatus, setVendorStatus] = useState<string | null>(null);
   const [selectedStoreId, setSelectedStoreIdState] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -79,7 +80,11 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
           setReady(true);
           return;
         }
+        const currentVendor = vendorId
+          ? (vendors.find((vendor) => vendor.id === vendorId) ?? null)
+          : null;
         setMe(profile);
+        setVendorStatus(currentVendor?.status ?? null);
         setError(null);
         setAuthorized(true);
         setReady(true);
@@ -134,6 +139,9 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
       return [];
     }
     const base = `/vendor/${vendorId}`;
+    if (vendorStatus !== 'active') {
+      return [{ href: base, label: 'Dashboard', permission: 'vendor.manage' }];
+    }
     return [
       { href: base, label: 'Dashboard', permission: 'vendor.manage' },
       { href: `${base}/stores`, label: 'Stores', permission: 'store.manage' },
@@ -142,7 +150,7 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
       { href: `${base}/inventory`, label: 'Inventory', permission: 'inventory.read' },
       { href: `${base}/finance`, label: 'Finance', permission: 'finance.ledger.read' },
     ];
-  }, [vendorId]);
+  }, [vendorId, vendorStatus]);
 
   function onStoreChange(next: string) {
     setSelectedStoreIdState(next || null);

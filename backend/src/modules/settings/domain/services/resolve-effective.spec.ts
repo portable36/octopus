@@ -31,6 +31,7 @@ describe('resolveEffective', () => {
       supportEmail: null,
       defaultLocale: 'en',
       defaultCurrencyCode: 'BDT',
+      vendorRegistrationEnabled: false,
     });
     expect(resolveEffectiveBranding([], { kind: 'platform' })).toEqual({
       schemaVersion: 1,

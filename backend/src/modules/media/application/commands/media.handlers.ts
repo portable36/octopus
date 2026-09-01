@@ -10,6 +10,7 @@ import {
   MediaDomainError,
   MediaNotFoundError,
 } from '../errors/media.errors';
+import { OBJECT_STORAGE, type ObjectStoragePort } from '../ports/object-storage.port';
 import { MEDIA_REPOSITORY, type MediaRepository } from '../ports/media-repository.interface';
 
 const MEDIA_WRITE_ROLES = new Set(['PLATFORM_ADMIN', 'VENDOR_OWNER', 'STORE_MANAGER']);
@@ -30,6 +31,15 @@ export const MEDIA_ALLOWED_CONTENT_TYPES = new Set([
 
 export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 
+export const MEDIA_UPLOAD_SESSION_TTL_SECONDS = 15 * 60;
+
+const CONTENT_TYPE_EXTENSION: Readonly<Record<string, string>> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
 function assertSafeStorageKey(storageKey: string): void {
   const key = storageKey.trim();
   if (!key) {
@@ -41,6 +51,28 @@ function assertSafeStorageKey(storageKey: string): void {
   if (/^[a-z][a-z0-9+.-]*:/i.test(key)) {
     throw new MediaDomainError('storageKey must be an object key, not a URL.', 'MEDIA_INVALID_KEY');
   }
+}
+
+function assertVendorStorageKey(vendorId: string, storageKey: string): void {
+  const expectedPrefix = `vendors/${vendorId}/`;
+  if (!storageKey.startsWith(expectedPrefix)) {
+    throw new MediaDomainError(
+      'storageKey must belong to the vendor upload namespace.',
+      'MEDIA_INVALID_KEY',
+    );
+  }
+}
+
+function extensionForContentType(contentType: string): string {
+  const normalized = contentType.trim().toLowerCase();
+  const extension = CONTENT_TYPE_EXTENSION[normalized];
+  if (!extension) {
+    throw new MediaDomainError(
+      `contentType not allowed: ${normalized}`,
+      'MEDIA_INVALID_CONTENT_TYPE',
+    );
+  }
+  return extension;
 }
 
 function assertAllowedMediaMetadata(contentType: string, byteSize: number): void {
@@ -83,8 +115,45 @@ function assertMagicMatchesDeclared(contentType: string, contentPrefixBase64: st
 export class MediaHandlers {
   constructor(
     @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
+    @Inject(OBJECT_STORAGE) private readonly objectStorage: ObjectStoragePort,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
+
+  public async createUploadSession(input: {
+    readonly vendorId: string;
+    readonly originalFilename: string;
+    readonly contentType: string;
+    readonly byteSize: number;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertAllowedMediaMetadata(input.contentType, input.byteSize);
+
+    const extension = extensionForContentType(input.contentType);
+    const objectId = UniqueID.create().value;
+    const storageKey = `vendors/${input.vendorId}/${objectId}.${extension}`;
+    assertSafeStorageKey(storageKey);
+
+    const session = await this.objectStorage.createPresignedPut({
+      storageKey,
+      contentType: input.contentType.trim().toLowerCase(),
+      byteSize: input.byteSize,
+      expiresInSeconds: MEDIA_UPLOAD_SESSION_TTL_SECONDS,
+    });
+
+    return {
+      storageKey: session.storageKey,
+      uploadUrl: session.uploadUrl,
+      expiresAt: session.expiresAt.toISOString(),
+      requiredHeaders: session.requiredHeaders,
+      originalFilename: input.originalFilename.trim(),
+      contentType: input.contentType.trim().toLowerCase(),
+      byteSize: input.byteSize,
+    };
+  }
 
   public async registerMetadata(input: {
     readonly originalFilename: string;
@@ -102,6 +171,9 @@ export class MediaHandlers {
     }
     assertAllowedMediaMetadata(input.contentType, input.byteSize);
     assertSafeStorageKey(input.storageKey);
+    if (input.vendorId) {
+      assertVendorStorageKey(input.vendorId, input.storageKey);
+    }
     assertMagicMatchesDeclared(input.contentType, input.contentPrefixBase64);
 
     const asset = {

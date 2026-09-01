@@ -41,6 +41,7 @@ Prefer extending Catalog/Search public endpoints over inventing `MarketplaceModu
 | `/checkout/success`                 | Multi-store order refs + **server** `totals` from checkout outcome                  |
 | `/login`, `/register`               | Identity auth (refresh cookie + Bearer access; no `?token=`)                        |
 | `/account/*`                        | Profile, addresses, orders, returns (authenticated)                                 |
+| `/vendor/register`                  | Customer vendor application when enabled by platform settings                       |
 
 Layout: `frontend/src/app/(storefront)/` + `StorefrontShell`. Search goes through Nest only (`GET /search/products`); never Meilisearch from the browser. Prices/stock are display until checkout.
 

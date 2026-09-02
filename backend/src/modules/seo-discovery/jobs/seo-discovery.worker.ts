@@ -5,9 +5,12 @@ import {
   bullmqWorkerOptions,
 } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import { registerBullmqQueueMetrics } from '../../../shared-kernel/infrastructure/observability/queue-metrics';
+import { ImageSitemapCacheService } from '../application/services/image-sitemap-cache.service';
+import { SeoHealthVerificationService } from '../application/services/seo-health-verification.service';
 import { SitemapCacheService } from '../application/services/sitemap-cache.service';
 import { ProductFeedService } from '../feeds/product-feed.service';
 import { MetaCapiService } from '../infrastructure/services/meta-capi.service';
+import { SearchConsoleApiService } from '../infrastructure/services/search-console.service';
 import {
   SEO_DISCOVERY_JOB_NAMES,
   SEO_DISCOVERY_QUEUE,
@@ -27,6 +30,9 @@ export class SeoDiscoveryWorker implements OnModuleInit, OnModuleDestroy {
     private readonly sitemapCache: SitemapCacheService,
     private readonly productFeeds: ProductFeedService,
     private readonly metaCapi: MetaCapiService,
+    private readonly seoHealth: SeoHealthVerificationService,
+    private readonly imageSitemapCache: ImageSitemapCacheService,
+    private readonly searchConsole: SearchConsoleApiService,
   ) {
     this.connection = {
       url: this.config.redisUrl,
@@ -72,12 +78,23 @@ export class SeoDiscoveryWorker implements OnModuleInit, OnModuleDestroy {
     switch (job.name) {
       case SEO_DISCOVERY_JOB_NAMES.generateSitemapCache:
         await this.sitemapCache.refresh();
+        await this.enqueuer.enqueuePingSearchConsole();
+        return;
+      case SEO_DISCOVERY_JOB_NAMES.generateImageSitemap:
+        await this.imageSitemapCache.refresh();
+        await this.enqueuer.enqueuePingSearchConsole();
         return;
       case SEO_DISCOVERY_JOB_NAMES.generateProductFeeds:
         await this.productFeeds.generateAll();
         return;
       case SEO_DISCOVERY_JOB_NAMES.sendMetaCapiEvent:
         await this.processMetaCapiEvent(job);
+        return;
+      case SEO_DISCOVERY_JOB_NAMES.verifySeoHealth:
+        await this.seoHealth.verifyTopProductRoutes();
+        return;
+      case SEO_DISCOVERY_JOB_NAMES.pingSearchConsole:
+        await this.searchConsole.submitProductionSitemaps();
         return;
       default:
         throw new Error(`Unsupported SEO discovery job: ${job.name}`);

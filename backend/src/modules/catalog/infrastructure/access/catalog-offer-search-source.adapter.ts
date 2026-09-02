@@ -3,8 +3,10 @@ import { EntityManager } from '@mikro-orm/core';
 import type {
   CatalogOfferSearchSourceDto,
   CatalogOfferSearchSourcePort,
+  CatalogSearchAttribute,
 } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
+import { CategoryOrmEntity } from '../persistence/category.orm-entity';
 import { ProductOrmEntity } from '../persistence/product.orm-entity';
 import { StoreOfferOrmEntity } from '../persistence/store-offer.orm-entity';
 import { VariantOrmEntity } from '../persistence/variant.orm-entity';
@@ -19,10 +21,29 @@ function slugify(value: string): string {
   return slug.length > 0 ? slug : 'offer';
 }
 
+function parseSearchAttributes(raw: readonly unknown[]): CatalogSearchAttribute[] {
+  const attributes: CatalogSearchAttribute[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') {
+      continue;
+    }
+    const record = entry as Record<string, unknown>;
+    if (typeof record['code'] !== 'string' || record['value'] === undefined) {
+      continue;
+    }
+    attributes.push({
+      code: record['code'],
+      value: record['value'] as CatalogSearchAttribute['value'],
+    });
+  }
+  return attributes;
+}
+
 function toSearchSource(
   offer: StoreOfferOrmEntity,
   product: ProductOrmEntity,
   variant: VariantOrmEntity,
+  categoryNames: readonly string[],
 ): CatalogOfferSearchSourceDto {
   const updatedAt = offer.updatedAt ?? product.updatedAt ?? new Date();
   return {
@@ -32,11 +53,16 @@ function toSearchSource(
     vendorId: offer.vendorId,
     storeId: offer.storeId,
     name: product.name,
+    variantName: variant.name,
     slug: slugify(product.name),
     sku: variant.sku,
     shortDescription: product.description,
     brandId: product.brandId,
     categoryIds: product.categoryIds ?? [],
+    categoryNames,
+    productAttributes: parseSearchAttributes(product.attributes ?? []),
+    variantAttributes: parseSearchAttributes(variant.attributes ?? []),
+    reviewTexts: [],
     priceMinor: offer.priceMinor,
     currencyCode: offer.currencyCode,
     offerStatus: offer.status,
@@ -77,6 +103,12 @@ export class CatalogOfferSearchSourceAdapter implements CatalogOfferSearchSource
         tx.find(ProductOrmEntity, { id: { $in: productIds } }),
         tx.find(VariantOrmEntity, { id: { $in: variantIds } }),
       ]);
+      const categoryIds = [...new Set(products.flatMap((product) => product.categoryIds ?? []))];
+      const categories =
+        categoryIds.length > 0
+          ? await tx.find(CategoryOrmEntity, { id: { $in: categoryIds } })
+          : [];
+      const categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
       const productsById = new Map(products.map((product) => [product.id, product]));
       const variantsById = new Map(variants.map((variant) => [variant.id, variant]));
       const sources: CatalogOfferSearchSourceDto[] = [];
@@ -86,7 +118,10 @@ export class CatalogOfferSearchSourceAdapter implements CatalogOfferSearchSource
         if (!product || !variant) {
           continue;
         }
-        sources.push(toSearchSource(offer, product, variant));
+        const categoryNames = (product.categoryIds ?? [])
+          .map((categoryId) => categoryNameById.get(categoryId))
+          .filter((name): name is string => Boolean(name));
+        sources.push(toSearchSource(offer, product, variant, categoryNames));
       }
       return sources;
     });

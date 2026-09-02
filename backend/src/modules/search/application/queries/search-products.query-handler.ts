@@ -13,6 +13,7 @@ import {
   PRODUCT_SEARCH_INDEX,
   type ProductSearchIndexPort,
 } from '../ports/product-search-index.port';
+import { SearchSynonymService } from '../services/search-synonym.service';
 
 export type EnrichedSearchProductsResultDto = Omit<SearchProductsResultDto, 'hits'> & {
   readonly hits: readonly SearchProductHitDto[];
@@ -23,11 +24,18 @@ export class SearchProductsQueryHandler {
   constructor(
     @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
     @Inject(MEDIA_ASSET_ACCESS) private readonly mediaAccess: MediaAssetAccessPort,
+    private readonly searchSynonyms: SearchSynonymService,
   ) {}
 
   public async execute(query: SearchProductsQueryDto): Promise<EnrichedSearchProductsResultDto> {
     const result = await this.searchIndex.search(query);
     const hits = await this.enrichHits(result.hits);
+
+    const trimmedQuery = query.q?.trim();
+    if (trimmedQuery && result.estimatedTotal === 0) {
+      void this.searchSynonyms.recordZeroResultQuery(trimmedQuery).catch(() => undefined);
+    }
+
     return { ...result, hits };
   }
 

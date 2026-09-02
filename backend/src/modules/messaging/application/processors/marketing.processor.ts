@@ -1,6 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type Redis from 'ioredis';
 import {
+  ABANDONED_CART_OUTBOX_HANDLER,
+  type AbandonedCartOutboxHandler,
+} from '../../../../shared-kernel/application/ports/abandoned-cart-outbox-handler.port';
+import {
   MARKETING_OUTBOX_HANDLER,
   type MarketingOutboxHandler,
 } from '../../../../shared-kernel/application/ports/marketing-outbox-handler.port';
@@ -30,12 +34,15 @@ export class MarketingProcessor {
     @Inject(MARKETING_OUTBOX_HANDLER) private readonly marketing: MarketingOutboxHandler,
     @Inject(REPORTING_OUTBOX_HANDLER) private readonly reporting: ReportingOutboxHandler,
     @Inject(SEO_META_CAPI_OUTBOX_HANDLER) private readonly metaCapi: SeoMetaCapiOutboxHandler,
+    @Inject(ABANDONED_CART_OUTBOX_HANDLER)
+    private readonly abandonedCart: AbandonedCartOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
     const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
       await this.reporting.handle(job.eventType, job.payload);
       await this.metaCapi.handle(job.eventType, job.payload);
+      await this.abandonedCart.handle(job.eventType, job.payload);
 
       if (job.eventType === 'OrderCreated') {
         return;

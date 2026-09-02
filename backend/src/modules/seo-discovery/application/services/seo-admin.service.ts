@@ -13,6 +13,8 @@ import {
   type UpsertSeoOverrideInput,
 } from '../ports/seo-override-repository.interface';
 import { SeoDiscoveryEnqueuerService } from '../../jobs/seo-discovery-enqueuer.service';
+import { CrawlErrorLogService } from './crawl-error-log.service';
+import { SeoHealthVerificationService } from './seo-health-verification.service';
 
 export type SeoArtifactSyncStatus = {
   readonly status: 'fresh' | 'stale' | 'missing';
@@ -23,6 +25,9 @@ export type SeoArtifactSyncStatus = {
 export type SeoAdminHealth = {
   readonly brokenRedirectsCount: number;
   readonly missingMetadataCount: number;
+  readonly crawlErrorsLast24h: number;
+  readonly seoHealthIssuesCount: number;
+  readonly seoHealthLastScanAt: string | null;
   readonly jobs: {
     readonly sitemap: SeoArtifactSyncStatus;
     readonly productFeeds: SeoArtifactSyncStatus;
@@ -44,12 +49,18 @@ export class SeoAdminService {
     @Inject(REDIRECT_REPOSITORY) private readonly redirects: RedirectRepository,
     private readonly config: AppConfigService,
     private readonly enqueuer: SeoDiscoveryEnqueuerService,
+    private readonly crawlErrors: CrawlErrorLogService,
+    private readonly seoHealth: SeoHealthVerificationService,
   ) {}
 
   public async getHealth(): Promise<SeoAdminHealth> {
-    const [brokenRedirectsCount, missingMetadataCount, sitemap, productFeeds] = await Promise.all([
+    const [brokenRedirectsCount, missingMetadataCount, crawlErrorsLast24h, seoHealthIssuesCount, seoHealthLastScanAt, sitemap, productFeeds] =
+      await Promise.all([
       this.redirects.countBroken(),
       this.overrides.countMissingMetadata(),
+      this.crawlErrors.countRecent(24),
+      this.seoHealth.countOpenIssues(),
+      this.seoHealth.latestScanAt(),
       this.readArtifactStatus('sitemap.xml'),
       this.readArtifactStatus(join('feeds', 'google-products.xml')),
     ]);
@@ -60,6 +71,9 @@ export class SeoAdminService {
     return {
       brokenRedirectsCount,
       missingMetadataCount,
+      crawlErrorsLast24h,
+      seoHealthIssuesCount,
+      seoHealthLastScanAt: seoHealthLastScanAt?.toISOString() ?? null,
       jobs: {
         sitemap,
         productFeeds: productFeedStatus,
@@ -87,6 +101,11 @@ export class SeoAdminService {
             this.config.metaPixelId && this.config.metaAccessToken ? 'configured' : 'not_configured',
           lastRunAt: null,
         },
+        {
+          jobName: 'verify-seo-health',
+          status: seoHealthLastScanAt ? 'fresh' : 'missing',
+          lastRunAt: seoHealthLastScanAt?.toISOString() ?? null,
+        },
       ],
     };
   }
@@ -107,6 +126,18 @@ export class SeoAdminService {
 
   public async enqueueProductFeedRefresh(): Promise<void> {
     await this.enqueuer.enqueueProductFeeds();
+  }
+
+  public async enqueueVerifySeoHealth(): Promise<void> {
+    await this.enqueuer.enqueueVerifySeoHealth();
+  }
+
+  public async listCrawlErrors(limit = 50) {
+    return this.crawlErrors.listRecent(limit);
+  }
+
+  public async listSeoHealthIssues(limit = 100) {
+    return this.seoHealth.listIssues(limit);
   }
 
   private async readArtifactStatus(relativePath: string): Promise<SeoArtifactSyncStatus> {

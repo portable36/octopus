@@ -94,12 +94,16 @@ describe('SEO discovery jobs and feeds', () => {
       const productFeeds = {
         generateAll: vi.fn(),
       };
+      const enqueuer = { enqueuePingSearchConsole: vi.fn() };
       const worker = new SeoDiscoveryWorker(
         { isTest: true, outboxDispatchEnabled: false } as never,
-        {} as never,
+        enqueuer as never,
         sitemapCache as unknown as SitemapCacheService,
         productFeeds as unknown as ProductFeedService,
         { sendEvent: vi.fn() } as never,
+        { verifyTopProductRoutes: vi.fn() } as never,
+        { refresh: vi.fn() } as never,
+        { submitProductionSitemaps: vi.fn() } as never,
       );
 
       const job = {
@@ -113,6 +117,7 @@ describe('SEO discovery jobs and feeds', () => {
       await worker.process(job);
 
       expect(sitemapCache.refresh).toHaveBeenCalledTimes(1);
+      expect(enqueuer.enqueuePingSearchConsole).toHaveBeenCalledTimes(1);
       expect(productFeeds.generateAll).not.toHaveBeenCalled();
     });
 
@@ -127,12 +132,16 @@ describe('SEO discovery jobs and feeds', () => {
           itemCount: 3,
         }),
       };
+      const enqueuer = { enqueuePingSearchConsole: vi.fn() };
       const worker = new SeoDiscoveryWorker(
         { isTest: true, outboxDispatchEnabled: false } as never,
-        {} as never,
+        enqueuer as never,
         sitemapCache as unknown as SitemapCacheService,
         productFeeds as unknown as ProductFeedService,
         { sendEvent: vi.fn() } as never,
+        { verifyTopProductRoutes: vi.fn() } as never,
+        { refresh: vi.fn() } as never,
+        { submitProductionSitemaps: vi.fn() } as never,
       );
 
       const job = {
@@ -147,6 +156,36 @@ describe('SEO discovery jobs and feeds', () => {
 
       expect(productFeeds.generateAll).toHaveBeenCalledTimes(1);
       expect(sitemapCache.refresh).not.toHaveBeenCalled();
+    });
+
+    it('routes generate-image-sitemap to the image sitemap cache refresher', async () => {
+      const imageSitemapCache = {
+        refresh: vi.fn().mockResolvedValue(undefined),
+      };
+      const enqueuer = { enqueuePingSearchConsole: vi.fn() };
+      const worker = new SeoDiscoveryWorker(
+        { isTest: true, outboxDispatchEnabled: false } as never,
+        enqueuer as never,
+        { refresh: vi.fn() } as never,
+        { generateAll: vi.fn() } as never,
+        { sendEvent: vi.fn() } as never,
+        { verifyTopProductRoutes: vi.fn() } as never,
+        imageSitemapCache as never,
+        { submitProductionSitemaps: vi.fn() } as never,
+      );
+
+      const job = {
+        name: SEO_DISCOVERY_JOB_NAMES.generateImageSitemap,
+        data: {
+          jobName: SEO_DISCOVERY_JOB_NAMES.generateImageSitemap,
+          requestedAt: new Date().toISOString(),
+        } satisfies SeoDiscoveryJobPayload,
+      } as Job<SeoDiscoveryJobPayload>;
+
+      await worker.process(job);
+
+      expect(imageSitemapCache.refresh).toHaveBeenCalledTimes(1);
+      expect(enqueuer.enqueuePingSearchConsole).toHaveBeenCalledTimes(1);
     });
   });
 

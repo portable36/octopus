@@ -32,6 +32,7 @@ export class RedirectMiddleware implements NestMiddleware {
       path.startsWith('/api/') ||
       path === '/robots.txt' ||
       path === '/sitemap.xml' ||
+      path === '/sitemaps/images.xml' ||
       path.startsWith('/api/docs')
     );
   }

@@ -3,6 +3,7 @@ import type { StructuredData } from '../../domain/seo.types';
 import { parsePublicSeoPath } from '../../domain/parse-seo-path';
 import { CatalogSeoFactsAdapter } from '../../infrastructure/access/catalog-seo-facts.adapter';
 import { StructuredDataEngine } from '../../structured-data/structured-data.engine';
+import { SemanticSeoService } from './semantic-seo.service';
 import { SeoMetadataService } from './seo-metadata.service';
 
 export type PublicSeoResolveResponse = {
@@ -17,6 +18,7 @@ export class SeoPageResolveService {
     private readonly facts: CatalogSeoFactsAdapter,
     private readonly metadata: SeoMetadataService,
     private readonly structuredData: StructuredDataEngine,
+    private readonly semanticSeo: SemanticSeoService,
   ) {}
 
   public async resolveByPath(path: string): Promise<PublicSeoResolveResponse> {
@@ -46,13 +48,16 @@ export class SeoPageResolveService {
       }
 
       const canonicalUrl = `${siteUrl}/products/${product.id}`;
+      const enrichedDescription = await this.semanticSeo.enrichDescriptionWithInternalLinks(
+        product.description,
+      );
       const resolvedMetadata = await this.metadata.resolve({
         entityType: 'product',
         entityId: product.id,
         defaults: {
           title: product.name,
           description:
-            product.description?.trim().slice(0, 300) ||
+            enrichedDescription?.trim().slice(0, 300) ||
             `${product.name} on ${new URL(siteUrl).hostname}`,
           canonicalUrl,
         },
@@ -68,7 +73,7 @@ export class SeoPageResolveService {
           name: product.name,
           sku: product.sku,
           url: canonicalUrl,
-          ...(product.description ? { description: product.description } : {}),
+          ...(enrichedDescription ? { description: enrichedDescription } : {}),
           ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
           offers: product.offers.map((offer) => ({
             priceMinor: offer.priceMinor,
@@ -96,13 +101,16 @@ export class SeoPageResolveService {
       }
 
       const canonicalUrl = `${siteUrl}/categories/${category.slug}`;
+      const enrichedDescription = await this.semanticSeo.enrichDescriptionWithInternalLinks(
+        category.seoDescription,
+      );
       const resolvedMetadata = await this.metadata.resolve({
         entityType: 'category',
         entityId: category.id,
         defaults: {
           title: category.seoTitle?.trim() || category.name,
           description:
-            category.seoDescription?.trim() ||
+            enrichedDescription?.trim() ||
             `${category.name} on ${new URL(siteUrl).hostname}`,
           canonicalUrl,
         },

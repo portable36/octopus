@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { Job } from 'bullmq';
+import type { AppConfigService } from '../../../config/app-config.service';
 import { MetaCapiService } from '../infrastructure/services/meta-capi.service';
 import {
   hashMetaEmail,
@@ -11,6 +12,32 @@ import {
 import { SEO_DISCOVERY_JOB_NAMES } from '../jobs/seo-discovery.constants';
 import type { SeoDiscoveryMetaCapiJobPayload } from '../jobs/seo-discovery-job.types';
 import { SeoDiscoveryWorker } from '../jobs/seo-discovery.worker';
+
+function mockMetaCapiConfig(
+  overrides: Partial<{
+    metaPixelId: string;
+    metaAccessToken: string;
+    metaTestEventCode: string;
+    metaAndromedaDataProcessingOptionsRaw: string;
+    metaAndromedaCountry: number;
+    metaAndromedaState: number;
+    metaCapiDataSource: 'system_generated' | 'server';
+    gemSchemaVersion: string;
+    gemTrackingEnvironment: 'production' | 'staging' | 'development';
+  }> = {},
+): AppConfigService {
+  return {
+    metaPixelId: overrides.metaPixelId,
+    metaAccessToken: overrides.metaAccessToken,
+    metaTestEventCode: overrides.metaTestEventCode,
+    metaAndromedaDataProcessingOptionsRaw: overrides.metaAndromedaDataProcessingOptionsRaw,
+    metaAndromedaCountry: overrides.metaAndromedaCountry,
+    metaAndromedaState: overrides.metaAndromedaState,
+    metaCapiDataSource: overrides.metaCapiDataSource,
+    gemSchemaVersion: overrides.gemSchemaVersion,
+    gemTrackingEnvironment: overrides.gemTrackingEnvironment,
+  } as AppConfigService;
+}
 
 describe('Meta CAPI', () => {
   describe('PII normalization and hashing', () => {
@@ -31,11 +58,9 @@ describe('Meta CAPI', () => {
     });
 
     it('buildHashedUserData omits empty hashed fields and keeps network-safe ip/ua', () => {
-      const config = {
-        metaPixelId: '123456789',
-        metaAccessToken: 'token',
-      };
-      const service = new MetaCapiService(config as never);
+      const service = new MetaCapiService(
+        mockMetaCapiConfig({ metaPixelId: '123456789', metaAccessToken: 'token' }),
+      );
 
       const hashed = service.buildHashedUserData({
         email: 'buyer@shop.test',
@@ -66,11 +91,9 @@ describe('Meta CAPI', () => {
     it('throws on HTTP failure so BullMQ can retry the job', async () => {
       global.fetch = vi.fn(async () => new Response('error', { status: 500 })) as typeof fetch;
 
-      const config = {
-        metaPixelId: '999',
-        metaAccessToken: 'secret',
-      };
-      const service = new MetaCapiService(config as never);
+      const service = new MetaCapiService(
+        mockMetaCapiConfig({ metaPixelId: '999', metaAccessToken: 'secret' }),
+      );
 
       await expect(
         service.sendEvent({
@@ -93,11 +116,9 @@ describe('Meta CAPI', () => {
       });
       global.fetch = fetchMock as typeof fetch;
 
-      const config = {
-        metaPixelId: 'pixel-42',
-        metaAccessToken: 'access-token',
-      };
-      const service = new MetaCapiService(config as never);
+      const service = new MetaCapiService(
+        mockMetaCapiConfig({ metaPixelId: 'pixel-42', metaAccessToken: 'access-token' }),
+      );
 
       await service.sendEvent({
         eventName: 'Purchase',
@@ -130,6 +151,78 @@ describe('Meta CAPI', () => {
         order_id: 'ORD-99',
       });
     });
+
+    it('includes test_event_code when META_TEST_EVENT_CODE is configured', async () => {
+      let capturedInit: RequestInit | undefined;
+      global.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+        capturedInit = init;
+        return new Response('{"events_received":1}', { status: 200 });
+      }) as typeof fetch;
+
+      const service = new MetaCapiService(
+        mockMetaCapiConfig({
+          metaPixelId: 'pixel-42',
+          metaAccessToken: 'access-token',
+          metaTestEventCode: 'TEST12345',
+        }),
+      );
+
+      await service.sendEvent({
+        eventName: 'Purchase',
+        eventTime: 1_700_000_000,
+        eventId: 'purchase:ORD-2',
+        userData: { email: 'buyer@shop.test' },
+        customData: { value: 10, currency: 'BDT', orderId: 'ORD-2' },
+      });
+
+      const body = JSON.parse(String(capturedInit?.body)) as { test_event_code?: string };
+      expect(body.test_event_code).toBe('TEST12345');
+    });
+
+    it('applies Andromeda privacy, action_source, and GEM schema version from env config', async () => {
+      let capturedInit: RequestInit | undefined;
+      global.fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+        capturedInit = init;
+        return new Response('{"events_received":1}', { status: 200 });
+      }) as typeof fetch;
+
+      const service = new MetaCapiService(
+        mockMetaCapiConfig({
+          metaPixelId: 'pixel-42',
+          metaAccessToken: 'access-token',
+          metaAndromedaDataProcessingOptionsRaw: '["LDU"]',
+          metaAndromedaCountry: 1,
+          metaAndromedaState: 0,
+          metaCapiDataSource: 'server',
+          gemSchemaVersion: '2.4.0',
+          gemTrackingEnvironment: 'production',
+        }),
+      );
+
+      await service.sendEvent({
+        eventName: 'Purchase',
+        eventTime: 1_700_000_000,
+        eventId: 'purchase:ORD-3',
+        userData: { email: 'buyer@shop.test' },
+        customData: { value: 10, currency: 'BDT', orderId: 'ORD-3' },
+      });
+
+      const body = JSON.parse(String(capturedInit?.body)) as {
+        data: Array<Record<string, unknown>>;
+      };
+      const event = body.data[0] ?? {};
+      expect(event.action_source).toBe('website');
+      expect(event.data_processing_options).toEqual(['LDU']);
+      expect(event.data_processing_options_country).toBe(1);
+      expect(event.data_processing_options_state).toBe(0);
+      expect(event.custom_data).toMatchObject({
+        value: 10,
+        currency: 'BDT',
+        order_id: 'ORD-3',
+        gem_schema_version: '2.4.0',
+        gem_tracking_environment: 'production',
+      });
+    });
   });
 
   describe('SeoDiscoveryWorker Meta CAPI job routing', () => {
@@ -143,6 +236,9 @@ describe('Meta CAPI', () => {
         { refresh: vi.fn() } as never,
         { generateAll: vi.fn() } as never,
         metaCapi as never,
+        { verifyTopProductRoutes: vi.fn() } as never,
+        { refresh: vi.fn() } as never,
+        { submitProductionSitemaps: vi.fn() } as never,
       );
 
       const job = {

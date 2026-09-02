@@ -15,6 +15,7 @@ export type OfferSearchDocumentDto = {
   readonly slug: string;
   readonly sku: string;
   readonly shortDescription: string;
+  readonly semanticText: string;
   readonly brandId: string | null;
   readonly categoryIds: readonly string[];
   readonly priceMinor: number;
@@ -80,4 +81,6 @@ export interface ProductSearchIndexPort {
   ): Promise<'written' | 'skipped'>;
   deleteByOfferId(offerId: string): Promise<void>;
   search(query: SearchProductsQueryDto): Promise<SearchProductsResultDto>;
+  /** Push synonym map from DB to Meilisearch index settings. */
+  syncSynonyms(synonyms: Readonly<Record<string, readonly string[]>>): Promise<void>;
 }

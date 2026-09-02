@@ -1,4 +1,7 @@
+import type { CatalogSearchAttribute } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import type { OfferSearchDocument, OfferSearchSource, SearchStockStatus } from '../search.types';
+import { buildSemanticSearchText } from './build-semantic-search-text';
+import { stripHtmlForSearch } from './strip-html-for-search';
 
 export function resolveStockStatus(available: number | null | undefined): SearchStockStatus {
   if (available === null || available === undefined) {
@@ -14,6 +17,16 @@ export function buildOfferSearchDocument(source: OfferSearchSource): OfferSearch
     source.offerStatus === 'active' &&
     source.offerAvailable;
 
+  const semanticText = buildSemanticSearchText({
+    name: source.name,
+    variantName: source.variantName ?? null,
+    categoryNames: source.categoryNames ?? [],
+    shortDescription: source.shortDescription ?? null,
+    productAttributes: (source.productAttributes ?? []) as readonly CatalogSearchAttribute[],
+    variantAttributes: (source.variantAttributes ?? []) as readonly CatalogSearchAttribute[],
+    reviewTexts: source.reviewTexts ?? [],
+  });
+
   return {
     id: source.offerId,
     offerId: source.offerId,
@@ -24,7 +37,8 @@ export function buildOfferSearchDocument(source: OfferSearchSource): OfferSearch
     name: source.name.trim(),
     slug: source.slug.trim(),
     sku: source.sku.trim(),
-    shortDescription: (source.shortDescription ?? '').trim(),
+    shortDescription: stripHtmlForSearch(source.shortDescription),
+    semanticText,
     brandId: source.brandId ?? null,
     categoryIds: [...(source.categoryIds ?? [])],
     priceMinor: source.priceMinor,

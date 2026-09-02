@@ -14,6 +14,7 @@ describe('MeilisearchProductSearchAdapter', () => {
     slug: 'tee',
     sku: 'SKU',
     shortDescription: '',
+    semanticText: 'Tee',
     brandId: null,
     categoryIds: [],
     priceMinor: 100,

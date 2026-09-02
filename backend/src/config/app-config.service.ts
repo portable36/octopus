@@ -228,6 +228,10 @@ export class AppConfigService {
     return this.configService.get('SEO_DISCOVERY_WORKER_ENABLED', { infer: true });
   }
 
+  get aiPersonalizationWorkerEnabled(): boolean {
+    return this.configService.get('AI_PERSONALIZATION_WORKER_ENABLED', { infer: true });
+  }
+
   get outboxPollIntervalMs(): number {
     return this.configService.get('OUTBOX_POLL_INTERVAL_MS', { infer: true });
   }
@@ -276,11 +280,59 @@ export class AppConfigService {
     return this.configService.get('SEO_CACHE_DIR', { infer: true });
   }
 
+  get seoCacheTtlSeconds(): number {
+    return this.configService.get('SEO_CACHE_TTL_SECONDS', { infer: true });
+  }
+
+  get sitemapItemsPerChunk(): number {
+    return this.configService.get('SITEMAP_ITEMS_PER_CHUNK', { infer: true });
+  }
+
+  get appUrl(): string | undefined {
+    return this.configService.get('APP_URL', { infer: true });
+  }
+
   get metaPixelId(): string | undefined {
     return this.configService.get('META_PIXEL_ID', { infer: true });
   }
 
   get metaAccessToken(): string | undefined {
     return this.configService.get('META_ACCESS_TOKEN', { infer: true });
+  }
+
+  get metaTestEventCode(): string | undefined {
+    return this.configService.get('META_TEST_EVENT_CODE', { infer: true });
+  }
+
+  get metaAndromedaDataProcessingOptionsRaw(): string | undefined {
+    return this.configService.get('META_ANDROMEDA_DATA_PROCESSING_OPTIONS', { infer: true });
+  }
+
+  get metaAndromedaCountry(): number | undefined {
+    return this.configService.get('META_ANDROMEDA_COUNTRY', { infer: true });
+  }
+
+  get metaAndromedaState(): number | undefined {
+    return this.configService.get('META_ANDROMEDA_STATE', { infer: true });
+  }
+
+  get metaCapiDataSource(): Env['META_CAPI_DATA_SOURCE'] {
+    return this.configService.get('META_CAPI_DATA_SOURCE', { infer: true });
+  }
+
+  get gemSchemaVersion(): string | undefined {
+    return this.configService.get('GEM_SCHEMA_VERSION', { infer: true });
+  }
+
+  get gemTrackingEnvironment(): Env['GEM_TRACKING_ENVIRONMENT'] {
+    return this.configService.get('GEM_TRACKING_ENVIRONMENT', { infer: true });
+  }
+
+  get googleServicesClientEmail(): string | undefined {
+    return this.configService.get('GOOGLE_SERVICES_CLIENT_EMAIL', { infer: true });
+  }
+
+  get googleServicesPrivateKey(): string | undefined {
+    return this.configService.get('GOOGLE_SERVICES_PRIVATE_KEY', { infer: true });
   }
 }

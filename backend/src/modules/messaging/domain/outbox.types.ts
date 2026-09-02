@@ -45,6 +45,9 @@ export const QUEUE_NAMES = {
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 
 export function routeQueueForEvent(eventType: string): QueueName {
+  if (eventType === 'CartAbandonedEvent') {
+    return QUEUE_NAMES.email;
+  }
   if (eventType === 'OrderPaid' || eventType === 'OrderCreated') {
     return QUEUE_NAMES.marketing;
   }

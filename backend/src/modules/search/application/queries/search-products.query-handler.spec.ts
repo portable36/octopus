@@ -18,6 +18,7 @@ describe('SearchProductsQueryHandler', () => {
               slug: 'tee',
               sku: 'SKU',
               shortDescription: '',
+              semanticText: 'Tee',
               brandId: null,
               categoryIds: [],
               priceMinor: 100,
@@ -41,6 +42,7 @@ describe('SearchProductsQueryHandler', () => {
               slug: 'hat',
               sku: 'HAT',
               shortDescription: '',
+              semanticText: 'Hat',
               brandId: null,
               categoryIds: [],
               priceMinor: 200,
@@ -74,6 +76,9 @@ describe('SearchProductsQueryHandler', () => {
           url: 'https://cdn.example/media-1.png',
         }),
         findById: vi.fn(),
+      } as never,
+      {
+        recordZeroResultQuery: vi.fn().mockResolvedValue(undefined),
       } as never,
     );
 

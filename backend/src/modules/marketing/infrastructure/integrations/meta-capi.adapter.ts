@@ -1,4 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { AppConfigService } from '../../../../config/app-config.service';
+import { applyMetaCapiEnvToEvent } from '../../../../config/meta-capi-payload';
 import {
   MARKETING_SETTINGS_PORT,
   type MarketingSettingsPort,
@@ -20,6 +22,7 @@ export class MetaCapiAdapter implements MetaCapiPort {
 
   constructor(
     @Inject(MARKETING_SETTINGS_PORT) private readonly marketingSettings: MarketingSettingsPort,
+    private readonly config: AppConfigService,
   ) {}
 
   public async sendPurchase(input: MarketingPurchasePayload): Promise<MarketingChannelResult> {
@@ -47,22 +50,22 @@ export class MetaCapiAdapter implements MetaCapiPort {
         'items' in input ? input.items.map((item) => item.itemId) : [input.transactionId];
 
       const url = `https://graph.facebook.com/v21.0/${encodeURIComponent(cfg.metaPixelId)}/events`;
+      const eventPayload: Record<string, unknown> = {
+        event_name: eventName,
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: input.eventId,
+        custom_data: {
+          currency: input.currencyCode,
+          value: minorToMajor(input.valueMinor),
+          content_ids: contentIds,
+          content_type: 'product',
+          order_id: input.transactionId,
+        },
+      };
+      applyMetaCapiEnvToEvent(eventPayload, this.config);
+
       const body = {
-        data: [
-          {
-            event_name: eventName,
-            event_time: Math.floor(Date.now() / 1000),
-            event_id: input.eventId,
-            action_source: 'website',
-            custom_data: {
-              currency: input.currencyCode,
-              value: minorToMajor(input.valueMinor),
-              content_ids: contentIds,
-              content_type: 'product',
-              order_id: input.transactionId,
-            },
-          },
-        ],
+        data: [eventPayload],
       };
 
       const response = await fetch(url, {

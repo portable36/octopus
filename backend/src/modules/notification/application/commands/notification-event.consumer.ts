@@ -55,7 +55,39 @@ export class NotificationEventConsumer implements NotificationOutboxHandler {
         templateKey: 'fulfillment.shipment_delivered',
         eventIdPrefix: 'notify:ship_delivered',
       });
+      return;
     }
+    if (eventType === 'CartAbandonedEvent') {
+      await this.notifyCartAbandoned(payload);
+    }
+  }
+
+  private async notifyCartAbandoned(payload: Record<string, unknown>): Promise<void> {
+    const cartId = String(payload['cartId'] ?? '');
+    const customerId = payload['customerId'] == null ? null : String(payload['customerId']);
+    if (!cartId || !customerId) {
+      this.logger.debug(`CartAbandonedEvent ${cartId || 'unknown'} has no customer; skip notification.`);
+      return;
+    }
+
+    const email = await this.contacts.findEmailByUserId(customerId);
+    const couponCode = String(payload['couponCode'] ?? '');
+    await this.notifications.notify({
+      eventId: `cart-abandoned:${cartId}`,
+      recipientUserId: customerId,
+      recipientEmail: email,
+      type: 'cart.abandoned_recovery',
+      templateKey: 'cart.abandoned_recovery',
+      category: 'MARKETING',
+      channels: ['EMAIL'],
+      data: {
+        cartId,
+        couponCode,
+        couponExpiresAt: String(payload['couponExpiresAt'] ?? ''),
+        currencyCode: String(payload['currencyCode'] ?? ''),
+        subtotalMinor: String(payload['subtotalMinor'] ?? '0'),
+      },
+    });
   }
 
   private async notifyForOrder(

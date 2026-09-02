@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
+import { applyMetaCapiEnvToEvent } from '../../../../config/meta-capi-payload';
 import { hashMetaEmail, hashMetaPhone } from './meta-capi-hash';
 import type { MetaCapiSendInput, MetaCapiUserDataInput } from './meta-capi.types';
 
@@ -56,22 +57,27 @@ export class MetaCapiService {
     const url = `https://graph.facebook.com/${META_GRAPH_API_VERSION}/${encodeURIComponent(pixelId)}/events`;
     const userData = this.buildHashedUserData(input.userData);
 
-    const body = {
-      data: [
-        {
-          event_name: input.eventName,
-          event_time: input.eventTime,
-          event_id: input.eventId,
-          action_source: 'website',
-          user_data: userData,
-          custom_data: {
-            value: input.customData.value,
-            currency: input.customData.currency,
-            order_id: input.customData.orderId,
-          },
-        },
-      ],
+    const eventPayload: Record<string, unknown> = {
+      event_name: input.eventName,
+      event_time: input.eventTime,
+      event_id: input.eventId,
+      user_data: userData,
+      custom_data: {
+        value: input.customData.value,
+        currency: input.customData.currency,
+        order_id: input.customData.orderId,
+      },
     };
+    applyMetaCapiEnvToEvent(eventPayload, this.config);
+
+    const body: Record<string, unknown> = {
+      data: [eventPayload],
+    };
+
+    const testEventCode = this.config.metaTestEventCode;
+    if (testEventCode) {
+      body.test_event_code = testEventCode;
+    }
 
     const response = await fetch(url, {
       method: 'POST',

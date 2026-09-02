@@ -38,6 +38,7 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { SeoDiscoveryModule } from './modules/seo-discovery/seo-discovery.module';
+import { AiPersonalizationModule } from './modules/ai-personalization/ai-personalization.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { SeoDiscoveryModule } from './modules/seo-discovery/seo-discovery.module
     PosModule,
     InventoryModule,
     PricingModule,
+    AiPersonalizationModule,
     CartModule,
     OrderModule,
     PaymentModule,

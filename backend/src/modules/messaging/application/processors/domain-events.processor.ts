@@ -1,6 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type Redis from 'ioredis';
 import {
+  ABANDONED_CART_OUTBOX_HANDLER,
+  type AbandonedCartOutboxHandler,
+} from '../../../../shared-kernel/application/ports/abandoned-cart-outbox-handler.port';
+import {
   LEDGER_PORT,
   type LedgerPort,
   type LedgerRefundAllocation,
@@ -40,6 +44,8 @@ export class DomainEventsProcessor {
     private readonly marketingEvents: MarketingOutboxHandler,
     @Inject(SEO_META_CAPI_OUTBOX_HANDLER)
     private readonly metaCapiEvents: SeoMetaCapiOutboxHandler,
+    @Inject(ABANDONED_CART_OUTBOX_HANDLER)
+    private readonly abandonedCartEvents: AbandonedCartOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
@@ -53,6 +59,7 @@ export class DomainEventsProcessor {
 
       await this.notificationEvents.handle(job.eventType, job.payload);
       await this.metaCapiEvents.handle(job.eventType, job.payload);
+      await this.abandonedCartEvents.handle(job.eventType, job.payload);
       await this.marketingEvents.handle(job.eventType, job.payload);
     });
     if (!processed) {

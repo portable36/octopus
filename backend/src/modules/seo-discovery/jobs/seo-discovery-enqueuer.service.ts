@@ -10,6 +10,7 @@ import {
   type SeoDiscoveryJobName,
 } from './seo-discovery.constants';
 import type { MetaCapiEnqueueInput, SeoDiscoveryJobPayload, SeoDiscoveryMaintenanceJobPayload } from './seo-discovery-job.types';
+import { SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS } from './seo-search-console-job.options';
 
 @Injectable()
 export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
@@ -46,8 +47,46 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
     await this.enqueue(SEO_DISCOVERY_JOB_NAMES.generateSitemapCache);
   }
 
+  public async enqueueImageSitemap(): Promise<void> {
+    await this.enqueue(SEO_DISCOVERY_JOB_NAMES.generateImageSitemap);
+  }
+
+  public async enqueuePingSearchConsole(): Promise<void> {
+    if (this.config.isTest || !this.config.outboxDispatchEnabled) {
+      this.logger.debug('Search Console ping enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
+      return;
+    }
+
+    const payload: SeoDiscoveryMaintenanceJobPayload = {
+      jobName: SEO_DISCOVERY_JOB_NAMES.pingSearchConsole,
+      requestedAt: new Date().toISOString(),
+    };
+
+    await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.pingSearchConsole, payload, {
+      ...SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS,
+      jobId: SEO_DISCOVERY_JOB_NAMES.pingSearchConsole,
+    });
+  }
+
   public async enqueueProductFeeds(): Promise<void> {
     await this.enqueue(SEO_DISCOVERY_JOB_NAMES.generateProductFeeds);
+  }
+
+  public async enqueueVerifySeoHealth(): Promise<void> {
+    if (this.config.isTest || !this.config.outboxDispatchEnabled) {
+      this.logger.warn('SEO health verification enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
+      return;
+    }
+
+    const payload: SeoDiscoveryMaintenanceJobPayload = {
+      jobName: SEO_DISCOVERY_JOB_NAMES.verifySeoHealth,
+      requestedAt: new Date().toISOString(),
+    };
+    await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.verifySeoHealth, payload, {
+      ...BULLMQ_DEFAULT_JOB_OPTIONS,
+      jobId: `${SEO_DISCOVERY_JOB_NAMES.verifySeoHealth}-${randomUUID()}`,
+      priority: 20,
+    });
   }
 
   public async enqueueMetaCapiEvent(input: MetaCapiEnqueueInput): Promise<void> {

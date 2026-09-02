@@ -22,6 +22,7 @@ async function bootstrap(): Promise<void> {
     exclude: [
       { path: 'robots.txt', method: RequestMethod.GET },
       { path: 'sitemap.xml', method: RequestMethod.GET },
+      { path: 'sitemaps/images.xml', method: RequestMethod.GET },
     ],
   });
   configureApplication(app, config);

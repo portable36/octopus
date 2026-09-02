@@ -1,5 +1,10 @@
 export const CATALOG_OFFER_SEARCH_SOURCE = Symbol('CATALOG_OFFER_SEARCH_SOURCE');
 
+export type CatalogSearchAttribute = {
+  readonly code: string;
+  readonly value: string | number | boolean | readonly string[];
+};
+
 /** Catalog projection shape for Meilisearch documents (no cost/private fields). */
 export type CatalogOfferSearchSourceDto = {
   readonly offerId: string;
@@ -8,11 +13,16 @@ export type CatalogOfferSearchSourceDto = {
   readonly vendorId: string;
   readonly storeId: string;
   readonly name: string;
+  readonly variantName?: string | null;
   readonly slug: string;
   readonly sku: string;
   readonly shortDescription?: string | null;
   readonly brandId?: string | null;
   readonly categoryIds?: readonly string[];
+  readonly categoryNames?: readonly string[];
+  readonly productAttributes?: readonly CatalogSearchAttribute[];
+  readonly variantAttributes?: readonly CatalogSearchAttribute[];
+  readonly reviewTexts?: readonly string[];
   readonly priceMinor: number;
   readonly currencyCode: string;
   readonly offerStatus: string;

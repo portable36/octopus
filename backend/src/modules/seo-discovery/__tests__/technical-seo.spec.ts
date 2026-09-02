@@ -151,6 +151,10 @@ describe('technical SEO core', () => {
           getCachedBuffer: () => null,
           loadFromDisk: async () => null,
         } as unknown as import('../application/services/sitemap-cache.service').SitemapCacheService,
+        {
+          sitemapItemsPerChunk: 5000,
+          seoCacheTtlSeconds: 86_400,
+        } as never,
       );
 
       const chunks: string[] = [];

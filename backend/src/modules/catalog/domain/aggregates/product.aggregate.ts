@@ -152,30 +152,35 @@ export class Product extends AggregateRoot<UniqueID> {
     }
     this.props = { ...this.props, name: trimmed };
     this.addEvent('ProductRenamed', { productId: this.id.value, name: trimmed });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public updateDescription(description: string | null): void {
     this.assertMutable();
     this.props = { ...this.props, description: description?.trim() || null };
     this.addEvent('ProductDescriptionUpdated', { productId: this.id.value });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public assignBrand(brandId: string | null): void {
     this.assertMutable();
     this.props = { ...this.props, brandId };
     this.addEvent('ProductBrandAssigned', { productId: this.id.value, brandId });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public setCategories(categoryIds: readonly string[]): void {
     this.assertMutable();
     this.props = { ...this.props, categoryIds: [...categoryIds] };
     this.addEvent('ProductCategoriesUpdated', { productId: this.id.value });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public setAttributes(attributes: readonly CatalogAttributeAssignment[]): void {
     this.assertMutable();
     this.props = { ...this.props, attributes: [...attributes] };
     this.addEvent('ProductAttributesUpdated', { productId: this.id.value });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public setMedia(media: readonly CatalogMediaReference[]): void {
@@ -186,6 +191,7 @@ export class Product extends AggregateRoot<UniqueID> {
     }
     this.props = { ...this.props, media: [...media] };
     this.addEvent('ProductMediaUpdated', { productId: this.id.value });
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   public attachVariant(variantId: string): void {
@@ -234,6 +240,10 @@ export class Product extends AggregateRoot<UniqueID> {
       fromStatus: from,
       toStatus: target,
     });
+    if (target === 'published') {
+      this.addEvent('ProductPublished', { productId: this.id.value });
+    }
+    this.addEvent('ProductUpdated', { productId: this.id.value });
   }
 
   private assertMutable(): void {

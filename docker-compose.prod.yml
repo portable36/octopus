@@ -1,6 +1,15 @@
+# Production / staging matrix — Hostinger VPS, DigitalOcean, or AWS verification loops.
+# Local dev infra only: docker compose up (see docker-compose.yml).
+#
+# Build:  docker compose -f docker-compose.prod.yml build
+# Start:  docker compose -f docker-compose.prod.yml up -d
+#
+# Required: copy backend/.env.production.template values into a root `.env` file
+# (or export secrets in your orchestrator) before first boot.
+
 x-octopus-app-env: &octopus-app-env
   NODE_ENV: production
-  PORT: 3000
+  PORT: 4000
   DATABASE_URL: postgresql://octopus:octopus@postgres:5432/octopus
   REDIS_URL: redis://redis:6379
   JWT_SECRET: change-me-to-a-random-32-plus-character-secret
@@ -17,12 +26,25 @@ x-octopus-app-env: &octopus-app-env
   LOG_LEVEL: info
   SHUTDOWN_TIMEOUT_MS: 10000
   OUTBOX_DISPATCH_ENABLED: 'true'
-  SEO_PUBLIC_SITE_URL: http://localhost:3001
+  SEO_PUBLIC_SITE_URL: https://shop.example.com
   SEO_CACHE_DIR: .cache/seo
+  SEO_CACHE_TTL_SECONDS: '86400'
+  SITEMAP_ITEMS_PER_CHUNK: '5000'
+  META_PIXEL_ID: '123456789012345'
+  META_ACCESS_TOKEN: replace-with-meta-system-user-token
+  META_ANDROMEDA_DATA_PROCESSING_OPTIONS: '["LDU"]'
+  META_ANDROMEDA_COUNTRY: '1'
+  META_ANDROMEDA_STATE: '0'
+  META_CAPI_DATA_SOURCE: server
+  GEM_SCHEMA_VERSION: 2.4.0
+  GEM_TRACKING_ENVIRONMENT: production
+  GOOGLE_SERVICES_CLIENT_EMAIL: seo-automation@project.iam.gserviceaccount.com
+  GOOGLE_SERVICES_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nREPLACE\n-----END PRIVATE KEY-----\n"
 
 services:
   postgres:
     image: postgres:18-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: octopus
       POSTGRES_PASSWORD: octopus
@@ -38,6 +60,10 @@ services:
 
   redis:
     image: redis:8-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -47,6 +73,7 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:v1.13
+    restart: unless-stopped
     environment:
       MEILI_MASTER_KEY: masterKey
     volumes:
@@ -54,6 +81,7 @@ services:
 
   minio:
     image: minio/minio:latest
+    restart: unless-stopped
     command: server /data --console-address ':9001'
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -61,16 +89,22 @@ services:
     volumes:
       - miniodata:/data
 
-  web-backend:
+  backend-api:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:4000/api/v1
+        NEXT_PUBLIC_SITE_URL: http://localhost:3001
     image: octopus:prod
+    restart: unless-stopped
+    working_dir: /app
+    command: ['npm', 'run', 'start', '-w', 'backend']
     environment:
       <<: *octopus-app-env
       SEO_DISCOVERY_WORKER_ENABLED: 'false'
     ports:
-      - '3000:3000'
+      - '4000:4000'
     volumes:
       - seo-cache:/app/backend/.cache/seo
     depends_on:
@@ -83,15 +117,17 @@ services:
       minio:
         condition: service_started
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/v1/health/live']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:4000/api/v1/health/ready']
       interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   seo-worker:
     image: octopus:prod
-    command: ['node', 'dist/workers/seo-discovery-worker.main.js']
+    restart: unless-stopped
+    working_dir: /app
+    command: ['npm', 'run', 'start:seo-worker', '-w', 'backend']
     environment:
       <<: *octopus-app-env
       SEO_DISCOVERY_WORKER_ENABLED: 'true'
@@ -103,11 +139,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      web-backend:
+      backend-api:
         condition: service_healthy
 
 volumes:
   pgdata:
+  redisdata:
   meilidata:
   miniodata:
   seo-cache:

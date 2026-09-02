@@ -5,7 +5,6 @@ import { AppConfigService } from '../../../../config/app-config.service';
 import { SITEMAP_SOURCE, type SitemapSourcePort } from '../ports/sitemap-source.port';
 import { buildSitemapXml } from './sitemap-xml.renderer';
 
-const DEFAULT_BATCH_SIZE = 500;
 const SITEMAP_FILENAME = 'sitemap.xml';
 
 @Injectable()
@@ -22,10 +21,11 @@ export class SitemapCacheService {
     return this.memoryCache;
   }
 
-  public async refresh(batchSize = DEFAULT_BATCH_SIZE): Promise<void> {
+  public async refresh(batchSize?: number): Promise<void> {
+    const chunkSize = batchSize ?? this.config.sitemapItemsPerChunk;
     const xml = await buildSitemapXml(
       (size) => this.source.streamEntries(size),
-      batchSize,
+      chunkSize,
     );
     const buffer = Buffer.from(xml, 'utf8');
     this.memoryCache = buffer;

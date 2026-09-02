@@ -127,4 +127,27 @@ export class SeoAdminController {
     await this.seoAdmin.enqueueProductFeedRefresh();
     return { status: 'accepted' };
   }
+
+  @Post('jobs/verify-health')
+  @HttpCode(202)
+  @RequirePermissions('settings.write')
+  @ApiOperation({ summary: 'Enqueue low-priority SEO health verification crawl' })
+  async verifyHealth() {
+    await this.seoAdmin.enqueueVerifySeoHealth();
+    return { status: 'accepted' };
+  }
+
+  @Get('crawl-errors')
+  @ApiOperation({ summary: 'Recent crawl/404 error paths logged for admin review' })
+  async listCrawlErrors() {
+    const items = await this.seoAdmin.listCrawlErrors();
+    return { items };
+  }
+
+  @Get('health-issues')
+  @ApiOperation({ summary: 'Latest SEO health verification findings' })
+  async listHealthIssues() {
+    const items = await this.seoAdmin.listSeoHealthIssues();
+    return { items };
+  }
 }

@@ -1,4 +1,5 @@
 import { readAnalyticsConsent } from '@/components/marketing/consent-manager';
+import { getGemSchemaVersion, getGemTrackingEnvironment } from '@/lib/env';
 
 declare global {
   interface Window {
@@ -110,6 +111,8 @@ function toGa4EcommercePayload(event: ECommerceEvent): Record<string, unknown> {
 function toGa4Payload(event: ECommerceEvent): Record<string, unknown> {
   return {
     event: event.event,
+    gem_schema_version: getGemSchemaVersion(),
+    gem_tracking_environment: getGemTrackingEnvironment(),
     ecommerce: toGa4EcommercePayload(event),
   };
 }

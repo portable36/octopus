@@ -84,6 +84,7 @@ describe('DomainEventsProcessor', () => {
       notifications as never,
       marketing as never,
       metaCapi as never,
+      { handle: vi.fn() } as never,
     );
     const job = {
       outboxId: '11111111-1111-7111-8111-111111111111',
@@ -119,6 +120,7 @@ describe('DomainEventsProcessor', () => {
       notifications as never,
       marketing as never,
       metaCapi as never,
+      { handle: vi.fn() } as never,
     );
     const job = {
       outboxId: '55555555-5555-7555-8555-555555555555',
@@ -169,6 +171,7 @@ describe('DomainEventsProcessor', () => {
       notifications as never,
       marketing as never,
       metaCapi as never,
+      { handle: vi.fn() } as never,
     );
 
     await processor.handle({
@@ -223,6 +226,7 @@ describe('DomainEventsProcessor', () => {
       notifications as never,
       marketing as never,
       metaCapi as never,
+      { handle: vi.fn() } as never,
     );
     await processor.handle({
       outboxId: '44444444-4444-7444-8444-444444444444',

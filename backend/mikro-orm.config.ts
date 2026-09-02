@@ -22,6 +22,11 @@ import { InventoryMovementOrmEntity } from './src/modules/inventory/infrastructu
 import { InventoryOperationOrmEntity } from './src/modules/inventory/infrastructure/persistence/inventory-operation.orm-entity';
 import { Redirect } from './src/modules/seo-discovery/infrastructure/entities/redirect.entity';
 import { SeoOverride } from './src/modules/seo-discovery/infrastructure/entities/seo-override.entity';
+import { ProductAssociation } from './src/modules/ai-personalization/infrastructure/entities/product-association.entity';
+import { SearchSynonymMapping } from './src/modules/search/infrastructure/entities/search-synonym-mapping.entity';
+import { SearchZeroResultQuery } from './src/modules/search/infrastructure/entities/search-zero-result-query.entity';
+import { CrawlErrorLog } from './src/modules/seo-discovery/infrastructure/entities/crawl-error-log.entity';
+import { SeoHealthIssue } from './src/modules/seo-discovery/infrastructure/entities/seo-health-issue.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -54,6 +59,11 @@ export default defineConfig({
     InventoryOperationOrmEntity,
     Redirect,
     SeoOverride,
+    ProductAssociation,
+    SearchSynonymMapping,
+    SearchZeroResultQuery,
+    CrawlErrorLog,
+    SeoHealthIssue,
   ],
   migrations: {
     path: 'dist/migrations',

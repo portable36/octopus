@@ -11,7 +11,7 @@ import type { CatalogOfferSearchSourceDto } from '../../../../shared-kernel/appl
 import { buildOfferSearchDocument } from '../../domain/services/build-offer-search-document';
 import { withExternalSpan } from '../../../../shared-kernel/infrastructure/observability/external-span';
 
-const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug'] as const;
+const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug', 'semanticText'] as const;
 const FILTERABLE = [
   'vendorId',
   'storeId',
@@ -135,6 +135,23 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
         ...source,
         stockAvailable: stockAvailable ?? null,
       }),
+    );
+  }
+
+  public async syncSynonyms(synonyms: Readonly<Record<string, readonly string[]>>): Promise<void> {
+    return withExternalSpan(
+      'search.meili.sync_synonyms',
+      {
+        'octopus.search.index': this.indexUid,
+        'octopus.search.op': 'sync_synonyms',
+      },
+      async () => {
+        const payload: Record<string, string[]> = {};
+        for (const [source, targets] of Object.entries(synonyms)) {
+          payload[source] = [...targets];
+        }
+        await this.index().updateSynonyms(payload);
+      },
     );
   }
 

@@ -1,4 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import {
+  ABANDONED_CART_RECOVERY_PORT,
+  type AbandonedCartRecoveryPort,
+} from '../../../../shared-kernel/application/ports/abandoned-cart-recovery.port';
 import {
   CATALOG_STORE_OFFER_ACCESS,
   type CatalogStoreOfferAccessPort,
@@ -36,6 +40,9 @@ export class CartCommandHandler {
     @Inject(CATALOG_STORE_OFFER_ACCESS) private readonly offers: CatalogStoreOfferAccessPort,
     @Inject(INVENTORY_PORT) private readonly inventory: InventoryPort,
     @Inject(PRICING_PORT) private readonly pricing: PricingPort,
+    @Optional()
+    @Inject(ABANDONED_CART_RECOVERY_PORT)
+    private readonly abandonedCartRecovery?: AbandonedCartRecoveryPort,
   ) {}
 
   public async getOrCreate(owner: CartOwner): Promise<Cart> {
@@ -85,7 +92,7 @@ export class CartCommandHandler {
       unitPriceSnapshotMinor: offer.priceMinor,
       currencyCode: offer.currencyCode,
     });
-    await this.carts.save(cart);
+    await this.persistCart(cart);
     return cart;
   }
 
@@ -97,7 +104,7 @@ export class CartCommandHandler {
   }): Promise<Cart> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
     cart.updateQuantity(input.lineId, input.quantity);
-    await this.carts.save(cart);
+    await this.persistCart(cart);
     return cart;
   }
 
@@ -108,14 +115,14 @@ export class CartCommandHandler {
   }): Promise<Cart> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
     cart.removeItem(input.lineId);
-    await this.carts.save(cart);
+    await this.persistCart(cart);
     return cart;
   }
 
   public async clear(input: { readonly cartId: string; readonly owner: CartOwner }): Promise<Cart> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
     cart.clear();
-    await this.carts.save(cart);
+    await this.persistCart(cart);
     return cart;
   }
 
@@ -264,7 +271,7 @@ export class CartCommandHandler {
     }
 
     if (input.refreshSnapshots) {
-      await this.carts.save(cart);
+      await this.persistCart(cart);
     }
 
     return {
@@ -289,6 +296,7 @@ export class CartCommandHandler {
         'CART_VERSION_CONFLICT',
       );
     }
+    await this.abandonedCartRecovery?.cancelForCart(checkedOut.id.value);
     return checkedOut;
   }
 
@@ -320,10 +328,16 @@ export class CartCommandHandler {
         currencyCode: line.currencyCode,
       });
     }
-    await this.carts.save(customerCart);
+    await this.persistCart(customerCart);
     guest.abandon();
     await this.carts.save(guest);
+    await this.abandonedCartRecovery?.cancelForCart(guest.id.value);
     return customerCart;
+  }
+
+  private async persistCart(cart: Cart): Promise<void> {
+    await this.carts.save(cart);
+    await this.abandonedCartRecovery?.onCartUpdated(cart.id.value);
   }
 
   private assertOwner(owner: CartOwner): void {

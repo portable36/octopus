@@ -199,6 +199,7 @@ export class Cart extends AggregateRoot<UniqueID> {
       variantId: input.variantId,
       quantity: input.quantity,
     });
+    this.emitCartUpdated();
   }
 
   public updateQuantity(lineId: string, quantity: number): void {
@@ -218,6 +219,7 @@ export class Cart extends AggregateRoot<UniqueID> {
       updatedAt: new Date(),
     };
     this.addEvent('CartItemQuantityUpdated', { cartId: this.id.value, lineId, quantity });
+    this.emitCartUpdated();
   }
 
   public removeItem(lineId: string): void {
@@ -235,6 +237,7 @@ export class Cart extends AggregateRoot<UniqueID> {
       updatedAt: new Date(),
     };
     this.addEvent('CartItemRemoved', { cartId: this.id.value, lineId });
+    this.emitCartUpdated();
   }
 
   public clear(): void {
@@ -250,6 +253,7 @@ export class Cart extends AggregateRoot<UniqueID> {
       updatedAt: new Date(),
     };
     this.addEvent('CartCleared', { cartId: this.id.value });
+    this.emitCartUpdated();
   }
 
   public refreshLinePriceSnapshot(lineId: string, unitPriceSnapshotMinor: number): void {
@@ -270,6 +274,15 @@ export class Cart extends AggregateRoot<UniqueID> {
       version: this.props.version + 1,
       updatedAt: new Date(),
     };
+    this.emitCartUpdated();
+  }
+
+  private emitCartUpdated(): void {
+    this.addEvent('CartUpdated', {
+      cartId: this.id.value,
+      itemCount: this.props.lines.length,
+      version: this.props.version,
+    });
   }
 
   public attachCustomer(customerId: string): void {

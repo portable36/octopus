@@ -2,11 +2,16 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { TaxonomyKeywordAttributes } from '@/components/seo/TaxonomyKeywordAttributes';
 import { OfferCard } from '@/components/storefront/offer-card';
+import { SearchResultsAnalytics } from '@/components/storefront/search-results-analytics';
 import { SearchFiltersForm } from '@/components/storefront/search-filters-form';
-import { JsonLd } from '@/components/seo/json-ld';
+import { StructuredData } from '@/components/seo/StructuredData';
+import { buildTaxonomyKeywords } from '@/infrastructure/analytics/taxonomy-keywords';
 import { ApiClientError } from '@/lib/api-client';
-import { breadcrumbJsonLd, categoryMetadataWithFacets, hasFacetSearchParams } from '@/lib/seo';
+import { fetchSeoPageContext, isSeoNotFound } from '@/lib/seo-discovery-api';
+import { toNextMetadata } from '@/lib/seo-metadata-factory';
+import { hasFacetSearchParams } from '@/lib/seo';
 import { fetchPublicCategoryBySlug, isNotFound, searchProducts } from '@/lib/storefront-api';
 
 export const revalidate = 60;
@@ -24,8 +29,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { slug } = await params;
   const sp = await searchParams;
   try {
-    const category = await fetchPublicCategoryBySlug(slug);
-    return categoryMetadataWithFacets(category, hasFacetSearchParams(sp));
+    const context = await fetchSeoPageContext(`/categories/${slug}`);
+    const metadata = toNextMetadata(context);
+    if (hasFacetSearchParams(sp)) {
+      return { ...metadata, robots: { index: false, follow: true } };
+    }
+    return metadata;
   } catch {
     return { title: 'Category' };
   }
@@ -36,10 +45,14 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
   const sp = await searchParams;
 
   let category;
+  let seoContext;
   try {
-    category = await fetchPublicCategoryBySlug(slug);
+    [category, seoContext] = await Promise.all([
+      fetchPublicCategoryBySlug(slug),
+      fetchSeoPageContext(`/categories/${slug}`),
+    ]);
   } catch (error) {
-    if (isNotFound(error)) {
+    if (isNotFound(error) || isSeoNotFound(error)) {
       notFound();
     }
     throw error;
@@ -64,15 +77,21 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
       error instanceof ApiClientError ? error.message : 'Search is temporarily unavailable.';
   }
 
+  const categoryQuery = first(sp.q) ?? '';
+  const taxonomyKeywords = buildTaxonomyKeywords({ categoryNames: [category.name] });
+
   return (
     <div className="space-y-8">
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'Categories', path: '/categories' },
-          { name: category.name, path: `/categories/${category.slug}` },
-        ])}
-      />
+      <TaxonomyKeywordAttributes keywords={taxonomyKeywords} />
+      {categoryQuery ? (
+        <SearchResultsAnalytics
+          query={categoryQuery}
+          resultsCount={result?.estimatedTotal ?? 0}
+        />
+      ) : null}
+      {seoContext.structuredData.map((block, index) => (
+        <StructuredData key={`seo-ld-${index}`} data={block} />
+      ))}
       <header className="space-y-3">
         <p className="text-sm text-muted-foreground">
           <Link href="/categories" className="hover:underline">
@@ -83,10 +102,10 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
         </p>
         <p className="sf-eyebrow">Collection</p>
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          {category.seo.title ?? category.name}
+          {seoContext.metadata.title}
         </h1>
-        {category.seo.description ? (
-          <p className="max-w-2xl text-muted-foreground">{category.seo.description}</p>
+        {seoContext.metadata.description ? (
+          <p className="max-w-2xl text-muted-foreground">{seoContext.metadata.description}</p>
         ) : null}
       </header>
 

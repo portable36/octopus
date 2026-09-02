@@ -3,8 +3,12 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProductMediaGallery } from '@/components/storefront/product-media-gallery';
 import { ProductOfferPicker } from '@/components/storefront/product-offer-picker';
-import { JsonLd } from '@/components/seo/json-ld';
-import { breadcrumbJsonLd, productJsonLd, productMetadata } from '@/lib/seo';
+import { TaxonomyKeywordAttributes } from '@/components/seo/TaxonomyKeywordAttributes';
+import { ProductViewAnalytics } from '@/components/storefront/product-view-analytics';
+import { StructuredData } from '@/components/seo/StructuredData';
+import { buildTaxonomyKeywords } from '@/infrastructure/analytics/taxonomy-keywords';
+import { fetchSeoPageContext, isSeoNotFound } from '@/lib/seo-discovery-api';
+import { toNextMetadata } from '@/lib/seo-metadata-factory';
 import { fetchPublicProduct, isNotFound } from '@/lib/storefront-api';
 
 export const revalidate = 60;
@@ -16,8 +20,8 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { productId } = await params;
   try {
-    const product = await fetchPublicProduct(productId);
-    return productMetadata(product);
+    const context = await fetchSeoPageContext(`/products/${productId}`);
+    return toNextMetadata(context);
   } catch {
     return { title: 'Product' };
   }
@@ -27,25 +31,36 @@ export default async function ProductDetailPage({ params }: Props) {
   const { productId } = await params;
 
   let product;
+  let seoContext;
   try {
-    product = await fetchPublicProduct(productId);
+    [product, seoContext] = await Promise.all([
+      fetchPublicProduct(productId),
+      fetchSeoPageContext(`/products/${productId}`),
+    ]);
   } catch (error) {
-    if (isNotFound(error)) {
+    if (isNotFound(error) || isSeoNotFound(error)) {
       notFound();
     }
     throw error;
   }
 
+  const taxonomyKeywords = buildTaxonomyKeywords({
+    productName: product.name,
+    categoryNames: product.categoryIds,
+    brandName: product.brandId,
+  });
+
   return (
     <div className="space-y-10">
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'Search', path: '/search' },
-          { name: product.name, path: `/products/${product.id}` },
-        ])}
+      <TaxonomyKeywordAttributes keywords={taxonomyKeywords} />
+      <ProductViewAnalytics
+        product={product}
+        itemListName="Product Detail"
+        itemCategory={product.categoryIds[0]}
       />
-      <JsonLd data={productJsonLd(product)} />
+      {seoContext.structuredData.map((block, index) => (
+        <StructuredData key={`seo-ld-${index}`} data={block} />
+      ))}
       <header className="space-y-3">
         <p className="sf-breadcrumb">
           <Link href="/search" className="hover:underline">

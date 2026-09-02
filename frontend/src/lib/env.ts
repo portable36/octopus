@@ -14,3 +14,14 @@ export function getPublicSiteUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL;
   return raw.replace(/\/$/, '');
 }
+
+const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
+
+/** Public GTM container id (browser-safe). Returns null when unset or invalid. */
+export function getPublicGtmId(): string | null {
+  const raw = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+  if (!raw || !GTM_ID_PATTERN.test(raw)) {
+    return null;
+  }
+  return raw;
+}

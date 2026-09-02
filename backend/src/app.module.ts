@@ -37,6 +37,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
+import { SeoDiscoveryModule } from './modules/seo-discovery/seo-discovery.module';
 
 @Module({
   imports: [
@@ -121,6 +122,7 @@ import { ReportingModule } from './modules/reporting/reporting.module';
     SearchModule,
     MarketingModule,
     ReportingModule,
+    SeoDiscoveryModule,
     MessagingModule,
     ReturnsModule,
   ],

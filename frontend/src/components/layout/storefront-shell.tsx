@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ConsentManager } from '@/components/marketing/consent-manager';
+import { GoogleTagManager } from '@/components/marketing/GoogleTagManager';
 import { TrackingService } from '@/components/marketing/tracking-service';
 import { AccountNavLink } from '@/components/storefront/account-nav-link';
 import { CartNavLink } from '@/components/storefront/cart-nav-link';
@@ -207,6 +208,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
         </div>
       </footer>
       <ConsentManager />
+      <GoogleTagManager />
       <TrackingService />
     </div>
   );

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { pushToDataLayer, minorToMajor } from '@/infrastructure/analytics/dataLayer';
 import { readStashedCheckoutOutcome, type CheckoutOutcome } from '@/lib/cart-api';
 import { formatMoney } from '@/lib/storefront-api';
 
@@ -10,6 +11,7 @@ function SuccessBody() {
   const searchParams = useSearchParams();
   const checkoutId = searchParams.get('checkoutId');
   const [outcome, setOutcome] = useState<CheckoutOutcome | null>(null);
+  const purchaseTrackedRef = useRef(false);
 
   useEffect(() => {
     const stashed = readStashedCheckoutOutcome();
@@ -17,6 +19,26 @@ function SuccessBody() {
       setOutcome(stashed);
     }
   }, [checkoutId]);
+
+  useEffect(() => {
+    if (!outcome || purchaseTrackedRef.current) {
+      return;
+    }
+    purchaseTrackedRef.current = true;
+    pushToDataLayer({
+      event: 'purchase',
+      transaction_id: outcome.checkoutId,
+      currency: outcome.totals.currencyCode,
+      value: minorToMajor(outcome.totals.grandTotalMinor),
+      items: outcome.orders.map((order) => ({
+        id: order.orderId,
+        name: order.orderNumber,
+        price: minorToMajor(order.totalMinor),
+        sku: order.orderNumber,
+        quantity: 1,
+      })),
+    });
+  }, [outcome]);
 
   if (!outcome) {
     return (

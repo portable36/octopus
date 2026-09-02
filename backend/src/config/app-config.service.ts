@@ -224,6 +224,10 @@ export class AppConfigService {
     return this.configService.get('OUTBOX_DISPATCH_ENABLED', { infer: true });
   }
 
+  get seoDiscoveryWorkerEnabled(): boolean {
+    return this.configService.get('SEO_DISCOVERY_WORKER_ENABLED', { infer: true });
+  }
+
   get outboxPollIntervalMs(): number {
     return this.configService.get('OUTBOX_POLL_INTERVAL_MS', { infer: true });
   }
@@ -254,5 +258,29 @@ export class AppConfigService {
 
   get ledgerSettlementDays(): number {
     return this.configService.get('LEDGER_SETTLEMENT_DAYS', { infer: true });
+  }
+
+  get seoPublicSiteUrl(): string {
+    return this.configService.get('SEO_PUBLIC_SITE_URL', { infer: true });
+  }
+
+  get seoRobotsDisallow(): readonly string[] {
+    const raw = this.configService.get('SEO_ROBOTS_DISALLOW', { infer: true });
+    return raw
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+  }
+
+  get seoCacheDir(): string {
+    return this.configService.get('SEO_CACHE_DIR', { infer: true });
+  }
+
+  get metaPixelId(): string | undefined {
+    return this.configService.get('META_PIXEL_ID', { infer: true });
+  }
+
+  get metaAccessToken(): string | undefined {
+    return this.configService.get('META_ACCESS_TOKEN', { infer: true });
   }
 }

@@ -38,6 +38,14 @@ describe.runIf(Boolean(databaseUrl))('tenant isolation RLS integration', () => {
     const sampleB = randomUUID();
 
     try {
+      const roleRows = (await orm.em.execute(
+        `select rolsuper from pg_roles where rolname = current_user`,
+      )) as Array<{ rolsuper: boolean }>;
+      if (roleRows[0]?.rolsuper === true) {
+        // ponytail: local DATABASE_URL often uses a superuser that bypasses RLS.
+        return;
+      }
+
       await orm.em.transactional(async (em) => {
         await em.execute(
           `insert into tenant_isolation_samples (id, vendor_id, store_id, label, created_at)

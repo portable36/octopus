@@ -4,6 +4,11 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { pushToDataLayer, minorToMajor } from '@/infrastructure/analytics/dataLayer';
+import {
+  cartLinesValueMinor,
+  itemsFromCartLines,
+} from '@/infrastructure/analytics/ecommerce-mappers';
 import { ApiClientError } from '@/lib/api-client';
 import {
   getOrCreateCart,
@@ -26,6 +31,7 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const idempotencyKeyRef = useRef<string>(newIdempotencyKey());
+  const checkoutTrackedRef = useRef(false);
 
   useEffect(() => {
     void (async () => {
@@ -37,6 +43,20 @@ export default function CheckoutPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!cart || cart.lines.length === 0 || checkoutTrackedRef.current) {
+      return;
+    }
+    checkoutTrackedRef.current = true;
+    const items = itemsFromCartLines(cart.lines);
+    pushToDataLayer({
+      event: 'begin_checkout',
+      currency: cart.currencyCode,
+      value: minorToMajor(cartLinesValueMinor(cart.lines)),
+      items,
+    });
+  }, [cart]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

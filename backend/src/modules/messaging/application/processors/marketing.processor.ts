@@ -8,6 +8,10 @@ import {
   REPORTING_OUTBOX_HANDLER,
   type ReportingOutboxHandler,
 } from '../../../../shared-kernel/application/ports/reporting-outbox-handler.port';
+import {
+  SEO_META_CAPI_OUTBOX_HANDLER,
+  type SeoMetaCapiOutboxHandler,
+} from '../../../../shared-kernel/application/ports/seo-meta-capi-outbox-handler.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
 import { runOutboxDelivery } from '../outbox-delivery';
@@ -25,11 +29,13 @@ export class MarketingProcessor {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(MARKETING_OUTBOX_HANDLER) private readonly marketing: MarketingOutboxHandler,
     @Inject(REPORTING_OUTBOX_HANDLER) private readonly reporting: ReportingOutboxHandler,
+    @Inject(SEO_META_CAPI_OUTBOX_HANDLER) private readonly metaCapi: SeoMetaCapiOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
     const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
       await this.reporting.handle(job.eventType, job.payload);
+      await this.metaCapi.handle(job.eventType, job.payload);
 
       if (job.eventType === 'OrderCreated') {
         return;

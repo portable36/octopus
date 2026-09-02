@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
+    "start:seo-worker": "node dist/workers/seo-discovery-worker.main.js",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.orm.json",
     "migration:up": "mikro-orm migration:up --config ./mikro-orm.config.ts",
     "migration:pending": "mikro-orm migration:pending --config ./mikro-orm.config.ts",

@@ -96,6 +96,15 @@ export function ProductOfferPicker({ product, initialVariantId, preferredOfferId
                   storeId={offer.storeId}
                   variantId={offer.variantId}
                   disabled={!offer.isAvailable}
+                  analytics={{
+                    productId: product.id,
+                    productName: product.name,
+                    sku: variant?.sku ?? product.slug,
+                    priceMinor: offer.priceMinor,
+                    currencyCode: offer.currencyCode,
+                    ...(product.brandId ? { brand: product.brandId } : {}),
+                    ...(product.categoryIds[0] ? { category: product.categoryIds[0] } : {}),
+                  }}
                 />
               </div>
             </li>

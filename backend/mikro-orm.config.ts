@@ -20,6 +20,8 @@ import { InventoryItemOrmEntity } from './src/modules/inventory/infrastructure/p
 import { InventoryReservationOrmEntity } from './src/modules/inventory/infrastructure/persistence/inventory-reservation.orm-entity';
 import { InventoryMovementOrmEntity } from './src/modules/inventory/infrastructure/persistence/inventory-movement.orm-entity';
 import { InventoryOperationOrmEntity } from './src/modules/inventory/infrastructure/persistence/inventory-operation.orm-entity';
+import { Redirect } from './src/modules/seo-discovery/infrastructure/entities/redirect.entity';
+import { SeoOverride } from './src/modules/seo-discovery/infrastructure/entities/seo-override.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -50,6 +52,8 @@ export default defineConfig({
     InventoryReservationOrmEntity,
     InventoryMovementOrmEntity,
     InventoryOperationOrmEntity,
+    Redirect,
+    SeoOverride,
   ],
   migrations: {
     path: 'dist/migrations',

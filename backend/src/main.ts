@@ -2,6 +2,7 @@
 import './instrument';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { RequestMethod } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
@@ -17,7 +18,12 @@ async function bootstrap(): Promise<void> {
   const logger = app.get(Logger);
 
   app.useLogger(logger);
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1', {
+    exclude: [
+      { path: 'robots.txt', method: RequestMethod.GET },
+      { path: 'sitemap.xml', method: RequestMethod.GET },
+    ],
+  });
   configureApplication(app, config);
   app.enableShutdownHooks();
   registerGracefulShutdown(app, config, async () => {

@@ -13,6 +13,10 @@ import {
   NOTIFICATION_OUTBOX_HANDLER,
   type NotificationOutboxHandler,
 } from '../../../../shared-kernel/application/ports/notification-outbox-handler.port';
+import {
+  SEO_META_CAPI_OUTBOX_HANDLER,
+  type SeoMetaCapiOutboxHandler,
+} from '../../../../shared-kernel/application/ports/seo-meta-capi-outbox-handler.port';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import type { OutboxJobPayload } from '../../domain/outbox.types';
 import { runOutboxDelivery } from '../outbox-delivery';
@@ -34,6 +38,8 @@ export class DomainEventsProcessor {
     private readonly notificationEvents: NotificationOutboxHandler,
     @Inject(MARKETING_OUTBOX_HANDLER)
     private readonly marketingEvents: MarketingOutboxHandler,
+    @Inject(SEO_META_CAPI_OUTBOX_HANDLER)
+    private readonly metaCapiEvents: SeoMetaCapiOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
@@ -46,6 +52,7 @@ export class DomainEventsProcessor {
       }
 
       await this.notificationEvents.handle(job.eventType, job.payload);
+      await this.metaCapiEvents.handle(job.eventType, job.payload);
       await this.marketingEvents.handle(job.eventType, job.payload);
     });
     if (!processed) {

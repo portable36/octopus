@@ -81,6 +81,11 @@ export const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  /** When true, this process consumes the seo-discovery BullMQ queue (seo-worker container). */
+  SEO_DISCOVERY_WORKER_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().min(500).max(60_000).default(2000),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(200).default(50),
   OUTBOX_MAX_DISPATCH_RETRIES: z.coerce.number().int().min(1).max(50).default(10),
@@ -89,6 +94,16 @@ export const envSchema = z.object({
   BULLMQ_CONCURRENCY_PAYOUT: z.coerce.number().int().min(1).max(50).default(3),
   BULLMQ_CONCURRENCY_SEARCH: z.coerce.number().int().min(1).max(50).default(3),
   LEDGER_SETTLEMENT_DAYS: z.coerce.number().int().min(0).max(365).default(7),
+  /** Canonical public storefront origin for robots/sitemap (no trailing slash required). */
+  SEO_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3001'),
+  /** Extra robots.txt Disallow paths (comma-separated, e.g. /private,/preview). */
+  SEO_ROBOTS_DISALLOW: z.string().default(''),
+  /** Local directory for pre-generated sitemap and product feed artifacts. */
+  SEO_CACHE_DIR: z.string().min(1).default('.cache/seo'),
+  /** Meta Conversions API pixel id (server-only). */
+  META_PIXEL_ID: z.string().min(1).optional(),
+  /** Meta Conversions API access token (server-only). */
+  META_ACCESS_TOKEN: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { OfferCard } from '@/components/storefront/offer-card';
+import { SearchResultsAnalytics } from '@/components/storefront/search-results-analytics';
 import { SearchFiltersForm } from '@/components/storefront/search-filters-form';
 import { ApiClientError } from '@/lib/api-client';
 import { absoluteUrl } from '@/lib/seo';
@@ -47,8 +48,14 @@ export default async function SearchPage({ searchParams }: Props) {
       error instanceof ApiClientError ? error.message : 'Search is temporarily unavailable.';
   }
 
+  const trackedQuery = result?.query ?? query.q ?? '';
+  const trackedResultsCount = result?.estimatedTotal ?? 0;
+
   return (
     <div className="space-y-8">
+      {trackedQuery ? (
+        <SearchResultsAnalytics query={trackedQuery} resultsCount={trackedResultsCount} />
+      ) : null}
       <header className="space-y-3">
         <p className="sf-eyebrow">Browse the marketplace</p>
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Search offers</h1>

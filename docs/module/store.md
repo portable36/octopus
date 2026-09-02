@@ -24,10 +24,13 @@ Store does not own:
 ## Lifecycle
 
 ```text
-DRAFT -> ACTIVE -> SUSPENDED -> CLOSED
+DRAFT -> PROVISIONING -> ACTIVE
+PROVISIONING -> FAILED (retry)
+ACTIVE -> SUSPENDED | MAINTENANCE
+ACTIVE -> ARCHIVED (CLOSED deprecated alias)
 ```
 
-Closed stores remain readable for historical orders but cannot accept new sales.
+Vendor onboarding wizard and provisioning saga: see [store-provisioning.md](./store-provisioning.md).
 
 ## Store offers
 

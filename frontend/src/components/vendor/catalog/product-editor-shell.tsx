@@ -16,6 +16,7 @@ import {
   type ProductEditorState,
 } from '@/lib/vendor-catalog-flow';
 import type { StockAvailability, StoreOffer, VendorProduct, VendorVariant } from '@/lib/vendor-api';
+import { getVendor, listStoresForVendor } from '@/lib/vendor-api';
 import { getSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
 
 const SECTIONS: { id: ProductEditorSection; label: string }[] = [
@@ -38,6 +39,7 @@ export function ProductEditorShell({ vendorId, productId }: ProductEditorShellPr
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasStores, setHasStores] = useState(true);
 
   const reload = useCallback(async () => {
     const activeStoreId = getSelectedStoreId();
@@ -52,6 +54,11 @@ export function ProductEditorShell({ vendorId, productId }: ProductEditorShellPr
     async function load() {
       setLoading(true);
       try {
+        const [, storeRows] = await Promise.all([
+          getVendor(vendorId),
+          listStoresForVendor(vendorId).catch(() => []),
+        ]);
+        setHasStores(storeRows.length > 0);
         await reload();
         if (!cancelled) {
           setError(null);
@@ -72,7 +79,7 @@ export function ProductEditorShell({ vendorId, productId }: ProductEditorShellPr
     return subscribeSelectedStoreId(() => {
       void load();
     });
-  }, [reload]);
+  }, [reload, vendorId]);
 
   function onProductSaved(product: VendorProduct) {
     setState((current) => (current ? { ...current, product } : current));
@@ -161,9 +168,31 @@ export function ProductEditorShell({ vendorId, productId }: ProductEditorShellPr
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
 
       {needsStore && !storeId ? (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
-          Select a store in the header to work on pricing, inventory, and publish readiness.
-        </p>
+        <div className="space-y-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-3">
+          {!hasStores ? (
+            <>
+              <p className="text-sm font-medium">Create a store first</p>
+              <p className="text-sm text-muted-foreground">
+                Pricing, inventory, and publishing are scoped to a store. Add your first store below
+                or from{' '}
+                <Link className="underline underline-offset-4" href={`/vendor/${vendorId}/stores`}>
+                  Stores
+                </Link>
+                .
+              </p>
+              <Link
+                href={`/vendor/${vendorId}/stores/new`}
+                className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              >
+                Create store
+              </Link>
+            </>
+          ) : (
+            <p className="text-sm">
+              Select a store in the header to work on pricing, inventory, and publish readiness.
+            </p>
+          )}
+        </div>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">

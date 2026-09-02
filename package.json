@@ -41,6 +41,8 @@
     "graphify:extract": "graphify extract . --code-only",
     "graphify:update": "graphify update .",
     "graphify:query": "graphify query",
+    "chat:export": "node scripts/export-cursor-chats.mjs",
+    "chat:hooks:install": "node scripts/install-chat-hooks.mjs",
     "skills:update": "npx skills@latest update -y",
     "validate": "node scripts/validate.mjs"
   },

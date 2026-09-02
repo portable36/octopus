@@ -16,9 +16,14 @@ import type { StoreStaffRole } from '../../domain/store.types';
 import {
   StoreAccessDeniedError,
   StoreNotFoundError,
+  StoreProvisioningIncompleteError,
   VendorNotActiveForStoreError,
   VendorNotFoundForStoreError,
 } from '../errors/store.errors';
+import {
+  STORE_PROVISIONING_REPOSITORY,
+  type StoreProvisioningRepository,
+} from '../ports/store-provisioning-repository.interface';
 import { STORE_REPOSITORY, type StoreRepository } from '../ports/store-repository.interface';
 
 function isPlatformAdmin(roles: readonly string[]): boolean {
@@ -29,6 +34,8 @@ function isPlatformAdmin(roles: readonly string[]): boolean {
 export class StoreLifecycleHandler {
   constructor(
     @Inject(STORE_REPOSITORY) private readonly stores: StoreRepository,
+    @Inject(STORE_PROVISIONING_REPOSITORY)
+    private readonly provisioning: StoreProvisioningRepository,
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
     @Inject(MEMBERSHIP_DIRECTORY) private readonly memberships: MembershipDirectory,
     @Inject(USER_ROLE_ASSIGNER) private readonly roleAssigner: UserRoleAssigner,
@@ -42,7 +49,23 @@ export class StoreLifecycleHandler {
     const store = await this.requireStore(storeId);
     await this.assertVendorActive(store.vendorId);
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
-    store.activate(actorUserId);
+
+    if (store.status === 'provisioning') {
+      const run = await this.provisioning.findLatestRunByStoreId(storeId);
+      if (!run || run.status !== 'completed') {
+        throw new StoreProvisioningIncompleteError();
+      }
+      store.completeProvisioning(actorUserId);
+    } else if (
+      store.status === 'draft' ||
+      store.status === 'suspended' ||
+      store.status === 'maintenance'
+    ) {
+      store.activate(actorUserId);
+    } else {
+      store.activate(actorUserId);
+    }
+
     await this.stores.save(store);
     return store;
   }
@@ -68,6 +91,31 @@ export class StoreLifecycleHandler {
     const store = await this.requireStore(storeId);
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
     store.close(actorUserId);
+    await this.stores.save(store);
+    return store;
+  }
+
+  public async enableMaintenance(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+    reason?: string,
+  ): Promise<Store> {
+    const store = await this.requireStore(storeId);
+    await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
+    store.enableMaintenance(actorUserId, reason);
+    await this.stores.save(store);
+    return store;
+  }
+
+  public async archive(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<Store> {
+    const store = await this.requireStore(storeId);
+    await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
+    store.archive(actorUserId);
     await this.stores.save(store);
     return store;
   }

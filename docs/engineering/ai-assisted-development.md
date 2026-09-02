@@ -27,6 +27,13 @@ This repository uses [Graphify](https://github.com/Graphify-Labs/graphify) to ke
 
 Ignore patterns live in `.graphifyignore`. Do not commit `graphify-out/cost.json` or `graphify-out/cache/`.
 
+## Cursor chat backup
+
+Composer chats and agent transcripts are backed up to `.cursor/chat-backups/` on
+commit and push via git hooks. Restore after reinstall with the **Cursor Chat
+Transfer** extension and `latest.cursor-chat.json`. See
+[`cursor-chat-backup.md`](./cursor-chat-backup.md).
+
 ## Context database (OpenViking, optional)
 
 [OpenViking](https://github.com/volcengine/OpenViking) is optional **local dev tooling** for semantic recall over docs, rules, and cross-session agent memory. It complements Graphify; it is **not** part of the commerce runtime or CI.

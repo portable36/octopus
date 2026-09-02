@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { randomUUID } from 'node:crypto';
 import { CrawlErrorLog } from '../../infrastructure/entities/crawl-error-log.entity';
@@ -6,7 +6,7 @@ import { normalizeRequestPath } from '../../domain/normalize-path';
 
 @Injectable()
 export class CrawlErrorLogService {
-  constructor(private readonly em: EntityManager) {}
+  constructor(@Inject(EntityManager) private readonly em: EntityManager) {}
 
   public async logNotFound(input: {
     readonly requestPath: string;

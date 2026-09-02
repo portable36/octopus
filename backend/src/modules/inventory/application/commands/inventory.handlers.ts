@@ -95,7 +95,7 @@ export class StockCommandHandler {
     @Inject(CATALOG_VARIANT_ACCESS) private readonly variants: CatalogVariantAccessPort,
     @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
-    private readonly globalConfig: GlobalConfigService,
+    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
   ) {}
 
   public async ensureItem(input: {

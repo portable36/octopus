@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { AppConfigService } from '../../../config/app-config.service';
 import type { ProductFeedItem } from './product-feed.types';
@@ -18,8 +18,8 @@ type FeedRow = {
 @Injectable()
 export class CatalogProductFeedSourceAdapter implements ProductFeedSourcePort {
   constructor(
-    private readonly em: EntityManager,
-    private readonly config: AppConfigService,
+    @Inject(EntityManager) private readonly em: EntityManager,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async *streamItems(batchSize: number): AsyncGenerator<readonly ProductFeedItem[]> {

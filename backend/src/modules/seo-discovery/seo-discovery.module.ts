@@ -41,9 +41,11 @@ import { SeoOverrideRepositoryAdapter } from './infrastructure/persistence/seo-o
 import { SeoDiscoveryEnqueuerService } from './jobs/seo-discovery-enqueuer.service';
 import { SeoDiscoveryWorker } from './jobs/seo-discovery.worker';
 import { MetaCapiOutboxHandlerAdapter } from './infrastructure/access/meta-capi-outbox-handler.adapter';
+import { SeoProvisionerAdapter } from './infrastructure/access/seo-provisioner.adapter';
 import { MetaCapiService } from './infrastructure/services/meta-capi.service';
 import { SearchConsoleApiService } from './infrastructure/services/search-console.service';
 import { SEO_META_CAPI_OUTBOX_HANDLER } from '../../shared-kernel/application/ports/seo-meta-capi-outbox-handler.port';
+import { SEO_PROVISIONER } from '../../shared-kernel/application/ports/seo-provisioner.port';
 import { RobotsController, ImageSitemapController, SitemapController } from './presentation/http/technical-seo.controller';
 import { PublicSeoController } from './presentation/http/public-seo.controller';
 import { SeoAdminController } from './presentation/controllers/seo-admin.controller';
@@ -58,6 +60,7 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
   ],
   controllers: [RobotsController, SitemapController, ImageSitemapController, PublicSeoController, SeoAdminController],
   providers: [
+    SeoDiscoveryEnqueuerService,
     RedirectResolutionService,
     RobotsPolicyService,
     SitemapCacheService,
@@ -75,11 +78,11 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
     StructuredDataEngine,
     ProductFeedService,
     SeoArtifactStoreService,
-    SeoDiscoveryEnqueuerService,
     SeoDiscoveryWorker,
     MetaCapiService,
     SearchConsoleApiService,
     MetaCapiOutboxHandlerAdapter,
+    SeoProvisionerAdapter,
     SeoDiscoveryFacade,
     RedirectMiddleware,
     CatalogSitemapSourceAdapter,
@@ -115,8 +118,9 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
       provide: SEO_META_CAPI_OUTBOX_HANDLER,
       useExisting: MetaCapiOutboxHandlerAdapter,
     },
+    { provide: SEO_PROVISIONER, useExisting: SeoProvisionerAdapter },
   ],
-  exports: [SeoDiscoveryFacade, SEO_META_CAPI_OUTBOX_HANDLER],
+  exports: [SeoDiscoveryFacade, SEO_META_CAPI_OUTBOX_HANDLER, SEO_PROVISIONER],
 })
 export class SeoDiscoveryModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

@@ -181,6 +181,33 @@ export function getAdminStore(token: string, storeId: string): Promise<AdminStor
   });
 }
 
+export type AdminProvisioningStatus = {
+  run: {
+    id: string;
+    storeId: string;
+    status: string;
+    startedAt: string;
+    completedAt: string | null;
+    lastError: string | null;
+  };
+  steps: readonly {
+    stepName: string;
+    status: string;
+    error: string | null;
+    retryCount: number;
+  }[];
+};
+
+export function getAdminStoreProvisioning(
+  token: string,
+  storeId: string,
+): Promise<AdminProvisioningStatus> {
+  return apiRequest<AdminProvisioningStatus>(
+    `/stores/${encodeURIComponent(storeId)}/provisioning`,
+    { headers: authHeaders(token) },
+  );
+}
+
 export function activateStore(token: string, storeId: string): Promise<AdminStore> {
   return apiRequest<AdminStore>(`/stores/${encodeURIComponent(storeId)}/activate`, {
     method: 'POST',

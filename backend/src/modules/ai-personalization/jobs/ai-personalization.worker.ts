@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { Worker, type ConnectionOptions, type Job } from 'bullmq';
 import { AppConfigService } from '../../../config/app-config.service';
 import { bullmqWorkerOptions } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
@@ -19,9 +19,12 @@ export class AiPersonalizationWorker implements OnModuleInit, OnModuleDestroy {
   private readonly connection: ConnectionOptions;
 
   constructor(
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(forwardRef(() => AiPersonalizationEnqueuerService))
     private readonly enqueuer: AiPersonalizationEnqueuerService,
+    @Inject(forwardRef(() => PurchasePatternAnalysisService))
     private readonly purchasePatternAnalysis: PurchasePatternAnalysisService,
+    @Inject(forwardRef(() => AbandonedCartRecoveryService))
     private readonly abandonedCartRecovery: AbandonedCartRecoveryService,
   ) {
     this.connection = {

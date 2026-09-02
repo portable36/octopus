@@ -46,6 +46,7 @@ function outboxTable(source: OutboxSource): string {
   if (source === 'catalog') return 'catalog_outbox';
   if (source === 'inventory') return 'inventory_outbox';
   if (source === 'order') return 'order_outbox';
+  if (source === 'store') return 'store_outbox';
   if (source === 'notification') {
     throw new Error('notification delivery jobs are not claimed from SQL outbox');
   }
@@ -76,6 +77,7 @@ export class SqlOutboxStoreAdapter implements OutboxStore {
         const catalog = await this.selectBatch(conn, 'catalog_outbox', maxRetries, batchSize);
         const inventory = await this.selectBatch(conn, 'inventory_outbox', maxRetries, batchSize);
         const order = await this.selectBatch(conn, 'order_outbox', maxRetries, batchSize);
+        const store = await this.selectBatch(conn, 'store_outbox', maxRetries, batchSize);
 
         return [
           ...payment.map((row) => toRow('payment', row)),
@@ -85,6 +87,7 @@ export class SqlOutboxStoreAdapter implements OutboxStore {
           ...catalog.map((row) => toRow('catalog', row)),
           ...inventory.map((row) => toRow('inventory', row)),
           ...order.map((row) => toRow('order', row)),
+          ...store.map((row) => toRow('store', row)),
         ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       }),
     );
@@ -99,7 +102,8 @@ export class SqlOutboxStoreAdapter implements OutboxStore {
       | 'payout_outbox'
       | 'catalog_outbox'
       | 'inventory_outbox'
-      | 'order_outbox',
+      | 'order_outbox'
+      | 'store_outbox',
     maxRetries: number,
     batchSize: number,
   ): Promise<SqlOutboxRow[]> {

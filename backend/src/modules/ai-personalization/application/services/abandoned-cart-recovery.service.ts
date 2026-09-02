@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { Promotion } from '../../../pricing/domain/aggregates/promotion.aggregate';
 import {
@@ -29,11 +29,13 @@ export class AbandonedCartRecoveryService
   private readonly logger = new Logger(AbandonedCartRecoveryService.name);
 
   constructor(
+    @Inject(forwardRef(() => AbandonedCartSchedulerService))
     private readonly scheduler: AbandonedCartSchedulerService,
     @Inject(CART_REPOSITORY) private readonly carts: CartRepository,
     @Inject(PROMOTION_REPOSITORY) private readonly promotions: PromotionRepository,
+    @Inject(forwardRef(() => CartAbandonedOutboxPublisher))
     private readonly outboxPublisher: CartAbandonedOutboxPublisher,
-    private readonly em: EntityManager,
+    @Inject(EntityManager) private readonly em: EntityManager,
   ) {}
 
   public async onCartUpdated(cartId: string): Promise<void> {

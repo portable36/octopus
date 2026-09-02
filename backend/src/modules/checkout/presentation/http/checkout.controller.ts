@@ -36,7 +36,7 @@ export class CheckoutController {
   constructor(
     private readonly checkout: CheckoutSubmitHandler,
     @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
-    private readonly globalConfig: GlobalConfigService,
+    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
   ) {}
 
   @Public()

@@ -40,6 +40,13 @@ export class StoreNotOperableError extends StoreDomainError {
   }
 }
 
+export class DuplicateStoreCodeError extends StoreDomainError {
+  constructor() {
+    super('Store code already exists for this vendor.');
+    this.name = 'DuplicateStoreCodeError';
+  }
+}
+
 export class StoreClosedError extends StoreDomainError {
   constructor() {
     super('Closed stores cannot be mutated.');

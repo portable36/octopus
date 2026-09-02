@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
@@ -20,8 +20,8 @@ export class SeoHealthVerificationService {
   private readonly logger = new Logger(SeoHealthVerificationService.name);
 
   constructor(
-    private readonly em: EntityManager,
-    private readonly config: AppConfigService,
+    @Inject(EntityManager) private readonly em: EntityManager,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async verifyTopProductRoutes(): Promise<{ readonly scanned: number; readonly issues: number }> {

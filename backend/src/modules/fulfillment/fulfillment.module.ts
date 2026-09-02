@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { COURIER_PORT } from '../../shared-kernel/application/ports/courier.port';
+import { SHIPPING_CONFIG_PROVISIONER } from '../../shared-kernel/application/ports/shipping-config-provisioner.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import {
   CreateShipmentHandler,
@@ -10,6 +11,7 @@ import {
 import { FULFILLMENT_REPOSITORY } from './application/ports/fulfillment-repository.interface';
 import { FulfillmentAuthorizationService } from './application/services/fulfillment-authorization.service';
 import { CourierPortAdapter } from './infrastructure/access/courier-port.adapter';
+import { ShippingConfigProvisionerAdapter } from './infrastructure/access/shipping-config-provisioner.adapter';
 import { PathaoCourierClient } from './infrastructure/integrations/pathao.client';
 import { SteadfastCourierClient } from './infrastructure/integrations/steadfast.client';
 import { CourierAccountStore } from './infrastructure/persistence/courier-account.store';
@@ -48,7 +50,8 @@ import { FulfillmentController } from './presentation/http/fulfillment.controlle
     PathaoCourierClient,
     { provide: FULFILLMENT_REPOSITORY, useClass: FulfillmentRepositoryAdapter },
     { provide: COURIER_PORT, useClass: CourierPortAdapter },
+    { provide: SHIPPING_CONFIG_PROVISIONER, useClass: ShippingConfigProvisionerAdapter },
   ],
-  exports: [COURIER_PORT, FULFILLMENT_REPOSITORY],
+  exports: [COURIER_PORT, FULFILLMENT_REPOSITORY, SHIPPING_CONFIG_PROVISIONER],
 })
 export class FulfillmentModule {}

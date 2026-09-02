@@ -1,15 +1,30 @@
 import { Collection, Entity, OneToMany, PrimaryKey, Property, Unique } from '@mikro-orm/core';
-import type { StoreStatus } from '../../domain/store.types';
+import type {
+  StoreOpeningHoursEntry,
+  StoreOwnershipKind,
+  StoreStatus,
+  StoreType,
+} from '../../domain/store.types';
 import { StoreStaffOrmEntity } from './store-staff.orm-entity';
 
 @Entity({ tableName: 'stores' })
 @Unique({ properties: ['vendorId', 'slug'] })
+@Unique({ properties: ['vendorId', 'storeCode'] })
 export class StoreOrmEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
 
   @Property({ fieldName: 'vendor_id', type: 'uuid' })
   vendorId!: string;
+
+  @Property({ fieldName: 'store_code' })
+  storeCode!: string;
+
+  @Property({ fieldName: 'store_type', default: 'online' })
+  storeType!: StoreType;
+
+  @Property({ fieldName: 'ownership_kind', default: 'vendor_owned' })
+  ownershipKind!: StoreOwnershipKind;
 
   @Property()
   slug!: string;
@@ -19,6 +34,15 @@ export class StoreOrmEntity {
 
   @Property({ type: 'text', nullable: true })
   description: string | null = null;
+
+  @Property({ nullable: true })
+  phone: string | null = null;
+
+  @Property({ nullable: true })
+  email: string | null = null;
+
+  @Property({ fieldName: 'support_email', nullable: true })
+  supportEmail: string | null = null;
 
   @Property({ fieldName: 'address_line1', nullable: true })
   addressLine1: string | null = null;
@@ -37,6 +61,15 @@ export class StoreOrmEntity {
 
   @Property({ fieldName: 'country_code' })
   countryCode!: string;
+
+  @Property({ type: 'double', nullable: true })
+  latitude: number | null = null;
+
+  @Property({ type: 'double', nullable: true })
+  longitude: number | null = null;
+
+  @Property({ fieldName: 'opening_hours', type: 'json', nullable: true })
+  openingHours: StoreOpeningHoursEntry[] | null = null;
 
   @Property({ fieldName: 'currency_code' })
   currencyCode!: string;

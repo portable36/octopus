@@ -12,6 +12,7 @@ import {
   type VendorAccessPort,
 } from '../../../../shared-kernel/application/ports/vendor-access.port';
 import { Store } from '../../domain/aggregates/store.aggregate';
+import { DuplicateStoreCodeError } from '../../domain/errors/store.errors';
 import {
   StoreAccessDeniedError,
   StoreSlugTakenError,
@@ -74,6 +75,9 @@ export class CreateStoreHandler {
 
     if (await this.stores.existsByVendorAndSlug(command.vendorId, store.profile.slug)) {
       throw new StoreSlugTakenError();
+    }
+    if (await this.stores.existsByVendorAndStoreCode(command.vendorId, store.storeCode)) {
+      throw new DuplicateStoreCodeError();
     }
 
     await this.stores.save(store);

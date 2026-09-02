@@ -6,6 +6,7 @@ import { UserMembershipOrmEntity } from './src/modules/tenancy/infrastructure/pe
 import { TenantIsolationSampleOrmEntity } from './src/modules/tenancy/infrastructure/persistence/tenant-isolation-sample.orm-entity';
 import { VendorOrmEntity } from './src/modules/vendor/infrastructure/persistence/vendor.orm-entity';
 import { VendorStaffOrmEntity } from './src/modules/vendor/infrastructure/persistence/vendor-staff.orm-entity';
+import { StoreOutboxOrmEntity } from './src/modules/store/infrastructure/persistence/store-outbox.orm-entity';
 import { StoreOrmEntity } from './src/modules/store/infrastructure/persistence/store.orm-entity';
 import { StoreStaffOrmEntity } from './src/modules/store/infrastructure/persistence/store-staff.orm-entity';
 import { ProductOrmEntity } from './src/modules/catalog/infrastructure/persistence/product.orm-entity';
@@ -47,6 +48,7 @@ export default defineConfig({
     VendorStaffOrmEntity,
     StoreOrmEntity,
     StoreStaffOrmEntity,
+    StoreOutboxOrmEntity,
     ProductOrmEntity,
     VariantOrmEntity,
     CategoryOrmEntity,

@@ -12,8 +12,24 @@ export type StoreSummary = {
   id: string;
   vendorId: string;
   status: string;
+  storeCode?: string;
+  storeType?: string;
+  ownershipKind?: string;
   profile: { displayName: string; slug: string; description: string | null };
-  settings: { currencyCode: string };
+  contact?: { phone: string | null; email: string | null; supportEmail: string | null };
+  address?: {
+    line1: string | null;
+    city: string | null;
+    region: string | null;
+    countryCode: string;
+  };
+  settings: {
+    currencyCode: string;
+    timezone?: string;
+    locale?: string;
+    acceptsOnlineOrders?: boolean;
+    codEnabled?: boolean;
+  };
 };
 
 export type VendorFinanceSummary = {
@@ -194,6 +210,25 @@ export function submitVendorForReview(vendorId: string): Promise<VendorSummary> 
 
 export function listStoresForVendor(vendorId: string): Promise<StoreSummary[]> {
   return authedRequest<StoreSummary[]>(`/stores?vendorId=${encodeURIComponent(vendorId)}`);
+}
+
+export function getVendorStore(storeId: string): Promise<StoreSummary> {
+  return authedRequest<StoreSummary>(`/stores/${encodeURIComponent(storeId)}`);
+}
+
+export function createVendorStore(input: {
+  vendorId: string;
+  displayName: string;
+  description?: string;
+  currencyCode?: string;
+}): Promise<StoreSummary> {
+  return authedRequest<StoreSummary>('/stores', { method: 'POST', body: input });
+}
+
+export function activateVendorStore(storeId: string): Promise<StoreSummary> {
+  return authedRequest<StoreSummary>(`/stores/${encodeURIComponent(storeId)}/activate`, {
+    method: 'POST',
+  });
 }
 
 export function getVendorFinanceSummary(vendorId: string): Promise<VendorFinanceSummary> {

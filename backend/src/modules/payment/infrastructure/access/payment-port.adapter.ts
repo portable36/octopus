@@ -39,7 +39,7 @@ export class PaymentPortAdapter implements PaymentPort {
     @Inject(CreateRefundHandler)
     private readonly refundHandler: CreateRefundHandler,
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
-    private readonly globalConfig: GlobalConfigService,
+    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
   ) {}
 
   public async isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): Promise<boolean> {

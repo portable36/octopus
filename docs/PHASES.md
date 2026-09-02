@@ -380,6 +380,18 @@ CLOSED
 
 - [x] `StoreModule` under `backend/src/modules/store/` with RLS on `stores` / `store_staff`, membership sync, and HTTP under `/api/v1/stores/*`.
 
+### Slice 04.1 — Store onboarding & provisioning
+
+- [x] Extended lifecycle (`provisioning`, `failed`, `maintenance`, `archived`)
+- [x] Store code, type, contact, geo fields
+- [x] Store outbox + domain events
+- [x] Onboarding draft API (`store_onboarding_drafts`)
+- [x] Provisioning saga (`store_provisioning_runs` / `store_provisioning_steps`)
+- [x] Cross-module provisioner ports (settings, inventory, POS, stubs)
+- [x] Vendor 17-step wizard UI
+- [x] Admin provisioning monitor on store detail
+- [x] Docs: `docs/module/store-provisioning.md`
+
 ---
 
 # Phase 05 — Catalog

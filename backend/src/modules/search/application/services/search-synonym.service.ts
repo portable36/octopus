@@ -32,7 +32,7 @@ export type ZeroResultQueryDto = {
 @Injectable()
 export class SearchSynonymService {
   constructor(
-    private readonly em: EntityManager,
+    @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
   ) {}
 

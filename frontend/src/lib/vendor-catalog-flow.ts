@@ -35,8 +35,10 @@ export type ProductEditorState = {
   storeId: string | null;
 };
 
+/** Catalog SKU format: `^[A-Z]{3}-[A-Z]{3}-\\d{4}$` (see backend Sku value object). */
 export function createDraftSku(): string {
-  return `draft-${crypto.randomUUID().slice(0, 8)}`;
+  const suffix = String(crypto.getRandomValues(new Uint16Array(1))[0]! % 10_000).padStart(4, '0');
+  return `DRF-NEW-${suffix}`;
 }
 
 export async function createDraftVendorProduct(vendorId: string): Promise<VendorProduct> {

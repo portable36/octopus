@@ -22,25 +22,64 @@ describe('Store aggregate', () => {
     expect(store.status).toBe('draft');
     expect(store.vendorId).toBe(VENDOR);
     expect(store.profile.slug).toBe('gulshan-branch');
+    expect(store.storeCode.length).toBeGreaterThanOrEqual(3);
     expect(store.isManager(MANAGER)).toBe(true);
     expect(store.getUncommittedEvents().map((event) => event.eventName)).toContain('StoreCreated');
   });
 
-  it('walks draft -> active -> suspended -> active -> closed', () => {
+  it('walks draft -> provisioning -> active', () => {
     const store = Store.create({
       vendorId: VENDOR,
       displayName: 'Dhanmondi',
       managerUserId: MANAGER,
     });
 
-    store.activate(ACTOR);
+    store.startProvisioning(ACTOR);
+    expect(store.status).toBe('provisioning');
+    store.completeProvisioning(ACTOR);
     expect(store.status).toBe('active');
+  });
+
+  it('walks provisioning -> failed -> resume -> active', () => {
+    const store = Store.create({
+      vendorId: VENDOR,
+      displayName: 'Mirpur',
+      managerUserId: MANAGER,
+    });
+    store.startProvisioning(ACTOR);
+    store.markProvisioningFailed(ACTOR, 'warehouse error');
+    expect(store.status).toBe('failed');
+    store.resumeProvisioning(ACTOR);
+    expect(store.status).toBe('provisioning');
+    store.completeProvisioning(ACTOR);
+    expect(store.status).toBe('active');
+  });
+
+  it('walks active -> suspended -> active -> archived', () => {
+    const store = Store.create({
+      vendorId: VENDOR,
+      displayName: 'Banani',
+      managerUserId: MANAGER,
+    });
+    store.activate(ACTOR);
     store.suspend(ACTOR, 'maintenance');
     expect(store.status).toBe('suspended');
     store.activate(ACTOR);
+    store.enableMaintenance(ACTOR);
+    expect(store.status).toBe('maintenance');
+    store.activate(ACTOR);
+    store.archive(ACTOR);
+    expect(store.status).toBe('archived');
+  });
+
+  it('activates directly from draft without provisioning', () => {
+    const store = Store.create({
+      vendorId: VENDOR,
+      displayName: 'Quick Open',
+      managerUserId: MANAGER,
+    });
+    store.activate(ACTOR);
     expect(store.status).toBe('active');
-    store.close(ACTOR);
-    expect(store.status).toBe('closed');
   });
 
   it('rejects invalid transitions', () => {
@@ -65,14 +104,14 @@ describe('Store aggregate', () => {
     expect(() => store.removeStaff(MANAGER)).toThrow(CannotRemoveLastManagerError);
   });
 
-  it('blocks mutations after close', () => {
+  it('blocks mutations after archive', () => {
     const store = Store.create({
       vendorId: VENDOR,
       displayName: 'Motijheel',
       managerUserId: MANAGER,
     });
     store.activate(ACTOR);
-    store.close(ACTOR);
+    store.archive(ACTOR);
     expect(() => store.updateProfile({ description: 'x' })).toThrow(StoreClosedError);
   });
 });

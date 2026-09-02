@@ -11,10 +11,12 @@ import {
   activateStore,
   addStoreStaff,
   getAdminStore,
+  getAdminStoreProvisioning,
   removeStoreStaff,
   suspendStore,
   updateStoreSettings,
   type AdminCommerceSettings,
+  type AdminProvisioningStatus,
   type AdminStore,
   type StoreStaffRole,
 } from '@/lib/admin-api';
@@ -48,6 +50,7 @@ export default function AdminStoreDetailPage() {
   const storeId = params.storeId;
 
   const [store, setStore] = useState<AdminStore | null>(null);
+  const [provisioning, setProvisioning] = useState<AdminProvisioningStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,16 @@ export default function AdminStoreDetailPage() {
     try {
       const data = await getAdminStore(token, storeId);
       applyStore(data);
+      if (data.status === 'provisioning' || data.status === 'failed') {
+        try {
+          const prov = await getAdminStoreProvisioning(token, storeId);
+          setProvisioning(prov);
+        } catch {
+          setProvisioning(null);
+        }
+      } else {
+        setProvisioning(null);
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to load store.');
@@ -244,6 +257,24 @@ export default function AdminStoreDetailPage() {
               </Button>
             </div>
           </section>
+
+          {provisioning ? (
+            <section className="space-y-3 border border-border p-4">
+              <h2 className="text-sm font-medium">Provisioning</h2>
+              <p className="text-xs text-muted-foreground">
+                Run status: {provisioning.run.status}
+                {provisioning.run.lastError ? ` — ${provisioning.run.lastError}` : ''}
+              </p>
+              <ul className="space-y-1 text-sm">
+                {provisioning.steps.map((step) => (
+                  <li key={step.stepName} className="flex justify-between gap-4">
+                    <span>{step.stepName}</span>
+                    <span className="text-muted-foreground">{step.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <section className="space-y-3 border border-border p-4">
             <h2 className="text-sm font-medium">COD settings</h2>

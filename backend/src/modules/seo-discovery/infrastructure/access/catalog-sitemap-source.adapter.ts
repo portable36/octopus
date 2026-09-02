@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type {
@@ -12,8 +12,8 @@ type CategoryRow = { slug: string; updated_at: Date };
 @Injectable()
 export class CatalogSitemapSourceAdapter implements SitemapSourcePort {
   constructor(
-    private readonly em: EntityManager,
-    private readonly config: AppConfigService,
+    @Inject(EntityManager) private readonly em: EntityManager,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
   public async *streamEntries(batchSize: number): AsyncGenerator<readonly SitemapUrlEntry[]> {

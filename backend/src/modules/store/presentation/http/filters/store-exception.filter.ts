@@ -12,7 +12,12 @@ import { StoreDomainError } from '../../../domain/errors/store.errors';
 import {
   StoreAccessDeniedError,
   StoreApplicationError,
+  StoreDomainTakenError,
+  StoreDraftNotFoundError,
+  StoreDraftValidationError,
   StoreNotFoundError,
+  StoreProvisioningIncompleteError,
+  StoreProvisioningNotFoundError,
   StoreSlugTakenError,
   VendorNotActiveForStoreError,
   VendorNotFoundForStoreError,
@@ -35,13 +40,25 @@ export class StoreExceptionFilter implements ExceptionFilter {
     ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof StoreSlugTakenError) {
+    if (exception instanceof StoreSlugTakenError || exception instanceof StoreDomainTakenError) {
       return new ConflictException({ message: exception.message, code: exception.code });
     }
     if (exception instanceof StoreAccessDeniedError) {
       return new ForbiddenException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof VendorNotActiveForStoreError) {
+    if (exception instanceof StoreDraftNotFoundError || exception instanceof StoreProvisioningNotFoundError) {
+      return new NotFoundException({ message: exception.message, code: exception.code });
+    }
+    if (exception instanceof StoreDraftValidationError) {
+      return new HttpException(
+        { message: exception.message, code: exception.code, issues: exception.issues },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (
+      exception instanceof StoreProvisioningIncompleteError ||
+      exception instanceof VendorNotActiveForStoreError
+    ) {
       return new HttpException(
         { message: exception.message, code: exception.code },
         HttpStatus.CONFLICT,

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import type {
   SeoOverrideRepository,
@@ -10,7 +10,7 @@ import { SeoOverride } from '../entities/seo-override.entity';
 
 @Injectable()
 export class SeoOverrideRepositoryAdapter implements SeoOverrideRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(@Inject(EntityManager) private readonly em: EntityManager) {}
 
   public async findByEntity(entityType: SeoOverrideEntityType, entityId: string) {
     const entity = await this.em.findOne(

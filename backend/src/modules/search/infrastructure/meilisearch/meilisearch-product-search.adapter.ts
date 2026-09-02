@@ -39,7 +39,7 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
 
   constructor(
     @Inject(AppConfigService) private readonly config: AppConfigService,
-    private readonly globalConfig: GlobalConfigService,
+    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
   ) {
     this.client = new MeiliSearch({
       host: this.config.meilisearchHost,

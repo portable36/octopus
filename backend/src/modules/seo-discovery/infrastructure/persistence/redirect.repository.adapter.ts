@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import type {
   RedirectRepository,
@@ -19,7 +19,7 @@ function toRule(entity: Pick<Redirect, 'sourceUrl' | 'targetUrl' | 'statusCode'>
 
 @Injectable()
 export class RedirectRepositoryAdapter implements RedirectRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(@Inject(EntityManager) private readonly em: EntityManager) {}
 
   public async findBySourcePath(sourcePath: string): Promise<RedirectRule | null> {
     const entity = await this.em.findOne(

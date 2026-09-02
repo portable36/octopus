@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { ORDER_PORT, type OrderPort } from '../../../../shared-kernel/application/ports/order.port';
 import {
   USER_CONTACT_PORT,
@@ -23,7 +23,8 @@ export class MetaCapiOutboxHandlerAdapter implements SeoMetaCapiOutboxHandler {
   private readonly logger = new Logger(MetaCapiOutboxHandlerAdapter.name);
 
   constructor(
-    private readonly config: AppConfigService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(forwardRef(() => SeoDiscoveryEnqueuerService))
     private readonly enqueuer: SeoDiscoveryEnqueuerService,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Inject(USER_CONTACT_PORT) private readonly contacts: UserContactPort,

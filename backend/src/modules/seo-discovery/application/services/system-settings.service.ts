@@ -13,7 +13,7 @@ export class SystemSettingsService {
   private readonly logger = new Logger(SystemSettingsService.name);
 
   constructor(
-    private readonly em: EntityManager,
+    @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 

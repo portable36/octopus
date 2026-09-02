@@ -9,7 +9,9 @@ import { CONFIGURATION_REPOSITORY } from './application/ports/configuration-repo
 import { STOREFRONT_CONFIG_CACHE } from './application/ports/storefront-config-cache.port';
 import { SettingsAuthorizationService } from './application/services/settings-authorization.service';
 import { MarketingSettingsPortAdapter } from './infrastructure/access/marketing-settings-port.adapter';
+import { StoreSettingsProvisionerAdapter } from './infrastructure/access/store-settings-provisioner.adapter';
 import { VendorRegistrationPolicyAdapter } from './infrastructure/access/vendor-registration-policy.adapter';
+import { STORE_SETTINGS_PROVISIONER } from '../../shared-kernel/application/ports/store-settings-provisioner.port';
 import { ConfigurationDocumentOrmEntity } from './infrastructure/persistence/configuration-document.orm-entity';
 import { ConfigurationRepositoryAdapter } from './infrastructure/persistence/configuration.repository.adapter';
 import { StorefrontConfigCache } from './infrastructure/redis/storefront-config-cache';
@@ -30,6 +32,7 @@ import { PublicStorefrontConfigController } from './presentation/http/public-sto
     StorefrontConfigCache,
     MarketingSettingsPortAdapter,
     VendorRegistrationPolicyAdapter,
+    StoreSettingsProvisionerAdapter,
     {
       provide: CONFIGURATION_REPOSITORY,
       useClass: ConfigurationRepositoryAdapter,
@@ -37,7 +40,8 @@ import { PublicStorefrontConfigController } from './presentation/http/public-sto
     { provide: STOREFRONT_CONFIG_CACHE, useExisting: StorefrontConfigCache },
     { provide: MARKETING_SETTINGS_PORT, useExisting: MarketingSettingsPortAdapter },
     { provide: VENDOR_REGISTRATION_POLICY, useExisting: VendorRegistrationPolicyAdapter },
+    { provide: STORE_SETTINGS_PROVISIONER, useExisting: StoreSettingsProvisionerAdapter },
   ],
-  exports: [SettingsHandlers, MARKETING_SETTINGS_PORT, VENDOR_REGISTRATION_POLICY],
+  exports: [SettingsHandlers, MARKETING_SETTINGS_PORT, VENDOR_REGISTRATION_POLICY, STORE_SETTINGS_PROVISIONER],
 })
 export class SettingsModule {}

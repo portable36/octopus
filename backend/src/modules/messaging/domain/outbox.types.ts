@@ -6,7 +6,8 @@ export type OutboxSource =
   | 'catalog'
   | 'inventory'
   | 'notification'
-  | 'order';
+  | 'order'
+  | 'store';
 
 export type OutboxRow = {
   readonly id: string;
@@ -70,6 +71,7 @@ export function routeQueueForEvent(eventType: string): QueueName {
     return QUEUE_NAMES.notification;
   }
   if (
+    eventType.startsWith('Store') ||
     eventType.startsWith('StoreOffer') ||
     eventType.startsWith('Product') ||
     eventType.startsWith('Inventory') ||

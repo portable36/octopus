@@ -44,8 +44,8 @@ function parseImageMediaRefs(raw: unknown): readonly ImageMediaRef[] {
 @Injectable()
 export class CatalogImageSitemapSourceAdapter implements ImageSitemapSourcePort {
   constructor(
-    private readonly em: EntityManager,
-    private readonly config: AppConfigService,
+    @Inject(EntityManager) private readonly em: EntityManager,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
     @Inject(MEDIA_ASSET_ACCESS) private readonly mediaAccess: MediaAssetAccessPort,
   ) {}
 

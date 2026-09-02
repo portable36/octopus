@@ -7,7 +7,7 @@ import { ensureAccessToken, fetchMe, logoutAccount, type MeResponse } from '@/li
 import { ApiClientError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { listMyVendors, listStoresForVendor, type StoreSummary } from '@/lib/vendor-api';
-import { getSelectedStoreId, setSelectedStoreId } from '@/lib/vendor-session';
+import { getSelectedStoreId, setSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
 import { canAccessVendor, hasVendorRole } from '@/lib/role-admission';
 
 type NavItem = {
@@ -111,10 +111,12 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
       setStores([]);
       return;
     }
+
     let cancelled = false;
-    void (async () => {
+
+    async function loadStores() {
       try {
-        const rows = await listStoresForVendor(vendorId);
+        const rows = await listStoresForVendor(vendorId!);
         if (cancelled) {
           return;
         }
@@ -128,9 +130,15 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
           setStores([]);
         }
       }
-    })();
+    }
+
+    void loadStores();
+    const unsubscribe = subscribeSelectedStoreId(() => {
+      void loadStores();
+    });
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [vendorId, ready]);
 
@@ -252,6 +260,14 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
                   ))}
                 </select>
               </label>
+            ) : null}
+            {vendorId && vendorStatus === 'active' && stores.length === 0 ? (
+              <Link
+                href={`/vendor/${vendorId}/stores/new`}
+                className="text-sm font-medium underline underline-offset-4"
+              >
+                Create store
+              </Link>
             ) : null}
           </header>
           <main className="flex-1 space-y-6 px-4 py-6 md:px-6">{children}</main>

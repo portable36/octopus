@@ -183,3 +183,29 @@ export class UpdateStoreSettingsRequestDto {
   @Min(1)
   codReservationTtlHours?: number;
 }
+
+export class CreateStoreDraftRequestDto {
+  @ApiProperty()
+  @IsUUID()
+  vendorId!: string;
+}
+
+export class UpdateStoreDraftRequestDto {
+  @ApiPropertyOptional({ minimum: 1, maximum: 17 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  currentStep?: number;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  @IsOptional()
+  payload?: Record<string, unknown>;
+}
+
+export class MaintenanceStoreRequestDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  reason?: string;
+}

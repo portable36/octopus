@@ -14,10 +14,18 @@ export function toDomain(entity: StoreOrmEntity): Store {
   return Store.rehydrate({
     id: entity.id,
     vendorId: entity.vendorId,
+    storeCode: entity.storeCode,
+    storeType: entity.storeType,
+    ownershipKind: entity.ownershipKind,
     profile: {
       displayName: entity.displayName,
       slug: entity.slug,
       description: entity.description,
+    },
+    contact: {
+      phone: entity.phone,
+      email: entity.email,
+      supportEmail: entity.supportEmail,
     },
     address: {
       line1: entity.addressLine1,
@@ -26,7 +34,10 @@ export function toDomain(entity: StoreOrmEntity): Store {
       region: entity.region,
       postalCode: entity.postalCode,
       countryCode: entity.countryCode,
+      latitude: entity.latitude,
+      longitude: entity.longitude,
     },
+    openingHours: entity.openingHours ?? [],
     settings: {
       currencyCode: entity.currencyCode,
       timezone: entity.timezone,
@@ -45,15 +56,24 @@ export function toDomain(entity: StoreOrmEntity): Store {
 export function applyToOrm(store: Store, entity: StoreOrmEntity): void {
   entity.id = store.id.value;
   entity.vendorId = store.vendorId;
+  entity.storeCode = store.storeCode;
+  entity.storeType = store.storeType;
+  entity.ownershipKind = store.ownershipKind;
   entity.slug = store.profile.slug;
   entity.displayName = store.profile.displayName;
   entity.description = store.profile.description;
+  entity.phone = store.contact.phone;
+  entity.email = store.contact.email;
+  entity.supportEmail = store.contact.supportEmail;
   entity.addressLine1 = store.address.line1;
   entity.addressLine2 = store.address.line2;
   entity.city = store.address.city;
   entity.region = store.address.region;
   entity.postalCode = store.address.postalCode;
   entity.countryCode = store.address.countryCode;
+  entity.latitude = store.address.latitude;
+  entity.longitude = store.address.longitude;
+  entity.openingHours = [...store.openingHours];
   entity.currencyCode = store.settings.currencyCode;
   entity.timezone = store.settings.timezone;
   entity.locale = store.settings.locale;

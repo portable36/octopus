@@ -82,6 +82,9 @@ graphify update .
 ```
 
 - Use Graphify for symbols, imports, and code paths.
+- Cursor chat backups live in `.cursor/chat-backups/` (auto-export on commit/push).
+  Restore via **Cursor Chat Transfer → Import Chats** and `latest.cursor-chat.json`;
+  see `docs/engineering/cursor-chat-backup.md`.
 - Reviewed project-local skills include `skill-creator`, `mcp-builder`,
   `seo-auditing`, `penthera`, `verifying-markdown-formatting`,
   `building-skills-from-patterns`, `suggesting-skills`,

@@ -96,7 +96,7 @@ export class CheckoutSubmitHandler {
     @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
     @Inject(AppConfigService) private readonly config: AppConfigService,
-    private readonly globalConfig: GlobalConfigService,
+    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {

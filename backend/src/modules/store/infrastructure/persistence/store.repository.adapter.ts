@@ -3,6 +3,7 @@ import { EntityManager } from '@mikro-orm/core';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
 import type { StoreRepository } from '../../application/ports/store-repository.interface';
 import type { Store } from '../../domain/aggregates/store.aggregate';
+import { appendStoreOutbox } from './append-store-outbox';
 import { applyToOrm, toDomain } from './store.mapper';
 import { StoreOrmEntity } from './store.orm-entity';
 
@@ -20,6 +21,8 @@ export class StoreRepositoryAdapter implements StoreRepository {
       const entity = existing ?? new StoreOrmEntity();
       applyToOrm(store, entity);
       await tx.persist(entity).flush();
+      await appendStoreOutbox(tx, store.id.value, store.getUncommittedEvents());
+      store.clearEvents();
     });
   }
 
@@ -58,6 +61,13 @@ export class StoreRepositoryAdapter implements StoreRepository {
   public async existsByVendorAndSlug(vendorId: string, slug: string): Promise<boolean> {
     return withRlsContext(this.em, async (tx) => {
       const count = await tx.count(StoreOrmEntity, { vendorId, slug });
+      return count > 0;
+    });
+  }
+
+  public async existsByVendorAndStoreCode(vendorId: string, storeCode: string): Promise<boolean> {
+    return withRlsContext(this.em, async (tx) => {
+      const count = await tx.count(StoreOrmEntity, { vendorId, storeCode });
       return count > 0;
     });
   }

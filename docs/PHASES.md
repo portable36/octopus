@@ -1245,7 +1245,7 @@ under `frontend/src/app/(vendor)/vendor/`.
       (`GET /finance/vendors/:vendorId/{summary,ledger,payouts}`)
 
 Deferred (later Phase 19 slices): returns UI, multi-store reports, payout request UI,
-low-stock alert UI, catalog media attach, etc. Catalog mutations: see 19.3.
+low-stock alert UI, etc. Catalog mutations: see 19.3; Martvill-style editor: 19.6.
 
 ### 19.2 — Inventory
 
@@ -1273,7 +1273,23 @@ Vendor catalog create/lifecycle/variants/offers over **existing** Catalog HTTP A
 - [x] Create variant (`POST /products/:productId/variants`) + activate/archive by id
 - [x] Store offer create (`POST /store-offers`) for selected store
 - [x] Offer activate / suspend / price update (`PATCH …/price`)
-- [ ] Media attach UI (deferred; no media mutation surface in this slice)
+- [x] Media attach UI (primary image + gallery via `PATCH /products`)
+
+### 19.6 — Catalog editor UX (Martvill-style simple flow)
+
+Draft-first vendor product creation with a single-page sectioned editor (General,
+Pricing, Media, Inventory, Publish). Uses existing Catalog, Media, and Inventory
+HTTP APIs — no new backend endpoints.
+
+- [x] List page: **Add product** creates draft (`Untitled product` + `draft-*` SKU) and opens editor
+- [x] Sectioned editor at `/vendor/[vendorId]/catalog/[productId]` with per-section Save
+- [x] General: name, description, categories (`PATCH /products`)
+- [x] Pricing: default variant + store offer for selected store
+- [x] Media: multi-image gallery, primary selection, reorder (`PATCH /products` `media[]`)
+- [x] Inventory: ensure item + receive stock for default variant
+- [x] Publish: readiness checklist + lifecycle actions
+
+Deferred: variable products, brands, duplicate/import/export, vendor-managed categories.
 
 ### 19.4 — Orders depth
 

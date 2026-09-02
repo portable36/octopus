@@ -24,7 +24,14 @@ export function configureApplication(app: INestApplication, config: AppConfigSer
     origin: config.corsOrigins,
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'X-Request-Id', 'Idempotency-Key'],
+    allowedHeaders: [
+      'Authorization',
+      'Content-Type',
+      'Accept',
+      'X-Request-Id',
+      'Idempotency-Key',
+      'x-guest-token',
+    ],
     exposedHeaders: ['x-request-id'],
     maxAge: 86_400,
   });

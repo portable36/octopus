@@ -1,51 +1,75 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ProductListThumbnail } from '@/components/vendor/catalog/product-list-thumbnail';
 import { ApiClientError } from '@/lib/api-client';
+import { createDraftVendorProduct, isOfferActive } from '@/lib/vendor-catalog-flow';
 import {
-  createVendorProduct,
-  listCatalogCategories,
+  listStoreOffers,
   listVendorProducts,
-  type CatalogCategory,
+  type StoreOffer,
   type VendorProduct,
 } from '@/lib/vendor-api';
+import { getSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
 
-const fieldClass = 'h-10 rounded-md border border-border bg-background px-3';
-const labelClass = 'flex flex-col gap-1 text-sm';
-const formClass = 'max-w-lg space-y-3 rounded-md border border-border bg-background p-4';
-
-function formString(form: FormData, name: string): string {
-  return String(form.get(name) || '').trim();
+function statusClass(status: string): string {
+  switch (status) {
+    case 'published':
+      return 'text-emerald-700';
+    case 'pending_review':
+      return 'text-amber-700';
+    case 'archived':
+      return 'text-muted-foreground';
+    default:
+      return 'text-foreground';
+  }
 }
 
 export default function VendorCatalogPage() {
+  const router = useRouter();
   const params = useParams<{ vendorId: string }>();
   const vendorId = params.vendorId;
   const [products, setProducts] = useState<VendorProduct[] | null>(null);
-  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [storeOffers, setStoreOffers] = useState<StoreOffer[]>([]);
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  const offersByProductId = useMemo(() => {
+    const map = new Map<string, StoreOffer>();
+    for (const offer of storeOffers) {
+      map.set(offer.productId, offer);
+    }
+    return map;
+  }, [storeOffers]);
+
+  useEffect(() => {
+    const sync = () => setStoreId(getSelectedStoreId());
+    sync();
+    return subscribeSelectedStoreId(sync);
+  }, []);
 
   const reload = useCallback(async () => {
     const rows = await listVendorProducts(vendorId);
     setProducts(rows);
+    const activeStoreId = getSelectedStoreId();
+    if (activeStoreId) {
+      const offers = await listStoreOffers(activeStoreId).catch(() => [] as StoreOffer[]);
+      setStoreOffers(offers);
+    } else {
+      setStoreOffers([]);
+    }
   }, [vendorId]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const [rows, cats] = await Promise.all([
-          listVendorProducts(vendorId),
-          listCatalogCategories().catch(() => [] as CatalogCategory[]),
-        ]);
+        await reload();
         if (!cancelled) {
-          setProducts(rows);
-          setCategories(cats.filter((c) => c.status !== 'ARCHIVED'));
           setError(null);
         }
       } catch (err) {
@@ -58,31 +82,16 @@ export default function VendorCatalogPage() {
     return () => {
       cancelled = true;
     };
-  }, [vendorId]);
+  }, [reload]);
 
-  async function onCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const el = event.currentTarget;
-    const form = new FormData(el);
-    const description = formString(form, 'description');
-    const categoryIds = form.getAll('categoryIds').map(String).filter(Boolean);
+  async function onAddProduct() {
     setPending(true);
     setError(null);
-    setMessage(null);
     try {
-      await createVendorProduct({
-        vendorId,
-        sku: formString(form, 'sku'),
-        name: formString(form, 'name'),
-        ...(description ? { description } : {}),
-        ...(categoryIds.length > 0 ? { categoryIds } : {}),
-      });
-      await reload();
-      setMessage('Product created.');
-      el.reset();
+      const product = await createDraftVendorProduct(vendorId);
+      router.push(`/vendor/${vendorId}/catalog/${product.id}`);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to create product.');
-    } finally {
       setPending(false);
     }
   }
@@ -93,88 +102,78 @@ export default function VendorCatalogPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-xl font-semibold tracking-tight">Catalog</h2>
-        <p className="text-sm text-muted-foreground">
-          Create products and open a row for variants and offers.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Catalog</h2>
+          <p className="text-sm text-muted-foreground">
+            Create products and manage pricing, media, inventory, and publishing.
+          </p>
+        </div>
+        <Button type="button" disabled={pending} onClick={() => void onAddProduct()}>
+          {pending ? 'Creating…' : 'Add product'}
+        </Button>
       </header>
+
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
-      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
 
-      <form className={formClass} onSubmit={onCreate}>
-        <h3 className="text-sm font-medium">Create product</h3>
-        <label className={labelClass}>
-          SKU
-          <input className={fieldClass} name="sku" required minLength={3} disabled={pending} />
-        </label>
-        <label className={labelClass}>
-          Name
-          <input className={fieldClass} name="name" required minLength={3} disabled={pending} />
-        </label>
-        <label className={labelClass}>
-          Description (optional)
-          <textarea
-            className="min-h-20 rounded-md border border-border bg-background px-3 py-2"
-            name="description"
-            disabled={pending}
-          />
-        </label>
-        {categories.length > 0 ? (
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Categories (optional)</legend>
-            <div className="max-h-40 space-y-1 overflow-y-auto text-sm">
-              {categories.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2">
-                  <input type="checkbox" name="categoryIds" value={cat.id} disabled={pending} />
-                  {cat.name}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Creating…' : 'Create product'}
-        </Button>
-      </form>
+      {!storeId ? (
+        <p className="text-sm text-muted-foreground">
+          Select a store in the header to see offer status in the list.
+        </p>
+      ) : null}
 
       <div className="overflow-x-auto rounded-md border border-border bg-background">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-border text-muted-foreground">
             <tr>
+              <th className="px-3 py-2 font-medium">Image</th>
               <th className="px-3 py-2 font-medium">Name</th>
               <th className="px-3 py-2 font-medium">SKU</th>
               <th className="px-3 py-2 font-medium">Status</th>
               <th className="px-3 py-2 font-medium">Variants</th>
+              {storeId ? <th className="px-3 py-2 font-medium">Store offer</th> : null}
             </tr>
           </thead>
           <tbody>
             {(products ?? []).length === 0 ? (
               <tr>
-                <td className="px-3 py-4 text-muted-foreground" colSpan={4}>
-                  No products yet.
+                <td className="px-3 py-4 text-muted-foreground" colSpan={storeId ? 6 : 5}>
+                  No products yet. Click Add product to start a draft.
                 </td>
               </tr>
             ) : (
-              (products ?? []).map((product) => (
-                <tr key={product.id} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2">
-                    <Link
-                      className="font-medium underline-offset-4 hover:underline"
-                      href={`/vendor/${vendorId}/catalog/${product.id}`}
-                    >
-                      {product.name}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 font-mono text-xs">{product.sku}</td>
-                  <td className="px-3 py-2">{product.status}</td>
-                  <td className="px-3 py-2 tabular-nums">{product.variantIds.length}</td>
-                </tr>
-              ))
+              (products ?? []).map((product) => {
+                const offer = offersByProductId.get(product.id);
+                return (
+                  <tr key={product.id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2">
+                      <ProductListThumbnail product={product} />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Link
+                        className="font-medium underline-offset-4 hover:underline"
+                        href={`/vendor/${vendorId}/catalog/${product.id}`}
+                      >
+                        {product.name}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">{product.sku}</td>
+                    <td className={`px-3 py-2 capitalize ${statusClass(product.status)}`}>
+                      {product.status.replace('_', ' ')}
+                    </td>
+                    <td className="px-3 py-2 tabular-nums">{product.variantIds.length}</td>
+                    {storeId ? (
+                      <td className="px-3 py-2">
+                        {offer ? (isOfferActive(offer) ? 'Active' : offer.status) : 'None'}
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

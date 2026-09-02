@@ -86,6 +86,8 @@ describe('StockCommandHandler.restoreFromReturn', () => {
       warehouses as never,
       variants as never,
       auth as never,
+      null,
+      { get: vi.fn(async () => 0) } as never,
     );
 
     const first = await handler.restoreFromReturn({

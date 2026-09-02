@@ -36,6 +36,11 @@ import {
   type WarehouseRepository,
 } from '../ports/warehouse-repository.interface';
 import { InventoryAuthorizationService } from '../services/inventory-authorization.service';
+import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_GROUPS,
+  GLOBAL_CONFIG_KEYS,
+} from '../../../configuration/domain/global-config-keys';
 
 @Injectable()
 export class WarehouseCommandHandler {
@@ -90,6 +95,7 @@ export class StockCommandHandler {
     @Inject(CATALOG_VARIANT_ACCESS) private readonly variants: CatalogVariantAccessPort,
     @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
+    private readonly globalConfig: GlobalConfigService,
   ) {}
 
   public async ensureItem(input: {
@@ -117,14 +123,18 @@ export class StockCommandHandler {
       return existing;
     }
 
+    const defaultThreshold = await this.globalConfig.get<number>(
+      GLOBAL_CONFIG_GROUPS.CATALOG,
+      GLOBAL_CONFIG_KEYS.catalog.LOW_STOCK_THRESHOLD,
+      0,
+    );
+
     const item = InventoryItem.create({
       vendorId: store.vendorId,
       storeId: store.storeId,
       warehouseId: warehouse.id.value,
       variantId: variant.variantId,
-      ...(input.lowStockThreshold !== undefined
-        ? { lowStockThreshold: input.lowStockThreshold }
-        : {}),
+      lowStockThreshold: input.lowStockThreshold ?? defaultThreshold,
     });
     await this.inventory.saveItem(item);
     return item;

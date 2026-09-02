@@ -11,6 +11,11 @@ import type {
   PaymentMethodDto,
   PaymentPort,
 } from '../../../../shared-kernel/application/ports/payment.port';
+import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_GROUPS,
+  GLOBAL_CONFIG_KEYS,
+} from '../../../configuration/domain/global-config-keys';
 import {
   CancelCodPaymentHandler,
   CollectCodPaymentHandler,
@@ -34,10 +39,33 @@ export class PaymentPortAdapter implements PaymentPort {
     @Inject(CreateRefundHandler)
     private readonly refundHandler: CreateRefundHandler,
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
+    private readonly globalConfig: GlobalConfigService,
   ) {}
 
-  public isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): boolean {
-    return paymentMethod === 'COD';
+  public async isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): Promise<boolean> {
+    switch (paymentMethod) {
+      case 'COD':
+        return this.globalConfig.get<boolean>(
+          GLOBAL_CONFIG_GROUPS.PAYMENTS,
+          GLOBAL_CONFIG_KEYS.payments.COD_ENABLED,
+          true,
+        );
+      case 'SSLCOMMERZ':
+        return this.globalConfig.get<boolean>(
+          GLOBAL_CONFIG_GROUPS.PAYMENTS,
+          GLOBAL_CONFIG_KEYS.payments.STRIPE_ENABLED,
+          false,
+        );
+      case 'BKASH':
+      case 'NAGAD':
+        return this.globalConfig.get<boolean>(
+          GLOBAL_CONFIG_GROUPS.PAYMENTS,
+          GLOBAL_CONFIG_KEYS.payments.ADYEN_ENABLED,
+          false,
+        );
+      default:
+        return false;
+    }
   }
 
   public createIntent(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult> {

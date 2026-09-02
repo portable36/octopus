@@ -6,6 +6,7 @@ import {
   type SitemapSourcePort,
 } from '../ports/sitemap-source.port';
 import { SitemapCacheService } from './sitemap-cache.service';
+import { SystemSettingsRuntimeBridge } from './system-settings-runtime.bridge';
 import { renderSitemapUrl } from './sitemap-xml.renderer';
 
 @Injectable()
@@ -14,10 +15,11 @@ export class SitemapStreamService {
     @Inject(SITEMAP_SOURCE) private readonly source: SitemapSourcePort,
     private readonly cache: SitemapCacheService,
     private readonly config: AppConfigService,
+    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
   ) {}
 
   public async pipeXml(response: Response, batchSize?: number): Promise<void> {
-    const chunkSize = batchSize ?? this.config.sitemapItemsPerChunk;
+    const chunkSize = batchSize ?? (await this.runtimeSettings.resolveSitemapItemsPerChunk());
     response.setHeader('Content-Type', 'application/xml; charset=utf-8');
     response.setHeader('Cache-Control', `public, max-age=${this.config.seoCacheTtlSeconds}`);
 

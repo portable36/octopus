@@ -15,6 +15,8 @@ import {
 import { SeoDiscoveryEnqueuerService } from '../../jobs/seo-discovery-enqueuer.service';
 import { CrawlErrorLogService } from './crawl-error-log.service';
 import { SeoHealthVerificationService } from './seo-health-verification.service';
+import { SystemSettingsRuntimeBridge } from './system-settings-runtime.bridge';
+import { SystemSettingsService } from './system-settings.service';
 
 export type SeoArtifactSyncStatus = {
   readonly status: 'fresh' | 'stale' | 'missing';
@@ -51,6 +53,8 @@ export class SeoAdminService {
     private readonly enqueuer: SeoDiscoveryEnqueuerService,
     private readonly crawlErrors: CrawlErrorLogService,
     private readonly seoHealth: SeoHealthVerificationService,
+    private readonly systemSettings: SystemSettingsService,
+    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
   ) {}
 
   public async getHealth(): Promise<SeoAdminHealth> {
@@ -67,6 +71,11 @@ export class SeoAdminService {
 
     const metaFeeds = await this.readArtifactStatus(join('feeds', 'meta-catalog.json'));
     const productFeedStatus = this.mergeFeedStatus(productFeeds, metaFeeds);
+    const metaConfigured = await this.runtimeSettings.resolveMetaCapiEnv();
+    const metaCapiStatus: 'configured' | 'not_configured' =
+      metaConfigured.metaPixelId && metaConfigured.metaAccessToken
+        ? 'configured'
+        : 'not_configured';
 
     return {
       brokenRedirectsCount,
@@ -78,10 +87,7 @@ export class SeoAdminService {
         sitemap,
         productFeeds: productFeedStatus,
         metaCapi: {
-          status:
-            this.config.metaPixelId && this.config.metaAccessToken
-              ? 'configured'
-              : 'not_configured',
+          status: metaCapiStatus,
         },
       },
       recentJobs: [
@@ -97,8 +103,7 @@ export class SeoAdminService {
         },
         {
           jobName: 'send-meta-capi-event',
-          status:
-            this.config.metaPixelId && this.config.metaAccessToken ? 'configured' : 'not_configured',
+          status: metaCapiStatus,
           lastRunAt: null,
         },
         {
@@ -138,6 +143,14 @@ export class SeoAdminService {
 
   public async listSeoHealthIssues(limit = 100) {
     return this.seoHealth.listIssues(limit);
+  }
+
+  public async updateSystemSettings(settings: Record<string, unknown>) {
+    return this.systemSettings.updateSettings(settings);
+  }
+
+  public async listSystemSettings() {
+    return this.systemSettings.listAllSettings();
   }
 
   private async readArtifactStatus(relativePath: string): Promise<SeoArtifactSyncStatus> {

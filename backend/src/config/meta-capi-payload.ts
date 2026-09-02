@@ -5,9 +5,19 @@ import {
   resolveMetaCapiActionSource,
 } from './meta-gem-env';
 
+export type MetaCapiEnvConfig = Pick<
+  AppConfigService,
+  | 'metaCapiDataSource'
+  | 'metaAndromedaDataProcessingOptionsRaw'
+  | 'metaAndromedaCountry'
+  | 'metaAndromedaState'
+  | 'gemSchemaVersion'
+  | 'gemTrackingEnvironment'
+>;
+
 export function applyMetaCapiEnvToEvent(
   event: Record<string, unknown>,
-  config: AppConfigService,
+  config: MetaCapiEnvConfig,
 ): void {
   const dataSource = config.metaCapiDataSource;
   if (dataSource) {

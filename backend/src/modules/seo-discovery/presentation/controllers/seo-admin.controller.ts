@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -70,6 +71,11 @@ class ManageRedirectsDto {
   redirects?: RedirectRuleDto[];
 }
 
+class PatchSystemSettingsDto {
+  @IsObject()
+  settings!: Record<string, unknown>;
+}
+
 @ApiTags('admin-seo')
 @Controller('admin/seo')
 @ApiBearerAuth()
@@ -81,6 +87,20 @@ export class SeoAdminController {
   @ApiOperation({ summary: 'SEO health metrics and job synchronization status' })
   async health() {
     return this.seoAdmin.getHealth();
+  }
+
+  @Get('settings')
+  @ApiOperation({ summary: 'List platform SEO / analytics system settings' })
+  async listSettings() {
+    const settings = await this.seoAdmin.listSystemSettings();
+    return { settings };
+  }
+
+  @Patch('settings')
+  @RequirePermissions('settings.write')
+  @ApiOperation({ summary: 'Update platform SEO / analytics system settings (admin only)' })
+  async patchSettings(@Body() body: PatchSystemSettingsDto) {
+    return this.seoAdmin.updateSystemSettings(body.settings);
   }
 
   @Post('overrides')

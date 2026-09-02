@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
+import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_GROUPS,
+  GLOBAL_CONFIG_KEYS,
+} from '../../../configuration/domain/global-config-keys';
 import {
   CART_PORT,
   type CartOwnerRef,
@@ -91,6 +96,7 @@ export class CheckoutSubmitHandler {
     @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
     @Inject(AppConfigService) private readonly config: AppConfigService,
+    private readonly globalConfig: GlobalConfigService,
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {
@@ -107,7 +113,7 @@ export class CheckoutSubmitHandler {
     this.assertShippingAddress(input.shippingAddress);
     const requestHash = hashSubmitRequest(input);
 
-    if (!this.payments.isPaymentMethodAvailable(input.paymentMethod)) {
+    if (!(await this.payments.isPaymentMethodAvailable(input.paymentMethod))) {
       throw new CheckoutValidationError('The selected payment method is currently unavailable.', [
         {
           code: 'PAYMENT_METHOD_UNAVAILABLE',
@@ -134,6 +140,7 @@ export class CheckoutSubmitHandler {
     }
 
     const checkoutId = UniqueID.create().value;
+    const checkoutConfig = await this.resolveCheckoutCommerceConfig();
     const byStore = groupLinesByStore(cart.lines);
     const quotes = new Map<string, PricingQuoteResult>();
     const reservationTtlMs = await this.resolveReservationTtlMs(input.paymentMethod, byStore);
@@ -141,6 +148,14 @@ export class CheckoutSubmitHandler {
     try {
       for (const [storeId, lines] of byStore) {
         const first = lines[0]!;
+        const lineSubtotalMinor = lines.reduce(
+          (sum, line) => sum + line.unitPriceSnapshotMinor * line.quantity,
+          0,
+        );
+        const shippingMinor = this.resolveShippingMinor(
+          lineSubtotalMinor,
+          checkoutConfig.freeShippingThresholdMinor,
+        );
         try {
           const quote = await this.pricing.quote({
             vendorId: first.vendorId,
@@ -154,8 +169,10 @@ export class CheckoutSubmitHandler {
               quantity: line.quantity,
               unitBasePriceMinor: line.unitPriceSnapshotMinor,
             })),
-            // Pricing policy is server-owned; client financial overrides are not accepted.
-            shippingMinor: 0,
+            shippingMinor,
+            ...(checkoutConfig.taxComputationEnabled
+              ? { taxRateBps: checkoutConfig.taxRateBps }
+              : {}),
             ...(input.couponCode !== undefined ? { couponCode: input.couponCode } : {}),
             ...(input.owner.customerId !== undefined ? { customerId: input.owner.customerId } : {}),
           });
@@ -177,6 +194,16 @@ export class CheckoutSubmitHandler {
 
     if (input.paymentMethod === 'COD') {
       await this.assertCodEligibility(byStore, quotes);
+    }
+
+    const orderTotalMinor = [...quotes.values()].reduce((sum, quote) => sum + quote.totalMinor, 0);
+    if (orderTotalMinor < checkoutConfig.minimumOrderMinor) {
+      throw new CheckoutValidationError('Order total is below the platform minimum.', [
+        {
+          code: 'MINIMUM_ORDER_NOT_MET',
+          message: `Minimum order amount is ${checkoutConfig.minimumOrderMinor} minor units.`,
+        },
+      ]);
     }
 
     const claimToken = UniqueID.create().value;
@@ -504,6 +531,58 @@ export class CheckoutSubmitHandler {
     if (!owner.customerId && !owner.guestToken) {
       throw new CheckoutAccessDeniedError();
     }
+  }
+
+  private async resolveCheckoutCommerceConfig(): Promise<{
+    readonly minimumOrderMinor: number;
+    readonly taxComputationEnabled: boolean;
+    readonly taxRateBps: number;
+    readonly freeShippingThresholdMinor: number;
+  }> {
+    const [
+      minimumOrderMinor,
+      taxComputationEnabled,
+      taxRateBps,
+      freeShippingThresholdMinor,
+    ] = await Promise.all([
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.MINIMUM_ORDER_MINOR,
+        0,
+      ),
+      this.globalConfig.get<boolean>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.TAX_COMPUTATION_ENABLED,
+        false,
+      ),
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.TAX_RATE_BPS,
+        0,
+      ),
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.SHIPPING,
+        GLOBAL_CONFIG_KEYS.shipping.FREE_SHIPPING_THRESHOLD_MINOR,
+        0,
+      ),
+    ]);
+
+    return {
+      minimumOrderMinor,
+      taxComputationEnabled,
+      taxRateBps,
+      freeShippingThresholdMinor,
+    };
+  }
+
+  private resolveShippingMinor(
+    lineSubtotalMinor: number,
+    freeShippingThresholdMinor: number,
+  ): number {
+    if (freeShippingThresholdMinor > 0 && lineSubtotalMinor >= freeShippingThresholdMinor) {
+      return 0;
+    }
+    return 0;
   }
 }
 

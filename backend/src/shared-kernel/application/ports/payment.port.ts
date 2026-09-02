@@ -88,7 +88,7 @@ export interface CodIntentLookupResult {
 }
 
 export interface PaymentPort {
-  isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): boolean;
+  isPaymentMethodAvailable(paymentMethod: PaymentMethodDto): Promise<boolean>;
   createIntent(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult>;
   confirmCodCollection(input: ConfirmCodCollectionInput): Promise<ConfirmCodCollectionResult>;
   /** Trusted Fulfillment seam — skips staff RBAC; still enforces amount + intent state. */

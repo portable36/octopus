@@ -11,11 +11,17 @@ export function resolveStockStatus(available: number | null | undefined): Search
 }
 
 /** Pure mapper — Catalog/Inventory truth → search document (no Meili SDK). */
-export function buildOfferSearchDocument(source: OfferSearchSource): OfferSearchDocument {
+export function buildOfferSearchDocument(
+  source: OfferSearchSource,
+  options?: { readonly hideOutOfStock?: boolean },
+): OfferSearchDocument {
+  const hideOutOfStock = options?.hideOutOfStock ?? false;
+  const inStock = (source.stockAvailable ?? 0) > 0;
   const searchable =
     source.productStatus === 'published' &&
     source.offerStatus === 'active' &&
-    source.offerAvailable;
+    source.offerAvailable &&
+    (!hideOutOfStock || inStock);
 
   const semanticText = buildSemanticSearchText({
     name: source.name,

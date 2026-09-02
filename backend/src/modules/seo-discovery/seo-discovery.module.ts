@@ -11,6 +11,8 @@ import { CrawlErrorLogService } from './application/services/crawl-error-log.ser
 import { RedirectResolutionService } from './application/services/redirect-resolution.service';
 import { SemanticSeoService } from './application/services/semantic-seo.service';
 import { SeoAdminService } from './application/services/seo-admin.service';
+import { SystemSettingsRuntimeBridge } from './application/services/system-settings-runtime.bridge';
+import { SystemSettingsService } from './application/services/system-settings.service';
 import { SeoHealthVerificationService } from './application/services/seo-health-verification.service';
 import { RobotsPolicyService } from './application/services/robots-policy.service';
 import { ImageSitemapCacheService } from './application/services/image-sitemap-cache.service';
@@ -27,6 +29,7 @@ import { SeoArtifactStoreService } from './feeds/seo-artifact-store.service';
 import { CrawlErrorLog } from './infrastructure/entities/crawl-error-log.entity';
 import { Redirect } from './infrastructure/entities/redirect.entity';
 import { SeoHealthIssue } from './infrastructure/entities/seo-health-issue.entity';
+import { SystemSetting } from './infrastructure/entities/system-setting.entity';
 import { SeoOverride } from './infrastructure/entities/seo-override.entity';
 import { CatalogInternalLinkSourceAdapter } from './infrastructure/access/catalog-internal-link-source.adapter';
 import { CatalogImageSitemapSourceAdapter } from './infrastructure/access/catalog-image-sitemap-source.adapter';
@@ -51,7 +54,7 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
   imports: [
     DatabaseModule,
     AppConfigModule,
-    MikroOrmModule.forFeature([Redirect, SeoOverride, CrawlErrorLog, SeoHealthIssue]),
+    MikroOrmModule.forFeature([Redirect, SeoOverride, CrawlErrorLog, SeoHealthIssue, SystemSetting]),
   ],
   controllers: [RobotsController, SitemapController, ImageSitemapController, PublicSeoController, SeoAdminController],
   providers: [
@@ -67,6 +70,8 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
     CrawlErrorLogService,
     SeoHealthVerificationService,
     SeoAdminService,
+    SystemSettingsService,
+    SystemSettingsRuntimeBridge,
     StructuredDataEngine,
     ProductFeedService,
     SeoArtifactStoreService,

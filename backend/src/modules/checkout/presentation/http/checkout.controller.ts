@@ -14,6 +14,11 @@ import {
 } from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { CheckoutSubmitHandler } from '../../application/commands/checkout.handlers';
 import { CheckoutAccessDeniedError } from '../../application/errors/checkout.errors';
+import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_GROUPS,
+  GLOBAL_CONFIG_KEYS,
+} from '../../../configuration/domain/global-config-keys';
 import { SubmitCheckoutDto } from './dto/checkout.dto';
 import { CheckoutExceptionFilter } from './filters/checkout-exception.filter';
 
@@ -31,6 +36,7 @@ export class CheckoutController {
   constructor(
     private readonly checkout: CheckoutSubmitHandler,
     @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
+    private readonly globalConfig: GlobalConfigService,
   ) {}
 
   @Public()
@@ -48,7 +54,7 @@ export class CheckoutController {
     @Req() req: Request,
   ) {
     await this.rateLimiter.consume(`checkout:submit:${req.ip ?? 'unknown'}`, 20, 60);
-    const owner = this.resolveOwner(user, guestToken);
+    const owner = await this.resolveOwner(user, guestToken);
     if (owner.guestToken) {
       setGuestToken(owner.guestToken);
     }
@@ -115,16 +121,24 @@ export class CheckoutController {
     });
   }
 
-  private resolveOwner(
+  private async resolveOwner(
     user: RequestPrincipal | undefined,
     guestToken: string | undefined,
-  ): CartOwnerRef {
+  ): Promise<CartOwnerRef> {
     if (user?.userId) {
       return {
         customerId: user.userId,
         actorRoles: user.roles,
         ...(guestToken ? { guestToken } : {}),
       };
+    }
+    const guestCheckoutEnabled = await this.globalConfig.get<boolean>(
+      GLOBAL_CONFIG_GROUPS.CHECKOUT,
+      GLOBAL_CONFIG_KEYS.checkout.GUEST_CHECKOUT_ENABLED,
+      true,
+    );
+    if (!guestCheckoutEnabled) {
+      throw new CheckoutAccessDeniedError();
     }
     if (guestToken && guestToken.trim().length >= 8) {
       return { guestToken: guestToken.trim() };

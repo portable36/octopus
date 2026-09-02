@@ -9,6 +9,11 @@ import type {
 import type { ProductSearchIndexPort } from '../../../../shared-kernel/application/ports/product-search-index.port';
 import type { CatalogOfferSearchSourceDto } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import { buildOfferSearchDocument } from '../../domain/services/build-offer-search-document';
+import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_GROUPS,
+  GLOBAL_CONFIG_KEYS,
+} from '../../../configuration/domain/global-config-keys';
 import { withExternalSpan } from '../../../../shared-kernel/infrastructure/observability/external-span';
 
 const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug', 'semanticText'] as const;
@@ -32,7 +37,10 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
   private readonly client: MeiliSearch;
   private readonly indexUid: string;
 
-  constructor(@Inject(AppConfigService) private readonly config: AppConfigService) {
+  constructor(
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    private readonly globalConfig: GlobalConfigService,
+  ) {
     this.client = new MeiliSearch({
       host: this.config.meilisearchHost,
       apiKey: this.config.meilisearchApiKey,
@@ -130,11 +138,19 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
     source: CatalogOfferSearchSourceDto,
     stockAvailable?: number | null,
   ): Promise<'written' | 'skipped'> {
+    const hideOutOfStock = await this.globalConfig.get<boolean>(
+      GLOBAL_CONFIG_GROUPS.CATALOG,
+      GLOBAL_CONFIG_KEYS.catalog.HIDE_OUT_OF_STOCK,
+      false,
+    );
     return this.upsertIfNewer(
-      buildOfferSearchDocument({
-        ...source,
-        stockAvailable: stockAvailable ?? null,
-      }),
+      buildOfferSearchDocument(
+        {
+          ...source,
+          stockAvailable: stockAvailable ?? null,
+        },
+        { hideOutOfStock },
+      ),
     );
   }
 

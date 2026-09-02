@@ -39,6 +39,25 @@ function mockMetaCapiConfig(
   } as AppConfigService;
 }
 
+function createMetaCapiService(
+  overrides: Parameters<typeof mockMetaCapiConfig>[0] = {},
+): MetaCapiService {
+  const config = mockMetaCapiConfig(overrides);
+  const runtimeSettings = {
+    resolveMetaCapiEnv: vi.fn(async () => ({
+      metaPixelId: config.metaPixelId,
+      metaAccessToken: config.metaAccessToken,
+      metaAndromedaDataProcessingOptionsRaw: config.metaAndromedaDataProcessingOptionsRaw,
+      metaAndromedaCountry: config.metaAndromedaCountry,
+      metaAndromedaState: config.metaAndromedaState,
+      metaCapiDataSource: config.metaCapiDataSource,
+      gemSchemaVersion: config.gemSchemaVersion,
+      gemTrackingEnvironment: config.gemTrackingEnvironment,
+    })),
+  };
+  return new MetaCapiService(config, runtimeSettings as never);
+}
+
 describe('Meta CAPI', () => {
   describe('PII normalization and hashing', () => {
     it('normalizes and SHA-256 hashes email before payload generation', () => {
@@ -58,9 +77,7 @@ describe('Meta CAPI', () => {
     });
 
     it('buildHashedUserData omits empty hashed fields and keeps network-safe ip/ua', () => {
-      const service = new MetaCapiService(
-        mockMetaCapiConfig({ metaPixelId: '123456789', metaAccessToken: 'token' }),
-      );
+      const service = createMetaCapiService({ metaPixelId: '123456789', metaAccessToken: 'token' });
 
       const hashed = service.buildHashedUserData({
         email: 'buyer@shop.test',
@@ -91,9 +108,7 @@ describe('Meta CAPI', () => {
     it('throws on HTTP failure so BullMQ can retry the job', async () => {
       global.fetch = vi.fn(async () => new Response('error', { status: 500 })) as typeof fetch;
 
-      const service = new MetaCapiService(
-        mockMetaCapiConfig({ metaPixelId: '999', metaAccessToken: 'secret' }),
-      );
+      const service = createMetaCapiService({ metaPixelId: '999', metaAccessToken: 'secret' });
 
       await expect(
         service.sendEvent({
@@ -116,9 +131,10 @@ describe('Meta CAPI', () => {
       });
       global.fetch = fetchMock as typeof fetch;
 
-      const service = new MetaCapiService(
-        mockMetaCapiConfig({ metaPixelId: 'pixel-42', metaAccessToken: 'access-token' }),
-      );
+      const service = createMetaCapiService({
+        metaPixelId: 'pixel-42',
+        metaAccessToken: 'access-token',
+      });
 
       await service.sendEvent({
         eventName: 'Purchase',
@@ -159,13 +175,11 @@ describe('Meta CAPI', () => {
         return new Response('{"events_received":1}', { status: 200 });
       }) as typeof fetch;
 
-      const service = new MetaCapiService(
-        mockMetaCapiConfig({
-          metaPixelId: 'pixel-42',
-          metaAccessToken: 'access-token',
-          metaTestEventCode: 'TEST12345',
-        }),
-      );
+      const service = createMetaCapiService({
+        metaPixelId: 'pixel-42',
+        metaAccessToken: 'access-token',
+        metaTestEventCode: 'TEST12345',
+      });
 
       await service.sendEvent({
         eventName: 'Purchase',
@@ -186,18 +200,16 @@ describe('Meta CAPI', () => {
         return new Response('{"events_received":1}', { status: 200 });
       }) as typeof fetch;
 
-      const service = new MetaCapiService(
-        mockMetaCapiConfig({
-          metaPixelId: 'pixel-42',
-          metaAccessToken: 'access-token',
-          metaAndromedaDataProcessingOptionsRaw: '["LDU"]',
-          metaAndromedaCountry: 1,
-          metaAndromedaState: 0,
-          metaCapiDataSource: 'server',
-          gemSchemaVersion: '2.4.0',
-          gemTrackingEnvironment: 'production',
-        }),
-      );
+      const service = createMetaCapiService({
+        metaPixelId: 'pixel-42',
+        metaAccessToken: 'access-token',
+        metaAndromedaDataProcessingOptionsRaw: '["LDU"]',
+        metaAndromedaCountry: 1,
+        metaAndromedaState: 0,
+        metaCapiDataSource: 'server',
+        gemSchemaVersion: '2.4.0',
+        gemTrackingEnvironment: 'production',
+      });
 
       await service.sendEvent({
         eventName: 'Purchase',

@@ -155,6 +155,9 @@ describe('technical SEO core', () => {
           sitemapItemsPerChunk: 5000,
           seoCacheTtlSeconds: 86_400,
         } as never,
+        {
+          resolveSitemapItemsPerChunk: async () => 5000,
+        } as never,
       );
 
       const chunks: string[] = [];

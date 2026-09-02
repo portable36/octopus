@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
+import { SystemSettingsRuntimeBridge } from '../../application/services/system-settings-runtime.bridge';
 import { fetchGoogleAccessToken } from './google-service-account-auth';
 
 const WEBMASTERS_API_BASE = 'https://www.googleapis.com/webmasters/v3';
@@ -24,15 +25,20 @@ export class SearchConsoleApiService {
   private cachedAccessToken: { readonly token: string; readonly expiresAtMs: number } | null =
     null;
 
-  constructor(private readonly config: AppConfigService) {}
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
+  ) {}
 
-  public isConfigured(): boolean {
-    return Boolean(this.config.googleServicesClientEmail && this.config.googleServicesPrivateKey);
+  public async isConfigured(): Promise<boolean> {
+    const credentials = await this.runtimeSettings.resolveGoogleSearchConsoleCredentials();
+    return Boolean(credentials.clientEmail && credentials.privateKey);
   }
 
   public async submitProductionSitemaps(): Promise<void> {
-    const siteUrl = buildSearchConsoleSiteUrl(this.config.seoPublicSiteUrl);
-    const sitemapUrls = buildProductionSitemapUrls(this.config.seoPublicSiteUrl);
+    const publicSiteUrl = await this.runtimeSettings.resolveCanonicalAppUrl();
+    const siteUrl = buildSearchConsoleSiteUrl(publicSiteUrl);
+    const sitemapUrls = buildProductionSitemapUrls(publicSiteUrl);
 
     for (const sitemapUrl of sitemapUrls) {
       await this.submitSitemap(siteUrl, sitemapUrl);
@@ -44,8 +50,9 @@ export class SearchConsoleApiService {
   }
 
   public async submitSitemap(siteUrl: string, feedpath: string): Promise<void> {
-    const clientEmail = this.config.googleServicesClientEmail;
-    const privateKey = this.config.googleServicesPrivateKey;
+    const credentials = await this.runtimeSettings.resolveGoogleSearchConsoleCredentials();
+    const clientEmail = credentials.clientEmail;
+    const privateKey = credentials.privateKey;
     if (!clientEmail || !privateKey) {
       this.logger.debug(
         'Search Console submit skipped — GOOGLE_SERVICES_CLIENT_EMAIL or GOOGLE_SERVICES_PRIVATE_KEY not configured.',

@@ -38,6 +38,7 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { SeoDiscoveryModule } from './modules/seo-discovery/seo-discovery.module';
+import { ConfigurationModule } from './modules/configuration/configuration.module';
 import { AiPersonalizationModule } from './modules/ai-personalization/ai-personalization.module';
 
 @Module({
@@ -101,6 +102,7 @@ import { AiPersonalizationModule } from './modules/ai-personalization/ai-persona
     RedisModule,
     DatabaseModule,
     HealthModule,
+    ConfigurationModule,
     CatalogModule,
     IdentityModule,
     TenancyModule,

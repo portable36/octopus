@@ -84,7 +84,14 @@ describe('Search Console notification pipeline', () => {
         googleServicesPrivateKey:
           '-----BEGIN PRIVATE KEY-----\\ninvalid-for-token\\n-----END PRIVATE KEY-----',
       };
-      const service = new SearchConsoleApiService(config as never);
+      const runtimeSettings = {
+        resolveCanonicalAppUrl: vi.fn(async () => config.seoPublicSiteUrl),
+        resolveGoogleSearchConsoleCredentials: vi.fn(async () => ({
+          clientEmail: config.googleServicesClientEmail,
+          privateKey: config.googleServicesPrivateKey,
+        })),
+      };
+      const service = new SearchConsoleApiService(config as never, runtimeSettings as never);
 
       const logSpy = vi.spyOn(service['logger'], 'log');
 
@@ -131,11 +138,19 @@ describe('Search Console notification pipeline', () => {
 
       global.fetch = vi.fn(async () => new Response('quota exceeded', { status: 429 })) as typeof fetch;
 
-      const service = new SearchConsoleApiService({
+      const config = {
         seoPublicSiteUrl: 'https://shop.example.com',
         googleServicesClientEmail: 'svc@test.iam.gserviceaccount.com',
         googleServicesPrivateKey: 'ignored',
-      } as never);
+      };
+      const runtimeSettings = {
+        resolveCanonicalAppUrl: vi.fn(async () => config.seoPublicSiteUrl),
+        resolveGoogleSearchConsoleCredentials: vi.fn(async () => ({
+          clientEmail: config.googleServicesClientEmail,
+          privateKey: config.googleServicesPrivateKey,
+        })),
+      };
+      const service = new SearchConsoleApiService(config as never, runtimeSettings as never);
 
       await expect(service.submitProductionSitemaps()).rejects.toThrow(
         'Search Console sitemap submit HTTP 429',

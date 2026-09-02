@@ -119,6 +119,12 @@ function accessMocks(codEnabled = true) {
   };
 }
 
+function mockGlobalConfig() {
+  return {
+    get: vi.fn(async (_group: string, _key: string, defaultValue?: unknown) => defaultValue),
+  };
+}
+
 function buildHandler(deps: {
   checkouts?: unknown;
   carts?: unknown;
@@ -152,12 +158,13 @@ function buildHandler(deps: {
     }) as never,
     (deps.orders ?? { createFromCheckout: vi.fn() }) as never,
     (deps.payments ?? {
-      isPaymentMethodAvailable: vi.fn(() => true),
+      isPaymentMethodAvailable: vi.fn(async () => true),
       createIntent: vi.fn(),
     }) as never,
     access.stores as never,
     access.vendors as never,
     access.config as never,
+    mockGlobalConfig() as never,
   );
 }
 
@@ -225,7 +232,7 @@ describe('CheckoutSubmitHandler', () => {
       })),
     };
     const payments = {
-      isPaymentMethodAvailable: vi.fn(() => true),
+      isPaymentMethodAvailable: vi.fn(async () => true),
       createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
         paymentIntentId: `pi-${input.orderId}`,
         paymentMethod: 'COD' as const,
@@ -325,7 +332,7 @@ describe('CheckoutSubmitHandler', () => {
       })),
     };
     const payments = {
-      isPaymentMethodAvailable: vi.fn(() => false),
+      isPaymentMethodAvailable: vi.fn(async () => false),
       createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
         paymentIntentId: `pi-${input.orderId}`,
         paymentMethod: 'SSLCOMMERZ' as const,

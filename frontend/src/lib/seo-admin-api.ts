@@ -75,3 +75,21 @@ export function enqueueSeoProductFeeds(token: string) {
     headers: authHeaders(token),
   });
 }
+
+export type SeoSystemSettingsResponse = {
+  readonly settings: Record<string, unknown>;
+};
+
+export function fetchSeoSystemSettings(token: string) {
+  return apiRequest<SeoSystemSettingsResponse>('/admin/seo/settings', {
+    headers: authHeaders(token),
+  });
+}
+
+export function patchSeoSystemSettings(token: string, settings: Record<string, unknown>) {
+  return apiRequest<{ readonly updated: readonly string[] }>('/admin/seo/settings', {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: { settings },
+  });
+}

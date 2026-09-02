@@ -27,6 +27,8 @@ import { SearchSynonymMapping } from './src/modules/search/infrastructure/entiti
 import { SearchZeroResultQuery } from './src/modules/search/infrastructure/entities/search-zero-result-query.entity';
 import { CrawlErrorLog } from './src/modules/seo-discovery/infrastructure/entities/crawl-error-log.entity';
 import { SeoHealthIssue } from './src/modules/seo-discovery/infrastructure/entities/seo-health-issue.entity';
+import { SystemSetting } from './src/modules/seo-discovery/infrastructure/entities/system-setting.entity';
+import { GlobalSetting } from './src/modules/configuration/infrastructure/entities/global-setting.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -64,6 +66,8 @@ export default defineConfig({
     SearchZeroResultQuery,
     CrawlErrorLog,
     SeoHealthIssue,
+    SystemSetting,
+    GlobalSetting,
   ],
   migrations: {
     path: 'dist/migrations',

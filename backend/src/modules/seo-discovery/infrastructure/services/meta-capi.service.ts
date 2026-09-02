@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import { applyMetaCapiEnvToEvent } from '../../../../config/meta-capi-payload';
+import { SystemSettingsRuntimeBridge } from '../../application/services/system-settings-runtime.bridge';
 import { hashMetaEmail, hashMetaPhone } from './meta-capi-hash';
 import type { MetaCapiSendInput, MetaCapiUserDataInput } from './meta-capi.types';
 
@@ -10,10 +11,14 @@ const META_GRAPH_API_VERSION = 'v21.0';
 export class MetaCapiService {
   private readonly logger = new Logger(MetaCapiService.name);
 
-  constructor(private readonly config: AppConfigService) {}
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
+  ) {}
 
-  public isConfigured(): boolean {
-    return Boolean(this.config.metaPixelId && this.config.metaAccessToken);
+  public async isConfigured(): Promise<boolean> {
+    const env = await this.runtimeSettings.resolveMetaCapiEnv();
+    return Boolean(env.metaPixelId && env.metaAccessToken);
   }
 
   /** Builds Meta `user_data` with SHA-256 hashed PII per Meta privacy requirements. */
@@ -47,8 +52,9 @@ export class MetaCapiService {
    * Throws on transport/HTTP failure so BullMQ can retry the job.
    */
   public async sendEvent(input: MetaCapiSendInput): Promise<void> {
-    const pixelId = this.config.metaPixelId;
-    const accessToken = this.config.metaAccessToken;
+    const runtime = await this.runtimeSettings.resolveMetaCapiEnv();
+    const pixelId = runtime.metaPixelId;
+    const accessToken = runtime.metaAccessToken;
     if (!pixelId || !accessToken) {
       this.logger.debug('Meta CAPI skipped — META_PIXEL_ID or META_ACCESS_TOKEN not configured.');
       return;
@@ -68,7 +74,16 @@ export class MetaCapiService {
         order_id: input.customData.orderId,
       },
     };
-    applyMetaCapiEnvToEvent(eventPayload, this.config);
+    applyMetaCapiEnvToEvent(eventPayload, {
+      metaCapiDataSource: runtime.metaCapiDataSource ?? this.config.metaCapiDataSource,
+      metaAndromedaDataProcessingOptionsRaw:
+        runtime.metaAndromedaDataProcessingOptionsRaw ??
+        this.config.metaAndromedaDataProcessingOptionsRaw,
+      metaAndromedaCountry: runtime.metaAndromedaCountry ?? this.config.metaAndromedaCountry,
+      metaAndromedaState: runtime.metaAndromedaState ?? this.config.metaAndromedaState,
+      gemSchemaVersion: runtime.gemSchemaVersion ?? this.config.gemSchemaVersion,
+      gemTrackingEnvironment: runtime.gemTrackingEnvironment ?? this.config.gemTrackingEnvironment,
+    });
 
     const body: Record<string, unknown> = {
       data: [eventPayload],

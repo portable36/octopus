@@ -20,7 +20,9 @@ Installed under `.agents/skills/`:
 
 Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.cursor/rules/` as the hard engineering contract. Third-party skills must not weaken tenant isolation, payments, authn, or module boundaries.
 
-**Do not** enable Superpowers' full Cursor plugin session-start bootstrap in this repo — it auto-forces skill checks before every reply and duplicates mattpocock + ponytail. Optional personal install: `/add-plugin superpowers` in Cursor; set `SUPERPOWERS_DISABLE_TELEMETRY=1` if you use it.
+**Spec Kit** ([github/spec-kit](https://github.com/github/spec-kit)) is installed for Spec-Driven Development: CLI via `uv tool install specify-cli`, project under `.specify/`, Cursor skills under `.cursor/skills/speckit-*`. Constitution: `.specify/memory/constitution.md`. See `docs/agents/spec-kit.md`. Use Spec Kit for durable `specs/` workflows; mattpocock remains fine for lighter planning. Spec Kit must not weaken `.cursor/rules/`.
+
+**Do not** enable Superpowers' full Cursor plugin session-start bootstrap in this repo — it auto-forces skill checks before every reply and duplicates mattpocock + ponytail. Same rule for Spec Kit session-start hooks. Optional personal install: `/add-plugin superpowers` in Cursor; set `SUPERPOWERS_DISABLE_TELEMETRY=1` if you use it.
 
 ### Issue tracker
 
@@ -41,10 +43,11 @@ Durable verified agent context is maintained in root `memory.md`; read it before
 | ------------------------ | ------------------------------------------------------------------- |
 | Align before building    | `/grill-with-docs` or `/grill-me`                                   |
 | Which skill to use       | `/ask-matt`                                                         |
-| Spec from this chat      | `/to-spec`                                                          |
+| Spec from this chat      | `/to-spec` or `/speckit-specify`                                    |
+| Spec → plan → tasks      | `/speckit-specify` → `/speckit-plan` → `/speckit-tasks`             |
+| Implement a spec/tickets | `/implement` (drives `/tdd`) or `/speckit-implement`                |
 | Break into tickets       | `/to-tickets`                                                       |
-| Implement a spec/tickets | `/implement` (drives `/tdd`)                                        |
-| Hard bug                 | `/diagnosing-bugs` or `/systematic-debugging`                       |
+| Hard bug                 | `/diagnosing-bugs`, `/systematic-debugging`, or `/speckit-bug-*`    |
 | Architecture survey      | `/improve-codebase-architecture`                                    |
 | Session handoff          | `/handoff`                                                          |
 | Smallest fix / YAGNI     | `/ponytail` (also always-on rule)                                   |
@@ -81,5 +84,6 @@ Durable verified agent context is maintained in root `memory.md`; read it before
 
 - `docs/engineering/ai-assisted-development.md`
 - `docs/agents/skill-inventory.md` (reviewed project-local skill decisions)
+- `docs/agents/spec-kit.md` (Spec Kit install, skills, precedence)
 - `docs/PHASES.md` (living checklist; Cursor plans are historical — see `docs/agents/plan-fit.md`)
 - `.cursor/rules/00-core.mdc`

@@ -62,6 +62,19 @@ openviking-server
 
 Exclude secrets via `.openvikingignore`. Do not commit `.openviking/` or `openviking.log`.
 
+## Spec Kit (Spec-Driven Development)
+
+[GitHub Spec Kit](https://github.com/github/spec-kit) is installed as developer
+tooling (not a runtime or CI dependency).
+
+- **CLI (once):** `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git`
+- **Project:** `.specify/` (templates, PowerShell scripts, constitution)
+- **Cursor skills:** `.cursor/skills/speckit-*` (`/speckit-specify`, `/speckit-plan`, …)
+- **Extensions:** `bug`, `assess`
+- **Guide:** `docs/agents/spec-kit.md`
+- **Precedence:** `.cursor/rules/` win over Spec Kit templates; prefer mattpocock for light planning and Spec Kit for durable `specs/` loops
+- Do not enable Spec Kit session-start hooks that force skill checks on every reply
+
 ## External agent-tooling decisions
 
 The following repositories were reviewed for local development use on 2026-08-28:

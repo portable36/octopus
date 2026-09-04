@@ -90,6 +90,11 @@ graphify update .
   `building-skills-from-patterns`, `suggesting-skills`,
   `web-design-guidelines`, and `vercel-react-best-practices`. See
   `docs/agents/skill-inventory.md` for the audit record.
+- Spec Kit (specify-cli 1.0.4, `cursor-agent`, PowerShell scripts, `bug` +
+  `assess` extensions) is installed under `.specify/` with Cursor skills in
+  `.cursor/skills/speckit-*`. Constitution lives at
+  `.specify/memory/constitution.md`. Feature artifacts go under `specs/`.
+  See `docs/agents/spec-kit.md`. Do not add Spec Kit session-start hooks.
 - OpenViking is optional local tooling for approved documentation and memory
   only; index `docs/`, `.cursor/rules/`, `AGENTS.md`, and this file—not the
   application tree. Never wire it into runtime or CI.

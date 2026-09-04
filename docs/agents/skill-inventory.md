@@ -58,6 +58,14 @@ project-local directories with `skill-security-auditor`.
   Vercel metrics, React Native, view transitions, and composition workflows are
   outside this slice.
 
+## Spec Kit skills (`.cursor/skills/speckit-*`)
+
+Installed via `specify init --integration cursor-agent` (not copied under
+`.agents/skills`). Vendor-managed by the Spec Kit CLI; refresh with
+`specify init --here --force …`. See `docs/agents/spec-kit.md`. These skills
+are approved for Spec-Driven Development workflows; repository `.cursor/rules/`
+still win on conflicts. Do not enable Spec Kit session-start hooks.
+
 ## Operating rules
 
 - Keep skills project-local and review updates before use.

@@ -6,16 +6,17 @@ Repository security requirements live in [SECURITY.md](../../SECURITY.md). This 
 
 ## HTTP boundary (Phase 25.1–25.3)
 
-| Control        | Behavior                                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------ |
-| Helmet         | Enabled in `configureApplication`; CSP off outside production for Swagger/dev DX                             |
-| CORS           | Explicit `CORS_ORIGINS` allowlist + credentials; methods/headers allowlisted; `*` rejected by env validation |
-| ValidationPipe | Global whitelist + `forbidNonWhitelisted` + transform                                                        |
-| Body limit     | `HTTP_BODY_LIMIT` (default `1mb`)                                                                            |
-| Permissions    | Global `PermissionsGuard`; admin routes use `@RequirePermissions` (`platform.*` for platform-only lists)     |
-| Output         | API responses are JSON (no HTML templates); React text escaping; JSON-LD escapes `<`                         |
-| SSRF           | Courier outbound URLs must match `OUTBOUND_URL_ALLOWLIST` + PATHAO/STEADFAST base hosts; https only          |
-| API rate limit | Redis `API_RATE_LIMITER`: checkout submit 20/min/IP; product search 60/min/IP                                |
+| Control        | Behavior                                                                                                                                                                                                       |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Helmet         | Enabled in `configureApplication`; CSP off outside production for Swagger/dev DX                                                                                                                               |
+| CORS           | Explicit `CORS_ORIGINS` allowlist + credentials; methods/headers allowlisted; `*` rejected by env validation                                                                                                   |
+| ValidationPipe | Global whitelist + `forbidNonWhitelisted` + transform                                                                                                                                                          |
+| Body limit     | `HTTP_BODY_LIMIT` (default `1mb`)                                                                                                                                                                              |
+| Permissions    | Global `PermissionsGuard`; admin routes use `@RequirePermissions` (`platform.*` for platform-only lists). Store admin: `platform.stores.read` / `platform.stores.write` for `/admin/stores` list vs lifecycle. |
+| Output         | API responses are JSON (no HTML templates); React text escaping; JSON-LD escapes `<`                                                                                                                           |
+| SSRF           | Courier outbound URLs must match `OUTBOUND_URL_ALLOWLIST` + PATHAO/STEADFAST base hosts; https only                                                                                                            |
+| API rate limit | Redis `API_RATE_LIMITER`: checkout 20/min/IP; search 60/min/IP; COD collect 30/min/IP; refund 20/min/IP; media register/upload-session 30/min/user                                                             |
+| Trust proxy    | `TRUST_PROXY_HOPS` (default `0`): Express hop count for `req.ip`. Set to `1` behind a single LB; never `true` (spoofable `X-Forwarded-For`)                                                                    |
 
 ### CSRF strategy
 
@@ -75,7 +76,7 @@ Metadata registration allowlists `image/jpeg|png|webp|gif`, caps size at 10 MiB,
 - Authentication required unless explicitly public
 - Authorization policy evaluates role **and** ownership scope
 - Input validated with explicit DTO schemas
-- Rate limits on auth, checkout, payment, and search endpoints
+- Rate limits on auth, checkout, payment, media, and search endpoints
 - Idempotency for retryable mutations
 - Audit log for sensitive actions
 

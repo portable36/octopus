@@ -153,6 +153,19 @@ describe('env.validation', () => {
     }
   });
 
+  it('defaults TRUST_PROXY_HOPS to 0 (socket address only)', () => {
+    const env = validateEnv({ ...productionBase });
+    expect(env.TRUST_PROXY_HOPS).toBe(0);
+  });
+
+  it('accepts TRUST_PROXY_HOPS for a single reverse-proxy hop', () => {
+    const env = validateEnv({
+      ...productionBase,
+      TRUST_PROXY_HOPS: '1',
+    });
+    expect(env.TRUST_PROXY_HOPS).toBe(1);
+  });
+
   it('validates optional marketing id formats when provided', () => {
     const result = envSchema.safeParse({
       ...productionBase,

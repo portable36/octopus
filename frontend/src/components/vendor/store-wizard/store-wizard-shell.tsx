@@ -23,9 +23,16 @@ import { setSelectedStoreId } from '@/lib/vendor-session';
 type StoreWizardShellProps = {
   readonly vendorId: string;
   readonly draft: StoreOnboardingDraft;
+  readonly backHref?: string;
+  readonly successHref?: (storeId: string) => string;
 };
 
-export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardShellProps) {
+export function StoreWizardShell({
+  vendorId,
+  draft: initialDraft,
+  backHref,
+  successHref,
+}: StoreWizardShellProps) {
   const router = useRouter();
   const [draft, setDraft] = useState(initialDraft);
   const [step, setStep] = useState<StoreWizardStep>(initialDraft.currentStep);
@@ -35,8 +42,12 @@ export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardS
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
+  const storesBackHref = backHref ?? `/vendor/${vendorId}/stores`;
+
   useEffect(() => {
-    void getVendor(vendorId).then(setVendor).catch(() => setVendor(null));
+    void getVendor(vendorId)
+      .then(setVendor)
+      .catch(() => setVendor(null));
   }, [vendorId]);
 
   const onSectionChange = useCallback(
@@ -88,7 +99,11 @@ export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardS
       const { submitStoreDraft } = await import('@/lib/store-wizard-flow');
       const result = await submitStoreDraft(draft.id);
       setSelectedStoreId(result.storeId);
-      router.push(`/vendor/${vendorId}/stores/${result.storeId}/setup`);
+      router.push(
+        successHref
+          ? successHref(result.storeId)
+          : `/vendor/${vendorId}/stores/${result.storeId}/setup`,
+      );
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to submit store.');
     } finally {
@@ -103,7 +118,7 @@ export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardS
       <header>
         <Link
           className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          href={`/vendor/${vendorId}/stores`}
+          href={storesBackHref}
         >
           ← Stores
         </Link>
@@ -151,7 +166,12 @@ export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardS
           />
 
           <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-            <Button type="button" variant="outline" disabled={pending || step <= 1} onClick={() => void onBack()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || step <= 1}
+              onClick={() => void onBack()}
+            >
               Back
             </Button>
             {step < 17 ? (
@@ -163,7 +183,12 @@ export function StoreWizardShell({ vendorId, draft: initialDraft }: StoreWizardS
                 {pending ? 'Creating…' : 'Create store'}
               </Button>
             )}
-            <Button type="button" variant="ghost" disabled={pending} onClick={() => void onSaveDraft()}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={pending}
+              onClick={() => void onSaveDraft()}
+            >
               Save draft
             </Button>
             <Link

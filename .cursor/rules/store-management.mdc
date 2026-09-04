@@ -1,0 +1,1022 @@
+# Store Management — Cursor Rule
+
+## Purpose
+
+`Store Management` is the platform-level administrative bounded context responsible for managing the lifecycle, identity, ownership, configuration entry points, and operational status of stores in a multi-vendor, multi-store ecommerce platform.
+
+It is the primary collection and administration interface for all stores.
+
+Store Management owns:
+
+* Store identity
+* Store code
+* Store ownership relationship
+* Store type
+* Store lifecycle
+* Store status
+* Store-level metadata
+* Store creation entry point
+* Store provisioning state
+* Store activation/suspension/maintenance/archive controls
+* Store discovery and administration
+* Store-level access boundaries
+
+Store Management does NOT own the business data of:
+
+* Catalog
+* Inventory
+* Orders
+* Payments
+* Shipping
+* Tax
+* POS
+* Finance
+* Marketing
+* SEO
+* CMS
+* Notifications
+
+Those modules remain authoritative for their respective domains.
+
+---
+
+# 1. Architectural Principle
+
+```text
+                    STORE MANAGEMENT
+                           │
+            ┌──────────────┼──────────────┐
+            ▼              ▼              ▼
+        Store Identity   Lifecycle    Ownership
+            │              │              │
+            └──────────────┼──────────────┘
+                           ▼
+                     Store Details
+                           │
+       ┌───────────┬───────┼────────┬────────────┐
+       ▼           ▼       ▼        ▼            ▼
+    Catalog     Inventory Orders   POS        Payments
+       │           │       │        │            │
+       └───────────┴───────┼────────┴────────────┘
+                           ▼
+                  Other Store Modules
+```
+
+Store Management is an orchestration/control boundary.
+
+Do not turn it into a giant service that contains every store-related business rule.
+
+---
+
+# 2. Store Lifecycle
+
+Supported states:
+
+```text
+DRAFT
+PROVISIONING
+ACTIVE
+SUSPENDED
+MAINTENANCE
+FAILED
+ARCHIVED
+```
+
+Primary lifecycle:
+
+```text
+DRAFT
+  ↓
+PROVISIONING
+  ↓
+ACTIVE
+```
+
+Failure:
+
+```text
+PROVISIONING
+  ↓
+FAILED
+  ↓
+PROVISIONING
+```
+
+Operational states:
+
+```text
+ACTIVE
+  ↓
+MAINTENANCE
+  ↓
+ACTIVE
+```
+
+Suspension:
+
+```text
+ACTIVE
+  ↓
+SUSPENDED
+  ↓
+ACTIVE
+```
+
+Archive:
+
+```text
+ACTIVE/SUSPENDED
+       ↓
+   ARCHIVED
+```
+
+Lifecycle transitions must be validated server-side.
+
+Never allow arbitrary status mutation through a generic PATCH endpoint.
+
+---
+
+# 3. Store Entity
+
+The Store entity should contain identity and lifecycle information.
+
+Example:
+
+```typescript
+interface Store {
+  id: StoreId;
+  platformId: PlatformId;
+
+  vendorId?: VendorId;
+
+  name: string;
+  code: string;
+
+  type: StoreType;
+  ownership: StoreOwnership;
+
+  status: StoreStatus;
+
+  timezone: string;
+  locale: string;
+  currency: string;
+
+  contact: StoreContact;
+  location: StoreLocation;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+Do not put complete payment, inventory, POS, shipping, or catalog configuration inside the Store entity.
+
+---
+
+# 4. Store Types
+
+Support:
+
+```text
+ONLINE
+PHYSICAL
+ONLINE_AND_PHYSICAL
+WAREHOUSE
+OUTLET
+PICKUP_POINT
+POPUP
+MARKETPLACE
+```
+
+Store type affects available configuration.
+
+Examples:
+
+```text
+ONLINE
+→ Online storefront required
+
+PHYSICAL
+→ POS recommended
+
+WAREHOUSE
+→ Inventory required
+→ Storefront optional
+
+PICKUP_POINT
+→ Fulfillment/pickup configuration required
+```
+
+---
+
+# 5. Ownership
+
+Supported ownership:
+
+```text
+PLATFORM
+VENDOR
+```
+
+Rules:
+
+* A platform may own multiple stores.
+* A vendor may own multiple stores.
+* A store may have only one primary owner.
+* Vendor/store relationships must be validated server-side.
+* Vendor isolation is mandatory.
+
+Never trust a frontend-provided `vendorId`.
+
+---
+
+# 6. Store Code
+
+Store code must be:
+
+* Unique
+* Stable
+* Human-readable
+* Suitable for URLs/internal references where appropriate
+
+Example:
+
+```text
+UF-DHK-001
+```
+
+Do not automatically change store code when the store name changes unless explicitly supported.
+
+---
+
+# 7. Store Creation
+
+Store Management provides the entry point:
+
+```text
+POST /admin/stores
+```
+
+Creation should produce a Store Draft when provisioning is not immediately executed.
+
+Preferred workflow:
+
+```text
+Create
+  ↓
+Draft
+  ↓
+Validate
+  ↓
+Provision
+  ↓
+Activate
+```
+
+Do not implement Store Creation as a single massive database transaction.
+
+---
+
+# 8. Provisioning
+
+Provisioning belongs to a controlled workflow.
+
+Typical steps:
+
+```text
+Store Identity
+Vendor
+Catalog
+Warehouse
+Inventory
+POS
+Payment
+Shipping
+Tax
+Branding
+SEO
+Staff
+Notifications
+```
+
+Provisioning state:
+
+```text
+PENDING
+RUNNING
+COMPLETED
+FAILED
+RETRYABLE
+```
+
+Provisioning must be:
+
+* Idempotent
+* Resumable
+* Retryable
+* Observable
+* Auditable
+
+---
+
+# 9. Provisioning Events
+
+Publish:
+
+```text
+StoreCreated
+StoreProvisioningStarted
+StoreProvisioningStepCompleted
+StoreProvisioningFailed
+StoreProvisioningRetried
+StoreActivated
+```
+
+Use the platform's existing event envelope.
+
+Do not invent a second event bus.
+
+---
+
+# 10. Store Events
+
+Supported events:
+
+```text
+StoreCreated
+StoreUpdated
+StoreActivated
+StoreSuspended
+StoreReactivated
+StoreMaintenanceEnabled
+StoreMaintenanceDisabled
+StoreArchived
+StoreDomainConfigured
+StoreBrandingUpdated
+StoreSeoUpdated
+```
+
+Only publish events for meaningful domain changes.
+
+---
+
+# 11. Store Management Screen
+
+Route:
+
+```text
+/admin/stores
+```
+
+Purpose:
+
+* Discover stores
+* Monitor stores
+* Search stores
+* Filter stores
+* Perform lifecycle operations
+* Open Store Details
+* Create stores
+
+Page structure:
+
+```text
+Stores
+├── Header
+├── Summary Cards
+├── Search / Filters
+├── Store Table
+├── Bulk Actions
+└── Pagination
+```
+
+---
+
+# 12. Header
+
+Display:
+
+```text
+Stores
+
+Manage all stores across the platform.
+
+[Search] [Filters] [Columns] [Create Store]
+```
+
+Optional:
+
+```text
+Import
+Export
+Bulk Actions
+```
+
+Only expose actions permitted by RBAC.
+
+---
+
+# 13. Summary Cards
+
+Show:
+
+```text
+Total Stores
+Active
+Provisioning
+Suspended
+Maintenance
+Failed
+Archived
+```
+
+Use backend aggregate queries.
+
+Do not calculate global counts from the current paginated browser dataset.
+
+---
+
+# 14. Store Table
+
+Recommended columns:
+
+```text
+Store
+Owner/Vendor
+Type
+Location
+Domain
+Status
+Products
+Inventory
+Orders
+Revenue
+Created
+Actions
+```
+
+Store identity:
+
+```text
+Logo
+Store Name
+Store Code
+```
+
+Example:
+
+```text
+Urban Fashion
+UF-DHK-001
+```
+
+---
+
+# 15. Search
+
+Search by:
+
+```text
+Store Name
+Store Code
+Vendor
+Domain
+Email
+Phone
+Address
+```
+
+Search must be server-side for large datasets.
+
+---
+
+# 16. Filters
+
+Support:
+
+```text
+Status
+Vendor
+Store Type
+Country
+Region
+City
+Domain Status
+POS Enabled
+Online Store Enabled
+Warehouse
+Payment Provider
+Shipping Provider
+Created Date
+Updated Date
+```
+
+Advanced filters may include:
+
+```text
+Revenue
+Order Count
+Product Count
+Low Stock Count
+Conversion Rate
+```
+
+---
+
+# 17. Sorting
+
+Allow:
+
+```text
+Created Date
+Updated Date
+Name
+Revenue
+Orders
+Products
+Status
+```
+
+Sorting must use deterministic backend ordering.
+
+---
+
+# 18. Pagination
+
+Use server-side pagination.
+
+Recommended API:
+
+```text
+GET /admin/stores?page=1&limit=25
+```
+
+Prefer cursor pagination when the existing platform supports it.
+
+Never load the complete store dataset into the browser.
+
+---
+
+# 19. Store Actions
+
+Available actions depend on lifecycle.
+
+```text
+View
+Edit
+View Storefront
+Activate
+Suspend
+Enable Maintenance
+Disable Maintenance
+Archive
+View Activity
+```
+
+Invalid actions must not be displayed or must be disabled.
+
+Backend remains authoritative.
+
+---
+
+# 20. Bulk Actions
+
+Allowed bulk operations:
+
+```text
+Activate
+Suspend
+Enable Maintenance
+Disable Maintenance
+Assign Store Group
+Export
+```
+
+Dangerous actions require confirmation.
+
+Example:
+
+```text
+Suspend 12 stores?
+
+This may prevent new customer transactions.
+
+[Cancel]
+[Confirm]
+```
+
+---
+
+# 21. Store Details Navigation
+
+Selecting a store should navigate to:
+
+```text
+/admin/stores/:storeId
+```
+
+Store Details is defined separately in:
+
+```text
+store-details.mdc
+```
+
+Store Management must not duplicate the Store Details implementation.
+
+---
+
+# 22. RBAC
+
+Recommended permissions:
+
+```text
+store.view
+store.create
+store.update
+store.activate
+store.suspend
+store.maintenance
+store.archive
+store.domain.manage
+store.staff.manage
+store.audit.view
+```
+
+Permission evaluation:
+
+```text
+Authenticated User
+        ↓
+Platform RBAC
+        ↓
+Vendor Scope
+        ↓
+Store Scope
+        ↓
+Action Authorization
+```
+
+Frontend permissions are UX controls only.
+
+Authorization must be enforced on the backend.
+
+---
+
+# 23. Vendor Isolation
+
+A vendor must only access authorized stores.
+
+Example:
+
+```text
+Vendor A
+├── Store A1
+└── Store A2
+
+Vendor B
+├── Store B1
+└── Store B2
+```
+
+Vendor A must never retrieve:
+
+```text
+Store B1
+Store B2
+```
+
+by manipulating:
+
+```text
+storeId
+vendorId
+query parameters
+route parameters
+request body
+```
+
+Protect against IDOR.
+
+---
+
+# 24. Platform Admin
+
+Platform administrators may have platform-wide access depending on RBAC.
+
+Platform-wide access must still be auditable.
+
+Never bypass audit logging because the actor is an administrator.
+
+---
+
+# 25. Domain Management
+
+Store Management may expose the domain configuration entry point.
+
+Domain ownership remains in the domain/website infrastructure.
+
+Support:
+
+```text
+Platform Subdomain
+Custom Domain
+Custom Subdomain
+Redirect Domain
+Primary Domain
+```
+
+Domain states:
+
+```text
+PENDING
+VERIFYING
+VERIFIED
+FAILED
+SUSPENDED
+```
+
+Rules:
+
+* Primary domain must be unique.
+* Domain ownership must be verified.
+* One active domain cannot belong to multiple stores.
+* Canonical URL must use the primary domain.
+* Redirect domains must not create duplicate SEO pages.
+
+---
+
+# 26. Store Groups
+
+Optional enterprise feature:
+
+```text
+Store Groups
+```
+
+Examples:
+
+```text
+Dhaka Stores
+Chittagong Stores
+Retail Stores
+Outlet Stores
+Premium Stores
+Vendor A Stores
+```
+
+Groups are organizational constructs.
+
+Do not make Store Groups the source of business-domain ownership.
+
+---
+
+# 27. Store Health
+
+Store Management should expose a summarized health state.
+
+```text
+HEALTHY
+WARNING
+CRITICAL
+```
+
+Possible checks:
+
+```text
+Store Status
+Domain
+SSL
+Catalog
+Inventory
+Payment
+Shipping
+Tax
+POS
+SEO
+Notifications
+```
+
+Detailed health belongs to Store Details.
+
+---
+
+# 28. Store Management API
+
+Recommended:
+
+```text
+GET    /admin/stores
+POST   /admin/stores
+GET    /admin/stores/:storeId
+PATCH  /admin/stores/:storeId
+
+POST   /admin/stores/:storeId/activate
+POST   /admin/stores/:storeId/suspend
+POST   /admin/stores/:storeId/maintenance
+POST   /admin/stores/:storeId/archive
+
+GET    /admin/stores/:storeId/health
+GET    /admin/stores/:storeId/provisioning
+GET    /admin/stores/:storeId/activity
+```
+
+Avoid generic:
+
+```text
+PATCH /admin/stores/:id/settings
+```
+
+for every business domain.
+
+Delegate domain-specific configuration to the appropriate module.
+
+---
+
+# 29. Repository Boundary
+
+Example:
+
+```typescript
+interface StoreRepository {
+  findById(id: StoreId): Promise<Store | null>;
+
+  findMany(query: StoreListQuery): Promise<Paginated<Store>>;
+
+  findByCode(code: string): Promise<Store | null>;
+
+  save(store: Store): Promise<void>;
+}
+```
+
+Repositories must not expose unrelated domain persistence.
+
+---
+
+# 30. Store Domain Services
+
+Recommended:
+
+```text
+StoreLifecycleService
+StoreValidationService
+StoreProvisioningService
+StoreAuthorizationService
+StoreHealthService
+StoreDomainService
+```
+
+Keep domain logic out of controllers.
+
+---
+
+# 31. Error Handling
+
+Use platform-standard errors.
+
+Examples:
+
+```text
+STORE_NOT_FOUND
+STORE_CODE_ALREADY_EXISTS
+STORE_DOMAIN_ALREADY_EXISTS
+INVALID_STORE_STATE
+STORE_ACCESS_DENIED
+INVALID_LIFECYCLE_TRANSITION
+PROVISIONING_IN_PROGRESS
+STORE_ARCHIVED
+```
+
+Do not leak database errors to the frontend.
+
+---
+
+# 32. Audit
+
+Record:
+
+```text
+StoreCreated
+StoreUpdated
+StoreActivated
+StoreSuspended
+StoreMaintenanceEnabled
+StoreArchived
+DomainChanged
+OwnershipChanged
+StoreSettingsChanged
+```
+
+Include:
+
+```text
+actorId
+storeId
+vendorId
+action
+timestamp
+before
+after
+correlationId
+```
+
+---
+
+# 33. Performance
+
+Store Management must support thousands or millions of store records.
+
+Use:
+
+* Server-side pagination
+* Indexed search
+* Indexed filters
+* Backend aggregation
+* Query projections
+* Caching where appropriate
+* Lazy loading
+
+Do not perform N+1 queries.
+
+---
+
+# 34. Testing
+
+Required:
+
+```text
+Store creation
+Store listing
+Search
+Filtering
+Sorting
+Pagination
+Lifecycle transitions
+Duplicate store code
+Duplicate domain
+Vendor isolation
+Store isolation
+RBAC
+Bulk operations
+Provisioning state
+Audit logging
+```
+
+Security tests must include IDOR attempts.
+
+---
+
+# 35. Cursor Implementation Rules
+
+Before changing code:
+
+1. Inspect existing Store module.
+2. Inspect existing Admin UI.
+3. Inspect existing RBAC.
+4. Inspect existing table components.
+5. Inspect existing filter components.
+6. Inspect existing lifecycle implementation.
+7. Inspect existing provisioning workflow.
+8. Inspect existing audit infrastructure.
+9. Inspect existing API conventions.
+10. Inspect existing design system.
+
+Then implement using existing patterns.
+
+Do not rewrite unrelated modules.
+
+Do not duplicate business domains.
+
+Do not bypass domain services.
+
+Do not create a second provisioning system.
+
+Do not introduce a second RBAC system.
+
+Do not introduce a second event bus.
+
+---
+
+# 36. Definition of Done
+
+Store Management is complete when:
+
+* Store list works.
+* Search works.
+* Filtering works.
+* Sorting works.
+* Pagination works.
+* Store creation integrates with provisioning.
+* Lifecycle controls work.
+* Vendor isolation works.
+* Store isolation works.
+* RBAC works.
+* Bulk operations are safe.
+* Audit logging works.
+* Store Details navigation works.
+* Health status is available.
+* Provisioning state is visible.
+* Tests pass.
+* No unrelated modules are duplicated.
+
+```
+```

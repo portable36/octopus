@@ -8,6 +8,15 @@ const LOGIN_RATE_PREFIX = 'identity:login-rate:';
 const MAX_ATTEMPTS = 20;
 const WINDOW_SECONDS = 15 * 60;
 
+/** Atomic INCR + EXPIRE so concurrent first failures cannot leave a key without TTL. */
+const RECORD_FAILURE_SCRIPT = `
+local current = redis.call('INCR', KEYS[1])
+if current == 1 then
+  redis.call('EXPIRE', KEYS[1], tonumber(ARGV[1]))
+end
+return current
+`;
+
 @Injectable()
 export class RedisLoginRateLimiterAdapter implements LoginRateLimiter {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
@@ -20,11 +29,12 @@ export class RedisLoginRateLimiterAdapter implements LoginRateLimiter {
   }
 
   public async recordFailure(key: string): Promise<void> {
-    const redisKey = this.rateKey(key);
-    const attempts = await this.redis.incr(redisKey);
-    if (attempts === 1) {
-      await this.redis.expire(redisKey, WINDOW_SECONDS);
-    }
+    await this.redis.eval(
+      RECORD_FAILURE_SCRIPT,
+      1,
+      this.rateKey(key),
+      String(WINDOW_SECONDS),
+    );
   }
 
   private rateKey(key: string): string {

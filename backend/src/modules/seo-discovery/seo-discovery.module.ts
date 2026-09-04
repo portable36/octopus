@@ -3,6 +3,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppConfigModule } from '../../config/app-config.module';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
+import { RedisModule } from '../../shared-kernel/infrastructure/redis/redis.module';
 import { REDIRECT_REPOSITORY } from './application/ports/redirect-repository.interface';
 import { SEO_OVERRIDE_REPOSITORY } from './application/ports/seo-override-repository.interface';
 import { SITEMAP_SOURCE } from './application/ports/sitemap-source.port';
@@ -55,6 +56,7 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
 @Module({
   imports: [
     DatabaseModule,
+    RedisModule,
     AppConfigModule,
     MikroOrmModule.forFeature([Redirect, SeoOverride, CrawlErrorLog, SeoHealthIssue, SystemSetting]),
   ],

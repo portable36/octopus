@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { POS_PROVISIONER } from '../../shared-kernel/application/ports/pos-provisioner.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
@@ -15,6 +15,7 @@ import { ReceiptTemplateOrmEntity } from './infrastructure/persistence/receipt-t
 import { ReceiptTemplateRepositoryAdapter } from './infrastructure/persistence/receipt-template.repository.adapter';
 import { PosReceiptController } from './presentation/http/pos-receipt.controller';
 
+@Global()
 @Module({
   imports: [
     DatabaseModule,

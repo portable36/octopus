@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, UseFilters } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsInt, IsString, Min } from 'class-validator';
 import {
@@ -7,6 +7,10 @@ import {
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { tryGetTenantContext } from '../../../../shared-kernel/infrastructure/context/tenant-context.storage';
 import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
+import {
+  API_RATE_LIMITER,
+  type ApiRateLimiter,
+} from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { MediaHandlers } from '../../application/commands/media.handlers';
 import { MediaExceptionFilter } from './filters/media-exception.filter';
 
@@ -34,7 +38,10 @@ class RegisterMediaDto {
 @ApiBearerAuth()
 @UseFilters(MediaExceptionFilter)
 export class AdminMediaController {
-  constructor(private readonly media: MediaHandlers) {}
+  constructor(
+    private readonly media: MediaHandlers,
+    @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
+  ) {}
 
   @Post()
   @RequirePermissions('media.write')
@@ -42,6 +49,7 @@ export class AdminMediaController {
     summary: 'Register media asset metadata (MediaId source of truth; no public URL)',
   })
   async register(@CurrentUser() user: RequestPrincipal, @Body() body: RegisterMediaDto) {
+    await this.rateLimiter.consume(`media:register:${user.userId}`, 30, 60);
     const ctx = tryGetTenantContext();
     const asset = await this.media.registerMetadata({
       ...body,

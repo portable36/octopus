@@ -25,6 +25,11 @@ describe('AuthorizationService', () => {
   it('grants platform admin new platform list permissions', () => {
     expect(service.hasPermission(['PLATFORM_ADMIN'], 'platform.users.read')).toBe(true);
     expect(service.hasPermission(['PLATFORM_ADMIN'], 'platform.search.reindex')).toBe(true);
+    expect(service.hasPermission(['PLATFORM_ADMIN'], 'platform.stores.write')).toBe(true);
+  });
+
+  it('denies vendor owner platform store write', () => {
+    expect(service.hasPermission(['VENDOR_OWNER'], 'platform.stores.write')).toBe(false);
   });
 
   it('allows vendor owner settings.write for non-platform scopes (scope checks elsewhere)', () => {

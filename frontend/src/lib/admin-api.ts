@@ -50,11 +50,77 @@ export type AdminVendor = {
 export type AdminStore = {
   id: string;
   vendorId: string;
+  storeCode?: string;
+  storeType?: string;
   status: string;
   profile: { displayName: string; slug: string; description?: string | null };
   address?: Record<string, unknown> | null;
+  contact?: { phone?: string | null; email?: string | null; supportEmail?: string | null };
   settings?: AdminCommerceSettings;
   staff: AdminStaffMember[];
+};
+
+export type AdminStoreListItem = {
+  id: string;
+  vendorId: string;
+  vendorDisplayName: string | null;
+  storeCode: string;
+  storeType: string;
+  status: string;
+  profile: { displayName: string; slug: string; description: string | null };
+  location: { city: string | null; region: string | null; countryCode: string };
+  createdAt: string;
+};
+
+export type AdminStoreListResponse = {
+  items: AdminStoreListItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type AdminStoreStats = {
+  total: number;
+  byStatus: Record<string, number>;
+};
+
+export type AdminStoreHealth = {
+  storeId: string;
+  score: 'OK' | 'WARNING' | 'CRITICAL';
+  checks: readonly {
+    key: string;
+    label: string;
+    ok: boolean;
+    severity: 'OK' | 'WARNING' | 'CRITICAL';
+    detail: string;
+  }[];
+};
+
+export type AdminStoreOverview = {
+  store: AdminStore;
+  health: AdminStoreHealth;
+  provisioning: {
+    runId: string;
+    status: string;
+    lastError: string | null;
+    startedAt: string;
+    completedAt: string | null;
+  } | null;
+  metrics: {
+    orders: { available: false; reason: string };
+    revenue: { available: false; reason: string };
+  };
+};
+
+export type AdminStoreListParams = {
+  q?: string;
+  status?: string;
+  vendorId?: string;
+  storeType?: string;
+  country?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
 };
 
 function authHeaders(token: string): HeadersInit {
@@ -171,12 +237,43 @@ export function removeVendorStaff(
   );
 }
 
-export function listAdminStores(token: string): Promise<AdminStore[]> {
-  return apiRequest<AdminStore[]>('/admin/stores', { headers: authHeaders(token) });
+export function listAdminStores(
+  token: string,
+  params: AdminStoreListParams = {},
+): Promise<AdminStoreListResponse> {
+  const search = new URLSearchParams();
+  if (params.q) search.set('q', params.q);
+  if (params.status) search.set('status', params.status);
+  if (params.vendorId) search.set('vendorId', params.vendorId);
+  if (params.storeType) search.set('storeType', params.storeType);
+  if (params.country) search.set('country', params.country);
+  if (params.page) search.set('page', String(params.page));
+  if (params.limit) search.set('limit', String(params.limit));
+  if (params.sort) search.set('sort', params.sort);
+  const qs = search.toString();
+  return apiRequest<AdminStoreListResponse>(`/admin/stores${qs ? `?${qs}` : ''}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminStoreStats(token: string): Promise<AdminStoreStats> {
+  return apiRequest<AdminStoreStats>('/admin/stores/stats', { headers: authHeaders(token) });
 }
 
 export function getAdminStore(token: string, storeId: string): Promise<AdminStore> {
   return apiRequest<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminStoreOverview(token: string, storeId: string): Promise<AdminStoreOverview> {
+  return apiRequest<AdminStoreOverview>(`/admin/stores/${encodeURIComponent(storeId)}/overview`, {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminStoreHealth(token: string, storeId: string): Promise<AdminStoreHealth> {
+  return apiRequest<AdminStoreHealth>(`/admin/stores/${encodeURIComponent(storeId)}/health`, {
     headers: authHeaders(token),
   });
 }
@@ -203,23 +300,52 @@ export function getAdminStoreProvisioning(
   storeId: string,
 ): Promise<AdminProvisioningStatus> {
   return apiRequest<AdminProvisioningStatus>(
-    `/stores/${encodeURIComponent(storeId)}/provisioning`,
+    `/admin/stores/${encodeURIComponent(storeId)}/provisioning`,
     { headers: authHeaders(token) },
   );
 }
 
+export function retryAdminStoreProvisioning(
+  token: string,
+  storeId: string,
+): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>(
+    `/admin/stores/${encodeURIComponent(storeId)}/provisioning/retry`,
+    { method: 'POST', headers: authHeaders(token) },
+  );
+}
+
 export function activateStore(token: string, storeId: string): Promise<AdminStore> {
-  return apiRequest<AdminStore>(`/stores/${encodeURIComponent(storeId)}/activate`, {
+  return apiRequest<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}/activate`, {
     method: 'POST',
     headers: authHeaders(token),
   });
 }
 
 export function suspendStore(token: string, storeId: string, reason?: string): Promise<AdminStore> {
-  return apiRequest<AdminStore>(`/stores/${encodeURIComponent(storeId)}/suspend`, {
+  return apiRequest<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}/suspend`, {
     method: 'POST',
     headers: authHeaders(token),
     body: reason !== undefined && reason !== '' ? { reason } : {},
+  });
+}
+
+export function maintenanceStore(
+  token: string,
+  storeId: string,
+  reason?: string,
+): Promise<AdminStore> {
+  return apiRequest<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}/maintenance`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: reason !== undefined && reason !== '' ? { reason } : {},
+  });
+}
+
+export function archiveStore(token: string, storeId: string): Promise<AdminStore> {
+  return apiRequest<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}/archive`, {
+    method: 'POST',
+    headers: authHeaders(token),
   });
 }
 
@@ -342,6 +468,54 @@ export function listAdminInventoryItems(
     `/inventory/stores/${encodeURIComponent(storeId)}/items?limit=${limit}`,
     { headers: authHeaders(token) },
   );
+}
+
+export type AdminStoreOfferRow = {
+  id: string;
+  vendorId: string;
+  storeId: string;
+  productId: string;
+  variantId: string;
+  priceMinor: number;
+  currencyCode: string;
+  status: string;
+  isAvailable: boolean;
+};
+
+export function listAdminStoreOffers(
+  token: string,
+  storeId: string,
+): Promise<AdminStoreOfferRow[]> {
+  const qs = new URLSearchParams({ storeId });
+  return apiRequest<AdminStoreOfferRow[]>(`/store-offers?${qs.toString()}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export type AdminWarehouseRow = {
+  id: string;
+  vendorId: string;
+  storeId: string;
+  code: string;
+  name: string;
+  status: string;
+  addressLine: string | null;
+};
+
+export function listAdminStoreWarehouses(
+  token: string,
+  storeId: string,
+): Promise<AdminWarehouseRow[]> {
+  return apiRequest<AdminWarehouseRow[]>(
+    `/inventory/stores/${encodeURIComponent(storeId)}/warehouses`,
+    { headers: authHeaders(token) },
+  );
+}
+
+export function listAdminStoreOrders(token: string, storeId: string): Promise<AdminOrderRow[]> {
+  return apiRequest<AdminOrderRow[]>(`/orders/stores/${encodeURIComponent(storeId)}`, {
+    headers: authHeaders(token),
+  });
 }
 
 export type AdminAuditEvent = {

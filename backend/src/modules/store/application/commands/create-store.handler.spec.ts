@@ -30,6 +30,8 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        listAdmin: vi.fn(),
+        statsByStatus: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
       vendorAccessMock(vi.fn().mockResolvedValue(null)),
@@ -63,6 +65,8 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        listAdmin: vi.fn(),
+        statsByStatus: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
       vendorAccessMock(
@@ -103,6 +107,8 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        listAdmin: vi.fn(),
+        statsByStatus: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
       vendorAccessMock(
@@ -146,6 +152,8 @@ describe('CreateStoreHandler', () => {
         findByVendorId: vi.fn(),
         findByStaffUserId: vi.fn(),
         listAll: vi.fn(),
+        listAdmin: vi.fn(),
+        statsByStatus: vi.fn(),
         findActiveBySlug: vi.fn(),
       },
       vendorAccessMock(

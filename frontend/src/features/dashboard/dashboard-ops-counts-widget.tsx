@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { ApiClientError } from '@/lib/api-client';
 import {
+  getAdminStoreStats,
   listAdminOrders,
   listAdminPayments,
-  listAdminStores,
   listAdminUsers,
   listAdminVendors,
 } from '@/lib/admin-api';
@@ -69,9 +69,9 @@ export function DashboardOpsCountsWidget() {
     let cancelled = false;
     void (async () => {
       try {
-        const [vendors, stores, orders, payments, users] = await Promise.all([
+        const [vendors, storeStats, orders, payments, users] = await Promise.all([
           listAdminVendors(token),
-          listAdminStores(token),
+          getAdminStoreStats(token),
           listAdminOrders(token, 50),
           listAdminPayments(token, 50),
           listAdminUsers(token, 50),
@@ -79,7 +79,7 @@ export function DashboardOpsCountsWidget() {
         if (!cancelled) {
           setCounts({
             vendors: vendors.length,
-            stores: stores.length,
+            stores: storeStats.total,
             ordersRecent: orders.length,
             paymentsRecent: payments.length,
             usersRecent: users.length,

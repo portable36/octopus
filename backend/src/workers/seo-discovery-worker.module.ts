@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { validateEnv } from '../config/env.validation';
-import { SeoDiscoveryModule } from '../modules/seo-discovery/seo-discovery.module';
+import { AppModule } from '../app.module';
 
-/** Minimal Nest context for the dedicated SEO BullMQ worker process. */
+/**
+ * SEO BullMQ worker process entry module.
+ * Uses the full AppModule graph so catalog/order/identity ports resolve;
+ * HTTP is not listened (ApplicationContext only).
+ */
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env', '../.env'],
-      validate: validateEnv,
-    }),
-    SeoDiscoveryModule,
-  ],
+  imports: [AppModule],
 })
 export class SeoDiscoveryWorkerAppModule {}

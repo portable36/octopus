@@ -1,0 +1,1756 @@
+# Store Details — Cursor Rule
+
+## Purpose
+
+`Store Details` is the central operational control surface for managing one store.
+
+It provides a unified admin interface over the store's:
+
+* Identity
+* Lifecycle
+* Health
+* Catalog
+* Inventory
+* Warehouses
+* Orders
+* POS
+* Payments
+* Shipping
+* Tax
+* Branding
+* Website
+* SEO
+* Staff
+* Notifications
+* Analytics
+* GEM
+* Settings
+* Activity/Audit
+
+Store Details is primarily a UI/application orchestration layer.
+
+It must not become the owner of every underlying business domain.
+
+---
+
+# 1. Route
+
+Primary route:
+
+```text
+/admin/stores/:storeId
+```
+
+Default redirect:
+
+```text
+/admin/stores/:storeId/overview
+```
+
+---
+
+# 2. Store Details Navigation
+
+```text
+Store Details
+│
+├── Overview
+├── Orders
+├── Catalog
+├── Inventory
+├── Warehouses
+├── POS
+├── Payments
+├── Shipping
+├── Tax
+├── Branding
+├── Website
+├── SEO
+├── Staff
+├── Notifications
+├── Analytics
+├── GEM
+├── Settings
+└── Activity
+```
+
+Tabs should be permission-aware.
+
+Do not show irrelevant tabs for a store type.
+
+Example:
+
+```text
+Warehouse Store
+→ POS tab may be hidden
+
+Online Store
+→ POS may be optional
+
+Physical Store
+→ POS likely available
+```
+
+---
+
+# 3. Store Header
+
+Header must remain visible while navigating the store sections.
+
+Display:
+
+```text
+← Stores
+
+[Logo]
+
+Urban Fashion
+UF-DHK-001
+
+ACTIVE
+Online + Physical
+
+Dhaka, Bangladesh
+
+[View Storefront]
+[Edit]
+[More]
+```
+
+Optional:
+
+```text
+Store Health
+Domain Status
+Owner
+```
+
+---
+
+# 4. Header Actions
+
+Actions depend on state.
+
+### ACTIVE
+
+```text
+View Storefront
+Edit
+Maintenance
+Suspend
+```
+
+### PROVISIONING
+
+```text
+View Provisioning
+Retry Failed Step
+```
+
+### FAILED
+
+```text
+Retry Provisioning
+View Error
+```
+
+### SUSPENDED
+
+```text
+Reactivate
+```
+
+### MAINTENANCE
+
+```text
+Disable Maintenance
+```
+
+### ARCHIVED
+
+```text
+Restore
+```
+
+Never expose invalid lifecycle actions.
+
+---
+
+# 5. Overview
+
+Route:
+
+```text
+/admin/stores/:storeId/overview
+```
+
+Overview should be the store command center.
+
+Sections:
+
+```text
+Store Summary
+Store Health
+Provisioning Status
+Sales Metrics
+Inventory Metrics
+Operational Status
+Quick Actions
+Recent Activity
+```
+
+---
+
+# 6. Store Summary
+
+Show:
+
+```text
+Store Name
+Store Code
+Vendor
+Ownership
+Store Type
+Status
+Domain
+Location
+Timezone
+Currency
+Locale
+Created Date
+Updated Date
+```
+
+Use Store domain data.
+
+Do not duplicate it into frontend-only state beyond temporary UI state.
+
+---
+
+# 7. Store Health
+
+Display:
+
+```text
+Store Health: 92%
+
+✓ Store
+✓ Domain
+✓ SSL
+✓ Catalog
+✓ Inventory
+✓ Payment
+✓ Shipping
+✓ Tax
+✓ POS
+✓ SEO
+⚠ Notifications
+```
+
+Health states:
+
+```text
+HEALTHY
+WARNING
+CRITICAL
+UNKNOWN
+```
+
+Every check must come from backend data.
+
+Do not calculate fake health scores in the browser.
+
+---
+
+# 8. Provisioning
+
+If provisioning is active or failed:
+
+```text
+Provisioning
+
+✓ Store Identity
+✓ Vendor
+✓ Catalog
+✓ Warehouse
+✓ Inventory
+✓ POS
+⚠ Payment
+○ Shipping
+○ Tax
+○ Branding
+○ SEO
+```
+
+Display:
+
+```text
+Current Step
+Progress
+Started At
+Last Updated
+Failure Reason
+Retry Status
+```
+
+Actions:
+
+```text
+Retry
+Resume
+View Details
+```
+
+Provisioning must be resumable.
+
+---
+
+# 9. Store Metrics
+
+Display:
+
+```text
+Orders Today
+Revenue Today
+Orders This Month
+Revenue This Month
+Average Order Value
+Customers
+Conversion Rate
+```
+
+Inventory:
+
+```text
+Active SKUs
+Available Units
+Reserved Units
+Low Stock
+Out of Stock
+```
+
+Do not calculate financial truth inside Store Details.
+
+Consume Finance/Order/Inventory read models.
+
+---
+
+# 10. Quick Actions
+
+Useful actions:
+
+```text
+Manage Products
+View Inventory
+View Orders
+Open POS
+Configure Payment
+Configure Shipping
+Edit Branding
+Manage SEO
+Manage Staff
+View Analytics
+```
+
+Actions must navigate to the appropriate module using store context.
+
+---
+
+# 11. Orders
+
+Route:
+
+```text
+/admin/stores/:storeId/orders
+```
+
+Show:
+
+```text
+Order Number
+Customer
+Items
+Amount
+Payment
+Fulfillment
+Status
+Created
+```
+
+Filters:
+
+```text
+Status
+Payment
+Fulfillment
+Date
+Customer
+Amount
+```
+
+Order ownership remains in Order Management.
+
+Store Details only scopes/order-filters the data.
+
+---
+
+# 12. Catalog
+
+Route:
+
+```text
+/admin/stores/:storeId/catalog
+```
+
+Display:
+
+```text
+Active Products
+Draft Products
+Out of Stock
+Low Stock
+Categories
+Brands
+Collections
+```
+
+Actions:
+
+```text
+Assign Product
+Remove Product
+Manage Categories
+Manage Collections
+```
+
+Do not create store-specific duplicate Product entities unless the existing Catalog architecture explicitly requires them.
+
+---
+
+# 13. Inventory
+
+Route:
+
+```text
+/admin/stores/:storeId/inventory
+```
+
+Display:
+
+```text
+Total SKUs
+Available
+Reserved
+Low Stock
+Out of Stock
+```
+
+Actions:
+
+```text
+View Stock
+Receive Stock
+Adjust Stock
+Transfer Stock
+Reservations
+```
+
+All mutations must call Inventory application services.
+
+Never modify inventory tables directly from Store Details.
+
+Inventory remains the source of truth.
+
+---
+
+# 14. Warehouses
+
+Route:
+
+```text
+/admin/stores/:storeId/warehouses
+```
+
+Display:
+
+```text
+Warehouse
+Code
+Location
+Status
+Stock
+Reserved
+Available
+```
+
+Actions:
+
+```text
+Add Warehouse
+Edit
+View Inventory
+Transfer
+Deactivate
+```
+
+A store may have multiple warehouses.
+
+---
+
+# 15. POS
+
+Route:
+
+```text
+/admin/stores/:storeId/pos
+```
+
+Display only if POS is configured or available.
+
+Dashboard:
+
+```text
+POS Status
+Registers
+Active Shifts
+Cashiers
+Today's Sales
+Today's Cash
+Refunds
+```
+
+Register list:
+
+```text
+Register
+Status
+Cashier
+Shift
+Sales
+Cash
+```
+
+Actions:
+
+```text
+Manage Registers
+Manage Shifts
+Cash Management
+Hardware
+POS Settings
+```
+
+Important:
+
+```text
+POS CASH = in-store till cash
+```
+
+Do not classify POS cash as online COD.
+
+---
+
+# 16. Payments
+
+Route:
+
+```text
+/admin/stores/:storeId/payments
+```
+
+Display payment methods:
+
+```text
+Cash
+bKash
+Nagad
+SSLCommerz
+Card
+Other configured providers
+```
+
+For each:
+
+```text
+Enabled
+Status
+Health
+Last Checked
+```
+
+Never display secrets.
+
+Show:
+
+```text
+••••••••
+```
+
+for sensitive configuration.
+
+Payment credentials must be managed through secure secret infrastructure.
+
+---
+
+# 17. Shipping
+
+Route:
+
+```text
+/admin/stores/:storeId/shipping
+```
+
+Display:
+
+```text
+Shipping Mode
+Zones
+Methods
+Rates
+Courier Providers
+Pickup
+Delivery
+```
+
+Actions:
+
+```text
+Manage Zones
+Manage Methods
+Configure Rates
+Configure Courier
+```
+
+Shipping rules remain owned by Shipping/Fulfillment.
+
+---
+
+# 18. Tax
+
+Route:
+
+```text
+/admin/stores/:storeId/tax
+```
+
+Display:
+
+```text
+Tax Mode
+Default Tax Rate
+Tax Classes
+Tax Rules
+Region
+Tax ID
+```
+
+Tax calculations must remain in the Tax/Finance domain.
+
+Store Details only manages or links configuration.
+
+---
+
+# 19. Branding
+
+Route:
+
+```text
+/admin/stores/:storeId/branding
+```
+
+Configuration:
+
+```text
+Logo
+Favicon
+Mobile Logo
+Dark Logo
+Slogan
+Primary Color
+Secondary Color
+Typography
+Theme
+```
+
+Website branding:
+
+```text
+Header
+Footer
+Homepage
+Announcement Bar
+Social Links
+Copyright
+```
+
+Changes should support:
+
+```text
+Draft
+Preview
+Publish
+```
+
+where the platform's CMS/theme architecture supports it.
+
+---
+
+# 20. Website
+
+Route:
+
+```text
+/admin/stores/:storeId/website
+```
+
+Control:
+
+```text
+Homepage
+Header Menu
+Footer Menu
+Navigation
+Banners
+Featured Products
+Featured Categories
+Announcement Bar
+Popups
+Contact Information
+Social Links
+Footer
+```
+
+Website content belongs to CMS.
+
+Store Details should configure store-specific website settings and associations.
+
+---
+
+# 21. Storefront Preview
+
+Provide:
+
+```text
+[View Storefront]
+[Preview]
+```
+
+Preview modes:
+
+```text
+Desktop
+Tablet
+Mobile
+```
+
+If draft configuration exists:
+
+```text
+Preview Draft
+```
+
+Draft changes must not accidentally become production configuration.
+
+---
+
+# 22. SEO
+
+Route:
+
+```text
+/admin/stores/:storeId/seo
+```
+
+Configuration:
+
+```text
+SEO Title
+Meta Description
+Keywords
+Canonical URL
+Robots
+Open Graph Image
+Social Metadata
+Sitemap
+Structured Data
+```
+
+Organization data:
+
+```text
+Organization
+LocalBusiness
+WebSite
+WebPage
+BreadcrumbList
+```
+
+where applicable.
+
+SEO remains integrated with the platform SEO bounded context.
+
+Do not duplicate the SEO engine inside Store Details.
+
+---
+
+# 23. Domain
+
+Domain configuration should be accessible from Website or Settings.
+
+Display:
+
+```text
+Primary Domain
+Platform Subdomain
+Custom Domain
+Redirect Domains
+Verification
+SSL
+```
+
+Status:
+
+```text
+PENDING
+VERIFYING
+VERIFIED
+FAILED
+SUSPENDED
+```
+
+Actions:
+
+```text
+Add Domain
+Verify
+Set Primary
+Remove
+```
+
+Domain ownership must be enforced server-side.
+
+---
+
+# 24. Staff
+
+Route:
+
+```text
+/admin/stores/:storeId/staff
+```
+
+Roles:
+
+```text
+Store Manager
+Sales Manager
+Inventory Manager
+Cashier
+Warehouse Staff
+Support Agent
+Marketing Staff
+Accountant
+```
+
+Display:
+
+```text
+Name
+Role
+Email
+Status
+Last Login
+```
+
+Actions:
+
+```text
+Add Staff
+Assign Role
+Change Role
+Remove Access
+View Activity
+```
+
+Staff permissions must be store-scoped.
+
+---
+
+# 25. Notifications
+
+Route:
+
+```text
+/admin/stores/:storeId/notifications
+```
+
+Configure:
+
+```text
+Order Notifications
+Payment Notifications
+Shipping Notifications
+Low Stock Notifications
+POS Notifications
+Customer Notifications
+Admin Notifications
+```
+
+Channels:
+
+```text
+Email
+SMS
+Push
+In-App
+WhatsApp
+Webhook
+```
+
+Notification Center remains authoritative for templates and delivery.
+
+Store Details controls store-level preferences.
+
+---
+
+# 26. Analytics
+
+Route:
+
+```text
+/admin/stores/:storeId/analytics
+```
+
+Display:
+
+```text
+Revenue
+Orders
+Customers
+AOV
+Conversion Rate
+Traffic
+Product Performance
+Customer Acquisition
+```
+
+Marketing:
+
+```text
+Meta
+Google
+GTM
+Organic
+Direct
+Referral
+```
+
+SEO:
+
+```text
+Organic Traffic
+Search Queries
+Indexed Pages
+Clicks
+Impressions
+CTR
+```
+
+Use existing Analytics read models.
+
+---
+
+# 27. GEM
+
+Route:
+
+```text
+/admin/stores/:storeId/gem
+```
+
+Display:
+
+```text
+GEM Overview
+Product Ad Scores
+Recommendations
+Campaign Opportunities
+Creative Recommendations
+Audience Recommendations
+ROAS
+CPA
+Potential Opportunities
+```
+
+Example:
+
+```text
+Top Advertising Opportunity
+
+Product:
+Oversized Tee
+
+GEM Score:
+94
+
+Confidence:
+89%
+
+Reason:
+Strong conversion
+Healthy inventory
+High ROAS
+
+[View Recommendation]
+```
+
+GEM remains a separate intelligence bounded context.
+
+Store Details provides the store-scoped view.
+
+---
+
+# 28. Settings
+
+Route:
+
+```text
+/admin/stores/:storeId/settings
+```
+
+General:
+
+```text
+Store Name
+Store Code
+Timezone
+Currency
+Locale
+Date Format
+```
+
+Operational:
+
+```text
+Store Hours
+Reservation Timeout
+Low Stock Defaults
+Order Number Format
+Invoice Format
+```
+
+Only settings genuinely owned by Store should live here.
+
+Domain-specific settings must delegate to their owning module.
+
+---
+
+# 29. Activity
+
+Route:
+
+```text
+/admin/stores/:storeId/activity
+```
+
+Timeline:
+
+```text
+Store Created
+Store Activated
+Domain Updated
+Branding Updated
+Payment Updated
+Shipping Updated
+Staff Added
+POS Register Created
+SEO Updated
+Store Suspended
+Store Reactivated
+```
+
+Each record:
+
+```text
+Actor
+Action
+Timestamp
+Changes
+Correlation ID
+```
+
+Use the central audit infrastructure.
+
+---
+
+# 30. Store Lifecycle UI
+
+Lifecycle controls must use backend commands.
+
+Do not:
+
+```text
+PATCH { status: "ACTIVE" }
+```
+
+from arbitrary UI forms.
+
+Instead use explicit operations:
+
+```text
+POST /admin/stores/:storeId/activate
+POST /admin/stores/:storeId/suspend
+POST /admin/stores/:storeId/maintenance
+POST /admin/stores/:storeId/archive
+```
+
+This makes authorization and state-transition validation explicit.
+
+---
+
+# 31. Suspension
+
+Confirmation:
+
+```text
+Suspend Store?
+
+Store:
+Urban Fashion
+
+Reason:
+[________________]
+
+This may prevent new customer transactions.
+
+[Cancel]
+[Suspend Store]
+```
+
+On success:
+
+```text
+StoreSuspended
+```
+
+Do not directly cancel orders, modify inventory, or refund payments from this UI.
+
+Each domain reacts according to its own policy.
+
+---
+
+# 32. Maintenance
+
+Maintenance is not the same as suspension.
+
+Maintenance means temporary storefront unavailability while the store remains operationally configured.
+
+Configuration:
+
+```text
+Maintenance Message
+Start Time
+End Time
+Allow Admin Access
+Allow Staff Access
+```
+
+Events:
+
+```text
+StoreMaintenanceEnabled
+StoreMaintenanceDisabled
+```
+
+---
+
+# 33. Error Isolation
+
+Store Details is a composite page.
+
+One failing subsystem should not necessarily break the whole page.
+
+Example:
+
+```text
+Store Health
+
+✓ Catalog
+✓ Inventory
+✓ Shipping
+⚠ Payment health unavailable
+✓ SEO
+```
+
+Display partial failure states.
+
+Do not hide failures silently.
+
+---
+
+# 34. Loading States
+
+Every section must support:
+
+```text
+Loading
+Empty
+Success
+Partial Failure
+Permission Denied
+Network Error
+Server Error
+```
+
+Use the existing design system's:
+
+```text
+Skeleton
+Spinner
+Empty State
+Error State
+Toast
+```
+
+Do not create duplicate UI primitives.
+
+---
+
+# 35. Performance
+
+Overview must load quickly.
+
+Initial data:
+
+```text
+Store Identity
+Status
+Health
+Key Metrics
+```
+
+Lazy-load:
+
+```text
+Orders
+Analytics
+Activity
+Inventory details
+GEM details
+```
+
+Use:
+
+* Server-side pagination
+* Query projections
+* Read models
+* Caching where safe
+* Parallel independent requests
+
+Avoid N+1 queries.
+
+---
+
+# 36. API Design
+
+Recommended:
+
+```text
+GET /admin/stores/:storeId
+GET /admin/stores/:storeId/overview
+GET /admin/stores/:storeId/health
+GET /admin/stores/:storeId/provisioning
+
+GET /admin/stores/:storeId/orders
+GET /admin/stores/:storeId/catalog
+GET /admin/stores/:storeId/inventory
+GET /admin/stores/:storeId/warehouses
+GET /admin/stores/:storeId/pos
+GET /admin/stores/:storeId/payments
+GET /admin/stores/:storeId/shipping
+GET /admin/stores/:storeId/tax
+GET /admin/stores/:storeId/branding
+GET /admin/stores/:storeId/website
+GET /admin/stores/:storeId/seo
+GET /admin/stores/:storeId/staff
+GET /admin/stores/:storeId/notifications
+GET /admin/stores/:storeId/analytics
+GET /admin/stores/:storeId/gem
+GET /admin/stores/:storeId/activity
+```
+
+Use existing API conventions.
+
+Do not create endpoints solely to mirror every UI component.
+
+---
+
+# 37. Store Scope
+
+Every request must establish:
+
+```text
+Authenticated User
+        ↓
+Platform Authorization
+        ↓
+Vendor Authorization
+        ↓
+Store Authorization
+        ↓
+Domain Access
+```
+
+Never rely on route-level `storeId` alone.
+
+---
+
+# 38. Cross-Domain Rules
+
+Store Details must call:
+
+```text
+Catalog → Catalog services
+Inventory → Inventory services
+Orders → Order services
+POS → POS services
+Payment → Payment services
+Shipping → Shipping services
+Tax → Tax services
+SEO → SEO services
+CMS → CMS services
+Notifications → Notification services
+Analytics → Analytics services
+GEM → GEM services
+```
+
+Do not access another module's database directly.
+
+---
+
+# 39. Read Model
+
+The Overview should use a dedicated read/aggregation model where beneficial.
+
+Example:
+
+```typescript
+interface StoreOverview {
+  store: StoreSummary;
+  health: StoreHealth;
+  sales: StoreSalesMetrics;
+  inventory: StoreInventoryMetrics;
+  operations: StoreOperationalMetrics;
+  marketing: StoreMarketingMetrics;
+}
+```
+
+The read model may aggregate data from multiple bounded contexts.
+
+It must not become a second source of truth.
+
+---
+
+# 40. Security
+
+Protect:
+
+```text
+Store data
+Vendor data
+Payment configuration
+Staff information
+Customer information
+Financial metrics
+Advertising information
+```
+
+Security requirements:
+
+```text
+RBAC
+Tenant isolation
+Vendor isolation
+Store isolation
+IDOR protection
+Audit logging
+Secret protection
+Input validation
+Output filtering
+```
+
+---
+
+# 41. Sensitive Data
+
+Never expose:
+
+```text
+Payment secrets
+API tokens
+AI provider keys
+Advertising credentials
+Private customer information
+Internal security configuration
+```
+
+Use masked representations or secure configuration interfaces.
+
+---
+
+# 42. Confirmation Rules
+
+Require confirmation for:
+
+```text
+Suspend
+Archive
+Disable payment
+Disable POS
+Remove primary domain
+Remove staff access
+Bulk operations
+```
+
+Never perform dangerous mutations from a single accidental click.
+
+---
+
+# 43. Unsaved Changes
+
+Configuration forms should detect unsaved changes.
+
+Display:
+
+```text
+You have unsaved changes.
+
+[Discard]
+[Save]
+```
+
+Do not silently lose configuration.
+
+---
+
+# 44. Draft and Publish
+
+For configuration that supports staged publishing:
+
+```text
+Draft
+  ↓
+Preview
+  ↓
+Validation
+  ↓
+Publish
+```
+
+Particularly useful for:
+
+```text
+Branding
+Website
+SEO
+Menus
+Homepage
+Theme
+```
+
+Never mix draft configuration with live configuration accidentally.
+
+---
+
+# 45. Accessibility
+
+Store Details must support:
+
+* Keyboard navigation
+* Focus management
+* Screen readers
+* Semantic headings
+* Accessible tabs
+* Accessible dialogs
+* Accessible tables
+* Visible validation errors
+* Sufficient contrast
+* Responsive layout
+
+Follow the project's existing accessibility standards.
+
+---
+
+# 46. Responsive Design
+
+Desktop:
+
+```text
+Sidebar
+Store Header
+Tabs
+Multi-column dashboard
+```
+
+Tablet:
+
+```text
+Condensed navigation
+Responsive cards
+Horizontal tab scrolling where appropriate
+```
+
+Mobile:
+
+```text
+Compact header
+Dropdown/scroll navigation
+Stacked cards
+Responsive tables
+```
+
+Do not simply shrink desktop tables without considering mobile usability.
+
+---
+
+# 47. Testing
+
+## Overview
+
+Test:
+
+```text
+Correct store
+Correct metrics
+Health
+Provisioning
+Partial failures
+Permissions
+```
+
+## Navigation
+
+Test:
+
+```text
+All tabs
+Deep links
+Back navigation
+Invalid store
+Archived store
+```
+
+## Authorization
+
+Test:
+
+```text
+Platform admin
+Vendor
+Store manager
+Unauthorized vendor
+Unauthorized store
+```
+
+## Domain Integration
+
+Test:
+
+```text
+Catalog
+Inventory
+Orders
+POS
+Payment
+Shipping
+Tax
+SEO
+CMS
+Notifications
+Analytics
+GEM
+```
+
+## Lifecycle
+
+Test:
+
+```text
+Active
+Suspended
+Maintenance
+Failed
+Archived
+```
+
+---
+
+# 48. E2E Scenarios
+
+Required end-to-end scenarios:
+
+```text
+1. Create Store
+2. Provision Store
+3. Open Store Details
+4. Configure Branding
+5. Configure Domain
+6. Configure Catalog
+7. Configure Warehouse
+8. Configure Inventory
+9. Configure Payment
+10. Configure Shipping
+11. Configure POS
+12. Add Staff
+13. Configure SEO
+14. Open Analytics
+15. Open GEM
+16. Enable Maintenance
+17. Disable Maintenance
+18. Suspend Store
+19. Reactivate Store
+20. Archive Store
+```
+
+---
+
+# 49. Cursor AI Implementation Instructions
+
+Before implementing:
+
+1. Inspect existing Store Management.
+2. Inspect Store Creation/Provisioning.
+3. Inspect existing Admin Layout.
+4. Inspect design system.
+5. Inspect routing.
+6. Inspect RBAC.
+7. Inspect API client conventions.
+8. Inspect existing dashboard components.
+9. Inspect existing tables/forms/dialogs.
+10. Inspect each bounded context's public application interfaces.
+
+Then implement Store Details using those existing abstractions.
+
+Never create duplicate domain logic.
+
+Never access another module's database directly.
+
+Never bypass authorization.
+
+Never modify inventory/order/payment state directly.
+
+Never introduce a second state-management architecture without justification.
+
+---
+
+# 50. Component Architecture
+
+Recommended frontend structure:
+
+```text
+StoreDetails/
+├── StoreDetailsLayout
+├── StoreHeader
+├── StoreNavigation
+├── StoreStatusBadge
+├── StoreHealth
+├── StoreOverview
+├── ProvisioningStatus
+├── StoreMetrics
+├── QuickActions
+│
+├── OrdersSection
+├── CatalogSection
+├── InventorySection
+├── WarehousesSection
+├── POSSection
+├── PaymentsSection
+├── ShippingSection
+├── TaxSection
+├── BrandingSection
+├── WebsiteSection
+├── SEOSection
+├── StaffSection
+├── NotificationsSection
+├── AnalyticsSection
+├── GEMSection
+├── SettingsSection
+└── ActivitySection
+```
+
+Use existing reusable components instead of rebuilding common UI primitives.
+
+---
+
+# 51. Final Architecture
+
+```text
+                         STORE
+                           │
+                     Store Details
+                           │
+       ┌───────────────────┼────────────────────┐
+       │                   │                    │
+    Identity            Lifecycle             Health
+       │                   │                    │
+       └───────────────────┼────────────────────┘
+                           │
+       ┌───────────────────┼────────────────────┐
+       ▼                   ▼                    ▼
+    Catalog             Inventory             Orders
+       │                   │                    │
+       ▼                   ▼                    ▼
+      POS               Warehouse            Fulfillment
+       │                   │                    │
+       └───────────────────┼────────────────────┘
+                           │
+       ┌───────────┬───────┼───────┬────────────┐
+       ▼           ▼       ▼       ▼            ▼
+    Payments    Shipping   Tax   Branding      SEO
+       │           │       │       │            │
+       └───────────┴───────┼───────┴────────────┘
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+           Staff      Notifications   Analytics
+                                         │
+                                         ▼
+                                        GEM
+```
+
+## Fundamental Rule
+
+`Store Management` owns:
+
+```text
+Store identity
+Store ownership
+Store lifecycle
+Store administration
+```
+
+`Store Details` owns:
+
+```text
+The administrative control surface for one store
+```
+
+Other bounded contexts own:
+
+```text
+Catalog      → Products
+Inventory    → Stock
+Orders       → Orders
+POS          → Point of Sale
+Payment      → Payment
+Shipping     → Fulfillment
+Tax          → Tax
+CMS          → Content
+SEO          → Search optimization
+Analytics    → Measurement
+GEM          → Advertising intelligence
+Notifications→ Delivery
+Finance      → Financial truth
+```
+
+The UI may unify these areas, but the domain architecture must remain separated.

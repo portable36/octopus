@@ -35,6 +35,11 @@ export class AppConfigService {
     return this.configService.get('HTTP_BODY_LIMIT', { infer: true });
   }
 
+  /** Trusted reverse-proxy hop count for `req.ip` / rate-limit keys. */
+  get trustProxyHops(): number {
+    return this.configService.get('TRUST_PROXY_HOPS', { infer: true });
+  }
+
   get redisUrl(): string {
     return this.configService.get('REDIS_URL', { infer: true });
   }

@@ -8,12 +8,12 @@ import {
   listAdminInventoryItems,
   listAdminStores,
   type AdminInventoryItemRow,
-  type AdminStore,
+  type AdminStoreListItem,
 } from '@/lib/admin-api';
 
 export default function AdminInventoryPage() {
   const token = useAccessToken();
-  const [stores, setStores] = useState<AdminStore[]>([]);
+  const [stores, setStores] = useState<AdminStoreListItem[]>([]);
   const [storeId, setStoreId] = useState('');
   const [rows, setRows] = useState<AdminInventoryItemRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +28,10 @@ export default function AdminInventoryPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await listAdminStores(token);
+        const data = await listAdminStores(token, { limit: 200 });
         if (!cancelled) {
-          setStores(data);
-          setStoreId(data[0]?.id ?? '');
+          setStores(data.items);
+          setStoreId(data.items[0]?.id ?? '');
           setError(null);
         }
       } catch (err) {

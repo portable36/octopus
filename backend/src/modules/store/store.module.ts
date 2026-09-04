@@ -15,10 +15,13 @@ import { StoreLifecycleHandler } from './application/commands/store-lifecycle.ha
 import { UpdateStoreHandler } from './application/commands/update-store.handler';
 import { GetProvisioningStatusHandler } from './application/queries/get-provisioning-status.handler';
 import { GetStoreHandler } from './application/queries/get-store.handler';
+import { GetStoreOverviewHandler } from './application/queries/get-store-overview.handler';
+import { ListAdminStoresHandler } from './application/queries/list-admin-stores.handler';
 import { STORE_ONBOARDING_DRAFT_REPOSITORY } from './application/ports/store-onboarding-draft-repository.interface';
 import { STORE_PROVISIONING_REPOSITORY } from './application/ports/store-provisioning-repository.interface';
 import { STORE_REPOSITORY } from './application/ports/store-repository.interface';
 import { StoreProvisioningOrchestrator } from './application/provisioning/store-provisioning.orchestrator';
+import { StoreHealthService } from './application/services/store-health.service';
 import { StoreAccessAdapter } from './infrastructure/access/store-access.adapter';
 import { StoreDomainOrmEntity } from './infrastructure/persistence/store-domain.orm-entity';
 import { StoreOnboardingDraftOrmEntity } from './infrastructure/persistence/store-onboarding-draft.orm-entity';
@@ -61,6 +64,9 @@ import { AdminStoreController } from './presentation/http/admin-store.controller
     StoreLifecycleHandler,
     UpdateStoreHandler,
     GetStoreHandler,
+    ListAdminStoresHandler,
+    StoreHealthService,
+    GetStoreOverviewHandler,
     {
       provide: STORE_REPOSITORY,
       useClass: StoreRepositoryAdapter,

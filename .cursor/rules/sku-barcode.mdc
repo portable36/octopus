@@ -1,0 +1,2031 @@
+# SKU & Barcode Management — `sku-barcode.mdc`
+
+## 1. Objective
+
+Implement an enterprise-grade SKU and barcode identification system for the ecommerce platform.
+
+The system MUST support:
+
+* Auto-generated SKU
+* Manual SKU entry
+* SKU validation
+* Unique SKU enforcement
+* Product-level SKU
+* Variant-level SKU
+* Barcode generation
+* Manual barcode entry
+* Barcode scanning
+* Barcode lookup
+* Barcode printing
+* Barcode label templates
+* Multiple barcodes per product/variant where required
+* SKU-based barcode generation
+* GS1-compatible barcode types where applicable
+* POS barcode scanning
+* Warehouse barcode scanning
+* Inventory barcode scanning
+* Product receiving by barcode
+* Product transfer by barcode
+* Product lookup by SKU
+* Product lookup by barcode
+* Bulk SKU generation
+* Bulk barcode generation
+* Bulk barcode printing
+* Import/export
+* Duplicate detection
+* Audit history
+
+The system MUST remain compatible with:
+
+* Catalog
+* Product Variants
+* Inventory
+* Warehouse
+* POS
+* Orders
+* Purchasing/Receiving
+* Search
+* Storefront
+* Admin
+* Reporting
+* Future mobile warehouse applications
+
+---
+
+# 2. Important Architecture Rule
+
+SKU and barcode are NOT the same thing.
+
+### SKU
+
+SKU means:
+
+> Stock Keeping Unit
+
+SKU is an internal business identifier controlled by the merchant/platform.
+
+Example:
+
+```text
+TSHIRT-BLK-M
+TSHIRT-BLK-L
+CAP-BLK-001
+SHOE-NIKE-AIRMAX-42
+```
+
+### Barcode
+
+Barcode is a machine-readable representation used primarily for scanning.
+
+Examples:
+
+```text
+012345678905
+8901234567890
+```
+
+A barcode MAY encode an SKU, but the barcode value itself is a separate identifier.
+
+Do NOT assume:
+
+```text
+SKU === Barcode
+```
+
+---
+
+# 3. Product Identification Hierarchy
+
+Use the following hierarchy:
+
+```text
+Product
+   │
+   ├── Product SKU (optional parent/group identifier)
+   │
+   └── Product Variant
+          │
+          ├── Variant SKU
+          │
+          ├── Barcode(s)
+          │
+          └── Identification metadata
+```
+
+For products with variants, the **variant SKU should normally be the operational stock identifier**.
+
+Example:
+
+```text
+Product:
+Oversized T-Shirt
+
+Variants:
+
+Black / S
+SKU: TSH-OVR-BLK-S
+Barcode: 8901000000011
+
+Black / M
+SKU: TSH-OVR-BLK-M
+Barcode: 8901000000028
+
+Black / L
+SKU: TSH-OVR-BLK-L
+Barcode: 8901000000035
+
+White / S
+SKU: TSH-OVR-WHT-S
+Barcode: 8901000000042
+```
+
+Inventory MUST reference the variant/SKU-level sellable item where variants exist.
+
+---
+
+# 4. SKU Modes
+
+Product creation MUST support:
+
+```text
+SKU Mode
+
+○ Auto Generate
+○ Manual Entry
+```
+
+## Auto Generate
+
+The system generates a SKU based on configured rules.
+
+Example:
+
+```text
+Category: T-Shirt
+Product: Oversized Tee
+Color: Black
+Size: M
+
+Generated:
+
+TSH-OVR-BLK-M
+```
+
+Another possible strategy:
+
+```text
+TSHIRT-000012-M
+```
+
+Or:
+
+```text
+STORE1-TSH-000012-BLK-M
+```
+
+The exact format MUST be configurable.
+
+---
+
+# 5. SKU Configuration
+
+Admin should be able to configure:
+
+```text
+SKU Settings
+
+Enable auto SKU
+SKU prefix
+Category prefix
+Vendor prefix
+Store prefix
+Product sequence
+Variant attributes
+Separator
+Sequence length
+Uppercase/lowercase
+Random suffix
+Checksum (optional)
+```
+
+Example:
+
+```text
+Prefix:
+PRD
+
+Category:
+TSH
+
+Sequence:
+000123
+
+Variant:
+BLK-M
+
+Result:
+
+PRD-TSH-000123-BLK-M
+```
+
+---
+
+# 6. SKU Generation Rules
+
+SKU generation MUST be deterministic where possible.
+
+Example:
+
+```text
+Category = SHOE
+Product sequence = 000245
+Color = BLK
+Size = 42
+
+SKU:
+
+SHOE-000245-BLK-42
+```
+
+Rules:
+
+* SKU MUST be unique within the required tenant/store scope.
+* SKU MUST NOT change automatically after creation.
+* Product name changes MUST NOT silently change SKU.
+* Category changes MUST NOT silently change SKU.
+* Variant attribute changes MUST NOT silently change SKU.
+* Existing SKU should remain stable for historical records.
+* SKU reuse should normally be prohibited.
+* Deleted/archived SKUs should remain reserved from reuse if historical references exist.
+
+---
+
+# 7. Manual SKU Entry
+
+Product creation MUST allow:
+
+```text
+SKU
+[ TSH-OVR-BLK-M             ]
+
+[✓] Validate SKU
+```
+
+Validation MUST check:
+
+* Format
+* Length
+* Allowed characters
+* Duplicate SKU
+* Store scope
+* Vendor scope
+* Reserved SKU
+* Archived SKU
+* Case normalization
+
+Example invalid:
+
+```text
+TSH 001
+```
+
+if spaces are not allowed.
+
+Example valid:
+
+```text
+TSH-001-BLK-M
+```
+
+---
+
+# 8. SKU Uniqueness
+
+SKU uniqueness MUST be enforced at the database level.
+
+Application validation alone is insufficient.
+
+Example:
+
+```text
+UNIQUE(store_id, sku)
+```
+
+or, depending on architecture:
+
+```text
+UNIQUE(platform_id, sku)
+```
+
+The correct scope MUST be determined by the existing Catalog architecture.
+
+Never rely exclusively on frontend validation.
+
+---
+
+# 9. SKU API
+
+Suggested APIs:
+
+```text
+POST /admin/catalog/sku/generate
+
+POST /admin/catalog/sku/validate
+
+GET  /admin/catalog/sku/:sku
+
+GET  /admin/catalog/products/by-sku/:sku
+```
+
+Example:
+
+```json
+{
+  "productId": "prod_123",
+  "variantId": "var_456",
+  "sku": "TSH-OVR-BLK-M"
+}
+```
+
+---
+
+# 10. Barcode Types
+
+The system should support configurable barcode formats.
+
+Common formats:
+
+```text
+CODE_128
+CODE_39
+EAN_13
+EAN_8
+UPC_A
+UPC_E
+ITF_14
+GS1_128
+GS1_DATA_MATRIX
+QR_CODE
+```
+
+Do not claim that every format is interchangeable.
+
+For retail products, EAN/UPC/GTIN identifiers may need to follow appropriate GS1 rules.
+
+For internal warehouse/POS labels, CODE_128 is often a practical choice.
+
+---
+
+# 11. Barcode Modes
+
+Product creation MUST support:
+
+```text
+Barcode
+
+○ Generate Automatically
+○ Enter Existing Barcode
+○ Generate From SKU
+○ Add Multiple Barcodes
+○ No Barcode
+```
+
+Example:
+
+```text
+Barcode Type:
+[ CODE_128 ]
+
+Barcode:
+[ Generate ]
+
+SKU:
+TSH-OVR-BLK-M
+
+[ Generate Barcode ]
+```
+
+---
+
+# 12. Generate Barcode From SKU
+
+The platform MAY generate an internal barcode representing the SKU.
+
+Example:
+
+```text
+SKU:
+
+TSH-OVR-BLK-M
+
+↓
+
+CODE_128
+
+↓
+
+████████████████
+████ ███ ███████
+████████████████
+
+Human-readable:
+TSH-OVR-BLK-M
+```
+
+Important:
+
+A generated internal CODE_128 barcode is NOT automatically a globally registered retail GTIN/EAN/UPC.
+
+Do not present internally generated barcodes as globally unique GS1 identifiers.
+
+---
+
+# 13. Existing Barcode Entry
+
+Merchants may already have manufacturer barcodes.
+
+Product creation:
+
+```text
+Barcode Mode:
+[ Existing Barcode ]
+
+Barcode:
+[ 8901234567890 ]
+
+Type:
+[ EAN-13 ]
+```
+
+Validate:
+
+* Format
+* Length
+* Check digit where applicable
+* Duplicate barcode
+* Status
+* Scope
+* Assignment
+
+---
+
+# 14. Multiple Barcodes
+
+A variant may have multiple valid identifiers.
+
+Example:
+
+```text
+Variant:
+TSH-OVR-BLK-M
+
+Barcodes:
+
+8901234567890    EAN-13    Primary
+012345678905     UPC-A     Secondary
+TSH-OVR-BLK-M    CODE-128  Internal
+```
+
+Model:
+
+```ts
+interface ProductBarcode {
+  id: BarcodeId;
+  productId?: ProductId;
+  variantId?: VariantId;
+
+  value: string;
+  normalizedValue: string;
+
+  type: BarcodeType;
+
+  isPrimary: boolean;
+  status: BarcodeStatus;
+
+  source: BarcodeSource;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+Possible source:
+
+```text
+GENERATED
+MANUAL
+IMPORTED
+MANUFACTURER
+SYSTEM
+```
+
+---
+
+# 15. Barcode Uniqueness
+
+Barcode uniqueness MUST be enforced.
+
+At minimum:
+
+```text
+UNIQUE(normalized_barcode)
+```
+
+unless the business architecture explicitly allows scoped duplicates.
+
+Never allow two active sellable variants to accidentally share the same barcode.
+
+---
+
+# 16. Barcode Lookup
+
+The platform MUST provide a unified identifier lookup.
+
+Input:
+
+```text
+Search product...
+
+[ Scan Barcode ]
+```
+
+Lookup order:
+
+```text
+Barcode
+↓
+SKU
+↓
+Product/Variant identifier
+```
+
+Example:
+
+```text
+8901234567890
+```
+
+returns:
+
+```text
+Oversized Tee
+Black / Medium
+SKU: TSH-OVR-BLK-M
+Stock: 42
+Price: ৳1,200
+Store: Dhaka Main
+```
+
+---
+
+# 17. Scan Barcode
+
+Scanning should work with:
+
+* USB barcode scanners
+* Bluetooth scanners
+* Mobile camera scanning
+* POS scanners
+* Warehouse scanners
+* Android handheld scanners
+* Future dedicated scanning devices
+
+Most USB/Bluetooth scanners behave like keyboard input.
+
+The frontend should support:
+
+```text
+Scanner Input
+↓
+Identifier Parser
+↓
+Barcode/SKU Lookup
+↓
+Product/Variant
+↓
+Requested Operation
+```
+
+---
+
+# 18. Global Scan Component
+
+Create a reusable component:
+
+```text
+BarcodeScanner
+```
+
+Capabilities:
+
+```text
+start()
+stop()
+scan()
+parse()
+lookup()
+onDetected()
+onError()
+```
+
+Example:
+
+```tsx
+<BarcodeScanner
+  onDetected={(value) => lookupIdentifier(value)}
+/>
+```
+
+Do not duplicate barcode-scanning logic inside:
+
+* POS
+* Inventory
+* Receiving
+* Product creation
+* Returns
+* Transfers
+
+Create one reusable identification/scanning capability.
+
+---
+
+# 19. Product Creation UX
+
+Product creation should follow:
+
+```text
+Basic Information
+      ↓
+Product Type
+      ↓
+Category
+      ↓
+Attributes
+      ↓
+Variants
+      ↓
+SKU
+      ↓
+Barcode
+      ↓
+Pricing
+      ↓
+Inventory
+      ↓
+Media
+      ↓
+SEO
+      ↓
+Review
+      ↓
+Create
+```
+
+For each variant:
+
+```text
+Variant
+
+Color: Black
+Size: M
+
+SKU:
+[ Auto Generate ] [ Manual ]
+
+SKU:
+TSH-OVR-BLK-M
+
+Barcode:
+[ Auto Generate ] [ Existing ]
+
+Barcode Type:
+CODE_128
+
+Barcode:
+TSH-OVR-BLK-M
+
+[ Generate ]
+
+[ Scan Existing Barcode ]
+
+[ Print Label ]
+```
+
+---
+
+# 20. Variant Bulk Generation
+
+If a product has many variants:
+
+```text
+Color:
+Black
+White
+Blue
+
+Size:
+S
+M
+L
+XL
+```
+
+Generate:
+
+```text
+12 variants
+```
+
+Each variant MUST receive:
+
+```text
+Unique SKU
+Unique barcode
+```
+
+Example:
+
+```text
+BLK-S
+BLK-M
+BLK-L
+BLK-XL
+
+WHT-S
+WHT-M
+WHT-L
+WHT-XL
+
+BLU-S
+BLU-M
+BLU-L
+BLU-XL
+```
+
+Provide:
+
+```text
+[ Generate SKUs ]
+[ Generate Barcodes ]
+[ Print All Labels ]
+```
+
+---
+
+# 21. Bulk SKU Operations
+
+Admin should support:
+
+```text
+Generate missing SKUs
+Regenerate draft SKUs
+Validate selected SKUs
+Import SKUs
+Export SKUs
+```
+
+Never regenerate active SKUs automatically.
+
+---
+
+# 22. Bulk Barcode Operations
+
+Support:
+
+```text
+Generate missing barcodes
+Validate barcodes
+Import barcodes
+Export barcodes
+Print selected
+Print all
+Reprint
+```
+
+---
+
+# 23. Barcode Label Printing
+
+Create a dedicated:
+
+```text
+Barcode Label Printer
+```
+
+Admin route:
+
+```text
+/admin/catalog/barcodes/print
+```
+
+Features:
+
+```text
+Select products
+Select variants
+Quantity
+Barcode type
+Label size
+Paper size
+Printer
+Template
+Show SKU
+Show product name
+Show price
+Show variant
+Show store
+Show logo
+```
+
+Example label:
+
+```text
+┌─────────────────────────┐
+│      STORE LOGO         │
+│                         │
+│     Oversized Tee       │
+│       Black / M         │
+│                         │
+│   ██████████████████    │
+│   █ ███ █████ ██████    │
+│                         │
+│     TSH-OVR-BLK-M       │
+│       ৳1,200            │
+└─────────────────────────┘
+```
+
+---
+
+# 24. Label Templates
+
+Support reusable templates.
+
+Example:
+
+```text
+Small Product
+Retail Price
+Warehouse
+Shelf
+POS
+Shipping
+Custom
+```
+
+Template fields:
+
+```text
+{{product.name}}
+{{variant.name}}
+{{sku}}
+{{barcode}}
+{{price}}
+{{currency}}
+{{store.name}}
+{{store.logo}}
+{{vendor.name}}
+{{product.brand}}
+```
+
+Templates should be configurable from Admin.
+
+---
+
+# 25. Printing Architecture
+
+Do not hard-code one printer vendor.
+
+Use:
+
+```text
+BarcodePrintService
+        ↓
+PrinterProvider
+        ↓
+┌─────────────────┐
+│ Browser Print   │
+│ Network Printer │
+│ USB Printer     │
+│ POS Printer     │
+│ Label Printer   │
+└─────────────────┘
+```
+
+Future provider interface:
+
+```ts
+interface LabelPrinterProvider {
+  print(request: PrintLabelRequest): Promise<PrintResult>;
+  getPrinters(): Promise<Printer[]>;
+  test(printerId: string): Promise<void>;
+}
+```
+
+---
+
+# 26. Print Preview
+
+Before printing:
+
+```text
+Print Labels
+
+Products: 25
+Labels: 50
+
+Template:
+[ Retail Label ]
+
+Paper:
+[ 40mm × 30mm ]
+
+Printer:
+[ Zebra Label Printer ]
+
+[ Preview ]
+[ Print ]
+```
+
+Support PDF generation where browser/network printing is unavailable.
+
+---
+
+# 27. Barcode Printing Quantity
+
+Example:
+
+```text
+Product:
+Oversized Tee / Black / M
+
+Available:
+42
+
+Print quantity:
+[ 42 ]
+```
+
+But printing labels MUST NOT automatically change inventory.
+
+Printing 42 labels does not mean receiving 42 units.
+
+---
+
+# 28. Warehouse Barcode Operations
+
+Warehouse staff should be able to scan:
+
+```text
+Receive Stock
+↓
+Scan Barcode
+↓
+Resolve Variant
+↓
+Enter Quantity
+↓
+Confirm
+↓
+Inventory Receive
+```
+
+Transfer:
+
+```text
+Scan Barcode
+↓
+Select Source Warehouse
+↓
+Select Destination Warehouse
+↓
+Quantity
+↓
+Transfer
+```
+
+Adjustment:
+
+```text
+Scan Barcode
+↓
+Current Stock
+↓
+Adjustment Quantity
+↓
+Reason
+↓
+Confirm
+```
+
+All actual stock mutations MUST go through the Inventory module.
+
+---
+
+# 29. POS Barcode Operations
+
+POS flow:
+
+```text
+Scan
+ ↓
+Barcode Lookup
+ ↓
+Variant
+ ↓
+Price
+ ↓
+Tax
+ ↓
+Cart
+```
+
+Example:
+
+```text
+Scan:
+8901234567890
+
+↓
+
+Oversized Tee
+Black / M
+
+৳1,200
+
+[Add to Cart]
+```
+
+POS MUST NOT directly modify inventory tables.
+
+POS calls the appropriate Inventory/Order application services.
+
+---
+
+# 30. Return Barcode Scanning
+
+Returns should support:
+
+```text
+Scan Product Barcode
+↓
+Resolve Order Item
+↓
+Validate Return Eligibility
+↓
+Return
+```
+
+This reduces manual product selection errors.
+
+---
+
+# 31. Product Receiving
+
+Receiving screen:
+
+```text
+Purchase Order: PO-000123
+
+[ Scan Barcode ]
+
+Scanned:
+8901234567890
+
+Product:
+Oversized Tee
+Black / M
+
+Expected: 50
+Received: 30
+
+Receive:
+[ 20 ]
+
+[ Confirm ]
+```
+
+---
+
+# 32. Barcode Search Everywhere
+
+Barcode/SKU lookup should be reusable across:
+
+```text
+POS
+Inventory
+Products
+Orders
+Returns
+Receiving
+Transfers
+Stock Adjustment
+Warehouse
+Product Creation
+Product Editing
+Customer Support
+```
+
+Use a shared:
+
+```text
+IdentifierResolver
+```
+
+Example:
+
+```ts
+interface IdentifierResolver {
+  resolve(value: string): Promise<ProductIdentifierResult>;
+}
+```
+
+---
+
+# 33. Identifier Resolution
+
+The resolver should determine:
+
+```text
+Input
+ ↓
+Normalize
+ ↓
+Barcode lookup
+ ↓
+SKU lookup
+ ↓
+Alternative identifier lookup
+ ↓
+Variant
+ ↓
+Product
+```
+
+Result:
+
+```ts
+interface ProductIdentifierResult {
+  type: "BARCODE" | "SKU";
+  value: string;
+  productId: string;
+  variantId?: string;
+  sku: string;
+  barcode?: string;
+}
+```
+
+---
+
+# 34. Normalization
+
+Barcode/SKU normalization MUST be consistent.
+
+Examples:
+
+```text
+trim whitespace
+uppercase SKU
+preserve barcode numeric value
+remove scanner line endings
+validate expected characters
+```
+
+Be careful with numeric barcodes.
+
+Do NOT store GTIN/EAN/UPC as database integer values.
+
+Use:
+
+```text
+string
+```
+
+because leading zeros matter.
+
+Correct:
+
+```text
+"012345678905"
+```
+
+Incorrect:
+
+```text
+12345678905
+```
+
+---
+
+# 35. Database Model
+
+Suggested:
+
+```ts
+Product {
+  id
+  ...
+  sku?
+}
+```
+
+For variants:
+
+```ts
+ProductVariant {
+  id
+  productId
+  sku
+  ...
+}
+```
+
+Barcode:
+
+```ts
+ProductBarcode {
+  id
+  productId?
+  variantId?
+
+  value
+  normalizedValue
+
+  type
+
+  isPrimary
+  status
+  source
+
+  createdAt
+  updatedAt
+}
+```
+
+Indexes:
+
+```text
+sku
+normalized_barcode
+product_id
+variant_id
+store_id
+vendor_id
+```
+
+Unique constraints MUST exist at database level.
+
+---
+
+# 36. Barcode Status
+
+```text
+ACTIVE
+INACTIVE
+REVOKED
+```
+
+Do not physically delete identifiers when historical records depend on them.
+
+Prefer:
+
+```text
+ACTIVE → INACTIVE
+```
+
+or:
+
+```text
+ACTIVE → REVOKED
+```
+
+---
+
+# 37. Audit
+
+Track:
+
+```text
+SKU generated
+SKU manually changed
+Barcode generated
+Barcode added
+Barcode removed
+Barcode revoked
+Barcode imported
+Barcode printed
+Label reprinted
+Bulk generation
+Bulk printing
+```
+
+Audit:
+
+```ts
+actorId
+storeId
+vendorId
+productId
+variantId
+action
+before
+after
+timestamp
+correlationId
+```
+
+---
+
+# 38. Security
+
+Never trust:
+
+```text
+storeId
+vendorId
+productId
+variantId
+```
+
+from the frontend.
+
+Every identifier operation MUST validate:
+
+```text
+Authenticated user
+↓
+Platform access
+↓
+Vendor access
+↓
+Store access
+↓
+Product access
+↓
+Variant access
+```
+
+Prevent IDOR attacks.
+
+Vendor A MUST NOT be able to resolve or modify Vendor B's private catalog through SKU/barcode manipulation.
+
+---
+
+# 39. Store Scope
+
+Because the platform is multi-vendor and multi-store:
+
+```text
+Platform
+ ├── Vendor A
+ │    ├── Store A1
+ │    └── Store A2
+ │
+ └── Vendor B
+      └── Store B1
+```
+
+Determine identifier scope from the Catalog architecture.
+
+If SKU is store-scoped:
+
+```text
+(storeId, sku)
+```
+
+If platform/vendor scoped:
+
+```text
+(platformId, sku)
+```
+
+Do not introduce a conflicting uniqueness rule without checking the existing Catalog model.
+
+---
+
+# 40. Barcode Scanner UX
+
+Scanner input should be extremely fast.
+
+Example:
+
+```text
+[ 🔍 Scan or enter SKU/barcode ]
+
+Scanner detected:
+8901234567890
+
+✓ Product found
+Oversized Tee
+Black / M
+SKU: TSH-OVR-BLK-M
+```
+
+Support keyboard scanners that send:
+
+```text
+value + ENTER
+```
+
+Avoid requiring users to click a button between every scan.
+
+---
+
+# 41. Continuous Scan Mode
+
+Warehouse/POS screens should support:
+
+```text
+Continuous Scan: ON
+```
+
+Example:
+
+```text
+Scan 1 → Product A → Qty +1
+Scan 2 → Product B → Qty +1
+Scan 3 → Product A → Qty +1
+Scan 4 → Product A → Qty +1
+```
+
+Result:
+
+```text
+Product A: 3
+Product B: 1
+```
+
+This is especially useful for:
+
+* POS
+* Stock counting
+* Receiving
+* Picking
+* Packing
+* Transfers
+
+---
+
+# 42. Stock Counting by Barcode
+
+Support:
+
+```text
+Inventory Count
+↓
+Scan barcode
+↓
+Enter/count quantity
+↓
+Next barcode
+↓
+Submit count
+```
+
+Example:
+
+```text
+TSH-OVR-BLK-M
+System: 42
+Counted: 40
+
+Difference: -2
+```
+
+The final adjustment MUST go through Inventory services and require the appropriate permission.
+
+---
+
+# 43. Import / Export
+
+CSV import should support:
+
+```text
+product_id
+variant_id
+sku
+barcode
+barcode_type
+is_primary
+```
+
+Import pipeline:
+
+```text
+Upload
+ ↓
+Parse
+ ↓
+Validate
+ ↓
+Detect duplicates
+ ↓
+Preview errors
+ ↓
+Confirm
+ ↓
+Import
+ ↓
+Audit
+```
+
+Never partially import silently.
+
+Provide:
+
+```text
+Valid: 9,840
+Invalid: 120
+Duplicates: 40
+```
+
+---
+
+# 44. Product Creation Example
+
+Example UX:
+
+```text
+Product Name
+Oversized Tee
+
+Category
+T-Shirts
+
+Variants
+
+Color:
+Black
+
+Size:
+M
+
+────────────────────────
+
+SKU
+
+○ Auto Generate
+● Manual
+
+SKU
+TSH-OVR-BLK-M
+
+✓ Available
+
+────────────────────────
+
+Barcode
+
+● Generate
+○ Existing
+
+Type
+CODE_128
+
+[ Generate Barcode ]
+
+Preview
+
+████████████████████
+████ ███ █████ ████
+████████████████████
+
+TSH-OVR-BLK-M
+
+[ Print Label ]
+
+────────────────────────
+
+[ Save Variant ]
+```
+
+---
+
+# 45. Existing Product Editing
+
+When editing an existing product:
+
+```text
+SKU:
+TSH-OVR-BLK-M
+```
+
+Do NOT silently regenerate it.
+
+Changing SKU should require:
+
+```text
+Edit SKU
+↓
+Validate
+↓
+Warning
+↓
+Confirm
+↓
+Audit
+```
+
+For active products, consider requiring elevated permission.
+
+Historical orders MUST continue to preserve the original SKU snapshot.
+
+---
+
+# 46. Historical Data
+
+Orders, invoices, POS receipts and inventory movements should store immutable snapshots where required.
+
+Example order item:
+
+```ts
+{
+  productId,
+  variantId,
+  skuSnapshot,
+  productNameSnapshot,
+  barcodeSnapshot,
+  quantity,
+  unitPrice
+}
+```
+
+Do not rely on the current product SKU to reconstruct historical transactions.
+
+---
+
+# 47. Events
+
+Publish domain events where appropriate:
+
+```text
+SkuAssigned
+SkuChanged
+BarcodeAdded
+BarcodeRemoved
+BarcodeRevoked
+BarcodeGenerated
+BarcodeImported
+BarcodePrinted
+```
+
+Example:
+
+```ts
+BarcodeAdded {
+  barcodeId
+  productId
+  variantId
+  sku
+  barcode
+  barcodeType
+  actorId
+  storeId
+}
+```
+
+Use the existing Outbox/Event Bus architecture.
+
+---
+
+# 48. Search Integration
+
+Search indexing MAY include:
+
+```text
+sku
+barcode
+product name
+variant name
+brand
+category
+```
+
+Example:
+
+```text
+Search:
+TSH-OVR-BLK-M
+```
+
+returns the matching variant.
+
+Meilisearch remains a read model.
+
+The database remains the source of truth.
+
+---
+
+# 49. Performance
+
+Barcode lookup is latency-sensitive.
+
+Target:
+
+```text
+Scanner
+ ↓
+API
+ ↓
+IdentifierResolver
+ ↓
+Indexed DB lookup
+ ↓
+Product/Variant
+```
+
+Avoid:
+
+```text
+Scanner
+ ↓
+Full product search
+ ↓
+Meilisearch
+ ↓
+multiple DB queries
+```
+
+for operational stock/POS mutations.
+
+Use direct indexed identifier lookup.
+
+---
+
+# 50. Offline POS
+
+Because POS supports offline operation, barcode resolution should support a locally cached catalog/index.
+
+Offline:
+
+```text
+Scanner
+ ↓
+Local Identifier Index
+ ↓
+Product Variant
+ ↓
+POS Cart
+```
+
+When synchronized:
+
+```text
+Offline Sale
+ ↓
+Sync
+ ↓
+Server validation
+ ↓
+Order
+ ↓
+Inventory reconciliation
+```
+
+The server remains authoritative once connected.
+
+---
+
+# 51. Admin Pages
+
+Create:
+
+```text
+/admin/catalog/products
+/admin/catalog/products/create
+/admin/catalog/products/:id
+/admin/catalog/skus
+/admin/catalog/barcodes
+/admin/catalog/barcodes/print
+/admin/catalog/barcodes/import
+/admin/catalog/barcodes/settings
+```
+
+Possible barcode dashboard:
+
+```text
+Barcode Management
+
+Total Barcodes
+Active
+Unused
+Duplicate Errors
+Missing
+Recently Generated
+
+[Generate Missing]
+[Import]
+[Print Labels]
+[Export]
+```
+
+---
+
+# 52. Permissions
+
+Add permissions:
+
+```text
+catalog.sku.view
+catalog.sku.create
+catalog.sku.update
+catalog.sku.generate
+
+catalog.barcode.view
+catalog.barcode.create
+catalog.barcode.update
+catalog.barcode.delete
+catalog.barcode.generate
+catalog.barcode.import
+catalog.barcode.print
+catalog.barcode.reprint
+```
+
+Sensitive operations such as changing an active SKU/barcode may require elevated permissions.
+
+---
+
+# 53. Recommended Domain Services
+
+```text
+SkuService
+SkuGenerator
+SkuValidator
+
+BarcodeService
+BarcodeGenerator
+BarcodeValidator
+BarcodeResolver
+
+IdentifierResolver
+
+BarcodeLabelService
+BarcodePrintService
+BarcodeTemplateService
+```
+
+Example:
+
+```ts
+SkuGenerator.generate(context)
+
+SkuValidator.validate(sku, context)
+
+BarcodeGenerator.generate(request)
+
+BarcodeResolver.resolve(value, context)
+
+BarcodePrintService.print(request)
+```
+
+---
+
+# 54. Do Not Do This
+
+Do NOT:
+
+* Treat SKU and barcode as identical concepts.
+* Store UPC/EAN/GTIN as integers.
+* Generate new SKU whenever product name changes.
+* Generate new SKU whenever category changes.
+* Allow duplicate active barcodes accidentally.
+* Trust frontend store/vendor IDs.
+* Modify inventory directly from barcode code.
+* Use Redis as identifier truth.
+* Use Meilisearch as mutation truth.
+* Delete historical identifiers that are referenced by transactions.
+* Generate fake GS1 identifiers and call them globally registered GTINs.
+* Put barcode logic separately into every module.
+* couple barcode generation to a specific printer vendor.
+
+---
+
+# 55. Definition of Done
+
+The implementation is complete when:
+
+### Product Creation
+
+* [ ] Auto SKU
+* [ ] Manual SKU
+* [ ] SKU validation
+* [ ] Duplicate SKU prevention
+* [ ] Variant SKU generation
+* [ ] Bulk SKU generation
+
+### Barcode
+
+* [ ] Generate barcode
+* [ ] Enter existing barcode
+* [ ] Generate barcode from SKU
+* [ ] Multiple barcodes
+* [ ] Barcode validation
+* [ ] Duplicate barcode prevention
+* [ ] Barcode status
+* [ ] Barcode history
+
+### Scanning
+
+* [ ] USB scanner
+* [ ] Bluetooth scanner
+* [ ] Camera scanner
+* [ ] SKU scan/lookup
+* [ ] Barcode lookup
+* [ ] Continuous scanning
+
+### Printing
+
+* [ ] Label templates
+* [ ] Print preview
+* [ ] Single print
+* [ ] Bulk print
+* [ ] Reprint
+* [ ] PDF fallback
+* [ ] Printer abstraction
+
+### Operations
+
+* [ ] POS scanning
+* [ ] Warehouse receiving
+* [ ] Stock counting
+* [ ] Inventory adjustment
+* [ ] Inventory transfer
+* [ ] Returns
+* [ ] Product lookup
+
+### Enterprise
+
+* [ ] Multi-vendor isolation
+* [ ] Multi-store isolation
+* [ ] RBAC
+* [ ] Audit logs
+* [ ] Import/export
+* [ ] Events/outbox
+* [ ] Offline POS support
+* [ ] Historical snapshots
+* [ ] Database constraints
+* [ ] Automated tests
+
+---
+
+# 56. Cursor Implementation Instructions
+
+Before changing code:
+
+1. Inspect the existing Catalog module.
+2. Inspect Product and ProductVariant models.
+3. Inspect Store/Vendor ownership rules.
+4. Inspect Inventory identifiers.
+5. Inspect POS product lookup.
+6. Inspect existing barcode libraries.
+7. Inspect existing printer abstraction.
+8. Inspect existing RBAC.
+9. Inspect existing audit infrastructure.
+10. Inspect existing Outbox/Event Bus.
+11. Inspect existing import/export infrastructure.
+
+Then implement the capability using existing architecture.
+
+DO NOT rewrite Catalog.
+
+DO NOT create a second Product model.
+
+DO NOT create a second Variant model.
+
+DO NOT create a separate inventory truth.
+
+DO NOT create a separate POS product database.
+
+Reuse existing domain services, repositories, events, authorization, validation, UI components and infrastructure wherever possible.
+
+Implement incrementally:
+
+```text
+1. SKU model/rules
+2. SKU generation
+3. SKU validation
+4. Barcode model
+5. Barcode generation
+6. Barcode validation
+7. IdentifierResolver
+8. Product creation integration
+9. Variant integration
+10. Barcode scanning
+11. POS integration
+12. Inventory integration
+13. Barcode label templates
+14. Printing
+15. Bulk operations
+16. Import/export
+17. Audit/events
+18. Offline POS support
+19. Tests
+20. E2E tests
+```
+
+Every implementation must preserve:
+
+```text
+Catalog → Inventory → POS → Orders
+```
+
+as separate bounded contexts with explicit application-service boundaries.

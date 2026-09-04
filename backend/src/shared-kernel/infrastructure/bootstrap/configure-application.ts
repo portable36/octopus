@@ -9,6 +9,14 @@ import type { AppConfigService } from '../../../config/app-config.service';
 import { Rfc7807ExceptionFilter } from '../filters/rfc7807-exception.filter';
 
 export function configureApplication(app: INestApplication, config: AppConfigService): void {
+  // Rate-limit keys use Express req.ip; trust only the configured hop count (never "true").
+  if (config.trustProxyHops > 0) {
+    const expressApp = app.getHttpAdapter().getInstance() as {
+      set: (key: string, value: number) => void;
+    };
+    expressApp.set('trust proxy', config.trustProxyHops);
+  }
+
   if (config.isProduction) {
     app.use(helmet());
   } else {

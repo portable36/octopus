@@ -34,6 +34,7 @@ export const PERMISSIONS = [
   'platform.vendors.read',
   'platform.vendors.write',
   'platform.stores.read',
+  'platform.stores.write',
   'platform.orders.read',
   'platform.payments.read',
   'platform.reports.read',

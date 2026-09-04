@@ -92,6 +92,11 @@ const baseEnvSchema = z.object({
   DATABASE_SLOW_QUERY_MS: z.coerce.number().int().min(0).max(60_000).default(500),
   /** Express JSON/urlencoded body size limit (e.g. 1mb). */
   HTTP_BODY_LIMIT: z.string().min(2).max(16).default('1mb'),
+  /**
+   * Number of trusted reverse-proxy hops for Express `trust proxy`.
+   * 0 = use socket address only (local). 1 = single LB/ingress. Too high enables X-Forwarded-For spoofing.
+   */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
   /** Previous signing secret for overlap during rotation; verify-only. */

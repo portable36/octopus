@@ -1,0 +1,13 @@
+#!/bin/sh
+# Re-export chats before push; auto-commit if backups changed since last commit.
+set -e
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+node scripts/export-cursor-chats.mjs
+if ! git diff --quiet -- .cursor/chat-backups/ 2>/dev/null || \
+   ! git diff --cached --quiet -- .cursor/chat-backups/ 2>/dev/null; then
+  git add .cursor/chat-backups/
+  if ! git diff --cached --quiet -- .cursor/chat-backups/ 2>/dev/null; then
+    git commit -m "chore: cursor chat backup" --no-verify
+  fi
+fi

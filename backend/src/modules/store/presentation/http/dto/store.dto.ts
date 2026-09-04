@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsIn,
@@ -209,3 +210,80 @@ export class MaintenanceStoreRequestDto {
   @MaxLength(1000)
   reason?: string;
 }
+
+const ADMIN_STORE_STATUSES = [
+  'draft',
+  'provisioning',
+  'failed',
+  'active',
+  'suspended',
+  'maintenance',
+  'archived',
+  'closed',
+] as const;
+
+const ADMIN_STORE_TYPES = [
+  'online',
+  'physical',
+  'online_physical',
+  'warehouse',
+  'outlet',
+  'pickup_point',
+  'popup',
+  'marketplace',
+] as const;
+
+const ADMIN_STORE_SORTS = ['createdAt_desc', 'createdAt_asc', 'name_asc', 'name_desc'] as const;
+
+export class AdminListStoresQueryDto {
+  @ApiPropertyOptional({ description: 'Search name, storeCode, slug, vendor name, email, phone' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  q?: string;
+
+  @ApiPropertyOptional({
+    description: 'Comma-separated statuses (e.g. provisioning,failed)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  status?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  vendorId?: string;
+
+  @ApiPropertyOptional({ enum: ADMIN_STORE_TYPES })
+  @IsOptional()
+  @IsIn([...ADMIN_STORE_TYPES])
+  storeType?: (typeof ADMIN_STORE_TYPES)[number];
+
+  @ApiPropertyOptional({ example: 'BD' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  country?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({ default: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
+
+  @ApiPropertyOptional({ enum: ADMIN_STORE_SORTS, default: 'createdAt_desc' })
+  @IsOptional()
+  @IsIn([...ADMIN_STORE_SORTS])
+  sort?: (typeof ADMIN_STORE_SORTS)[number];
+}
+
+export { ADMIN_STORE_STATUSES };

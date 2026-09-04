@@ -4,15 +4,22 @@ import {
   Controller,
   Headers,
   HttpCode,
+  Inject,
   Param,
   Post,
+  Req,
   UseFilters,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
 import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import {
+  API_RATE_LIMITER,
+  type ApiRateLimiter,
+} from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import {
   CollectCodPaymentHandler,
   CreateRefundHandler,
@@ -28,6 +35,7 @@ export class PaymentController {
   constructor(
     private readonly collectCod: CollectCodPaymentHandler,
     private readonly createRefund: CreateRefundHandler,
+    @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
   ) {}
 
   @Post('cod/:paymentIntentId/collect')
@@ -42,8 +50,10 @@ export class PaymentController {
     @CurrentUser() user: RequestPrincipal,
     @Param('paymentIntentId') paymentIntentId: string,
     @Body() body: CollectCodPaymentDto,
-    @Headers('idempotency-key') idempotencyHeader?: string,
+    @Headers('idempotency-key') idempotencyHeader: string | undefined,
+    @Req() req: Request,
   ) {
+    await this.rateLimiter.consume(`payment:cod-collect:${req.ip ?? 'unknown'}`, 30, 60);
     const idempotencyKey = requireIdempotencyKey(idempotencyHeader);
     return this.collectCod.execute({
       paymentIntentId,
@@ -70,8 +80,10 @@ export class PaymentController {
     @CurrentUser() user: RequestPrincipal,
     @Param('paymentIntentId') paymentIntentId: string,
     @Body() body: CreateRefundDto,
-    @Headers('idempotency-key') idempotencyHeader?: string,
+    @Headers('idempotency-key') idempotencyHeader: string | undefined,
+    @Req() req: Request,
   ) {
+    await this.rateLimiter.consume(`payment:refund:${req.ip ?? 'unknown'}`, 20, 60);
     const idempotencyKey = requireIdempotencyKey(idempotencyHeader);
     return this.createRefund.execute({
       paymentIntentId,

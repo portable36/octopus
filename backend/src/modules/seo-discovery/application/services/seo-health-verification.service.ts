@@ -1,5 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AppConfigService } from '../../../../config/app-config.service';
 import {
@@ -12,8 +14,15 @@ import { assertAllowedOutboundUrl } from '../../../../shared-kernel/infrastructu
 
 const MAX_ROUTES = 500;
 const FETCH_TIMEOUT_MS = 8_000;
+const LAST_SCAN_RELATIVE_PATH = 'health-last-scan.json';
 
 type ProductRouteRow = { id: string };
+
+type HealthLastScanFile = {
+  readonly scannedAt: string;
+  readonly scanned: number;
+  readonly issues: number;
+};
 
 @Injectable()
 export class SeoHealthVerificationService {
@@ -90,6 +99,12 @@ export class SeoHealthVerificationService {
       }
     });
 
+    await this.writeLastScanMarker({
+      scannedAt: scannedAt.toISOString(),
+      scanned: routes.length,
+      issues: issues.length,
+    });
+
     this.logger.log(`SEO health verification complete: ${routes.length} routes, ${issues.length} issues.`);
     return { scanned: routes.length, issues: issues.length };
   }
@@ -99,6 +114,14 @@ export class SeoHealthVerificationService {
   }
 
   public async latestScanAt(): Promise<Date | null> {
+    const fromFile = await this.readLastScanMarker();
+    if (fromFile?.scannedAt) {
+      const parsed = Date.parse(fromFile.scannedAt);
+      if (!Number.isNaN(parsed)) {
+        return new Date(parsed);
+      }
+    }
+
     const [latest] = await this.em.find(
       SeoHealthIssue,
       {},
@@ -160,6 +183,32 @@ export class SeoHealthVerificationService {
       return await response.text();
     } finally {
       clearTimeout(timeout);
+    }
+  }
+
+  private lastScanPath(): string {
+    return join(this.config.seoCacheDir, LAST_SCAN_RELATIVE_PATH);
+  }
+
+  private async writeLastScanMarker(payload: HealthLastScanFile): Promise<void> {
+    await mkdir(this.config.seoCacheDir, { recursive: true });
+    await writeFile(this.lastScanPath(), `${JSON.stringify(payload)}\n`, 'utf8');
+  }
+
+  private async readLastScanMarker(): Promise<HealthLastScanFile | null> {
+    try {
+      const raw = await readFile(this.lastScanPath(), 'utf8');
+      const parsed = JSON.parse(raw) as Partial<HealthLastScanFile>;
+      if (typeof parsed.scannedAt !== 'string') {
+        return null;
+      }
+      return {
+        scannedAt: parsed.scannedAt,
+        scanned: typeof parsed.scanned === 'number' ? parsed.scanned : 0,
+        issues: typeof parsed.issues === 'number' ? parsed.issues : 0,
+      };
+    } catch {
+      return null;
     }
   }
 }

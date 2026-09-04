@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Inject, Param, Post, UseFilters } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsInt, IsString, Min } from 'class-validator';
 import {
@@ -6,6 +6,10 @@ import {
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
+import {
+  API_RATE_LIMITER,
+  type ApiRateLimiter,
+} from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { MediaHandlers } from '../../application/commands/media.handlers';
 import { MediaAuthorizationService } from '../../application/services/media-authorization.service';
 import { MediaExceptionFilter } from './filters/media-exception.filter';
@@ -72,6 +76,7 @@ export class VendorMediaController {
   constructor(
     private readonly media: MediaHandlers,
     private readonly authz: MediaAuthorizationService,
+    @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
   ) {}
 
   @Post('upload-sessions')
@@ -82,6 +87,7 @@ export class VendorMediaController {
     @Param('vendorId') vendorId: string,
     @Body() body: CreateUploadSessionDto,
   ) {
+    await this.rateLimiter.consume(`media:upload-session:${user.userId}`, 30, 60);
     const vendor = await this.authz.requireActiveVendor(vendorId);
     this.authz.assertCanMutate(vendor, user.userId, user.roles);
     return this.media.createUploadSession({
@@ -102,6 +108,7 @@ export class VendorMediaController {
     @Param('vendorId') vendorId: string,
     @Body() body: RegisterVendorMediaDto,
   ) {
+    await this.rateLimiter.consume(`media:register:${user.userId}`, 30, 60);
     const vendor = await this.authz.requireActiveVendor(vendorId);
     this.authz.assertCanMutate(vendor, user.userId, user.roles);
     const asset = await this.media.registerMetadata({

@@ -1,0 +1,2110 @@
+# GEM — Generative Ads Model / Generative Ads Recommendation Model
+
+## Purpose
+
+GEM (Generative Ads Model / Generative Ads Recommendation Model) is the platform's AI-powered advertising intelligence and optimization bounded context.
+
+GEM is responsible for:
+
+* Product advertising recommendations
+* Product ad scoring
+* Audience recommendations
+* Creative generation
+* Campaign recommendations
+* Campaign optimization
+* Budget recommendations
+* Ad experimentation
+* Performance analysis
+* Advertising intelligence
+* Conversion-oriented recommendations
+* Automated advertising workflows
+* Feedback and learning loops
+
+GEM must integrate with the platform's existing Marketing, Catalog, Inventory, Order, Customer, Analytics, Promotion, Search, Notification, and Event/Queue infrastructure.
+
+GEM must remain modular and provider-agnostic.
+
+---
+
+# 1. Architectural Position
+
+GEM belongs primarily inside the Marketing bounded context but must have strict boundaries from other domains.
+
+```text
+Marketing
+│
+├── Campaigns
+├── Promotions
+├── Advertising
+├── Social Media
+├── Content
+│
+└── GEM
+    ├── Product Intelligence
+    ├── Audience Intelligence
+    ├── Creative Intelligence
+    ├── Campaign Intelligence
+    ├── Budget Intelligence
+    ├── Experimentation
+    ├── Optimization
+    ├── Recommendations
+    ├── Automation
+    └── Learning / Feedback
+```
+
+GEM is not the source of truth for:
+
+* Products
+* Prices
+* Inventory
+* Orders
+* Payments
+* Customers
+* Financial accounting
+* Promotions
+* Tax
+* Shipping
+
+GEM consumes authoritative information from those bounded contexts.
+
+---
+
+# 2. Core Architectural Principle
+
+GEM follows:
+
+```text
+Observe
+  ↓
+Analyze
+  ↓
+Recommend
+  ↓
+Validate
+  ↓
+Approve / Automate
+  ↓
+Execute
+  ↓
+Measure
+  ↓
+Learn
+```
+
+Never allow unrestricted AI-generated actions to directly mutate authoritative commerce data.
+
+---
+
+# 3. Decision Authority
+
+GEM may recommend:
+
+* Products
+* Audiences
+* Campaign structures
+* Creative variants
+* Budget allocations
+* Bid/optimization strategies
+* Promotion candidates
+* Timing
+* Channels
+* Experiments
+
+GEM must not independently change:
+
+* Product price
+* Inventory quantity
+* Order state
+* Payment state
+* Refund state
+* Vendor balance
+* Financial ledger
+* Tax rules
+* Shipping rules
+
+All sensitive actions must pass through domain/application services and policy validation.
+
+---
+
+# 4. Automation Levels
+
+Support configurable automation levels.
+
+```text
+LEVEL_0
+Analytics only
+
+LEVEL_1
+Recommendations only
+
+LEVEL_2
+Generate creatives automatically
+
+LEVEL_3
+Generate campaign drafts automatically
+
+LEVEL_4
+Automatically optimize approved campaigns
+
+LEVEL_5
+Autonomous advertising optimization
+```
+
+Default:
+
+```text
+LEVEL_1
+```
+
+Higher levels require explicit platform/admin configuration.
+
+---
+
+# 5. Core Data Sources
+
+GEM consumes data from:
+
+## Catalog
+
+* Product
+* Variant
+* SKU
+* Brand
+* Category
+* Collection
+* Attributes
+* Product descriptions
+* Product media
+* Product status
+* Product visibility
+
+## Inventory
+
+* Stock quantity
+* Available quantity
+* Reserved quantity
+* Warehouse
+* Store availability
+* Low-stock state
+
+Inventory remains authoritative in the Inventory bounded context.
+
+## Orders
+
+* Order
+* Order items
+* Sales channel
+* Revenue
+* Quantity
+* Customer
+* Store
+* Vendor
+* Product
+
+## Customer
+
+* Customer segments
+* Customer behavior
+* Purchase history
+* Wishlist
+* Cart behavior
+* Search behavior
+* Consent state
+
+Do not expose unnecessary personal data to AI providers.
+
+## Marketing
+
+* Campaigns
+* Ad sets
+* Ads
+* Creatives
+* Promotions
+* Coupons
+* Campaign goals
+
+## Analytics
+
+* Impressions
+* Clicks
+* CTR
+* CPC
+* CPM
+* Add-to-cart
+* Checkout
+* Purchase
+* Conversion rate
+* CPA
+* ROAS
+* Revenue
+* Profit/margin where permitted
+
+## Search
+
+* Search queries
+* Product popularity
+* Category popularity
+* Search trends
+* Product discovery signals
+
+---
+
+# 6. Event-Driven Architecture
+
+GEM must consume events asynchronously.
+
+```text
+Domain Event
+    ↓
+Outbox
+    ↓
+BullMQ
+    ↓
+GEM Consumer
+    ↓
+Feature / Metric Aggregation
+    ↓
+Recommendation Engine
+```
+
+Never make advertising intelligence depend on synchronous execution inside checkout or order transactions.
+
+---
+
+# 7. Important Events
+
+GEM should consume events such as:
+
+```text
+ProductCreated
+ProductUpdated
+ProductPublished
+ProductUnpublished
+ProductPriceChanged
+
+InventoryAdjusted
+InventoryReserved
+InventoryReleased
+InventoryDepleted
+
+ProductViewed
+SearchPerformed
+WishlistAdded
+CartCreated
+CartItemAdded
+CheckoutStarted
+
+OrderPlaced
+OrderPaid
+OrderCancelled
+OrderCompleted
+
+RefundCompleted
+ReturnCompleted
+
+CampaignCreated
+CampaignUpdated
+CampaignPaused
+CampaignActivated
+
+AdImpression
+AdClicked
+AdConversion
+
+PromotionCreated
+PromotionActivated
+PromotionExpired
+```
+
+Events must be:
+
+* Idempotent
+* Versioned
+* Traceable
+* Retryable
+* Auditable
+
+---
+
+# 8. GEM Core Entities
+
+Recommended entities:
+
+```text
+GEMRecommendation
+GEMDecision
+GEMModelVersion
+GEMExperiment
+GEMFeedback
+GEMProductScore
+GEMAudienceRecommendation
+GEMCreative
+GEMCampaignRecommendation
+GEMOptimization
+GEMBudgetRecommendation
+GEMPerformanceSnapshot
+GEMAutomationPolicy
+GEMFeatureSnapshot
+```
+
+---
+
+# 9. GEMRecommendation
+
+Represents a recommendation generated by GEM.
+
+Fields:
+
+```text
+id
+storeId
+vendorId
+type
+targetId
+recommendation
+score
+confidence
+reason
+modelVersion
+status
+expiresAt
+createdAt
+updatedAt
+```
+
+Recommendation types:
+
+```text
+PRODUCT
+AUDIENCE
+CREATIVE
+CAMPAIGN
+BUDGET
+PROMOTION
+CHANNEL
+TIMING
+OPTIMIZATION
+```
+
+Statuses:
+
+```text
+GENERATED
+REVIEWING
+APPROVED
+REJECTED
+EXECUTED
+EXPIRED
+FAILED
+```
+
+---
+
+# 10. Product Advertising Score
+
+GEM should calculate a product advertising score.
+
+Example factors:
+
+```text
+Conversion Rate
+Revenue
+ROAS
+Margin
+Inventory Availability
+Demand Trend
+Product Popularity
+CTR
+Add-to-Cart Rate
+Refund Rate
+Return Rate
+Promotion Strength
+Seasonality
+Store Performance
+```
+
+Example:
+
+```text
+Product Score
+----------------
+Demand              92
+Conversion          88
+Margin              81
+Inventory           95
+ROAS                91
+Trend               94
+Refund Risk         72
+
+Overall Score       89
+```
+
+The scoring model must be configurable and versioned.
+
+---
+
+# 11. Inventory-Aware Advertising
+
+GEM must consider inventory before recommending advertising.
+
+Example:
+
+```text
+Available Stock < minimum advertising threshold
+        ↓
+Reduce recommendation score
+        ↓
+Potentially exclude product
+```
+
+If:
+
+```text
+InventoryDepleted
+```
+
+then:
+
+```text
+Product advertising eligibility = BLOCKED
+```
+
+When inventory recovers:
+
+```text
+InventoryRestored
+        ↓
+Recalculate eligibility
+```
+
+Never use Redis as inventory truth.
+
+Read authoritative availability from the Inventory domain/read model.
+
+---
+
+# 12. Audience Intelligence
+
+GEM can generate audience recommendations based on aggregated behavioral signals.
+
+Examples:
+
+```text
+HIGH_INTENT
+CART_ABANDONERS
+PRODUCT_VIEWERS
+CATEGORY_INTEREST
+RECENT_PURCHASERS
+REPEAT_CUSTOMERS
+CROSS_SELL
+UPSELL
+WIN_BACK
+NEW_CUSTOMERS
+```
+
+Audience recommendations must respect:
+
+* Consent
+* Privacy policy
+* Platform policies
+* Applicable data-protection requirements
+* Data minimization
+
+Do not send raw sensitive customer information to external AI providers.
+
+---
+
+# 13. Creative Generation
+
+GEM can generate:
+
+```text
+Primary Text
+Headline
+Description
+CTA
+Creative Concept
+Image Prompt
+Video Concept
+Product Angle
+Offer Angle
+Audience Angle
+```
+
+Creative generation must use authoritative catalog facts.
+
+Example:
+
+```text
+Catalog
+    ↓
+Product Facts
+    ↓
+GEM Creative Generator
+    ↓
+Creative Variants
+```
+
+AI must never invent:
+
+* Price
+* Discount
+* Stock
+* Product specifications
+* Warranty
+* Shipping guarantee
+* Brand claims
+
+---
+
+# 14. Creative Variants
+
+Generate multiple variants for experimentation.
+
+```text
+Creative A
+Benefit-focused
+
+Creative B
+Price-focused
+
+Creative C
+Social-proof-focused
+
+Creative D
+Problem/solution-focused
+
+Creative E
+Urgency-focused
+```
+
+Each creative should have:
+
+```text
+creativeId
+productId
+campaignId
+audienceId
+copy
+headline
+description
+cta
+assetReference
+generationModel
+promptVersion
+status
+```
+
+---
+
+# 15. Campaign Recommendation
+
+GEM may recommend:
+
+```text
+Campaign Objective
+Products
+Audience
+Creative
+Channel
+Budget
+Schedule
+Optimization Goal
+Experiment Strategy
+```
+
+Example:
+
+```text
+Goal:
+Purchase
+
+Products:
+Top 5 high-converting products
+
+Audience:
+High-intent shoppers
+
+Strategy:
+Prospecting + Retargeting
+
+Creative:
+3 variants
+
+Budget:
+Recommended based on approved constraints
+
+Optimization:
+Purchase conversion
+```
+
+GEM should produce a draft first unless automation policy explicitly allows execution.
+
+---
+
+# 16. Budget Recommendation
+
+Budget recommendations must respect:
+
+```text
+Maximum Daily Budget
+Maximum Campaign Budget
+Store Budget
+Vendor Budget
+Platform Budget
+Minimum ROAS
+Maximum CPA
+Business Rules
+```
+
+Never allow GEM to exceed configured financial limits.
+
+Example:
+
+```text
+Configured maximum:
+৳10,000/day
+
+GEM recommendation:
+৳6,000/day
+
+Allowed:
+YES
+```
+
+---
+
+# 17. Campaign Optimization
+
+GEM may recommend:
+
+```text
+Increase budget
+Decrease budget
+Pause ad
+Pause creative
+Replace creative
+Change audience
+Change product
+Change schedule
+Change allocation
+Increase retargeting
+Reduce low-performing spend
+```
+
+Every optimization must have:
+
+```text
+reason
+evidence
+confidence
+expectedImpact
+risk
+modelVersion
+policyCheck
+```
+
+---
+
+# 18. Advertising Provider Abstraction
+
+Never couple GEM directly to Meta, Google, TikTok, or another advertising platform.
+
+Use an adapter interface.
+
+```typescript
+interface AdvertisingProvider {
+  createCampaign(input): Promise<Result>;
+  updateCampaign(input): Promise<Result>;
+  pauseCampaign(input): Promise<Result>;
+  createAdSet(input): Promise<Result>;
+  createCreative(input): Promise<Result>;
+  createAd(input): Promise<Result>;
+  getInsights(input): Promise<Result>;
+}
+```
+
+Providers:
+
+```text
+MetaAdsProvider
+GoogleAdsProvider
+TikTokAdsProvider
+FutureProvider
+```
+
+GEM decides WHAT should happen.
+
+The provider adapter decides HOW the platform API performs it.
+
+---
+
+# 19. Meta Ads Integration
+
+Meta integration should support:
+
+```text
+Campaign
+Ad Set
+Ad
+Creative
+Audience
+Conversion
+Insights
+Budget
+Status
+```
+
+Use a provider adapter.
+
+Do not put Meta-specific IDs throughout the GEM domain model.
+
+Use external integration mappings:
+
+```text
+GEM Entity
+    ↓
+Advertising Integration
+    ↓
+Provider External ID
+```
+
+---
+
+# 20. Conversion Measurement
+
+Advertising optimization requires reliable conversion signals.
+
+Track:
+
+```text
+PageView
+ViewContent
+Search
+AddToCart
+InitiateCheckout
+Purchase
+Refund
+```
+
+Where applicable, integrate:
+
+```text
+GTM
+Google Analytics
+Meta Pixel
+Meta Conversions API
+Advertising platform conversion APIs
+```
+
+Use server-side events where appropriate.
+
+Deduplicate browser/server events using stable event IDs.
+
+---
+
+# 21. Attribution
+
+GEM should support attribution data without pretending attribution is perfectly deterministic.
+
+Support:
+
+```text
+First Touch
+Last Touch
+Linear
+Position Based
+Time Decay
+Data Driven
+Platform Reported
+```
+
+Store attribution methodology/version.
+
+Never overwrite historical attribution calculations silently.
+
+---
+
+# 22. Performance Metrics
+
+Core metrics:
+
+```text
+Impressions
+Reach
+Clicks
+CTR
+CPC
+CPM
+AddToCart
+CheckoutStarted
+Purchases
+ConversionRate
+CPA
+Revenue
+ROAS
+RefundRate
+ReturnRate
+ProfitContribution
+```
+
+Use immutable historical snapshots where appropriate.
+
+---
+
+# 23. Feedback Loop
+
+Advertising performance must feed GEM.
+
+```text
+Ad Performance
+      ↓
+Performance Snapshot
+      ↓
+Feature Aggregation
+      ↓
+Recommendation Evaluation
+      ↓
+Model/Rule Feedback
+      ↓
+Future Recommendation
+```
+
+Example:
+
+```text
+Creative A
+CTR ↑
+CVR ↑
+CPA ↓
+ROAS ↑
+
+→ Increase recommendation score
+```
+
+Poor-performing assets should receive lower scores.
+
+---
+
+# 24. Experiments
+
+GEM must support controlled experimentation.
+
+Entity:
+
+```text
+GEMExperiment
+```
+
+Fields:
+
+```text
+id
+storeId
+campaignId
+hypothesis
+variants
+allocation
+startAt
+endAt
+successMetric
+status
+result
+```
+
+Experiment types:
+
+```text
+CREATIVE
+COPY
+AUDIENCE
+PRODUCT
+OFFER
+BUDGET
+LANDING_PAGE
+CAMPAIGN_STRUCTURE
+```
+
+Do not declare winners from statistically insufficient data.
+
+---
+
+# 25. Model Versioning
+
+Every AI-generated recommendation must record:
+
+```text
+modelProvider
+modelName
+modelVersion
+promptVersion
+featureVersion
+scoringVersion
+createdAt
+```
+
+Never silently change model behavior without version tracking.
+
+This is necessary for:
+
+* Debugging
+* Auditing
+* Reproducibility
+* Performance comparison
+* Rollback
+
+---
+
+# 26. AI Provider Abstraction
+
+Never hard-code one AI provider.
+
+Use:
+
+```typescript
+interface GenerativeAIProvider {
+  generateText(input): Promise<Result>;
+  generateStructuredOutput(input): Promise<Result>;
+  classify(input): Promise<Result>;
+  embed(input): Promise<Result>;
+}
+```
+
+Potential providers:
+
+```text
+OpenAI
+Anthropic
+Google
+Local Model
+Future Provider
+```
+
+Provider selection must happen through configuration/policy.
+
+---
+
+# 27. Structured AI Output
+
+Do not trust free-form AI output for business actions.
+
+Prefer:
+
+```json
+{
+  "recommendationType": "PRODUCT",
+  "productId": "...",
+  "score": 91,
+  "confidence": 0.87,
+  "reasonCodes": [
+    "HIGH_CONVERSION",
+    "HEALTHY_INVENTORY",
+    "STRONG_ROAS"
+  ]
+}
+```
+
+Validate with schema before accepting.
+
+AI output is untrusted input.
+
+---
+
+# 28. Recommendation Explainability
+
+Every recommendation should explain:
+
+```text
+Why recommended
+Data signals
+Score
+Confidence
+Expected benefit
+Potential risk
+Model version
+```
+
+Example:
+
+```text
+Recommended because:
+
+- Conversion rate is 32% above store average
+- Inventory is healthy
+- ROAS is 24% above campaign average
+- Product demand increased during the last period
+
+Confidence: 87%
+```
+
+---
+
+# 29. Policy Engine
+
+Before executing any GEM recommendation:
+
+```text
+Recommendation
+      ↓
+Policy Engine
+      ↓
+Allowed?
+   /     \
+ YES      NO
+ ↓         ↓
+Execute   Reject/Review
+```
+
+Policy rules can include:
+
+```text
+Max spend
+Min ROAS
+Max CPA
+Inventory threshold
+Product eligibility
+Vendor permissions
+Store permissions
+Campaign limits
+Automation level
+Approval requirements
+```
+
+---
+
+# 30. Human Approval
+
+Admin UI should show:
+
+```text
+Recommendation
+Why
+Evidence
+Expected result
+Risk
+Budget
+Products
+Audience
+Creative
+Confidence
+```
+
+Actions:
+
+```text
+Approve
+Reject
+Edit
+Schedule
+Execute
+Save as Draft
+```
+
+---
+
+# 31. Automation Engine
+
+Support:
+
+```text
+GEM Automation Rule
+```
+
+Example:
+
+```text
+WHEN
+ROAS < 1.5
+AND
+Spend > minimum threshold
+
+THEN
+recommend pause
+```
+
+Another:
+
+```text
+WHEN
+ROAS > 5
+AND
+Inventory > threshold
+
+THEN
+recommend budget increase
+```
+
+Automation must respect policy limits.
+
+---
+
+# 32. Scheduling
+
+Use BullMQ for asynchronous jobs.
+
+Jobs:
+
+```text
+gem:product-score
+gem:audience-analysis
+gem:creative-generation
+gem:campaign-analysis
+gem:performance-sync
+gem:recommendation-generation
+gem:optimization
+gem:experiment-evaluation
+gem:feedback-processing
+```
+
+Every job must be:
+
+* Idempotent
+* Retryable
+* Observable
+* Traceable
+* Dead-letter capable
+
+---
+
+# 33. Queue Architecture
+
+```text
+GEM Queues
+
+gem-product-analysis
+gem-audience-analysis
+gem-creative-generation
+gem-campaign-analysis
+gem-performance-sync
+gem-recommendations
+gem-optimization
+gem-experiments
+gem-feedback
+```
+
+Do not perform long-running AI operations inside HTTP requests.
+
+---
+
+# 34. Caching
+
+Redis may be used for:
+
+* Recommendation cache
+* Temporary feature cache
+* Rate limiting
+* Job coordination
+* AI response cache where safe
+
+Redis must never become the source of truth for:
+
+* Inventory
+* Orders
+* Payments
+* Financial ledger
+
+---
+
+# 35. Multi-Vendor Isolation
+
+Every GEM entity must be appropriately scoped.
+
+Typical scope:
+
+```text
+platformId
+storeId
+vendorId
+```
+
+Rules:
+
+```text
+Platform admin
+→ Platform-wide access
+
+Vendor
+→ Own vendor data
+
+Store staff
+→ Assigned store data
+
+Marketing staff
+→ Authorized marketing scope
+```
+
+Never trust frontend-provided vendorId/storeId without server-side authorization.
+
+---
+
+# 36. Multi-Store Intelligence
+
+GEM must support:
+
+```text
+Platform
+Vendor
+Store
+Warehouse
+Channel
+```
+
+Recommendations may differ by store.
+
+Example:
+
+```text
+Store A
+Product X
+ROAS = 6.2
+
+Store B
+Product X
+ROAS = 1.8
+```
+
+Do not assume platform-wide performance applies equally to every store.
+
+---
+
+# 37. Product Eligibility
+
+Before advertising a product:
+
+```text
+Product published?
+        ↓
+Sellable?
+        ↓
+Correct store?
+        ↓
+Inventory available?
+        ↓
+Price valid?
+        ↓
+Media available?
+        ↓
+Promotion valid?
+        ↓
+Policy eligible?
+        ↓
+Advertisable
+```
+
+A product failing eligibility must not be automatically advertised.
+
+---
+
+# 38. Financial Safety
+
+GEM is not an accounting system.
+
+Financial truth remains in Finance/Ledger.
+
+GEM may consume:
+
+```text
+Revenue
+Cost
+Margin
+Commission
+ROAS
+CPA
+```
+
+only through approved read models.
+
+Never write directly into:
+
+```text
+VendorLedger
+FinancialLedger
+PaymentLedger
+AccountingEntries
+```
+
+---
+
+# 39. Security
+
+Protect:
+
+```text
+Advertising credentials
+API tokens
+AI provider credentials
+Customer data
+Campaign data
+Business financial metrics
+```
+
+Secrets must use the platform's secret-management mechanism.
+
+Never store provider secrets in normal business tables without encryption/secret management.
+
+Never expose secrets to AI prompts.
+
+---
+
+# 40. Audit Logging
+
+Audit:
+
+```text
+RecommendationGenerated
+RecommendationApproved
+RecommendationRejected
+RecommendationExecuted
+CampaignCreatedByGEM
+CampaignModifiedByGEM
+BudgetChangedByGEM
+CreativeGenerated
+AutomationTriggered
+OptimizationApplied
+AIProviderChanged
+ModelVersionChanged
+```
+
+Include:
+
+```text
+actor
+source
+tenant/store/vendor
+timestamp
+before
+after
+reason
+modelVersion
+correlationId
+```
+
+---
+
+# 41. Admin Dashboard
+
+Create:
+
+```text
+Marketing
+└── GEM
+    ├── Overview
+    ├── Recommendations
+    ├── Product Intelligence
+    ├── Audience Intelligence
+    ├── Creative Studio
+    ├── Campaign Intelligence
+    ├── Budget Recommendations
+    ├── Experiments
+    ├── Automation
+    ├── Performance
+    ├── Models
+    ├── AI Providers
+    ├── Policies
+    ├── Activity
+    └── Settings
+```
+
+---
+
+# 42. GEM Dashboard
+
+Show:
+
+```text
+Total Ad Spend
+Revenue
+ROAS
+CPA
+Conversions
+Active Campaigns
+Top Products
+Top Creatives
+Top Audiences
+Recommendations
+Potential Revenue Opportunities
+Optimization Opportunities
+```
+
+---
+
+# 43. Recommendation Dashboard
+
+Columns:
+
+```text
+Recommendation
+Type
+Product/Campaign
+Score
+Confidence
+Expected Impact
+Risk
+Status
+Created
+Actions
+```
+
+Actions:
+
+```text
+View
+Approve
+Reject
+Edit
+Execute
+```
+
+---
+
+# 44. Creative Studio
+
+Support:
+
+```text
+Product selection
+Audience selection
+Tone
+Objective
+Creative variants
+AI generation
+Preview
+Comparison
+Approval
+Publishing
+Experiment assignment
+```
+
+Never publish AI-generated creatives automatically unless automation policy permits it.
+
+---
+
+# 45. Observability
+
+Track:
+
+```text
+AI latency
+AI errors
+Token usage
+AI cost
+Queue latency
+Job failures
+Recommendation generation rate
+Recommendation acceptance rate
+Recommendation execution rate
+Recommendation success rate
+Campaign performance
+Provider failures
+```
+
+Integrate with the existing Developer/System Monitoring bounded context.
+
+---
+
+# 46. Cost Controls
+
+AI usage must be budget-controlled.
+
+Track:
+
+```text
+AI requests
+Tokens
+Estimated cost
+Provider
+Model
+Store
+Vendor
+Feature
+```
+
+Support:
+
+```text
+Daily AI budget
+Monthly AI budget
+Per-feature limits
+Per-store limits
+Per-vendor limits
+```
+
+---
+
+# 47. Failure Handling
+
+If AI provider fails:
+
+```text
+Retry
+   ↓
+Provider fallback
+   ↓
+Rule-based recommendation
+   ↓
+Manual review
+```
+
+Advertising operations must not fail catastrophically because an AI provider is unavailable.
+
+---
+
+# 48. Rule-Based Fallback
+
+GEM should support deterministic rules.
+
+Example:
+
+```text
+IF
+inventory > threshold
+AND
+conversionRate > threshold
+AND
+ROAS > threshold
+
+THEN
+productScore += score
+```
+
+AI is an enhancement, not the only decision mechanism.
+
+---
+
+# 49. API Design
+
+Recommended application APIs:
+
+```text
+POST /admin/gem/recommendations/generate
+
+GET /admin/gem/recommendations
+
+GET /admin/gem/recommendations/:id
+
+POST /admin/gem/recommendations/:id/approve
+
+POST /admin/gem/recommendations/:id/reject
+
+POST /admin/gem/recommendations/:id/execute
+
+GET /admin/gem/products/scores
+
+GET /admin/gem/audiences
+
+POST /admin/gem/creatives/generate
+
+GET /admin/gem/campaigns/recommendations
+
+POST /admin/gem/campaigns/optimize
+
+GET /admin/gem/experiments
+
+POST /admin/gem/experiments
+
+GET /admin/gem/performance
+
+GET /admin/gem/models
+
+GET /admin/gem/providers
+
+GET /admin/gem/policies
+```
+
+---
+
+# 50. Domain Services
+
+Recommended services:
+
+```text
+ProductAdScoringService
+AudienceRecommendationService
+CreativeGenerationService
+CampaignRecommendationService
+BudgetRecommendationService
+CampaignOptimizationService
+GEMExperimentService
+GEMFeedbackService
+GEMPerformanceService
+GEMEligibilityService
+GEMPolicyService
+GEMAutomationService
+```
+
+Keep domain logic independent from external AI providers.
+
+---
+
+# 51. Repository Interfaces
+
+Example:
+
+```typescript
+interface GEMRecommendationRepository {
+  create(input): Promise<GEMRecommendation>;
+  findById(id): Promise<GEMRecommendation | null>;
+  findPending(scope): Promise<GEMRecommendation[]>;
+  updateStatus(id, status): Promise<void>;
+}
+```
+
+Repositories belong to the GEM application/domain boundary.
+
+---
+
+# 52. External Integration Boundary
+
+Never call:
+
+```text
+Meta API
+Google Ads API
+AI Provider
+Analytics Provider
+```
+
+directly from domain entities.
+
+Use:
+
+```text
+Domain
+ ↓
+Application Service
+ ↓
+Port/Interface
+ ↓
+Infrastructure Adapter
+ ↓
+External Provider
+```
+
+---
+
+# 53. Database Principles
+
+Use relational persistence for authoritative GEM state.
+
+Recommended indexes:
+
+```text
+(storeId, status)
+(vendorId, status)
+(type, status)
+(targetId)
+(createdAt)
+(modelVersion)
+(campaignId)
+(productId)
+```
+
+Use JSON/JSONB only for flexible AI metadata where appropriate.
+
+Do not put the entire business model into unstructured JSON.
+
+---
+
+# 54. Idempotency
+
+Every external execution must support idempotency.
+
+Examples:
+
+```text
+recommendationId
+executionId
+providerOperationId
+eventId
+jobId
+```
+
+Repeated queue execution must not:
+
+* Duplicate campaigns
+* Duplicate ads
+* Duplicate spend
+* Duplicate conversions
+* Duplicate recommendations
+
+---
+
+# 55. Event Publishing
+
+GEM may publish:
+
+```text
+GEMRecommendationGenerated
+GEMRecommendationApproved
+GEMRecommendationRejected
+GEMRecommendationExecuted
+GEMCreativeGenerated
+GEMCampaignRecommended
+GEMCampaignOptimized
+GEMExperimentCompleted
+GEMAutomationTriggered
+```
+
+Events must use the platform's standard event envelope.
+
+---
+
+# 56. Testing Requirements
+
+## Unit Tests
+
+Test:
+
+```text
+Product scoring
+Eligibility
+Recommendation scoring
+Budget limits
+Policy rules
+Audience segmentation
+Creative validation
+Automation rules
+```
+
+## Integration Tests
+
+Test:
+
+```text
+Catalog → GEM
+Inventory → GEM
+Orders → GEM
+Analytics → GEM
+GEM → Advertising Provider
+GEM → AI Provider
+```
+
+## Security Tests
+
+Test:
+
+```text
+Vendor isolation
+Store isolation
+Unauthorized campaign modification
+Budget bypass
+Secret exposure
+Prompt injection
+AI output validation
+```
+
+## Concurrency Tests
+
+Test:
+
+```text
+Duplicate recommendation jobs
+Duplicate campaign execution
+Concurrent optimization
+Repeated provider webhook
+Repeated event delivery
+```
+
+---
+
+# 57. AI Safety Rules
+
+Treat all external content as untrusted.
+
+Potential prompt injection sources include:
+
+```text
+Product descriptions
+Reviews
+User-generated content
+Imported catalog data
+External feeds
+Third-party advertising data
+```
+
+Never allow catalog/user content to override system instructions or business policies.
+
+AI output must be:
+
+```text
+Schema validated
+Policy validated
+Authorization validated
+Business-rule validated
+```
+
+before execution.
+
+---
+
+# 58. SEO / Content Separation
+
+GEM may cooperate with the SEO subsystem.
+
+Example:
+
+```text
+SEO Engine
+    ↓
+Organic discovery signals
+    ↓
+Analytics
+    ↓
+GEM
+    ↓
+Paid advertising recommendations
+```
+
+But GEM must not directly own:
+
+* Canonical URLs
+* Sitemap
+* Robots
+* Structured-data truth
+* Product SEO source data
+
+Those remain in SEO/Catalog/CMS domains.
+
+---
+
+# 59. Search Integration
+
+Use Search/Meilisearch as a discovery read model.
+
+GEM may consume:
+
+```text
+Search popularity
+Search trends
+Query-product relationships
+```
+
+Meilisearch is never the authoritative source for:
+
+```text
+Price
+Inventory
+Product ownership
+Orders
+```
+
+---
+
+# 60. Future Microservice Boundary
+
+GEM should eventually be extractable as:
+
+```text
+GEM / Advertising Intelligence Service
+```
+
+Potential future architecture:
+
+```text
+Catalog Service
+Inventory Service
+Order Service
+Customer Service
+Analytics Service
+       │
+       ▼
+GEM Intelligence Service
+       │
+       ├── AI Providers
+       ├── Meta Ads
+       ├── Google Ads
+       └── TikTok Ads
+```
+
+The modular-monolith implementation must therefore maintain clean interfaces now.
+
+---
+
+# 61. Cursor AI Implementation Rules
+
+When implementing GEM:
+
+1. Inspect the existing repository before changing code.
+2. Identify existing modules, domain boundaries, events, queues, repositories, authentication, RBAC, and admin UI patterns.
+3. Reuse existing infrastructure.
+4. Do not create duplicate Catalog, Inventory, Order, Customer, Analytics, or Finance models.
+5. Do not bypass domain services.
+6. Do not make Redis the source of truth.
+7. Do not directly couple GEM to one AI provider.
+8. Do not directly couple GEM to one advertising platform.
+9. Use interfaces/ports for external providers.
+10. Use Outbox + BullMQ for asynchronous workflows.
+11. Make jobs idempotent.
+12. Make external operations idempotent.
+13. Add audit logging.
+14. Add tenant/store/vendor authorization.
+15. Add tests before declaring the feature complete.
+16. Do not rewrite unrelated modules.
+17. Preserve backward compatibility.
+18. Follow existing project naming conventions.
+19. Follow existing database migration conventions.
+20. Follow existing API/error/validation conventions.
+
+---
+
+# 62. Implementation Order
+
+Implement GEM in this order:
+
+```text
+GEM-01
+Bounded-context foundation
+
+GEM-02
+Domain entities + database
+
+GEM-03
+Event consumers
+
+GEM-04
+Product advertising eligibility
+
+GEM-05
+Product scoring
+
+GEM-06
+Performance aggregation
+
+GEM-07
+Recommendation engine
+
+GEM-08
+Policy engine
+
+GEM-09
+Admin recommendation UI
+
+GEM-10
+AI provider abstraction
+
+GEM-11
+Creative generation
+
+GEM-12
+Audience intelligence
+
+GEM-13
+Campaign recommendations
+
+GEM-14
+Advertising provider abstraction
+
+GEM-15
+Meta Ads integration
+
+GEM-16
+Google Ads integration
+
+GEM-17
+Experimentation
+
+GEM-18
+Optimization engine
+
+GEM-19
+Automation
+
+GEM-20
+Feedback/learning loop
+
+GEM-21
+Observability/cost controls
+
+GEM-22
+Security/audit hardening
+```
+
+---
+
+# 63. Definition of Done
+
+GEM is not complete until:
+
+* Product recommendations work.
+* Product eligibility is enforced.
+* Inventory-aware advertising works.
+* Recommendations are explainable.
+* AI outputs are schema validated.
+* AI outputs pass business policies.
+* Campaign execution is idempotent.
+* Multi-store isolation works.
+* Multi-vendor isolation works.
+* Admin approval works.
+* Automation levels work.
+* Meta integration is provider-isolated.
+* Analytics feedback reaches GEM.
+* Experiments are tracked.
+* Performance is measurable.
+* AI cost is measurable.
+* Audit logs exist.
+* Queue retries/DLQ exist.
+* Security tests pass.
+* Integration tests pass.
+* Unit tests pass.
+* No authoritative commerce domain is duplicated inside GEM.
+
+---
+
+# 64. Master Architectural Rule
+
+The fundamental GEM architecture is:
+
+```text
+                    COMMERCE DATA
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+       Catalog        Inventory       Orders
+          │              │              │
+          └──────────────┼──────────────┘
+                         ▼
+                    Analytics
+                         │
+                         ▼
+                  ┌─────────────┐
+                  │     GEM     │
+                  │ Intelligence│
+                  └──────┬──────┘
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+          Product     Audience   Creative
+          Scoring     Intel.     Generation
+              │          │          │
+              └──────────┼──────────┘
+                         ▼
+                  Recommendations
+                         │
+                         ▼
+                   Policy Engine
+                         │
+                  ┌──────┴──────┐
+                  ▼             ▼
+              Approval      Automation
+                  │             │
+                  └──────┬──────┘
+                         ▼
+                 Advertising APIs
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+            Meta       Google      TikTok
+              │          │          │
+              └──────────┼──────────┘
+                         ▼
+                    Performance
+                         │
+                         ▼
+                    Feedback
+                         │
+                         └────────→ GEM
+```
+
+**GEM is an intelligence and decision layer — not a replacement for the commerce domains.**
+
+The architecture must always preserve this separation.

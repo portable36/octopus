@@ -90,7 +90,7 @@ Never mark an order paid because the browser reached a success redirect URL.
 ## Security
 
 - Replay protection via idempotency store
-- Rate limits on callback endpoints
+- Rate limits on callback endpoints (and on COD collect / refund mutations: Redis `API_RATE_LIMITER`)
 - No secrets or full card data in logs
 - Timeout and retry policies for provider API calls outside DB transactions
 

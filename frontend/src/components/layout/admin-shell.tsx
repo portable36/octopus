@@ -25,10 +25,26 @@ const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', permission: 'platform.dashboard.read' },
       { href: '/admin/vendors', label: 'Vendors', permission: 'platform.vendors.read' },
-      { href: '/admin/stores', label: 'Stores', permission: 'platform.stores.read' },
       { href: '/admin/orders', label: 'Orders', permission: 'platform.orders.read' },
       { href: '/admin/payments', label: 'Payments', permission: 'platform.payments.read' },
       { href: '/admin/users', label: 'Users', permission: 'platform.users.read' },
+    ],
+  },
+  {
+    label: 'Stores',
+    items: [
+      { href: '/admin/stores', label: 'All Stores', permission: 'platform.stores.read' },
+      { href: '/admin/stores/create', label: 'Create Store', permission: 'platform.stores.write' },
+      {
+        href: '/admin/stores/provisioning',
+        label: 'Provisioning',
+        permission: 'platform.stores.read',
+      },
+      {
+        href: '/admin/system/commerce',
+        label: 'Store Settings',
+        permission: 'settings.read',
+      },
     ],
   },
   {
@@ -38,7 +54,11 @@ const NAV_GROUPS: readonly NavGroup[] = [
       { href: '/admin/system/reports', label: 'Reports', permission: 'platform.reports.read' },
       { href: '/admin/system/security', label: 'Security', permission: 'audit.read' },
       { href: '/admin/system/website', label: 'Website', permission: 'settings.read' },
-      { href: '/admin/system/global-config', label: 'Platform config', permission: 'settings.read' },
+      {
+        href: '/admin/system/global-config',
+        label: 'Platform config',
+        permission: 'settings.read',
+      },
       { href: '/admin/system/marketing', label: 'Marketing', permission: 'settings.read' },
       { href: '/admin/system/seo', label: 'SEO', permission: 'settings.read' },
       { href: '/admin/system/commerce', label: 'Commerce', permission: 'settings.read' },
@@ -231,10 +251,13 @@ function AdminNavigation({
           </p>
           <div className="space-y-1">
             {group.items.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active =
+                item.href === '/admin/stores'
+                  ? pathname === '/admin/stores'
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
-                  key={item.href}
+                  key={`${item.href}-${item.label}`}
                   href={item.href}
                   className={cn(
                     'flex min-h-11 items-center rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

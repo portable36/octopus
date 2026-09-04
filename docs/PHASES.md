@@ -1425,8 +1425,10 @@ Build the platform admin **presentation layer** over existing bounded contexts
 
 - [x] Admin UI + thin admin APIs for vendor lifecycle (approve/suspend) over existing handlers
 - [x] Store lifecycle admin surfaces
+- [x] Admin Store Management Phase A — paginated list/stats, overview+health, admin lifecycle/provisioning routes, create via reused wizard, details shell (Overview / Provisioning / Settings / Staff / Activity placeholder)
 - [ ] Optional verification document fields (when domain supports them)
 - [x] Vendor/store staff management from admin shell
+- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓; payments/shipping/tax/branding/SEO/notifications/analytics/GEM/activity full still open)
 
 ---
 

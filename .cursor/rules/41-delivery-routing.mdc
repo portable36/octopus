@@ -1,0 +1,75 @@
+---
+description: Auto-route delivery via code+ponytail, Spec Kit, or mattpocock grill/tickets
+alwaysApply: true
+---
+
+# Delivery routing (automatic)
+
+Do **not** ask the user which workflow to use. Classify the request and follow
+the matching path. Octopus `.cursor/rules/` hard contracts always win.
+
+## Classify first (one pass)
+
+| Signal | Path |
+| ------ | ---- |
+| Clear bugfix, typo, small UI tweak, obvious one-module change, “just fix/ship X” with known acceptance | **Just code** |
+| Ambiguous product/design, multiple valid approaches, unclear scope, “what should we build”, new surface without settled decisions | **Grill** |
+| Nontrivial feature that needs durable artifacts (API/schema/auth/payments/inventory/multi-module), or user wants a formal spec | **Spec Kit** |
+| Plan or grilled design is ready to split for agents / GitHub Issues | **Tickets** |
+
+If both Grill and Spec Kit apply: **Grill first**, then Spec Kit (or Tickets) once decisions are settled.
+
+If the user already pasted a clear spec, acceptance criteria, or approved plan: skip Grill; go **Spec Kit** (when durable) or **Just code** / **Tickets** as appropriate.
+
+## Path A — Just code (default for small work)
+
+1. Ponytail is already always-on (`.cursor/rules/39-ponytail.mdc`) — climb the ladder before writing.
+2. Do **not** start Spec Kit or tickets unless the change grows mid-flight into multi-module / contract work.
+3. Hypothesis → smallest fix → focused test → narrow check → report results.
+4. Prefer reuse of existing APIs/UI; no speculative Phase B tabs or abstractions.
+
+## Path B — Grill (`/grill-me`)
+
+When classification is Grill:
+
+1. Read and follow `.agents/skills/grilling/SKILL.md` (via `/grill-me`).
+2. Ask the full frontier each round; recommend answers; wait for the user.
+3. Do **not** implement, scaffold Spec Kit features, or publish tickets until the user confirms shared understanding.
+4. After confirmation, auto-route:
+   - durable / multi-module / contract-heavy → **Spec Kit**
+   - ready to execute as agent slices → **Tickets**
+   - tiny remaining build → **Just code**
+
+Prefer `/grill-with-docs` when the question is mainly aligning to existing `docs/`, ADRs, or `CONTEXT.md`.
+
+## Path C — Spec Kit (`/speckit-*`)
+
+When classification is Spec Kit:
+
+1. Read `.cursor/skills/speckit-specify/SKILL.md` (and later plan/tasks/implement skills as you proceed).
+2. Honor `.specify/memory/constitution.md` and never weaken `.cursor/rules/`.
+3. Default loop (skip steps already satisfied):
+   - `/speckit-specify` → optional `/speckit-clarify` → `/speckit-plan` → optional `/speckit-checklist` → `/speckit-tasks` → optional `/speckit-analyze` → `/speckit-implement`
+4. Ponytail still applies inside implement: smallest coherent diff per task.
+5. Bug-shaped work may use `/speckit-bug-assess` → `/speckit-bug-fix` → `/speckit-bug-test` instead of the full feature loop.
+6. Do **not** invent session-start hooks.
+
+## Path D — Tickets (`/to-tickets`)
+
+When classification is Tickets (or after Grill/Spec Kit when slices are needed):
+
+1. Read and follow `.agents/skills/to-tickets/SKILL.md`.
+2. Quiz the user on granularity, then publish (GitHub Issues on `portable36/octopus` with triage labels per `docs/agents/issue-tracker.md`, or local `.scratch/` if configured).
+3. After publish, implement the unblocked frontier with **Just code** + ponytail (or `/speckit-implement` if tickets came from Spec Kit tasks).
+
+## Mid-flight escalation
+
+- Just code reveals auth/payments/inventory/schema or cross-module scope → stop coding; escalate to **Grill** or **Spec Kit** and say so in one line.
+- Spec Kit clarify shows product ambiguity → drop into **Grill**, then resume Spec Kit.
+- User says “just code it” / “skip process” → Path A only, still obey hard safety rules.
+
+## Communication
+
+- State the chosen path in one short line at the start of substantive work (`Path: Just code` / `Path: Grill` / `Path: Spec Kit` / `Path: Tickets`).
+- Do not dump the whole decision tree unless the user asks.
+- Do not offer a menu of workflows when routing is already determined by this rule.

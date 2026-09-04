@@ -58,8 +58,16 @@ are gitignored via `.specify/.gitignore`.
 3. Spec Kit templates and skills
 4. Other agent skills (mattpocock, ponytail, NestJS skills, …)
 
-Prefer mattpocock for lightweight planning/delivery and Spec Kit when you want
-durable `specs/` artifacts and a full specify → plan → tasks → implement loop.
+## Automatic routing
+
+Agents must not ask the user to pick a workflow. See
+`.cursor/rules/41-delivery-routing.mdc`:
+
+- Clear small work → just code under ponytail
+- Ambiguous design → `/grill-me` first
+- Durable / multi-module / contract work → Spec Kit loop
+- Approved plan needing agent slices → `/to-tickets`
+
 Do **not** add Spec Kit session-start hooks that force skill checks on every
 reply.
 

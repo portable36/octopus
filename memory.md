@@ -95,6 +95,19 @@ graphify update .
   `.cursor/skills/speckit-*`. Constitution lives at
   `.specify/memory/constitution.md`. Feature artifacts go under `specs/`.
   See `docs/agents/spec-kit.md`. Do not add Spec Kit session-start hooks.
+- Delivery routing is automatic via `.cursor/rules/41-delivery-routing.mdc`:
+  just code + ponytail for small work; `/grill-me` when ambiguous; Spec Kit
+  for durable features; `/to-tickets` when a plan needs agent slices. Do not
+  ask the user which of these workflows to use.
+
+## In progress (2026-09-04)
+
+- Catalog “production ready” grill started; not implemented yet. Waiting on
+  user answers to: (1) scope P0 / P0+P1 / full doc, (2) sellability at
+  Catalog+Cart vs soft/none, (3) wire `catalog.product.*` permissions vs
+  staff-only, (4) defer Brand/attrs vs ship, (5) Spec Kit vs tickets vs just
+  code. Agent recommendations were 1B 2A 3A 4A 5A. Resume with those answers
+  before coding.
 - OpenViking is optional local tooling for approved documentation and memory
   only; index `docs/`, `.cursor/rules/`, `AGENTS.md`, and this file—not the
   application tree. Never wire it into runtime or CI.

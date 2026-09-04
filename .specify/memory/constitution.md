@@ -72,12 +72,16 @@ as SQL. Never claim production-ready without validation.
 
 ## Spec Kit Workflow Fit
 
+Delivery routing is automatic (`.cursor/rules/41-delivery-routing.mdc`): just
+code + ponytail for small work; `/grill-me` when ambiguous; Spec Kit for
+durable features; `/to-tickets` for agent slices. Do not ask which to use.
+
 | Goal                         | Prefer                                      |
 | ---------------------------- | ------------------------------------------- |
-| Align / grill before build   | mattpocock `/grill-me` or `/grill-with-docs` |
+| Align / grill before build   | `/grill-me` or `/grill-with-docs`           |
 | Formal SDD for a feature     | `/speckit-specify` → `/speckit-plan` → …    |
-| Ticket breakdown from chat   | mattpocock `/to-tickets` or Spec Kit tasks  |
-| Minimal fix / YAGNI          | `/ponytail` (always-on rule)                |
+| Ticket breakdown             | `/to-tickets`                               |
+| Minimal fix / YAGNI          | Just code + `/ponytail` (always-on)         |
 | Hard bug                     | `/systematic-debugging` or Spec Kit bug ext |
 
 When Spec Kit guidance conflicts with `.cursor/rules/`, Octopus rules win.

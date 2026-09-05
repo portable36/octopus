@@ -171,7 +171,28 @@ export class BkashGatewayAdapter implements PaymentGatewayPort {
       };
     }
 
-    const paymentId = String(payload.paymentID || paymentIntent.gatewayReferenceId || '');
+    const paymentId = String(
+      payload.paymentID || payload.paymentId || paymentIntent.gatewayReferenceId || '',
+    );
+
+    // If payload already has trxID and transactionStatus Completed (e.g. from bKash IPN webhook)
+    if (
+      !paymentId &&
+      payload.trxID &&
+      String(payload.transactionStatus).toLowerCase() === 'completed'
+    ) {
+      const amountTaka = parseFloat(String(payload.amount || '0'));
+      const validatedAmountMinor = Math.round(amountTaka * 100);
+      return {
+        isSuccess: true,
+        providerTransactionId: String(payload.trxID),
+        amountMinor: validatedAmountMinor,
+        currencyCode: String(payload.currency || paymentIntent.currencyCode).toUpperCase(),
+        gatewayStatusCode: 'Completed',
+        rawResponse: payload,
+      };
+    }
+
     if (!paymentId) {
       throw new Error('bKash execution requires paymentID.');
     }
@@ -245,10 +266,13 @@ export class BkashGatewayAdapter implements PaymentGatewayPort {
       },
       body: JSON.stringify({
         paymentID: paymentId,
+        paymentId: paymentId,
         trxID: trxId,
+        trxId: trxId,
         amount: amountTaka,
-        sku: `REFUND_${paymentIntent.orderId}`,
-        reason: reason || 'Customer refund',
+        refundAmount: amountTaka,
+        sku: `REFUND_${paymentIntent.orderId}`.slice(0, 255),
+        reason: (reason || 'Customer refund').slice(0, 255),
       }),
     });
 
@@ -257,11 +281,19 @@ export class BkashGatewayAdapter implements PaymentGatewayPort {
     }
 
     const data = (await res.json()) as Record<string, unknown>;
-    const isSuccess = data.transactionStatus === 'Completed';
+    const status = String(data.refundTransactionStatus || data.transactionStatus || '');
+    const isSuccess = status === 'Completed' || data.statusCode === '0000';
+    const refundTrx =
+      typeof data.refundTrxID === 'string'
+        ? data.refundTrxID
+        : typeof data.refundTrxId === 'string'
+          ? data.refundTrxId
+          : null;
+
     return {
       success: isSuccess,
-      providerRefundId: typeof data.refundTrxID === 'string' ? data.refundTrxID : null,
-      providerResponseCode: String(data.transactionStatus || ''),
+      providerRefundId: refundTrx,
+      providerResponseCode: status || String(data.statusCode || ''),
       rawResponse: data,
     };
   }

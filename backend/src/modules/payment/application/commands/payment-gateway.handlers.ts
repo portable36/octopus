@@ -216,10 +216,15 @@ export class ProcessGatewayCallbackHandler {
     }
 
     if (provider === 'BKASH') {
-      const paymentId = String(payload.paymentID || '');
+      const paymentId = String(payload.paymentID || payload.paymentId || '');
       if (paymentId) {
         const byRef = await this.payments.findIntentByGatewayReference(paymentId);
         if (byRef) return byRef;
+      }
+      const invoiceNum = String(payload.merchantInvoiceNumber || '');
+      if (invoiceNum) {
+        const byId = await this.payments.findIntentById(invoiceNum);
+        if (byId) return byId;
       }
     }
 

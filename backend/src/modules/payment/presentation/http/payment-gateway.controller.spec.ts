@@ -53,6 +53,29 @@ describe('PaymentGatewayController', () => {
     );
   });
 
+  it('unpacks bkash SNS Notification payload', async () => {
+    const req = { ip: '127.0.0.1' } as never;
+    const body = {
+      Type: 'Notification',
+      Message: JSON.stringify({
+        trxID: '4J420ANOXC',
+        transactionStatus: 'Completed',
+        amount: '100',
+        currency: 'BDT',
+        merchantInvoiceNumber: 'intent-sns-bkash',
+      }),
+    };
+    const res = await controller.handleBkashCallback(req, body, {});
+
+    expect(res.success).toBe(true);
+    expect(mockHandler.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'BKASH',
+        paymentIntentId: 'intent-sns-bkash',
+      }),
+    );
+  });
+
   it('routes nagad callback correctly', async () => {
     const req = { ip: '127.0.0.1' } as never;
     const query = { paymentIntentId: 'intent-nagad' };

@@ -81,11 +81,34 @@ export class PaymentGatewayController {
     if (this.rateLimiter) {
       await this.rateLimiter.consume(`payment:gw:bkash:${req.ip ?? 'unknown'}`, 120, 60);
     }
-    const payload = { ...(query || {}), ...(body || {}) };
+    let payload = { ...(query || {}), ...(body || {}) };
+
+    // Support AWS SNS webhook subscription confirmation from bKash
+    if (payload.Type === 'SubscriptionConfirmation' && typeof payload.SubscribeURL === 'string') {
+      try {
+        await fetch(payload.SubscribeURL as string);
+        return { success: true, message: 'Subscription confirmed' };
+      } catch {
+        return { success: false, message: 'Failed to confirm subscription' };
+      }
+    }
+
+    // Support AWS SNS webhook notification from bKash
+    if (payload.Type === 'Notification' && typeof payload.Message === 'string') {
+      try {
+        const parsedMessage = JSON.parse(payload.Message as string) as Record<string, unknown>;
+        payload = { ...payload, ...parsedMessage };
+      } catch {
+        // Proceed with raw payload if parsing fails
+      }
+    }
+
     return this.callbackHandler.execute({
       provider: 'BKASH',
       payload,
-      paymentIntentId: (query.paymentIntentId || payload.paymentIntentId) as string | undefined,
+      paymentIntentId: (query.paymentIntentId ||
+        payload.paymentIntentId ||
+        payload.merchantInvoiceNumber) as string | undefined,
     });
   }
 

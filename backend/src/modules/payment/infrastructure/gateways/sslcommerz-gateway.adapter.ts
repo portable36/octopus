@@ -158,7 +158,7 @@ export class SslCommerzGatewayAdapter implements PaymentGatewayPort {
       valId,
     )}&store_id=${encodeURIComponent(storeId)}&store_passwd=${encodeURIComponent(
       storePasswd,
-    )}&format=json`;
+    )}&v=1&format=json`;
 
     const res = await fetch(validationUrl);
     if (!res.ok) {
@@ -168,6 +168,12 @@ export class SslCommerzGatewayAdapter implements PaymentGatewayPort {
     const valData = (await res.json()) as Record<string, unknown>;
     const valStatus = String(valData.status || '').toUpperCase();
     const isValid = valStatus === 'VALID' || valStatus === 'VALIDATED';
+
+    if (valData.risk_level === 1 || valData.risk_level === '1') {
+      this.logger.warn(
+        `[SSLCommerz] Risky transaction detected for intent ${paymentIntent.id.value}: ${valData.risk_title || 'Risk Level 1'}`,
+      );
+    }
 
     const validatedAmountTaka = parseFloat(
       String(valData.currency_amount || valData.amount || '0'),
@@ -210,13 +216,16 @@ export class SslCommerzGatewayAdapter implements PaymentGatewayPort {
 
     const storeId = this.appConfig.sslCommerzStoreId!;
     const storePasswd = this.appConfig.sslCommerzStorePasswd!;
+    const refundTransId = input.refundId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 30);
     const refundUrl = `${this.getBaseUrl()}/validator/api/merchantTransIDvalidationAPI.php?bank_tran_id=${encodeURIComponent(
       bankTranId,
-    )}&refund_amount=${encodeURIComponent(amountTaka)}&refund_remarks=${encodeURIComponent(
+    )}&refund_trans_id=${encodeURIComponent(refundTransId)}&refund_amount=${encodeURIComponent(
+      amountTaka,
+    )}&refund_remarks=${encodeURIComponent(
       reason || 'Customer refund',
     )}&store_id=${encodeURIComponent(storeId)}&store_passwd=${encodeURIComponent(
       storePasswd,
-    )}&format=json`;
+    )}&v=1&format=json`;
 
     const res = await fetch(refundUrl);
     if (!res.ok) {

@@ -4,7 +4,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: install dependencies and compile backend + frontend workspaces.
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 
@@ -38,7 +38,7 @@ RUN npm run build:backend && npm run build:frontend
 # -----------------------------------------------------------------------------
 # Stage 2: drop devDependencies from root + workspace packages.
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS production-prune
+FROM node:26-alpine AS production-prune
 
 WORKDIR /app
 
@@ -54,7 +54,7 @@ RUN npm prune --omit=dev \
 # -----------------------------------------------------------------------------
 # Stage 3: slim runtime image (non-root, API + worker + optional Next.js start).
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 
 WORKDIR /app
 

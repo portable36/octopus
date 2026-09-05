@@ -2,12 +2,12 @@
 
 This directory is updated automatically on commit and push (see `docs/engineering/cursor-chat-backup.md`).
 
-| File / folder | Purpose |
-| ------------- | ------- |
+| File / folder             | Purpose                                                          |
+| ------------------------- | ---------------------------------------------------------------- |
 | `latest.cursor-chat.json` | Full Composer export for **Cursor Chat Transfer → Import Chats** |
-| `*.cursor-chat.json` | Timestamped snapshots (last 10 kept) |
-| `agent-transcripts/` | Copy of Cursor agent session JSONL files |
-| `manifest.json` | Export metadata (counts, timestamp, repo path) |
+| `*.cursor-chat.json`      | Timestamped snapshots (last 10 kept)                             |
+| `agent-transcripts/`      | Copy of Cursor agent session JSONL files                         |
+| `manifest.json`           | Export metadata (counts, timestamp, repo path)                   |
 
 ## Restore after reinstall
 

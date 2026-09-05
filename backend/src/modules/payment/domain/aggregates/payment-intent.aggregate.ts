@@ -22,6 +22,9 @@ interface PaymentIntentProps {
   readonly currencyCode: string;
   readonly clientSecret: string | null;
   readonly expiresAt: Date | null;
+  readonly providerTransactionId?: string | null;
+  readonly gatewayReferenceId?: string | null;
+  readonly capturedAt?: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -146,6 +149,15 @@ export class PaymentIntent extends AggregateRoot<UniqueID> {
   get clientSecret(): string | null {
     return this.props.clientSecret;
   }
+  get providerTransactionId(): string | null {
+    return this.props.providerTransactionId ?? null;
+  }
+  get gatewayReferenceId(): string | null {
+    return this.props.gatewayReferenceId ?? null;
+  }
+  get capturedAt(): Date | null {
+    return this.props.capturedAt ?? null;
+  }
   get expiresAt(): Date | null {
     return this.props.expiresAt;
   }
@@ -154,6 +166,77 @@ export class PaymentIntent extends AggregateRoot<UniqueID> {
   }
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  public markCaptured(providerTransactionId: string, gatewayReferenceId?: string | null): void {
+    if (this.props.paymentMethod === 'COD') {
+      throw new InvalidPaymentMethodError(
+        'COD intents cannot be marked captured; use markCollected.',
+      );
+    }
+    if (this.props.status === 'CAPTURED') {
+      return;
+    }
+    if (this.props.status !== 'REQUIRES_PAYMENT') {
+      throw new Error(`Cannot capture payment intent with status ${this.props.status}.`);
+    }
+    const now = new Date();
+    this.props = {
+      ...this.props,
+      status: 'CAPTURED',
+      providerTransactionId,
+      gatewayReferenceId: gatewayReferenceId ?? this.props.gatewayReferenceId ?? null,
+      capturedAt: now,
+      updatedAt: now,
+    };
+    this.addEvent('PaymentCaptured', {
+      paymentIntentId: this.id.value,
+      orderId: this.orderId,
+      vendorId: this.vendorId,
+      storeId: this.storeId,
+      paymentMethod: this.paymentMethod,
+      provider: this.provider,
+      amountMinor: this.amountMinor,
+      currencyCode: this.currencyCode,
+      providerTransactionId,
+      capturedAt: now.toISOString(),
+    });
+  }
+
+  public markFailed(reason?: string): void {
+    if (this.props.status === 'CAPTURED' || this.props.status === 'COLLECTED') {
+      throw new Error(`Cannot fail an already collected or captured payment intent.`);
+    }
+    const now = new Date();
+    this.props = {
+      ...this.props,
+      status: 'FAILED',
+      updatedAt: now,
+    };
+    this.addEvent('PaymentFailed', {
+      paymentIntentId: this.id.value,
+      orderId: this.orderId,
+      reason: reason ?? null,
+    });
+  }
+
+  public cancelGateway(): void {
+    if (this.props.status === 'CAPTURED' || this.props.status === 'COLLECTED') {
+      throw new Error(`Cannot cancel an already collected or captured payment intent.`);
+    }
+    if (this.props.status === 'CANCELLED') {
+      return;
+    }
+    const now = new Date();
+    this.props = {
+      ...this.props,
+      status: 'CANCELLED',
+      updatedAt: now,
+    };
+    this.addEvent('PaymentCancelled', {
+      paymentIntentId: this.id.value,
+      orderId: this.orderId,
+    });
   }
 
   public assertCollectible(): void {

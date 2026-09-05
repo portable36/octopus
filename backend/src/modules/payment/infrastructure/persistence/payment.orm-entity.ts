@@ -43,6 +43,15 @@ export class PaymentIntentOrmEntity {
   @Property({ fieldName: 'client_secret', type: 'string', length: 120, nullable: true })
   clientSecret!: string | null;
 
+  @Property({ fieldName: 'provider_transaction_id', type: 'string', length: 120, nullable: true })
+  providerTransactionId: string | null = null;
+
+  @Property({ fieldName: 'gateway_reference_id', type: 'string', length: 120, nullable: true })
+  gatewayReferenceId: string | null = null;
+
+  @Property({ fieldName: 'captured_at', nullable: true })
+  capturedAt: Date | null = null;
+
   @Property({ fieldName: 'expires_at', nullable: true })
   expiresAt!: Date | null;
 

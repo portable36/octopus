@@ -26,6 +26,9 @@ const paymentsSchemas: Record<string, z.ZodType<unknown>> = {
   [GLOBAL_CONFIG_KEYS.payments.STRIPE_ENABLED]: z.boolean(),
   [GLOBAL_CONFIG_KEYS.payments.ADYEN_ENABLED]: z.boolean(),
   [GLOBAL_CONFIG_KEYS.payments.COD_ENABLED]: z.boolean(),
+  [GLOBAL_CONFIG_KEYS.payments.SSLCOMMERZ_ENABLED]: z.boolean(),
+  [GLOBAL_CONFIG_KEYS.payments.BKASH_ENABLED]: z.boolean(),
+  [GLOBAL_CONFIG_KEYS.payments.NAGAD_ENABLED]: z.boolean(),
 };
 
 const SCHEMAS_BY_GROUP: Record<string, Record<string, z.ZodType<unknown>>> = {

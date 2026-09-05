@@ -340,4 +340,56 @@ export class AppConfigService {
   get googleServicesPrivateKey(): string | undefined {
     return this.configService.get('GOOGLE_SERVICES_PRIVATE_KEY', { infer: true });
   }
+
+  get paymentGatewayMode(): Env['PAYMENT_GATEWAY_MODE'] {
+    return this.configService.get('PAYMENT_GATEWAY_MODE', { infer: true });
+  }
+
+  get sslCommerzStoreId(): string | undefined {
+    return this.configService.get('SSLCOMMERZ_STORE_ID', { infer: true });
+  }
+
+  get sslCommerzStorePasswd(): string | undefined {
+    return this.configService.get('SSLCOMMERZ_STORE_PASSWD', { infer: true });
+  }
+
+  get sslCommerzIsSandbox(): boolean {
+    return this.configService.get('SSLCOMMERZ_IS_SANDBOX', { infer: true });
+  }
+
+  get bkashAppKey(): string | undefined {
+    return this.configService.get('BKASH_APP_KEY', { infer: true });
+  }
+
+  get bkashAppSecret(): string | undefined {
+    return this.configService.get('BKASH_APP_SECRET', { infer: true });
+  }
+
+  get bkashUsername(): string | undefined {
+    return this.configService.get('BKASH_USERNAME', { infer: true });
+  }
+
+  get bkashPassword(): string | undefined {
+    return this.configService.get('BKASH_PASSWORD', { infer: true });
+  }
+
+  get bkashIsSandbox(): boolean {
+    return this.configService.get('BKASH_IS_SANDBOX', { infer: true });
+  }
+
+  get nagadMerchantId(): string | undefined {
+    return this.configService.get('NAGAD_MERCHANT_ID', { infer: true });
+  }
+
+  get nagadMerchantPrivateKey(): string | undefined {
+    return this.configService.get('NAGAD_MERCHANT_PRIVATE_KEY', { infer: true });
+  }
+
+  get nagadPgPublicKey(): string | undefined {
+    return this.configService.get('NAGAD_PG_PUBLIC_KEY', { infer: true });
+  }
+
+  get nagadIsSandbox(): boolean {
+    return this.configService.get('NAGAD_IS_SANDBOX', { infer: true });
+  }
 }

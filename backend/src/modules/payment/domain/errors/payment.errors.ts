@@ -15,8 +15,8 @@ export class CodNotAvailableError extends PaymentDomainError {
 }
 
 export class CodAmountMismatchError extends PaymentDomainError {
-  constructor() {
-    super('Submitted COD amount does not match the outstanding amount.', 'COD_AMOUNT_MISMATCH');
+  constructor(message = 'Submitted COD amount does not match the outstanding amount.') {
+    super(message, 'COD_AMOUNT_MISMATCH');
   }
 }
 

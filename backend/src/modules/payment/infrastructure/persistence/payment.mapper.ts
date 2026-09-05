@@ -17,6 +17,9 @@ export function paymentIntentToDomain(entity: PaymentIntentOrmEntity): PaymentIn
     amountMinor: entity.amountMinor,
     currencyCode: entity.currencyCode,
     clientSecret: entity.clientSecret,
+    providerTransactionId: entity.providerTransactionId,
+    gatewayReferenceId: entity.gatewayReferenceId,
+    capturedAt: entity.capturedAt,
     expiresAt: entity.expiresAt,
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
@@ -39,6 +42,9 @@ export function applyPaymentIntentToOrm(
   entity.amountMinor = intent.amountMinor;
   entity.currencyCode = intent.currencyCode;
   entity.clientSecret = intent.clientSecret;
+  entity.providerTransactionId = intent.providerTransactionId;
+  entity.gatewayReferenceId = intent.gatewayReferenceId;
+  entity.capturedAt = intent.capturedAt;
   entity.expiresAt = intent.expiresAt;
   entity.createdAt = intent.createdAt;
   entity.updatedAt = intent.updatedAt;

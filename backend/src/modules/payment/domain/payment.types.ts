@@ -1,7 +1,13 @@
 export type PaymentMethod = 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
 
 export type PaymentIntentStatus =
-  'AWAITING_COLLECTION' | 'COLLECTED' | 'REQUIRES_PAYMENT' | 'CANCELLED' | 'FAILED' | 'EXPIRED';
+  | 'AWAITING_COLLECTION'
+  | 'COLLECTED'
+  | 'REQUIRES_PAYMENT'
+  | 'CAPTURED'
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'EXPIRED';
 
 export type PaymentProvider = 'COD' | 'SSLCOMMERZ' | 'BKASH' | 'NAGAD';
 

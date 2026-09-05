@@ -213,6 +213,32 @@ const baseEnvSchema = z.object({
   GOOGLE_SERVICES_CLIENT_EMAIL: z.string().email().optional(),
   /** Google service account private key PEM (server-only; \\n escapes allowed). */
   GOOGLE_SERVICES_PRIVATE_KEY: z.string().min(1).optional(),
+  /** Payment Gateway Mode: live, sandbox, or sandbox-mock (default). */
+  PAYMENT_GATEWAY_MODE: z.enum(['live', 'sandbox', 'sandbox-mock']).default('sandbox-mock'),
+  /** SSLCommerz store ID (server-only). */
+  SSLCOMMERZ_STORE_ID: z.string().optional(),
+  /** SSLCommerz store password/secret (server-only). */
+  SSLCOMMERZ_STORE_PASSWD: z.string().optional(),
+  /** SSLCommerz sandbox toggle. */
+  SSLCOMMERZ_IS_SANDBOX: z.coerce.boolean().default(true),
+  /** bKash App Key (server-only). */
+  BKASH_APP_KEY: z.string().optional(),
+  /** bKash App Secret (server-only). */
+  BKASH_APP_SECRET: z.string().optional(),
+  /** bKash API Username (server-only). */
+  BKASH_USERNAME: z.string().optional(),
+  /** bKash API Password (server-only). */
+  BKASH_PASSWORD: z.string().optional(),
+  /** bKash sandbox toggle. */
+  BKASH_IS_SANDBOX: z.coerce.boolean().default(true),
+  /** Nagad Merchant ID (server-only). */
+  NAGAD_MERCHANT_ID: z.string().optional(),
+  /** Nagad Merchant Private Key PEM (server-only). */
+  NAGAD_MERCHANT_PRIVATE_KEY: z.string().optional(),
+  /** Nagad Payment Gateway Public Key PEM (server-only). */
+  NAGAD_PG_PUBLIC_KEY: z.string().optional(),
+  /** Nagad sandbox toggle. */
+  NAGAD_IS_SANDBOX: z.coerce.boolean().default(true),
 });
 
 function requireProductionIntegration(

@@ -53,15 +53,20 @@ export class PaymentPortAdapter implements PaymentPort {
       case 'SSLCOMMERZ':
         return this.globalConfig.get<boolean>(
           GLOBAL_CONFIG_GROUPS.PAYMENTS,
-          GLOBAL_CONFIG_KEYS.payments.STRIPE_ENABLED,
-          false,
+          GLOBAL_CONFIG_KEYS.payments.SSLCOMMERZ_ENABLED,
+          true,
         );
       case 'BKASH':
+        return this.globalConfig.get<boolean>(
+          GLOBAL_CONFIG_GROUPS.PAYMENTS,
+          GLOBAL_CONFIG_KEYS.payments.BKASH_ENABLED,
+          true,
+        );
       case 'NAGAD':
         return this.globalConfig.get<boolean>(
           GLOBAL_CONFIG_GROUPS.PAYMENTS,
-          GLOBAL_CONFIG_KEYS.payments.ADYEN_ENABLED,
-          false,
+          GLOBAL_CONFIG_KEYS.payments.NAGAD_ENABLED,
+          true,
         );
       default:
         return false;

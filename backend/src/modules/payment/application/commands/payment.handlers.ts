@@ -32,14 +32,24 @@ import {
 } from '../ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY, type PaymentRepository } from '../ports/payment-repository.interface';
 import { PaymentAuthorizationService } from '../services/payment-authorization.service';
+import { PaymentGatewayRegistry } from '../../infrastructure/gateways/payment-gateway-registry';
 import { recordPaymentFailure } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 
 @Injectable()
 export class CreatePaymentIntentHandler {
-  constructor(@Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository) {}
+  constructor(
+    @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
+    @Optional()
+    @Inject(PaymentGatewayRegistry)
+    private readonly gatewayRegistry?: PaymentGatewayRegistry,
+  ) {}
 
   public async execute(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult> {
-    if (input.paymentMethod !== 'COD') {
+    const isCod = input.paymentMethod === 'COD';
+    const gateway =
+      !isCod && this.gatewayRegistry ? this.gatewayRegistry.get(input.paymentMethod) : undefined;
+
+    if (!isCod && !gateway) {
       recordPaymentFailure('provider_unavailable');
       throw new PaymentProviderUnavailableError();
     }
@@ -70,7 +80,13 @@ export class CreatePaymentIntentHandler {
       expiresAt: input.expiresAt ?? null,
     });
 
-    const result = toCreateResult(intent);
+    let redirectUrl: string | undefined;
+    if (gateway) {
+      const session = await gateway.initializeSession({ paymentIntent: intent });
+      redirectUrl = session.redirectUrl;
+    }
+
+    const result = toCreateResult(intent, redirectUrl);
     await this.payments.saveIntent(intent);
     await this.payments.saveOperation({
       idempotencyKey: input.idempotencyKey,
@@ -421,7 +437,7 @@ function toRefundResult(refund: Refund): CreateRefundResult {
   };
 }
 
-function toCreateResult(intent: PaymentIntent): CreatePaymentIntentResult {
+function toCreateResult(intent: PaymentIntent, redirectUrl?: string): CreatePaymentIntentResult {
   const result: CreatePaymentIntentResult = {
     paymentIntentId: intent.id.value,
     paymentMethod: intent.paymentMethod,
@@ -430,7 +446,14 @@ function toCreateResult(intent: PaymentIntent): CreatePaymentIntentResult {
     currencyCode: intent.currencyCode,
   };
   if (intent.clientSecret) {
-    return { ...result, clientSecret: intent.clientSecret };
+    return {
+      ...result,
+      clientSecret: intent.clientSecret,
+      ...(redirectUrl ? { redirectUrl } : {}),
+    };
+  }
+  if (redirectUrl) {
+    return { ...result, redirectUrl };
   }
   return result;
 }

@@ -24,6 +24,7 @@ export interface CreatePaymentIntentResult {
   readonly currencyCode: string;
   /** Present for gateway methods only — never for COD. */
   readonly clientSecret?: string;
+  readonly redirectUrl?: string;
 }
 
 export interface ConfirmCodCollectionInput {

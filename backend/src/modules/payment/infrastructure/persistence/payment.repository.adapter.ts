@@ -41,6 +41,13 @@ export class PaymentRepositoryAdapter implements PaymentRepository {
     });
   }
 
+  public async findIntentByGatewayReference(referenceId: string): Promise<PaymentIntent | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(PaymentIntentOrmEntity, { gatewayReferenceId: referenceId });
+      return entity ? paymentIntentToDomain(entity) : null;
+    });
+  }
+
   public async listRecentIntents(limit: number): Promise<PaymentIntent[]> {
     const capped = Math.min(Math.max(limit, 1), 200);
     return withRlsContext(this.em, async (tx) => {

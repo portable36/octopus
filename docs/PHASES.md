@@ -783,29 +783,29 @@ Gateway providers (SSLCommerz / bKash / Nagad) remain stubbed behind method-awar
 - [x] COD inventory reservation TTL (default 72h) separate from gateway short TTL
 - [x] Minimal same-transaction `payment_outbox` rows (`CodPaymentCreated`, `CodCollected`) — dispatcher is Phase 12
 
-### Providers (live adapters later)
+### Providers (dual-mode live & mock simulation)
 
-- [ ] SSLCommerz
-- [ ] bKash
-- [ ] Nagad
+- [x] SSLCommerz
+- [x] bKash
+- [x] Nagad
 
 ### Payment
 
 - [x] Payment intent
-- [x] Payment transaction (COD collection record)
-- [ ] Provider reference (gateway)
+- [x] Payment transaction (COD collection record & gateway capture)
+- [x] Provider reference (gateway)
 - [x] Amount / currency / status
-- [ ] Callback / webhook
-- [ ] Refund
+- [x] Callback / webhook
+- [x] Refund
 
 ### Security
 
 - [x] Idempotency
-- [x] Amount verification (COD collect)
+- [x] Amount verification (COD collect & gateway capture)
 - [x] Currency verification
 - [x] Order verification via Payment → Order port
-- [ ] Signature validation (gateways)
-- [ ] Replay protection (gateways)
+- [x] Signature validation (gateways)
+- [x] Replay protection (gateways via Redis NX lock)
 
 ### Critical Rule
 
@@ -836,6 +836,15 @@ Checkout(COD) → AWAITING_COLLECTION → unpaid order
 ```
 
 COD is **not** POS till `CASH`.
+
+### Exit Criteria
+
+- [x] Multi-gateway payment infrastructure operational with SSLCommerz, bKash, and Nagad dual-mode adapters (live & sandbox-mock simulation).
+- [x] Hosted checkout session initiation with redirect URL.
+- [x] Authoritative server-to-server callback & IPN verification, amount/currency guard, and Redis NX replay protection.
+- [x] Payment intent capture transitions, outbox events, and order `markPaid` integration.
+- [x] Integrated gateway refund dispatcher routing original provider refunds and manual refunds.
+- [x] commit push
 
 ---
 

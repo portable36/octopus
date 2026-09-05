@@ -107,6 +107,53 @@ describe('Payment handlers', () => {
     ).rejects.toBeInstanceOf(PaymentProviderUnavailableError);
   });
 
+  it('initializes gateway payment intent with redirectUrl when gateway is registered', async () => {
+    const saved: PaymentIntent[] = [];
+    const repo = {
+      findOperation: vi.fn(async () => null),
+      findIntentByOrderId: vi.fn(async () => null),
+      saveIntent: vi.fn(async (intent: PaymentIntent) => {
+        saved.push(intent);
+      }),
+      saveOperation: vi.fn(async () => {}),
+    };
+
+    const mockBkashAdapter = {
+      provider: 'BKASH' as const,
+      initializeSession: vi.fn(async ({ paymentIntent }) => ({
+        redirectUrl: `https://mock.bkash.com/pay?intent=${paymentIntent.id.value}`,
+        gatewayReferenceId: 'BKASH_REF_123',
+      })),
+      verifyPayment: vi.fn(),
+      refund: vi.fn(),
+    };
+
+    const gatewayRegistry = {
+      get: vi.fn((method: string) =>
+        method === 'BKASH' ? (mockBkashAdapter as never) : undefined,
+      ),
+      has: vi.fn((method: string) => method === 'BKASH'),
+    };
+
+    const handler = new CreatePaymentIntentHandler(repo as never, gatewayRegistry as never);
+    const result = await handler.execute({
+      checkoutId: 'chk-1',
+      orderId: 'ord-bkash',
+      vendorId: 'v-1',
+      storeId: 's-1',
+      idempotencyKey: 'create-bkash',
+      customerId: null,
+      currencyCode: 'BDT',
+      amountMinor: 250000,
+      paymentMethod: 'BKASH',
+    });
+
+    expect(result.status).toBe('REQUIRES_PAYMENT');
+    expect(result.paymentMethod).toBe('BKASH');
+    expect(result.redirectUrl).toContain('https://mock.bkash.com/pay?intent=');
+    expect(mockBkashAdapter.initializeSession).toHaveBeenCalled();
+  });
+
   it('collect success, amount mismatch, authz, and multi-store isolation', async () => {
     const intentA = makeCodIntent('ord-a');
     const intentB = makeCodIntent('ord-b');

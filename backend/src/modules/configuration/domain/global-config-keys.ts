@@ -6,8 +6,7 @@ export const GLOBAL_CONFIG_GROUPS = {
   PAYMENTS: 'payments',
 } as const;
 
-export type GlobalConfigGroup =
-  (typeof GLOBAL_CONFIG_GROUPS)[keyof typeof GLOBAL_CONFIG_GROUPS];
+export type GlobalConfigGroup = (typeof GLOBAL_CONFIG_GROUPS)[keyof typeof GLOBAL_CONFIG_GROUPS];
 
 export const GLOBAL_CONFIG_KEYS = {
   catalog: {
@@ -28,6 +27,9 @@ export const GLOBAL_CONFIG_KEYS = {
     STRIPE_ENABLED: 'stripe_enabled',
     ADYEN_ENABLED: 'adyen_enabled',
     COD_ENABLED: 'cod_enabled',
+    SSLCOMMERZ_ENABLED: 'sslcommerz_enabled',
+    BKASH_ENABLED: 'bkash_enabled',
+    NAGAD_ENABLED: 'nagad_enabled',
   },
 } as const;
 
@@ -50,14 +52,14 @@ export const GLOBAL_CONFIG_DEFAULTS: Record<string, Record<string, unknown>> = {
     [GLOBAL_CONFIG_KEYS.payments.STRIPE_ENABLED]: false,
     [GLOBAL_CONFIG_KEYS.payments.ADYEN_ENABLED]: false,
     [GLOBAL_CONFIG_KEYS.payments.COD_ENABLED]: true,
+    [GLOBAL_CONFIG_KEYS.payments.SSLCOMMERZ_ENABLED]: true,
+    [GLOBAL_CONFIG_KEYS.payments.BKASH_ENABLED]: true,
+    [GLOBAL_CONFIG_KEYS.payments.NAGAD_ENABLED]: true,
   },
 };
 
 const ALLOWED: Record<string, ReadonlySet<string>> = Object.fromEntries(
-  Object.entries(GLOBAL_CONFIG_KEYS).map(([group, keys]) => [
-    group,
-    new Set(Object.values(keys)),
-  ]),
+  Object.entries(GLOBAL_CONFIG_KEYS).map(([group, keys]) => [group, new Set(Object.values(keys))]),
 );
 
 export function isAllowedGlobalConfigKey(group: string, key: string): boolean {

@@ -19,8 +19,9 @@ describe('PaymentGatewayController', () => {
     const body = { tran_id: 'intent-ssl', val_id: 'val-1', status: 'VALID' };
     const res = await controller.handleSslCommerzCallback(req, body, {});
 
-    expect(res.success).toBe(true);
-    expect(res.status).toBe('CAPTURED');
+    expect(res).toBeDefined();
+    expect(res?.success).toBe(true);
+    expect(res?.status).toBe('CAPTURED');
     expect(mockHandler.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'SSLCOMMERZ',
@@ -44,7 +45,8 @@ describe('PaymentGatewayController', () => {
     const body = { paymentID: 'PID_999', status: 'success' };
     const res = await controller.handleBkashCallback(req, body, query);
 
-    expect(res.success).toBe(true);
+    expect(res).toBeDefined();
+    expect(res?.success).toBe(true);
     expect(mockHandler.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'BKASH',
@@ -67,7 +69,8 @@ describe('PaymentGatewayController', () => {
     };
     const res = await controller.handleBkashCallback(req, body, {});
 
-    expect(res.success).toBe(true);
+    expect(res).toBeDefined();
+    expect(res?.success).toBe(true);
     expect(mockHandler.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'BKASH',
@@ -82,12 +85,30 @@ describe('PaymentGatewayController', () => {
     const body = { payment_ref_id: 'NAGAD_111', status: 'Success' };
     const res = await controller.handleNagadCallback(req, body, query);
 
-    expect(res.success).toBe(true);
+    expect(res).toBeDefined();
+    expect(res?.success).toBe(true);
     expect(mockHandler.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'NAGAD',
         paymentIntentId: 'intent-nagad',
       }),
+    );
+  });
+
+  it('redirects browser to storefront receipt page when accept header includes text/html', async () => {
+    const req = {
+      ip: '127.0.0.1',
+      headers: { accept: 'text/html,application/xhtml+xml' },
+    } as never;
+    const resMock = { redirect: vi.fn() };
+    const query = { paymentIntentId: 'intent-ssl' };
+    const body = { tran_id: 'intent-ssl', status: 'VALID', val_id: 'val-1' };
+
+    await controller.handleSslCommerzCallback(req, body, query, resMock as never);
+
+    expect(resMock.redirect).toHaveBeenCalledWith(
+      303,
+      expect.stringContaining('/checkout/receipt?status=CAPTURED&orderId=order-1'),
     );
   });
 });

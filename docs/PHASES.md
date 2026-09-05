@@ -796,6 +796,7 @@ Gateway providers (SSLCommerz / bKash / Nagad) remain stubbed behind method-awar
 - [x] Provider reference (gateway)
 - [x] Amount / currency / status
 - [x] Callback / webhook
+- [x] Storefront redirect flow & verification receipt (`/checkout` + `/checkout/receipt`)
 - [x] Refund
 
 ### Security

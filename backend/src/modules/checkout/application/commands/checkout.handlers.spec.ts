@@ -518,6 +518,71 @@ describe('CheckoutSubmitHandler', () => {
       }),
     ).rejects.toBeInstanceOf(CheckoutCartConflictError);
   });
+
+  it('propagates gateway redirectUrl when submitting gateway checkout', async () => {
+    const cart = baseCart();
+    const carts = {
+      getOwnedCart: vi.fn(),
+      validate: vi.fn(async () => ({ cart, issues: [], valid: true })),
+      markCheckedOut: vi.fn(async () => ({ ...cart, status: 'CHECKED_OUT', version: 4 })),
+    };
+    const pricing = {
+      quote: vi.fn(async (input: { storeId: string }) => {
+        if (input.storeId === 'store-a') {
+          return quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }]);
+        }
+        return quoteFor('store-b', [{ lineId: 'line-b', quantity: 2, unit: 500 }]);
+      }),
+      recordUsage: vi.fn(),
+    };
+    const inventory = {
+      pickWarehouseForReservation: vi.fn(async () => ({
+        warehouseId: 'wh-1',
+        available: 10,
+      })),
+      reserve: vi.fn(async () => ({ reservationId: Uniqueish(), availableAfter: 9 })),
+      release: vi.fn(),
+      commit: vi.fn(),
+    };
+    const orders = {
+      createFromCheckout: vi.fn(async (input: { storeId: string; totalMinor: number }) => ({
+        orderId: `order-${input.storeId}`,
+        orderNumber: `ORD-${input.storeId}`,
+        vendorId: input.storeId === 'store-a' ? 'vendor-a' : 'vendor-b',
+        storeId: input.storeId,
+        totalMinor: input.totalMinor,
+        currencyCode: 'BDT',
+        status: 'PENDING_PAYMENT' as const,
+      })),
+    };
+    const payments = {
+      isPaymentMethodAvailable: vi.fn(async () => true),
+      createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
+        paymentIntentId: `pi-${input.orderId}`,
+        paymentMethod: 'BKASH' as const,
+        status: 'REQUIRES_PAYMENT',
+        amountMinor: input.amountMinor,
+        currencyCode: 'BDT',
+        redirectUrl: `https://tokenized.sandbox.bka.sh/checkout?paymentID=pid-${input.orderId}`,
+      })),
+    };
+    const handler = buildHandler({ carts, pricing, inventory, orders, payments });
+    const result = await handler.submit({
+      owner: { customerId: 'customer-1' },
+      cartId: 'cart-1',
+      expectedCartVersion: 3,
+      idempotencyKey: 'idem-bkash-redirect',
+      paymentMethod: 'BKASH',
+      shippingAddress: address,
+      shippingMethod: 'STANDARD',
+    });
+
+    expect(result.payments).toHaveLength(2);
+    expect(result.payments[0]?.redirectUrl).toContain(
+      'https://tokenized.sandbox.bka.sh/checkout?paymentID=',
+    );
+    expect(result.payments[0]?.paymentMethod).toBe('BKASH');
+  });
 });
 
 function Uniqueish(): string {

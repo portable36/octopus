@@ -15,6 +15,7 @@ import {
   stashCheckoutOutcome,
   submitCheckout,
   type CartResponse,
+  type CheckoutPaymentMethod,
 } from '@/lib/cart-api';
 import { readAttributionForCheckout } from '@/lib/attribution';
 
@@ -27,6 +28,7 @@ function newIdempotencyKey(): string {
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartResponse | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('BKASH');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -64,6 +66,7 @@ export default function CheckoutPage() {
       return;
     }
     const form = new FormData(event.currentTarget);
+    const selectedMethod = (form.get('paymentMethod') as CheckoutPaymentMethod) || paymentMethod;
     setPending(true);
     setSubmitError(null);
     try {
@@ -71,7 +74,7 @@ export default function CheckoutPage() {
         cartId: cart.id,
         expectedCartVersion: cart.version,
         idempotencyKey: idempotencyKeyRef.current,
-        paymentMethod: 'COD',
+        paymentMethod: selectedMethod,
         shippingMethod: String(form.get('shippingMethod') || 'STANDARD'),
         shippingAddress: {
           line1: String(form.get('line1') || '').trim(),
@@ -86,12 +89,17 @@ export default function CheckoutPage() {
         attribution: readAttributionForCheckout(),
       });
       stashCheckoutOutcome(outcome);
+      const gatewayRedirect = outcome.payments?.find((p) => p.redirectUrl)?.redirectUrl;
+      if (gatewayRedirect) {
+        window.location.href = gatewayRedirect;
+        return;
+      }
       router.push(`/checkout/success?checkoutId=${encodeURIComponent(outcome.checkoutId)}`);
     } catch (error) {
       setSubmitError(
         error instanceof ApiClientError
           ? error.message
-          : 'Checkout failed. Totals and COD eligibility are decided by the server.',
+          : 'Checkout failed. Totals and payment eligibility are decided by the server.',
       );
       // Conflict / validation: new attempt needs a fresh idempotency key.
       if (error instanceof ApiClientError && error.status >= 400 && error.status < 500) {
@@ -145,8 +153,8 @@ export default function CheckoutPage() {
         <p className="sf-eyebrow">Almost yours</p>
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Checkout</h1>
         <p className="text-sm text-muted-foreground">
-          {cart.lines.length} item(s) · Cash on delivery. Store eligibility and order totals are
-          confirmed by the API.
+          {cart.lines.length} item(s) · Pay via bKash, Nagad, Cards, or Cash on Delivery. Order
+          totals and payment eligibility are confirmed by the server.
         </p>
       </header>
 
@@ -196,17 +204,101 @@ export default function CheckoutPage() {
           </select>
         </label>
 
-        <fieldset className="space-y-2">
-          <legend className="text-lg font-semibold">Payment</legend>
-          <label className="flex items-center gap-2 rounded-xl border border-border p-3">
-            <input type="radio" name="paymentMethod" value="COD" defaultChecked readOnly />
-            <span>
-              <strong className="block">Cash on delivery</strong>
-              <small className="font-normal text-muted-foreground">
-                Eligibility is checked when you place the order.
-              </small>
-            </span>
-          </label>
+        <fieldset className="space-y-3">
+          <legend className="text-lg font-semibold">Payment method</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                paymentMethod === 'BKASH'
+                  ? 'border-primary bg-primary/5 shadow-xs'
+                  : 'border-border hover:bg-muted/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="BKASH"
+                checked={paymentMethod === 'BKASH'}
+                onChange={() => setPaymentMethod('BKASH')}
+                className="mt-1"
+              />
+              <span className="space-y-1">
+                <strong className="block text-sm font-semibold">bKash</strong>
+                <small className="block text-xs text-muted-foreground leading-relaxed">
+                  Fast & secure mobile payment via bKash wallet, app, or USSD.
+                </small>
+              </span>
+            </label>
+
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                paymentMethod === 'NAGAD'
+                  ? 'border-primary bg-primary/5 shadow-xs'
+                  : 'border-border hover:bg-muted/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="NAGAD"
+                checked={paymentMethod === 'NAGAD'}
+                onChange={() => setPaymentMethod('NAGAD')}
+                className="mt-1"
+              />
+              <span className="space-y-1">
+                <strong className="block text-sm font-semibold">Nagad</strong>
+                <small className="block text-xs text-muted-foreground leading-relaxed">
+                  Instant mobile payment through your Nagad account.
+                </small>
+              </span>
+            </label>
+
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                paymentMethod === 'SSLCOMMERZ'
+                  ? 'border-primary bg-primary/5 shadow-xs'
+                  : 'border-border hover:bg-muted/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="SSLCOMMERZ"
+                checked={paymentMethod === 'SSLCOMMERZ'}
+                onChange={() => setPaymentMethod('SSLCOMMERZ')}
+                className="mt-1"
+              />
+              <span className="space-y-1">
+                <strong className="block text-sm font-semibold">Cards & Net Banking</strong>
+                <small className="block text-xs text-muted-foreground leading-relaxed">
+                  Visa, Mastercard, Amex, DBBL Nexus, and local internet banking.
+                </small>
+              </span>
+            </label>
+
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                paymentMethod === 'COD'
+                  ? 'border-primary bg-primary/5 shadow-xs'
+                  : 'border-border hover:bg-muted/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="COD"
+                checked={paymentMethod === 'COD'}
+                onChange={() => setPaymentMethod('COD')}
+                className="mt-1"
+              />
+              <span className="space-y-1">
+                <strong className="block text-sm font-semibold">Cash on delivery</strong>
+                <small className="block text-xs text-muted-foreground leading-relaxed">
+                  Pay with cash upon physical delivery. Eligibility verified at order.
+                </small>
+              </span>
+            </label>
+          </div>
         </fieldset>
 
         {submitError ? (
@@ -217,7 +309,17 @@ export default function CheckoutPage() {
 
         <div className="flex flex-wrap gap-3">
           <Button type="submit" className="sf-button-primary border-0" disabled={pending}>
-            {pending ? 'Placing order…' : 'Place COD order'}
+            {pending
+              ? paymentMethod === 'COD'
+                ? 'Placing order…'
+                : 'Redirecting to payment…'
+              : paymentMethod === 'BKASH'
+                ? 'Pay with bKash'
+                : paymentMethod === 'NAGAD'
+                  ? 'Pay with Nagad'
+                  : paymentMethod === 'SSLCOMMERZ'
+                    ? 'Pay with Cards / Banking'
+                    : 'Place COD order'}
           </Button>
           <Link href="/cart" className="sf-button-secondary">
             Back to cart

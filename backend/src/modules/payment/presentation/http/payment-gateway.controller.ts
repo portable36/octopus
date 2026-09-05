@@ -8,10 +8,12 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseFilters,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
+import { AppConfigService } from '../../../../config/app-config.service';
 import {
   API_RATE_LIMITER,
   type ApiRateLimiter,
@@ -29,7 +31,31 @@ export class PaymentGatewayController {
     @Optional()
     @Inject(API_RATE_LIMITER)
     private readonly rateLimiter?: ApiRateLimiter,
+    @Optional()
+    @Inject(AppConfigService)
+    private readonly appConfig?: AppConfigService,
   ) {}
+
+  private isBrowserNavigation(req: Request): boolean {
+    const accept = String(req.headers?.accept || '');
+    const dest = String(req.headers?.['sec-fetch-dest'] || '');
+    const mode = String(req.headers?.['sec-fetch-mode'] || '');
+    return accept.includes('text/html') || dest === 'document' || mode === 'navigate';
+  }
+
+  private getReceiptUrl(
+    status: string,
+    orderId: string,
+    paymentIntentId: string,
+    provider: string,
+  ): string {
+    const base = this.appConfig?.storefrontUrl || 'http://localhost:3000';
+    return `${base}/checkout/receipt?status=${encodeURIComponent(
+      status,
+    )}&orderId=${encodeURIComponent(orderId)}&paymentIntentId=${encodeURIComponent(
+      paymentIntentId,
+    )}&provider=${encodeURIComponent(provider)}`;
+  }
 
   @All('sslcommerz/callback')
   @HttpCode(200)
@@ -38,16 +64,32 @@ export class PaymentGatewayController {
     @Req() req: Request,
     @Body() body: Record<string, unknown>,
     @Query() query: Record<string, unknown>,
+    @Res({ passthrough: true }) res?: Response,
   ) {
     if (this.rateLimiter) {
       await this.rateLimiter.consume(`payment:gw:sslcommerz:${req.ip ?? 'unknown'}`, 120, 60);
     }
     const payload = { ...(query || {}), ...(body || {}) };
-    return this.callbackHandler.execute({
+    const outcome = await this.callbackHandler.execute({
       provider: 'SSLCOMMERZ',
       payload,
       paymentIntentId: (query.paymentIntentId || payload.tran_id) as string | undefined,
     });
+
+    if (res?.redirect && this.isBrowserNavigation(req)) {
+      res.redirect(
+        303,
+        this.getReceiptUrl(
+          outcome.status,
+          outcome.orderId,
+          outcome.paymentIntentId,
+          'SSLCOMMERZ',
+        ),
+      );
+      return;
+    }
+
+    return outcome;
   }
 
   @Post('sslcommerz/ipn')
@@ -77,6 +119,7 @@ export class PaymentGatewayController {
     @Req() req: Request,
     @Body() body: Record<string, unknown>,
     @Query() query: Record<string, unknown>,
+    @Res({ passthrough: true }) res?: Response,
   ) {
     if (this.rateLimiter) {
       await this.rateLimiter.consume(`payment:gw:bkash:${req.ip ?? 'unknown'}`, 120, 60);
@@ -103,13 +146,28 @@ export class PaymentGatewayController {
       }
     }
 
-    return this.callbackHandler.execute({
+    const outcome = await this.callbackHandler.execute({
       provider: 'BKASH',
       payload,
       paymentIntentId: (query.paymentIntentId ||
         payload.paymentIntentId ||
         payload.merchantInvoiceNumber) as string | undefined,
     });
+
+    if (res?.redirect && this.isBrowserNavigation(req)) {
+      res.redirect(
+        303,
+        this.getReceiptUrl(
+          outcome.status,
+          outcome.orderId,
+          outcome.paymentIntentId,
+          'BKASH',
+        ),
+      );
+      return;
+    }
+
+    return outcome;
   }
 
   @All('nagad/callback')
@@ -119,15 +177,31 @@ export class PaymentGatewayController {
     @Req() req: Request,
     @Body() body: Record<string, unknown>,
     @Query() query: Record<string, unknown>,
+    @Res({ passthrough: true }) res?: Response,
   ) {
     if (this.rateLimiter) {
       await this.rateLimiter.consume(`payment:gw:nagad:${req.ip ?? 'unknown'}`, 120, 60);
     }
     const payload = { ...(query || {}), ...(body || {}) };
-    return this.callbackHandler.execute({
+    const outcome = await this.callbackHandler.execute({
       provider: 'NAGAD',
       payload,
       paymentIntentId: (query.paymentIntentId || payload.paymentIntentId) as string | undefined,
     });
+
+    if (res?.redirect && this.isBrowserNavigation(req)) {
+      res.redirect(
+        303,
+        this.getReceiptUrl(
+          outcome.status,
+          outcome.orderId,
+          outcome.paymentIntentId,
+          'NAGAD',
+        ),
+      );
+      return;
+    }
+
+    return outcome;
   }
 }

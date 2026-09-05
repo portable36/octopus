@@ -41,6 +41,8 @@ export interface CheckoutPaymentRef {
   readonly status: string;
   /** Gateway methods only — never present for COD. */
   readonly clientSecret?: string;
+  /** Hosted gateway redirection URL (bKash, Nagad, SSLCommerz) */
+  readonly redirectUrl?: string;
 }
 
 export interface CheckoutOutcome {

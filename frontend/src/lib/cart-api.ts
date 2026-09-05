@@ -34,6 +34,8 @@ export type CartResponse = {
   updatedAt: string;
 };
 
+export type CheckoutPaymentMethod = 'COD' | 'BKASH' | 'NAGAD' | 'SSLCOMMERZ';
+
 export type CheckoutOutcome = {
   checkoutId: string;
   cartId: string;
@@ -66,6 +68,8 @@ export type CheckoutOutcome = {
     amountMinor: number;
     currencyCode: string;
     status: string;
+    clientSecret?: string;
+    redirectUrl?: string;
   }[];
 };
 
@@ -140,7 +144,7 @@ export async function submitCheckout(input: {
   cartId: string;
   expectedCartVersion: number;
   idempotencyKey: string;
-  paymentMethod: 'COD';
+  paymentMethod: CheckoutPaymentMethod;
   shippingAddress: ShippingAddressInput;
   shippingMethod: string;
   attribution?: {

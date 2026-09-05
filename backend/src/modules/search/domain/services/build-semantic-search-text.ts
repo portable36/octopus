@@ -1,4 +1,7 @@
-import { compileSearchAttributes, type SearchAttributeAssignment } from './compile-search-attributes';
+import {
+  compileSearchAttributes,
+  type SearchAttributeAssignment,
+} from './compile-search-attributes';
 import { stripHtmlForSearch } from './strip-html-for-search';
 
 export type SemanticSearchInput = {

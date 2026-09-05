@@ -100,14 +100,32 @@ graphify update .
   for durable features; `/to-tickets` when a plan needs agent slices. Do not
   ask the user which of these workflows to use.
 
-## In progress (2026-09-04)
+## Strategic roadmap decisions
 
-- Catalog “production ready” grill started; not implemented yet. Waiting on
-  user answers to: (1) scope P0 / P0+P1 / full doc, (2) sellability at
-  Catalog+Cart vs soft/none, (3) wire `catalog.product.*` permissions vs
-  staff-only, (4) defer Brand/attrs vs ship, (5) Spec Kit vs tickets vs just
-  code. Agent recommendations were 1B 2A 3A 4A 5A. Resume with those answers
-  before coding.
+- **GEM (v0.1.1):** GEM (Generative Ads Model / recommendation engine in
+  `.cursor/rules/gem.mdc`) is deferred to milestone `v0.1.1`. Do not scaffold
+  or implement GEM in `v0.1.0`. Current version `0.1.0` stabilizes core
+  commerce infrastructure (Catalog, Store Management / Details, Inventory,
+  Cart, and Analytics foundation).
+
+## Completed (2026-09-05)
+
+- **Catalog Production Readiness (`specs/001-catalog-prod-ready/`)**: Fully implemented, validated, and hardened according to user decisions (Q1=c [Full production-ready suite], Q2=A [Enforce at Catalog activation + Cart validation], Q3=A [Wire `@RequirePermissions` across routes + defense-in-depth], Q4=A [Full category hierarchy management + barcode uniqueness + physical dimensions persistence], Q5=A [Spec Kit loop]):
+  - Multi-point sellability validation across catalog offer activation and cart item additions/validations.
+  - Fine-grained permission decorators (`@RequirePermissions`) on all catalog endpoints with defense-in-depth checks in `CatalogAuthorizationService`.
+  - Barcode uniqueness per vendor enforced across application handlers, repository adapters, and PostgreSQL composite index.
+  - Complete category hierarchy CRUD (`GET /categories/:id`, `PATCH /categories/:id`, `archive`) with cycle prevention and `catalog_outbox` transactional event dispatch.
+  - Public storefront read models hardened (only active variants of published products exposed, unassociated offers omitted).
+  - Physical attributes persistence (`weightGrams`, `dimensions`: length/width/height in mm) round-trip mapped between domain, ORM, and DTOs.
+  - All 18 unit/integration test suites for catalog and cart passing (74 tests), full test suite passing (534 tests), TypeScript checks clean, and full build (`backend` + `frontend`) passing.
+- **Vendor & Admin UI (Phase 19 / 20 Surfaces)**:
+  - Extended frontend API contracts in `frontend/src/lib/vendor-api.ts` for barcode, weight (grams), and dimensional specs, as well as `adminCreateCategory`, `adminUpdateCategory`, `adminArchiveCategory`, and `adminGetCategory`.
+  - Enhanced Vendor Catalog pricing & variant section (`pricing-section.tsx`) with inputs and summaries for barcode, weight, and dimensional measurements (length/width/height in mm).
+  - Built Admin Category Hierarchy Management page (`frontend/src/app/(admin)/admin/categories/page.tsx`) with preorder tree indentation, search, status filtering, category creation, reparenting/editing, and archiving. Added Categories link to admin navigation shell.
+  - Implemented pure preorder tree traversal engine with unit tests in `frontend/src/lib/category-tree.spec.ts` (all 150 test files / 539 tests passing). Full frontend and backend production builds passing.
+
+## Tooling & integrations
+
 - OpenViking is optional local tooling for approved documentation and memory
   only; index `docs/`, `.cursor/rules/`, `AGENTS.md`, and this file—not the
   application tree. Never wire it into runtime or CI.

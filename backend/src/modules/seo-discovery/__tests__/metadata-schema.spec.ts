@@ -23,10 +23,7 @@ describe('on-page metadata and structured data', () => {
       });
 
       const moduleRef = await Test.createTestingModule({
-        providers: [
-          SeoMetadataService,
-          { provide: SEO_OVERRIDE_REPOSITORY, useValue: overrides },
-        ],
+        providers: [SeoMetadataService, { provide: SEO_OVERRIDE_REPOSITORY, useValue: overrides }],
       }).compile();
 
       const service = moduleRef.get(SeoMetadataService);
@@ -56,10 +53,7 @@ describe('on-page metadata and structured data', () => {
       overrides.findByEntity.mockResolvedValue(null);
 
       const moduleRef = await Test.createTestingModule({
-        providers: [
-          SeoMetadataService,
-          { provide: SEO_OVERRIDE_REPOSITORY, useValue: overrides },
-        ],
+        providers: [SeoMetadataService, { provide: SEO_OVERRIDE_REPOSITORY, useValue: overrides }],
       }).compile();
 
       const service = moduleRef.get(SeoMetadataService);

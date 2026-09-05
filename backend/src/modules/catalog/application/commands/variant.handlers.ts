@@ -4,10 +4,12 @@ import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-objec
 import { DuplicateVariantAttributesError } from '../../domain/errors/catalog.errors';
 import { Variant, type VariantCreateInput } from '../../domain/aggregates/variant.aggregate';
 import {
+  BarcodeAlreadyExistsError,
   CatalogSkuTakenError,
   ProductNotFoundError,
   VariantNotFoundError,
 } from '../errors/catalog.errors';
+import { Weight } from '../../domain/value-objects/weight.value-object';
 import { PRODUCT_REPOSITORY, type ProductRepository } from '../ports/product-repository.interface';
 import { VARIANT_REPOSITORY, type VariantRepository } from '../ports/variant-repository.interface';
 import { CatalogAuthorizationService } from '../services/catalog-authorization.service';
@@ -41,6 +43,12 @@ export interface CreateVariantCommand {
   readonly basePriceMinor?: number;
   readonly compareAtPriceMinor?: number;
   readonly currencyCode?: string;
+  readonly weightGrams?: number;
+  readonly dimensions?: {
+    readonly lengthMillimeters: number;
+    readonly widthMillimeters: number;
+    readonly heightMillimeters: number;
+  };
   readonly attributes?: VariantCreateInput['attributes'];
   readonly media?: VariantCreateInput['media'];
 }
@@ -66,6 +74,12 @@ export class CreateVariantHandler {
     ) {
       throw new CatalogSkuTakenError();
     }
+    if (
+      command.barcode &&
+      (await this.variants.existsByVendorAndBarcode(product.vendorId, command.barcode.trim()))
+    ) {
+      throw new BarcodeAlreadyExistsError();
+    }
 
     const siblings = await this.variants.findByProductId(product.id.value);
     const currency = command.currencyCode ?? 'BDT';
@@ -89,6 +103,8 @@ export class CreateVariantHandler {
       ...(command.compareAtPriceMinor !== undefined
         ? { compareAtPrice: Money.create(command.compareAtPriceMinor, currency) }
         : {}),
+      ...(command.weightGrams !== undefined ? { weight: Weight.create(command.weightGrams) } : {}),
+      ...(command.dimensions !== undefined ? { dimensions: command.dimensions } : {}),
       ...(command.attributes !== undefined ? { attributes: command.attributes } : {}),
       ...(command.media !== undefined ? { media: command.media } : {}),
     };

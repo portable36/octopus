@@ -88,19 +88,23 @@ export class MetaCapiOutboxHandlerAdapter implements SeoMetaCapiOutboxHandler {
 
     const userData: MetaCapiUserDataInput = {
       email,
-      ...(readString(payload, 'phone') ?? readString(payload, 'customerPhone')
+      ...((readString(payload, 'phone') ?? readString(payload, 'customerPhone'))
         ? { phone: readString(payload, 'phone') ?? readString(payload, 'customerPhone') ?? null }
         : {}),
-      ...(readString(payload, 'clientIpAddress') ?? readString(payload, 'client_ip_address')
+      ...((readString(payload, 'clientIpAddress') ?? readString(payload, 'client_ip_address'))
         ? {
             clientIpAddress:
-              readString(payload, 'clientIpAddress') ?? readString(payload, 'client_ip_address') ?? null,
+              readString(payload, 'clientIpAddress') ??
+              readString(payload, 'client_ip_address') ??
+              null,
           }
         : {}),
-      ...(readString(payload, 'clientUserAgent') ?? readString(payload, 'client_user_agent')
+      ...((readString(payload, 'clientUserAgent') ?? readString(payload, 'client_user_agent'))
         ? {
             clientUserAgent:
-              readString(payload, 'clientUserAgent') ?? readString(payload, 'client_user_agent') ?? null,
+              readString(payload, 'clientUserAgent') ??
+              readString(payload, 'client_user_agent') ??
+              null,
           }
         : {}),
     };

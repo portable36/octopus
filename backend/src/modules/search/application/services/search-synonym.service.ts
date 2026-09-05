@@ -68,7 +68,9 @@ export class SearchSynonymService {
     });
   }
 
-  public async listZeroResultQueries(needsReviewOnly = true): Promise<readonly ZeroResultQueryDto[]> {
+  public async listZeroResultQueries(
+    needsReviewOnly = true,
+  ): Promise<readonly ZeroResultQueryDto[]> {
     return withRlsContext(this.em, async (tx) => {
       const rows = await tx.find(
         SearchZeroResultQuery,

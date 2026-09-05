@@ -13,6 +13,7 @@ import {
   DuplicateVariantAttributesError,
 } from '../../../domain/errors/catalog.errors';
 import {
+  BarcodeAlreadyExistsError,
   CatalogAccessDeniedError,
   CatalogApplicationError,
   CatalogSkuTakenError,
@@ -20,6 +21,7 @@ import {
   CategorySlugTakenError,
   ProductNotFoundError,
   StoreOfferNotFoundError,
+  StoreOfferNotSellableError,
   VariantNotFoundError,
   VendorNotActiveForCatalogError,
   VendorNotFoundForCatalogError,
@@ -46,7 +48,13 @@ export class CatalogExceptionFilter implements ExceptionFilter {
     ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof CatalogSkuTakenError || exception instanceof CategorySlugTakenError) {
+    if (
+      exception instanceof CatalogSkuTakenError ||
+      exception instanceof CategorySlugTakenError ||
+      exception instanceof BarcodeAlreadyExistsError ||
+      exception instanceof StoreOfferNotSellableError ||
+      (exception instanceof CatalogApplicationError && exception.code === 'BARCODE_ALREADY_EXISTS')
+    ) {
       return new ConflictException({ message: exception.message, code: exception.code });
     }
     if (exception instanceof DuplicateVariantAttributesError) {

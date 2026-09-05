@@ -4,10 +4,7 @@ import {
   GLOBAL_CONFIG_CACHE_PREFIX,
   GlobalConfigService,
 } from '../application/services/global-config.service';
-import {
-  GLOBAL_CONFIG_GROUPS,
-  GLOBAL_CONFIG_KEYS,
-} from '../domain/global-config-keys';
+import { GLOBAL_CONFIG_GROUPS, GLOBAL_CONFIG_KEYS } from '../domain/global-config-keys';
 import { GlobalSetting } from '../infrastructure/entities/global-setting.entity';
 
 function createEntityManagerMock() {
@@ -19,10 +16,7 @@ function createEntityManagerMock() {
     }),
     find: vi.fn(async () => [...store.values()]),
     create: vi.fn(
-      (
-        _entity: unknown,
-        data: { group: string; key: string; value: unknown; updatedAt: Date },
-      ) => {
+      (_entity: unknown, data: { group: string; key: string; value: unknown; updatedAt: Date }) => {
         const row = { ...data } as GlobalSetting;
         store.set(`${data.group}:${data.key}`, row);
         return row;

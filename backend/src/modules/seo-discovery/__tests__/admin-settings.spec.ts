@@ -14,13 +14,11 @@ function createEntityManagerMock() {
     findOne: vi.fn(async (_entity: unknown, where: { key: string }) => {
       return store.get(where.key) ?? null;
     }),
-    create: vi.fn(
-      (_entity: unknown, data: { key: string; value: unknown; updatedAt: Date }) => {
-        const row = { ...data } as SystemSetting;
-        store.set(data.key, row);
-        return row;
-      },
-    ),
+    create: vi.fn((_entity: unknown, data: { key: string; value: unknown; updatedAt: Date }) => {
+      const row = { ...data } as SystemSetting;
+      store.set(data.key, row);
+      return row;
+    }),
     persist: vi.fn((row: SystemSetting) => {
       store.set(row.key, row);
     }),
@@ -99,8 +97,8 @@ describe('admin system settings', () => {
   });
 
   it('rejects unsupported setting keys', async () => {
-    await expect(
-      service.updateSettings({ UNKNOWN_SETTING_KEY: 'value' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.updateSettings({ UNKNOWN_SETTING_KEY: 'value' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 });

@@ -196,10 +196,7 @@ describe('SEO discovery jobs and feeds', () => {
       }
 
       const config = { seoCacheDir: cacheDir };
-      const cache = new SitemapCacheService(
-        { streamEntries } as never,
-        config as never,
-      );
+      const cache = new SitemapCacheService({ streamEntries } as never, config as never);
 
       await cache.refresh(50);
 

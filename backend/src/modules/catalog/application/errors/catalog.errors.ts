@@ -61,3 +61,17 @@ export class VendorNotFoundForCatalogError extends CatalogApplicationError {
     super('Vendor not found.', 'VENDOR_NOT_FOUND');
   }
 }
+
+export class StoreOfferNotSellableError extends CatalogApplicationError {
+  constructor(
+    message = 'Cannot activate offer: product must be published and variant must be active.',
+  ) {
+    super(message, 'OFFER_NOT_SELLABLE');
+  }
+}
+
+export class BarcodeAlreadyExistsError extends CatalogApplicationError {
+  constructor(message = 'Barcode already registered for this vendor.') {
+    super(message, 'BARCODE_ALREADY_EXISTS');
+  }
+}

@@ -1,6 +1,4 @@
-import type {
-  ImageSitemapUrlEntry,
-} from '../application/ports/image-sitemap-source.port';
+import type { ImageSitemapUrlEntry } from '../application/ports/image-sitemap-source.port';
 import { escapeXml } from '../application/services/sitemap-xml.renderer';
 
 const URLSET_OPEN =

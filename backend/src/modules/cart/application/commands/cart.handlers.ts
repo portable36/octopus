@@ -79,7 +79,7 @@ export class CartCommandHandler {
   }): Promise<Cart> {
     const cart = await this.requireOwnedCart(input.cartId, input.owner);
     const offer = await this.offers.findByStoreAndVariant(input.storeId, input.variantId);
-    if (!offer || offer.status !== 'active' || !offer.isAvailable) {
+    if (!offer || !offer.isSellable) {
       throw new CartOfferUnavailableError();
     }
     cart.addItem({
@@ -158,7 +158,7 @@ export class CartCommandHandler {
         });
         continue;
       }
-      if (offer.status !== 'active' || !offer.isAvailable) {
+      if (!offer.isSellable) {
         issues.push({
           lineId: line.lineId,
           code: 'OFFER_UNAVAILABLE',

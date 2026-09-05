@@ -5,7 +5,10 @@ import { fieldClass, labelClass } from '@/components/vendor/catalog/catalog-styl
 
 type StepProps = {
   readonly payload: StoreWizardPayload;
-  readonly onChange: (section: keyof StoreWizardPayload, data: StoreWizardPayload[keyof StoreWizardPayload]) => void;
+  readonly onChange: (
+    section: keyof StoreWizardPayload,
+    data: StoreWizardPayload[keyof StoreWizardPayload],
+  ) => void;
   readonly vendorName?: string;
 };
 
@@ -132,7 +135,10 @@ export function StoreWizardStepContent({
       return (
         <div className="grid gap-2 sm:grid-cols-2">
           {STORE_TYPES.map((type) => (
-            <label key={type.value} className="flex items-center gap-2 rounded-md border border-border p-3 text-sm">
+            <label
+              key={type.value}
+              className="flex items-center gap-2 rounded-md border border-border p-3 text-sm"
+            >
               <input
                 type="radio"
                 name="storeType"
@@ -362,7 +368,10 @@ export function StoreWizardStepContent({
                 type="checkbox"
                 checked={payload.notifications?.[channel] ?? channel === 'email'}
                 onChange={(e) =>
-                  onChange('notifications', { ...payload.notifications, [channel]: e.target.checked })
+                  onChange('notifications', {
+                    ...payload.notifications,
+                    [channel]: e.target.checked,
+                  })
                 }
               />
               {channel.toUpperCase()}

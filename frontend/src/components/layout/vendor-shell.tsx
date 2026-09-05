@@ -7,7 +7,11 @@ import { ensureAccessToken, fetchMe, logoutAccount, type MeResponse } from '@/li
 import { ApiClientError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { listMyVendors, listStoresForVendor, type StoreSummary } from '@/lib/vendor-api';
-import { getSelectedStoreId, setSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
+import {
+  getSelectedStoreId,
+  setSelectedStoreId,
+  subscribeSelectedStoreId,
+} from '@/lib/vendor-session';
 import { canAccessVendor, hasVendorRole } from '@/lib/role-admission';
 
 type NavItem = {

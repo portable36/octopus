@@ -11,7 +11,9 @@ function isAttributeAssignment(value: unknown): value is SearchAttributeAssignme
   return typeof record['code'] === 'string' && record['value'] !== undefined;
 }
 
-export function parseCatalogAttributes(raw: readonly unknown[]): readonly SearchAttributeAssignment[] {
+export function parseCatalogAttributes(
+  raw: readonly unknown[],
+): readonly SearchAttributeAssignment[] {
   return raw.filter(isAttributeAssignment);
 }
 

@@ -146,7 +146,9 @@ describe('technical SEO core', () => {
       }
 
       const service = new SitemapStreamService(
-        { streamEntries } as unknown as import('../application/ports/sitemap-source.port').SitemapSourcePort,
+        {
+          streamEntries,
+        } as unknown as import('../application/ports/sitemap-source.port').SitemapSourcePort,
         {
           getCachedBuffer: () => null,
           loadFromDisk: async () => null,

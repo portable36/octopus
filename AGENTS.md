@@ -22,12 +22,12 @@ Prefer mattpocock for planning/delivery and ponytail for minimal diffs; keep `.c
 
 **Automatic delivery routing** (always-on): `.cursor/rules/41-delivery-routing.mdc`. Agents classify each request and run the matching path without asking which workflow to use:
 
-| Path | When | Skills |
-| ---- | ---- | ------ |
-| Just code | Clear small fix / obvious change | Ponytail (always-on) |
-| Grill | Ambiguous product/design | `/grill-me` (or `/grill-with-docs`) |
-| Spec Kit | Durable nontrivial feature / contracts | `/speckit-specify` → … → `/speckit-implement` |
-| Tickets | Plan ready to slice for agents | `/to-tickets` |
+| Path      | When                                   | Skills                                        |
+| --------- | -------------------------------------- | --------------------------------------------- |
+| Just code | Clear small fix / obvious change       | Ponytail (always-on)                          |
+| Grill     | Ambiguous product/design               | `/grill-me` (or `/grill-with-docs`)           |
+| Spec Kit  | Durable nontrivial feature / contracts | `/speckit-specify` → … → `/speckit-implement` |
+| Tickets   | Plan ready to slice for agents         | `/to-tickets`                                 |
 
 **Spec Kit** ([github/spec-kit](https://github.com/github/spec-kit)) is installed for Spec-Driven Development: CLI via `uv tool install specify-cli`, project under `.specify/`, Cursor skills under `.cursor/skills/speckit-*`. Constitution: `.specify/memory/constitution.md`. See `docs/agents/spec-kit.md`. Spec Kit must not weaken `.cursor/rules/`.
 

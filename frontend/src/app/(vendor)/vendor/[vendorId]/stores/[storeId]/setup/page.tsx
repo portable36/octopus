@@ -35,7 +35,6 @@ export default function StoreSetupPage() {
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setInterval> | undefined;
 
     async function poll() {
       try {
@@ -49,11 +48,11 @@ export default function StoreSetupPage() {
     }
 
     void poll();
-    timer = setInterval(() => void poll(), 3000);
+    const timer = setInterval(() => void poll(), 3000);
 
     return () => {
       cancelled = true;
-      if (timer) clearInterval(timer);
+      clearInterval(timer);
     };
   }, [reload]);
 
@@ -85,9 +84,7 @@ export default function StoreSetupPage() {
         >
           ← Stores
         </Link>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight">
-          {store.profile.displayName}
-        </h2>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight">{store.profile.displayName}</h2>
         <p className="text-sm text-muted-foreground">
           Status: <span className="uppercase">{store.status}</span>
         </p>

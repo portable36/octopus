@@ -62,7 +62,9 @@ export class StoreProvisioningOrchestrator {
         await this.provisioning.markStepStatus(context.runId, stepName, 'completed');
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Provisioning step failed.';
-        this.logger.warn(`Provisioning step ${stepName} failed for store ${context.storeId}: ${message}`);
+        this.logger.warn(
+          `Provisioning step ${stepName} failed for store ${context.storeId}: ${message}`,
+        );
         await this.provisioning.markStepStatus(context.runId, stepName, 'failed', {
           error: message,
         });

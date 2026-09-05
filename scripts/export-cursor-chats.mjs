@@ -164,9 +164,7 @@ function copyAgentTranscripts(sourceDir, destDir) {
     return 0;
   }
 
-  const incoming = new Set(
-    readdirSync(sourceDir).filter((f) => f.endsWith('.jsonl')),
-  );
+  const incoming = new Set(readdirSync(sourceDir).filter((f) => f.endsWith('.jsonl')));
 
   for (const file of incoming) {
     cpSync(join(sourceDir, file), join(destDir, file));
@@ -185,9 +183,7 @@ function pruneSnapshots(backupDir) {
   const snapshots = readdirSync(backupDir)
     .filter(
       (f) =>
-        f.endsWith('.cursor-chat.json') &&
-        f !== 'latest.cursor-chat.json' &&
-        f !== 'manifest.json',
+        f.endsWith('.cursor-chat.json') && f !== 'latest.cursor-chat.json' && f !== 'manifest.json',
     )
     .map((f) => ({ name: f, mtime: statSync(join(backupDir, f)).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime);

@@ -1,4 +1,11 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Worker, type ConnectionOptions, type Job } from 'bullmq';
 import { AppConfigService } from '../../../config/app-config.service';
 import { bullmqWorkerOptions } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
@@ -35,7 +42,9 @@ export class AiPersonalizationWorker implements OnModuleInit, OnModuleDestroy {
 
   public async onModuleInit(): Promise<void> {
     if (this.config.isTest || !this.config.aiPersonalizationWorkerEnabled) {
-      this.logger.log('AI personalization worker disabled (test or AI_PERSONALIZATION_WORKER_ENABLED=false).');
+      this.logger.log(
+        'AI personalization worker disabled (test or AI_PERSONALIZATION_WORKER_ENABLED=false).',
+      );
       return;
     }
 

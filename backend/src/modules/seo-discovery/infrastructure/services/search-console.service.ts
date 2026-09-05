@@ -22,8 +22,7 @@ function buildSubmitSitemapUrl(siteUrl: string, feedpath: string): string {
 @Injectable()
 export class SearchConsoleApiService {
   private readonly logger = new Logger(SearchConsoleApiService.name);
-  private cachedAccessToken: { readonly token: string; readonly expiresAtMs: number } | null =
-    null;
+  private cachedAccessToken: { readonly token: string; readonly expiresAtMs: number } | null = null;
 
   constructor(
     private readonly config: AppConfigService,

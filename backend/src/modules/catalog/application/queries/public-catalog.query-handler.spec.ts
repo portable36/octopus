@@ -70,6 +70,79 @@ describe('PublicCatalogQueryHandler', () => {
     expect(products.findPublishedById).toHaveBeenCalledWith('prod-1');
   });
 
+  it('filters out draft or archived variants and unassociated offers from public product responses', async () => {
+    const product = Product.create({
+      vendorId: 'v1',
+      sku: 'abc-def-1234',
+      name: 'Oversized Tee',
+      description: 'Cotton',
+    });
+
+    const products = {
+      findPublishedById: vi.fn().mockResolvedValue(product),
+      listPublishedSitemapEntries: vi.fn(),
+    };
+    const variants = {
+      findByProductId: vi.fn().mockResolvedValue([
+        {
+          id: { value: 'var-active' },
+          sku: 'TEE-ACTIVE',
+          name: 'Active Variant',
+          status: 'ACTIVE',
+          attributes: [],
+          media: [],
+        },
+        {
+          id: { value: 'var-draft' },
+          sku: 'TEE-DRAFT',
+          name: 'Draft Variant',
+          status: 'DRAFT',
+          attributes: [],
+          media: [],
+        },
+      ]),
+    };
+    const offers = {
+      findActiveByProductId: vi.fn().mockResolvedValue([
+        {
+          id: { value: 'o1' },
+          storeId: 's1',
+          variantId: 'var-active',
+          priceMinor: 1200,
+          currencyCode: 'BDT',
+          isAvailable: true,
+        },
+        {
+          id: { value: 'o2' },
+          storeId: 's1',
+          variantId: 'var-draft',
+          priceMinor: 1000,
+          currencyCode: 'BDT',
+          isAvailable: true,
+        },
+      ]),
+    };
+    const handler = new PublicCatalogQueryHandler(
+      { listActive: vi.fn(), findActiveBySlug: vi.fn() } as never,
+      products as never,
+      variants as never,
+      offers as never,
+      { findActiveBySlug: vi.fn() } as never,
+      {
+        findById: vi.fn(),
+        findActivePublicById: vi.fn(),
+        findActivePublicBySlug: vi.fn(),
+      } as never,
+      { findById: vi.fn(), resolvePublicImageUrl: vi.fn().mockResolvedValue(null) } as never,
+    );
+
+    const result = await handler.getPublishedProduct('prod-1');
+    expect(result.variants).toHaveLength(1);
+    expect(result.variants[0]?.id).toBe('var-active');
+    expect(result.offers).toHaveLength(1);
+    expect(result.offers[0]?.variantId).toBe('var-active');
+  });
+
   it('404s when product is not published', async () => {
     const handler = new PublicCatalogQueryHandler(
       { listActive: vi.fn(), findActiveBySlug: vi.fn() } as never,

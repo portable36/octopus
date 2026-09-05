@@ -10,6 +10,9 @@ export interface CatalogStoreOfferSnapshot {
   readonly currencyCode: string;
   readonly status: string;
   readonly isAvailable: boolean;
+  readonly productStatus: string;
+  readonly variantStatus: string;
+  readonly isSellable: boolean;
 }
 
 export type StoreVariantPair = {

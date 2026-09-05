@@ -54,6 +54,12 @@ export interface AuthoringVariantDto {
   readonly name: string;
   readonly status: string;
   readonly barcode: string | null;
+  readonly weightGrams: number | null;
+  readonly dimensions: {
+    readonly lengthMillimeters: number;
+    readonly widthMillimeters: number;
+    readonly heightMillimeters: number;
+  } | null;
   readonly basePriceMinor: number | null;
   readonly currencyCode: string | null;
   readonly attributes: readonly CatalogAttributeDto[];

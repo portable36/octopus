@@ -8,5 +8,8 @@ export type ProductAssociationRecord = {
 
 export interface ProductAssociationRepository {
   replaceAll(associations: readonly ProductAssociationRecord[]): Promise<void>;
-  findTopByProductId(productId: string, limit: number): Promise<readonly ProductAssociationRecord[]>;
+  findTopByProductId(
+    productId: string,
+    limit: number,
+  ): Promise<readonly ProductAssociationRecord[]>;
 }

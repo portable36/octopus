@@ -84,10 +84,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
     <div className="space-y-8">
       <TaxonomyKeywordAttributes keywords={taxonomyKeywords} />
       {categoryQuery ? (
-        <SearchResultsAnalytics
-          query={categoryQuery}
-          resultsCount={result?.estimatedTotal ?? 0}
-        />
+        <SearchResultsAnalytics query={categoryQuery} resultsCount={result?.estimatedTotal ?? 0} />
       ) : null}
       {seoContext.structuredData.map((block, index) => (
         <StructuredData key={`seo-ld-${index}`} data={block} />

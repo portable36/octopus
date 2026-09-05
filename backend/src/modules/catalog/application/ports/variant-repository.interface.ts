@@ -8,4 +8,6 @@ export interface VariantRepository {
   findByProductId(productId: string): Promise<Variant[]>;
   findByVendorAndSku(vendorId: string, sku: string): Promise<Variant | null>;
   existsByVendorAndSku(vendorId: string, sku: string): Promise<boolean>;
+  findByVendorAndBarcode(vendorId: string, barcode: string): Promise<Variant | null>;
+  existsByVendorAndBarcode(vendorId: string, barcode: string): Promise<boolean>;
 }

@@ -27,7 +27,11 @@ describe('store onboarding handlers', () => {
     const save = vi.fn();
     const handler = new CreateStoreDraftHandler(
       { save, findById: vi.fn(), findByStoreId: vi.fn() },
-      { findById: vi.fn().mockResolvedValue(vendor), findActivePublicById: vi.fn(), findActivePublicBySlug: vi.fn() },
+      {
+        findById: vi.fn().mockResolvedValue(vendor),
+        findActivePublicById: vi.fn(),
+        findActivePublicBySlug: vi.fn(),
+      },
     );
 
     const draft = await handler.execute({
@@ -60,7 +64,11 @@ describe('store onboarding handlers', () => {
         findById: vi.fn().mockResolvedValue(existing),
         findByStoreId: vi.fn(),
       },
-      { findById: vi.fn().mockResolvedValue(vendor), findActivePublicById: vi.fn(), findActivePublicBySlug: vi.fn() },
+      {
+        findById: vi.fn().mockResolvedValue(vendor),
+        findActivePublicById: vi.fn(),
+        findActivePublicBySlug: vi.fn(),
+      },
     );
 
     const updated = await handler.execute({
@@ -95,7 +103,11 @@ describe('store onboarding handlers', () => {
         findById: vi.fn().mockResolvedValue(draft),
         findByStoreId: vi.fn(),
       },
-      { findById: vi.fn().mockResolvedValue(vendor), findActivePublicById: vi.fn(), findActivePublicBySlug: vi.fn() },
+      {
+        findById: vi.fn().mockResolvedValue(vendor),
+        findActivePublicById: vi.fn(),
+        findActivePublicBySlug: vi.fn(),
+      },
       { existsHostname: vi.fn().mockResolvedValue(false) } as never,
     );
 
@@ -122,7 +134,11 @@ describe('store onboarding handlers', () => {
         findById: vi.fn().mockResolvedValue(draft),
         findByStoreId: vi.fn(),
       },
-      { findById: vi.fn().mockResolvedValue(vendor), findActivePublicById: vi.fn(), findActivePublicBySlug: vi.fn() },
+      {
+        findById: vi.fn().mockResolvedValue(vendor),
+        findActivePublicById: vi.fn(),
+        findActivePublicBySlug: vi.fn(),
+      },
     );
 
     await expect(

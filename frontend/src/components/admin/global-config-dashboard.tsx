@@ -74,7 +74,9 @@ export function GlobalConfigDashboard() {
       setMarketingForm(mapMarketingSystemSettingsToForm(seoSettings.settings));
       setOperationsForm(mapGlobalConfigToOperationsForm(globalConfig.settings));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Could not load platform configuration.');
+      setError(
+        err instanceof ApiClientError ? err.message : 'Could not load platform configuration.',
+      );
     } finally {
       setLoading(false);
     }
@@ -95,7 +97,9 @@ export function GlobalConfigDashboard() {
     try {
       if (activeTab === 'seo') {
         await patchSeoSystemSettings(token, seoSystemFormToPatch(seoForm));
-        setSaved('SEO settings saved. Redis caches were invalidated — changes apply on the next request.');
+        setSaved(
+          'SEO settings saved. Redis caches were invalidated — changes apply on the next request.',
+        );
       } else if (activeTab === 'marketing') {
         await patchSeoSystemSettings(token, marketingSystemFormToPatch(marketingForm));
         setSaved(
@@ -163,12 +167,16 @@ export function GlobalConfigDashboard() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading configuration…</p>
       ) : (
-        <form onSubmit={(e) => void onSubmit(e)} className="max-w-2xl space-y-4 border border-border p-4">
+        <form
+          onSubmit={(e) => void onSubmit(e)}
+          className="max-w-2xl space-y-4 border border-border p-4"
+        >
           {activeTab === 'seo' ? (
             <>
               <h2 className="text-lg font-medium">SEO &amp; Search Engines</h2>
               <p className="text-sm text-muted-foreground">
-                Sitemap schedules, canonical URL, and Google Search Console service account credentials.
+                Sitemap schedules, canonical URL, and Google Search Console service account
+                credentials.
               </p>
               <label className={labelClassName()}>
                 <span className="text-muted-foreground">Sitemap cron (BullMQ)</span>
@@ -176,7 +184,9 @@ export function GlobalConfigDashboard() {
                   className={fieldClassName()}
                   value={seoForm.SEO_SITEMAP_CRON}
                   onChange={(e) =>
-                    setSeoForm((prev) => updateSeoSystemField(prev, 'SEO_SITEMAP_CRON', e.target.value))
+                    setSeoForm((prev) =>
+                      updateSeoSystemField(prev, 'SEO_SITEMAP_CRON', e.target.value),
+                    )
                   }
                 />
               </label>
@@ -219,7 +229,9 @@ export function GlobalConfigDashboard() {
                 />
               </label>
               <label className={labelClassName()}>
-                <span className="text-muted-foreground">Google Search Console private key (PEM)</span>
+                <span className="text-muted-foreground">
+                  Google Search Console private key (PEM)
+                </span>
                 <textarea
                   className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs"
                   value={seoForm.GOOGLE_SERVICES_PRIVATE_KEY}
@@ -246,7 +258,11 @@ export function GlobalConfigDashboard() {
                   value={marketingForm.MARKETING_GTM_CONTAINER_ID}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
-                      updateMarketingSystemField(prev, 'MARKETING_GTM_CONTAINER_ID', e.target.value),
+                      updateMarketingSystemField(
+                        prev,
+                        'MARKETING_GTM_CONTAINER_ID',
+                        e.target.value,
+                      ),
                     )
                   }
                   placeholder="GTM-XXXXXXX"
@@ -259,7 +275,11 @@ export function GlobalConfigDashboard() {
                   value={marketingForm.MARKETING_GA4_MEASUREMENT_ID}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
-                      updateMarketingSystemField(prev, 'MARKETING_GA4_MEASUREMENT_ID', e.target.value),
+                      updateMarketingSystemField(
+                        prev,
+                        'MARKETING_GA4_MEASUREMENT_ID',
+                        e.target.value,
+                      ),
                     )
                   }
                   placeholder="G-XXXXXXXX"
@@ -319,7 +339,9 @@ export function GlobalConfigDashboard() {
                 />
               </label>
               <label className={labelClassName()}>
-                <span className="text-muted-foreground">Andromeda data processing options (JSON)</span>
+                <span className="text-muted-foreground">
+                  Andromeda data processing options (JSON)
+                </span>
                 <input
                   className={fieldClassName()}
                   value={marketingForm.META_ANDROMEDA_DATA_PROCESSING_OPTIONS}
@@ -384,7 +406,8 @@ export function GlobalConfigDashboard() {
             <>
               <h2 className="text-lg font-medium">Store Core Operations</h2>
               <p className="text-sm text-muted-foreground">
-                Catalog defaults, checkout rules, free-shipping threshold, and payment gateway toggles.
+                Catalog defaults, checkout rules, free-shipping threshold, and payment gateway
+                toggles.
               </p>
               <label className={labelClassName()}>
                 <span className="text-muted-foreground">Default currency code</span>

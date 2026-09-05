@@ -49,7 +49,9 @@ export class AiPersonalizationEnqueuerService implements OnModuleDestroy, OnModu
 
   public async enqueueAnalyzePurchasePatterns(): Promise<void> {
     if (this.config.isTest || !this.config.outboxDispatchEnabled) {
-      this.logger.warn('AI personalization enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
+      this.logger.warn(
+        'AI personalization enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).',
+      );
       return;
     }
 

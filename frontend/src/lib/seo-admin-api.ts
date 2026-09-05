@@ -54,7 +54,10 @@ export function saveSeoOverride(token: string, body: SeoOverrideInput) {
   });
 }
 
-export function saveSeoRedirects(token: string, body: RedirectInput | { redirects: RedirectInput[] }) {
+export function saveSeoRedirects(
+  token: string,
+  body: RedirectInput | { redirects: RedirectInput[] },
+) {
   return apiRequest('/admin/seo/redirects', {
     method: 'POST',
     headers: authHeaders(token),

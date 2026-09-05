@@ -45,7 +45,9 @@ test.describe('auth pages', () => {
 
   test('register page loads', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.getByRole('heading', { level: 1, name: 'Create your account' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Create your account' }),
+    ).toBeVisible();
   });
 });
 

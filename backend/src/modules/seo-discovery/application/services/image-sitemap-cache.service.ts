@@ -27,10 +27,7 @@ export class ImageSitemapCacheService {
 
   public async refresh(batchSize?: number): Promise<void> {
     const chunkSize = batchSize ?? this.config.sitemapItemsPerChunk;
-    const xml = await this.generator.build(
-      (size) => this.source.streamEntries(size),
-      chunkSize,
-    );
+    const xml = await this.generator.build((size) => this.source.streamEntries(size), chunkSize);
     const buffer = Buffer.from(xml, 'utf8');
     this.memoryCache = buffer;
 

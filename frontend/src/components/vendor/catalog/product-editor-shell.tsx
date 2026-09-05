@@ -76,9 +76,14 @@ export function ProductEditorShell({ vendorId, productId }: ProductEditorShellPr
     }
 
     void load();
-    return subscribeSelectedStoreId(() => {
+    const unsubscribe = subscribeSelectedStoreId(() => {
       void load();
     });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [reload, vendorId]);
 
   function onProductSaved(product: VendorProduct) {

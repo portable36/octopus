@@ -24,6 +24,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
     label: 'Workspace',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', permission: 'platform.dashboard.read' },
+      { href: '/admin/categories', label: 'Categories', permission: 'platform.vendors.read' },
       { href: '/admin/vendors', label: 'Vendors', permission: 'platform.vendors.read' },
       { href: '/admin/orders', label: 'Orders', permission: 'platform.orders.read' },
       { href: '/admin/payments', label: 'Payments', permission: 'platform.payments.read' },

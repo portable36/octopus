@@ -125,6 +125,10 @@ export class AppConfigService {
       .filter((origin) => origin.length > 0);
   }
 
+  get storefrontUrl(): string {
+    return this.corsOrigins[0] || 'http://localhost:3000';
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

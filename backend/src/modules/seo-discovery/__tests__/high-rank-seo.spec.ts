@@ -91,10 +91,7 @@ describe('high-rank SEO engine', () => {
     it('logs unknown failures and returns RFC7807 404 when no redirect exists', async () => {
       const logNotFound = vi.fn().mockResolvedValue(undefined);
       const resolve = vi.fn().mockResolvedValue(null);
-      const filter = new SeoNotFoundFilter(
-        { logNotFound } as never,
-        { resolve } as never,
-      );
+      const filter = new SeoNotFoundFilter({ logNotFound } as never, { resolve } as never);
 
       const status = vi.fn().mockReturnThis();
       const type = vi.fn().mockReturnThis();
@@ -139,10 +136,7 @@ describe('high-rank SEO engine', () => {
         targetUrl: '/products/new-id',
         statusCode: 301,
       });
-      const filter = new SeoNotFoundFilter(
-        { logNotFound } as never,
-        { resolve } as never,
-      );
+      const filter = new SeoNotFoundFilter({ logNotFound } as never, { resolve } as never);
 
       const redirect = vi.fn();
       const response = { redirect };

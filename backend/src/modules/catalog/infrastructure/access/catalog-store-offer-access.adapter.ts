@@ -6,21 +6,9 @@ import type {
   StoreVariantPair,
 } from '../../../../shared-kernel/application/ports/catalog-store-offer-access.port';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
+import { ProductOrmEntity } from '../persistence/product.orm-entity';
 import { StoreOfferOrmEntity } from '../persistence/store-offer.orm-entity';
-
-function toSnapshot(entity: StoreOfferOrmEntity): CatalogStoreOfferSnapshot {
-  return {
-    offerId: entity.id,
-    vendorId: entity.vendorId,
-    storeId: entity.storeId,
-    productId: entity.productId,
-    variantId: entity.variantId,
-    priceMinor: entity.priceMinor,
-    currencyCode: entity.currencyCode,
-    status: entity.status,
-    isAvailable: entity.isAvailable,
-  };
-}
+import { VariantOrmEntity } from '../persistence/variant.orm-entity';
 
 @Injectable()
 export class CatalogStoreOfferAccessAdapter implements CatalogStoreOfferAccessPort {
@@ -52,7 +40,44 @@ export class CatalogStoreOfferAccessAdapter implements CatalogStoreOfferAccessPo
           variantId: pair.variantId,
         })),
       });
-      return entities.map(toSnapshot);
+      if (entities.length === 0) {
+        return [];
+      }
+      const productIds = [...new Set(entities.map((e) => e.productId))];
+      const variantIds = [...new Set(entities.map((e) => e.variantId))];
+      const [products, variants] = await Promise.all([
+        tx.find(ProductOrmEntity, { id: { $in: productIds } }),
+        tx.find(VariantOrmEntity, { id: { $in: variantIds } }),
+      ]);
+      const productMap = new Map(products.map((p) => [p.id, p]));
+      const variantMap = new Map(variants.map((v) => [v.id, v]));
+
+      return entities.map((entity) => {
+        const product = productMap.get(entity.productId);
+        const variant = variantMap.get(entity.variantId);
+        const productStatus = product?.status ?? 'unknown';
+        const variantStatus = variant?.status ?? 'unknown';
+        const isSellable =
+          entity.status === 'active' &&
+          entity.isAvailable &&
+          productStatus === 'published' &&
+          variantStatus === 'ACTIVE';
+
+        return {
+          offerId: entity.id,
+          vendorId: entity.vendorId,
+          storeId: entity.storeId,
+          productId: entity.productId,
+          variantId: entity.variantId,
+          priceMinor: entity.priceMinor,
+          currencyCode: entity.currencyCode,
+          status: entity.status,
+          isAvailable: entity.isAvailable,
+          productStatus,
+          variantStatus,
+          isSellable,
+        };
+      });
     });
   }
 }

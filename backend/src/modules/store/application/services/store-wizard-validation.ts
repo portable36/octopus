@@ -5,19 +5,13 @@ export function mergeWizardPayload(
   patch: StoreWizardPayload,
 ): StoreWizardPayload {
   return {
-    ...(current.basic || patch.basic
-      ? { basic: { ...current.basic, ...patch.basic } }
-      : {}),
-    ...(current.owner || patch.owner
-      ? { owner: { ...current.owner, ...patch.owner } }
-      : {}),
+    ...(current.basic || patch.basic ? { basic: { ...current.basic, ...patch.basic } } : {}),
+    ...(current.owner || patch.owner ? { owner: { ...current.owner, ...patch.owner } } : {}),
     ...(current.type || patch.type ? { type: { ...current.type, ...patch.type } } : {}),
     ...(current.location || patch.location
       ? { location: { ...current.location, ...patch.location } }
       : {}),
-    ...(current.domain || patch.domain
-      ? { domain: { ...current.domain, ...patch.domain } }
-      : {}),
+    ...(current.domain || patch.domain ? { domain: { ...current.domain, ...patch.domain } } : {}),
     ...(current.catalog || patch.catalog
       ? { catalog: { ...current.catalog, ...patch.catalog } }
       : {}),

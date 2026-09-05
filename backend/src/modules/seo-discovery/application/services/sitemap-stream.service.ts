@@ -1,10 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Response } from 'express';
 import { AppConfigService } from '../../../../config/app-config.service';
-import {
-  SITEMAP_SOURCE,
-  type SitemapSourcePort,
-} from '../ports/sitemap-source.port';
+import { SITEMAP_SOURCE, type SitemapSourcePort } from '../ports/sitemap-source.port';
 import { SitemapCacheService } from './sitemap-cache.service';
 import { SystemSettingsRuntimeBridge } from './system-settings-runtime.bridge';
 import { renderSitemapUrl } from './sitemap-xml.renderer';

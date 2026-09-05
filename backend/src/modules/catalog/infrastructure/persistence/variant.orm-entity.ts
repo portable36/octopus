@@ -1,8 +1,9 @@
-import { Entity, PrimaryKey, Property, Unique } from '@mikro-orm/core';
+import { Entity, Index, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 import type { VariantStatus } from '../../domain/aggregates/variant.aggregate';
 
 @Entity({ tableName: 'catalog_variants' })
 @Unique({ properties: ['vendorId', 'sku'] })
+@Index({ properties: ['vendorId', 'barcode'] })
 export class VariantOrmEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
@@ -21,6 +22,18 @@ export class VariantOrmEntity {
 
   @Property({ nullable: true })
   barcode: string | null = null;
+
+  @Property({ fieldName: 'weight_grams', nullable: true })
+  weightGrams: number | null = null;
+
+  @Property({ fieldName: 'length_mm', nullable: true })
+  lengthMm: number | null = null;
+
+  @Property({ fieldName: 'width_mm', nullable: true })
+  widthMm: number | null = null;
+
+  @Property({ fieldName: 'height_mm', nullable: true })
+  heightMm: number | null = null;
 
   @Property({ nullable: true })
   gtin: string | null = null;

@@ -95,7 +95,13 @@ describe('AiPersonalizationWorker', () => {
   it('runs analyze-purchase-patterns job through the analysis service', async () => {
     const analyzeAndPersist = vi.fn(async () => ({ associationsWritten: 4 }));
     const worker = new AiPersonalizationWorker(
-      { redisUrl: 'redis://localhost:6379', bullmqConcurrencyDefault: 1, bullmqJobTimeoutMs: 30_000, aiPersonalizationWorkerEnabled: false, isTest: true } as never,
+      {
+        redisUrl: 'redis://localhost:6379',
+        bullmqConcurrencyDefault: 1,
+        bullmqJobTimeoutMs: 30_000,
+        aiPersonalizationWorkerEnabled: false,
+        isTest: true,
+      } as never,
       {} as never,
       { analyzeAndPersist } as never,
       { processAbandonedCart: vi.fn() } as never,

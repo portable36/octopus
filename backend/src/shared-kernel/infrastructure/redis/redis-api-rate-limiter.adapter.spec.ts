@@ -30,6 +30,11 @@ describe('RedisApiRateLimiterAdapter', () => {
     const limiter = new RedisApiRateLimiterAdapter(redis as never);
 
     await limiter.consume('media:register:user-1', 30, 0);
-    expect(redis.eval).toHaveBeenCalledWith(expect.any(String), 1, 'api:rate:media:register:user-1', '1');
+    expect(redis.eval).toHaveBeenCalledWith(
+      expect.any(String),
+      1,
+      'api:rate:media:register:user-1',
+      '1',
+    );
   });
 });

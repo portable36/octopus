@@ -6,10 +6,7 @@ import {
   ABANDONED_CART_CHECK_DELAY_MS,
   abandonedCartJobId,
 } from '../application/abandoned-cart.types';
-import {
-  AI_PERSONALIZATION_JOB_NAMES,
-  type AiPersonalizationJobName,
-} from './ai-personalization.constants';
+import { AI_PERSONALIZATION_JOB_NAMES } from './ai-personalization.constants';
 import type { CheckAbandonedCartJobPayload } from './ai-personalization-job.types';
 import { AiPersonalizationEnqueuerService } from './ai-personalization-enqueuer.service';
 
@@ -48,7 +45,9 @@ export class AbandonedCartSchedulerService {
       payload,
       options as JobsOptions,
     );
-    this.logger.debug(`Scheduled ${AI_PERSONALIZATION_JOB_NAMES.checkAbandonedCart} for cart ${cartId}.`);
+    this.logger.debug(
+      `Scheduled ${AI_PERSONALIZATION_JOB_NAMES.checkAbandonedCart} for cart ${cartId}.`,
+    );
   }
 
   public async cancelCartCheck(cartId: string): Promise<void> {

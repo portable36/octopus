@@ -54,4 +54,18 @@ export class VariantRepositoryAdapter implements VariantRepository {
       return count > 0;
     });
   }
+
+  public async findByVendorAndBarcode(vendorId: string, barcode: string): Promise<Variant | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(VariantOrmEntity, { vendorId, barcode });
+      return entity ? variantToDomain(entity) : null;
+    });
+  }
+
+  public async existsByVendorAndBarcode(vendorId: string, barcode: string): Promise<boolean> {
+    return withRlsContext(this.em, async (tx) => {
+      const count = await tx.count(VariantOrmEntity, { vendorId, barcode });
+      return count > 0;
+    });
+  }
 }

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Inject,
   Param,
   Patch,
   Post,
@@ -35,6 +36,7 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import {
   CreateProductHandler,
   GetProductHandler,
@@ -63,6 +65,7 @@ import {
   toAuthoringVariantDto,
 } from '../../application/mappers/catalog-response.mapper';
 import { CatalogExceptionFilter } from './filters/catalog-exception.filter';
+import { CategoryNotFoundError } from '../../application/errors/catalog.errors';
 import type { Category } from '../../domain/aggregates/category.aggregate';
 
 class CatalogMediaRefDto {
@@ -150,6 +153,23 @@ class CreateProductDto {
   categoryIds?: string[];
 }
 
+class VariantDimensionsDto {
+  @ApiProperty({ example: 150 })
+  @IsInt()
+  @Min(0)
+  lengthMillimeters!: number;
+
+  @ApiProperty({ example: 75 })
+  @IsInt()
+  @Min(0)
+  widthMillimeters!: number;
+
+  @ApiProperty({ example: 10 })
+  @IsInt()
+  @Min(0)
+  heightMillimeters!: number;
+}
+
 class CreateVariantDto {
   @ApiProperty()
   @IsString()
@@ -165,6 +185,18 @@ class CreateVariantDto {
   @IsOptional()
   @IsString()
   barcode?: string;
+
+  @ApiPropertyOptional({ example: 250, description: 'Weight in grams' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  weightGrams?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => VariantDimensionsDto)
+  dimensions?: VariantDimensionsDto;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -199,6 +231,35 @@ class CreateCategoryDto {
   @IsOptional()
   @IsString()
   seoDescription?: string;
+}
+
+class UpdateCategoryDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  name?: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsUUID()
+  parentId?: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  seoTitle?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  seoDescription?: string | null;
 }
 
 class CreateStoreOfferDto {
@@ -240,21 +301,23 @@ class UpdateOfferPriceDto {
 @UseFilters(CatalogExceptionFilter)
 export class CatalogController {
   constructor(
-    private readonly createProduct: CreateProductHandler,
-    private readonly productLifecycle: ProductLifecycleHandler,
-    private readonly getProduct: GetProductHandler,
+    @Inject(CreateProductHandler) private readonly createProduct: CreateProductHandler,
+    @Inject(ProductLifecycleHandler) private readonly productLifecycle: ProductLifecycleHandler,
+    @Inject(GetProductHandler) private readonly getProduct: GetProductHandler,
+    @Inject(ListProductVariantsHandler)
     private readonly listProductVariants: ListProductVariantsHandler,
-    private readonly listStoreOffers: ListStoreOffersHandler,
-    private readonly createVariant: CreateVariantHandler,
-    private readonly variantLifecycle: VariantLifecycleHandler,
-    private readonly createCategory: CreateCategoryHandler,
-    private readonly updateCategory: UpdateCategoryHandler,
-    private readonly listCategories: ListCategoriesHandler,
-    private readonly createOffer: CreateStoreOfferHandler,
-    private readonly offerLifecycle: StoreOfferLifecycleHandler,
+    @Inject(ListStoreOffersHandler) private readonly listStoreOffers: ListStoreOffersHandler,
+    @Inject(CreateVariantHandler) private readonly createVariant: CreateVariantHandler,
+    @Inject(VariantLifecycleHandler) private readonly variantLifecycle: VariantLifecycleHandler,
+    @Inject(CreateCategoryHandler) private readonly createCategory: CreateCategoryHandler,
+    @Inject(UpdateCategoryHandler) private readonly updateCategory: UpdateCategoryHandler,
+    @Inject(ListCategoriesHandler) private readonly listCategories: ListCategoriesHandler,
+    @Inject(CreateStoreOfferHandler) private readonly createOffer: CreateStoreOfferHandler,
+    @Inject(StoreOfferLifecycleHandler) private readonly offerLifecycle: StoreOfferLifecycleHandler,
   ) {}
 
   @Post('products')
+  @RequirePermissions('catalog.product.create')
   @ApiOperation({ summary: 'Create a draft product for an active vendor' })
   async createProductRoute(@CurrentUser() user: RequestPrincipal, @Body() body: CreateProductDto) {
     const product = await this.createProduct.execute({
@@ -271,6 +334,7 @@ export class CatalogController {
   }
 
   @Get('products')
+  @RequirePermissions('catalog.product.read')
   @ApiQuery({ name: 'vendorId', required: true })
   async listProducts(@CurrentUser() user: RequestPrincipal, @Query('vendorId') vendorId: string) {
     const products = await this.getProduct.forVendor(vendorId, user.userId, user.roles);
@@ -278,6 +342,7 @@ export class CatalogController {
   }
 
   @Get('products/:productId')
+  @RequirePermissions('catalog.product.read')
   async getProductRoute(
     @CurrentUser() user: RequestPrincipal,
     @Param('productId') productId: string,
@@ -287,6 +352,7 @@ export class CatalogController {
   }
 
   @Patch('products/:productId')
+  @RequirePermissions('catalog.product.update')
   @ApiOperation({ summary: 'Update product fields (vendor-scoped, validated)' })
   async updateProductRoute(
     @CurrentUser() user: RequestPrincipal,
@@ -304,6 +370,7 @@ export class CatalogController {
   }
 
   @Get('products/:productId/variants')
+  @RequirePermissions('catalog.product.read')
   @ApiOperation({ summary: 'List variants for a product (vendor or platform admin)' })
   async listVariantsRoute(
     @CurrentUser() user: RequestPrincipal,
@@ -314,6 +381,7 @@ export class CatalogController {
   }
 
   @Get('store-offers')
+  @RequirePermissions('catalog.product.read')
   @ApiQuery({ name: 'storeId', required: true })
   @ApiQuery({ name: 'productId', required: false })
   @ApiOperation({ summary: 'List store offers for a store (optional product filter)' })
@@ -332,6 +400,7 @@ export class CatalogController {
   }
 
   @Post('products/:productId/submit-review')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async submitReview(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
     return toAuthoringProductDto(
@@ -340,6 +409,7 @@ export class CatalogController {
   }
 
   @Post('products/:productId/publish')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async publish(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
     return toAuthoringProductDto(
@@ -348,6 +418,7 @@ export class CatalogController {
   }
 
   @Post('products/:productId/unpublish')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async unpublish(@CurrentUser() user: RequestPrincipal, @Param('productId') productId: string) {
     return toAuthoringProductDto(
@@ -356,6 +427,7 @@ export class CatalogController {
   }
 
   @Post('products/:productId/archive')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async archiveProduct(
     @CurrentUser() user: RequestPrincipal,
@@ -367,6 +439,7 @@ export class CatalogController {
   }
 
   @Post('products/:productId/variants')
+  @RequirePermissions('catalog.product.create')
   async createVariantRoute(
     @CurrentUser() user: RequestPrincipal,
     @Param('productId') productId: string,
@@ -379,6 +452,8 @@ export class CatalogController {
       name: body.name,
       sku: body.sku,
       ...(body.barcode !== undefined ? { barcode: body.barcode } : {}),
+      ...(body.weightGrams !== undefined ? { weightGrams: body.weightGrams } : {}),
+      ...(body.dimensions !== undefined ? { dimensions: body.dimensions } : {}),
       ...(body.basePriceMinor !== undefined ? { basePriceMinor: body.basePriceMinor } : {}),
       ...(body.currencyCode !== undefined ? { currencyCode: body.currencyCode } : {}),
     });
@@ -386,6 +461,7 @@ export class CatalogController {
   }
 
   @Post('variants/:variantId/activate')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async activateVariant(
     @CurrentUser() user: RequestPrincipal,
@@ -397,6 +473,7 @@ export class CatalogController {
   }
 
   @Post('variants/:variantId/archive')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async archiveVariant(
     @CurrentUser() user: RequestPrincipal,
@@ -408,12 +485,24 @@ export class CatalogController {
   }
 
   @Get('categories')
+  @RequirePermissions('catalog.product.read')
   async categories() {
     const items = await this.listCategories.execute();
     return items.map((category) => this.categoryResponse(category));
   }
 
+  @Get('categories/:categoryId')
+  @RequirePermissions('catalog.product.read')
+  async getCategoryById(@Param('categoryId') categoryId: string) {
+    const category = await this.listCategories.byId(categoryId);
+    if (!category) {
+      throw new CategoryNotFoundError();
+    }
+    return this.categoryResponse(category);
+  }
+
   @Post('categories')
+  @RequirePermissions('platform.vendors.write')
   async createCategoryRoute(
     @CurrentUser() user: RequestPrincipal,
     @Body() body: CreateCategoryDto,
@@ -428,7 +517,25 @@ export class CatalogController {
     return this.categoryResponse(category);
   }
 
+  @Patch('categories/:categoryId')
+  @RequirePermissions('platform.vendors.write')
+  async updateCategoryRoute(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('categoryId') categoryId: string,
+    @Body() body: UpdateCategoryDto,
+  ) {
+    const category = await this.updateCategory.update(categoryId, user.roles, {
+      ...(body.name !== undefined ? { name: body.name } : {}),
+      ...(body.parentId !== undefined ? { parentId: body.parentId } : {}),
+      ...(body.sortOrder !== undefined ? { sortOrder: body.sortOrder } : {}),
+      ...(body.seoTitle !== undefined ? { seoTitle: body.seoTitle } : {}),
+      ...(body.seoDescription !== undefined ? { seoDescription: body.seoDescription } : {}),
+    });
+    return this.categoryResponse(category);
+  }
+
   @Post('categories/:categoryId/archive')
+  @RequirePermissions('platform.vendors.write')
   @HttpCode(200)
   async archiveCategory(
     @CurrentUser() user: RequestPrincipal,
@@ -438,6 +545,7 @@ export class CatalogController {
   }
 
   @Post('store-offers')
+  @RequirePermissions('catalog.product.create')
   async createOfferRoute(@CurrentUser() user: RequestPrincipal, @Body() body: CreateStoreOfferDto) {
     const offer = await this.createOffer.execute({
       actorUserId: user.userId,
@@ -451,6 +559,7 @@ export class CatalogController {
   }
 
   @Post('store-offers/:offerId/activate')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async activateOffer(@CurrentUser() user: RequestPrincipal, @Param('offerId') offerId: string) {
     return toAuthoringStoreOfferDto(
@@ -459,6 +568,7 @@ export class CatalogController {
   }
 
   @Post('store-offers/:offerId/suspend')
+  @RequirePermissions('catalog.product.update')
   @HttpCode(200)
   async suspendOffer(@CurrentUser() user: RequestPrincipal, @Param('offerId') offerId: string) {
     return toAuthoringStoreOfferDto(
@@ -467,6 +577,7 @@ export class CatalogController {
   }
 
   @Patch('store-offers/:offerId/price')
+  @RequirePermissions('catalog.product.update')
   async updateOfferPrice(
     @CurrentUser() user: RequestPrincipal,
     @Param('offerId') offerId: string,

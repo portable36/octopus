@@ -4,6 +4,7 @@ import { withRlsContext } from '../../../../shared-kernel/infrastructure/persist
 import type { CategoryRepository } from '../../application/ports/category-repository.interface';
 import type { Category } from '../../domain/aggregates/category.aggregate';
 import { applyCategoryToOrm, categoryToDomain } from './catalog.mappers';
+import { appendCatalogOutbox } from './append-catalog-outbox';
 import { CategoryOrmEntity } from './category.orm-entity';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class CategoryRepositoryAdapter implements CategoryRepository {
       const entity = existing ?? new CategoryOrmEntity();
       applyCategoryToOrm(category, entity);
       await tx.persist(entity).flush();
+      await appendCatalogOutbox(tx, category.id.value, category.getUncommittedEvents());
+      category.clearEvents();
     });
   }
 

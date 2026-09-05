@@ -117,7 +117,10 @@ function toGa4Payload(event: ECommerceEvent): Record<string, unknown> {
   };
 }
 
-function pushRaw(payload: Record<string, unknown>, options?: { readonly clearEcommerce?: boolean }): void {
+function pushRaw(
+  payload: Record<string, unknown>,
+  options?: { readonly clearEcommerce?: boolean },
+): void {
   if (typeof window === 'undefined') {
     return;
   }

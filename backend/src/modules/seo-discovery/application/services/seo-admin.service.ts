@@ -58,8 +58,15 @@ export class SeoAdminService {
   ) {}
 
   public async getHealth(): Promise<SeoAdminHealth> {
-    const [brokenRedirectsCount, missingMetadataCount, crawlErrorsLast24h, seoHealthIssuesCount, seoHealthLastScanAt, sitemap, productFeeds] =
-      await Promise.all([
+    const [
+      brokenRedirectsCount,
+      missingMetadataCount,
+      crawlErrorsLast24h,
+      seoHealthIssuesCount,
+      seoHealthLastScanAt,
+      sitemap,
+      productFeeds,
+    ] = await Promise.all([
       this.redirects.countBroken(),
       this.overrides.countMissingMetadata(),
       this.crawlErrors.countRecent(24),
@@ -185,10 +192,8 @@ export class SeoAdminService {
     }
     const googleTime = google.lastUpdatedAt ? Date.parse(google.lastUpdatedAt) : 0;
     const metaTime = meta.lastUpdatedAt ? Date.parse(meta.lastUpdatedAt) : 0;
-    const lastUpdatedAt =
-      googleTime >= metaTime ? google.lastUpdatedAt : meta.lastUpdatedAt;
-    const status =
-      google.status === 'stale' || meta.status === 'stale' ? 'stale' : 'fresh';
+    const lastUpdatedAt = googleTime >= metaTime ? google.lastUpdatedAt : meta.lastUpdatedAt;
+    const status = google.status === 'stale' || meta.status === 'stale' ? 'stale' : 'fresh';
     return {
       status,
       lastUpdatedAt,

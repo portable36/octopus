@@ -102,9 +102,7 @@ describe('image sitemap generation', () => {
       await cache.refresh(100);
 
       const diskXml = await readFile(join(cacheDir, 'sitemaps', 'images.xml'), 'utf8');
-      expect(diskXml).toContain(
-        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"',
-      );
+      expect(diskXml).toContain('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"');
       expect(diskXml).toContain('https://cdn.example.com/abc.png');
 
       const delivery = new ImageSitemapDeliveryService(cache, {

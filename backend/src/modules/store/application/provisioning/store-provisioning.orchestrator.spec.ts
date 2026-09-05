@@ -74,9 +74,7 @@ describe('StoreProvisioningOrchestrator', () => {
     });
 
     expect(markStepStatus).toHaveBeenCalled();
-    expect(updateRun).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'completed' }),
-    );
+    expect(updateRun).toHaveBeenCalledWith(expect.objectContaining({ status: 'completed' }));
     expect(store.status).toBe('active');
     expect(save).toHaveBeenCalled();
   });
@@ -89,22 +87,20 @@ describe('StoreProvisioningOrchestrator', () => {
     });
     store.startProvisioning(ACTOR);
 
-    const findStep = vi
-      .fn()
-      .mockImplementation(async (_runId: string, stepName: string) =>
-        stepName === 'StoreIdentityFinalized'
-          ? {
-              id: 's1',
-              runId: 'run-1',
-              stepName: 'StoreIdentityFinalized',
-              status: 'completed',
-              startedAt: new Date(),
-              completedAt: new Date(),
-              error: null,
-              retryCount: 0,
-            }
-          : null,
-      );
+    const findStep = vi.fn().mockImplementation(async (_runId: string, stepName: string) =>
+      stepName === 'StoreIdentityFinalized'
+        ? {
+            id: 's1',
+            runId: 'run-1',
+            stepName: 'StoreIdentityFinalized',
+            status: 'completed',
+            startedAt: new Date(),
+            completedAt: new Date(),
+            error: null,
+            retryCount: 0,
+          }
+        : null,
+    );
 
     const markStepStatus = vi.fn().mockImplementation(async (runId, stepName, status) => ({
       id: 'step-id',
@@ -150,7 +146,9 @@ describe('StoreProvisioningOrchestrator', () => {
       payload: {},
     });
 
-    const completedCalls = markStepStatus.mock.calls.filter((call) => call[1] === 'StoreIdentityFinalized');
+    const completedCalls = markStepStatus.mock.calls.filter(
+      (call) => call[1] === 'StoreIdentityFinalized',
+    );
     expect(completedCalls).toHaveLength(0);
   });
 });

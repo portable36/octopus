@@ -5,7 +5,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CreateStoreForm } from '@/components/vendor/create-store-form';
 import { ApiClientError } from '@/lib/api-client';
-import { getVendor, listStoresForVendor, type StoreSummary, type VendorSummary } from '@/lib/vendor-api';
+import {
+  getVendor,
+  listStoresForVendor,
+  type StoreSummary,
+  type VendorSummary,
+} from '@/lib/vendor-api';
 import { getSelectedStoreId, setSelectedStoreId } from '@/lib/vendor-session';
 
 export default function VendorStoresPage() {

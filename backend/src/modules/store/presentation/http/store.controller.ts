@@ -29,7 +29,11 @@ import { UpdateStoreHandler } from '../../application/commands/update-store.hand
 import { GetProvisioningStatusHandler } from '../../application/queries/get-provisioning-status.handler';
 import { GetStoreHandler } from '../../application/queries/get-store.handler';
 import type { Store } from '../../domain/aggregates/store.aggregate';
-import type { StoreOnboardingDraftRecord, StoreWizardPayload, StoreWizardStep } from '../../domain/store-onboarding.types';
+import type {
+  StoreOnboardingDraftRecord,
+  StoreWizardPayload,
+  StoreWizardStep,
+} from '../../domain/store-onboarding.types';
 import { normalizeStoreStatusForResponse } from '../../domain/store.types';
 import {
   AddStoreStaffRequestDto,

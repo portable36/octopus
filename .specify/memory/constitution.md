@@ -76,13 +76,13 @@ Delivery routing is automatic (`.cursor/rules/41-delivery-routing.mdc`): just
 code + ponytail for small work; `/grill-me` when ambiguous; Spec Kit for
 durable features; `/to-tickets` for agent slices. Do not ask which to use.
 
-| Goal                         | Prefer                                      |
-| ---------------------------- | ------------------------------------------- |
-| Align / grill before build   | `/grill-me` or `/grill-with-docs`           |
-| Formal SDD for a feature     | `/speckit-specify` → `/speckit-plan` → …    |
-| Ticket breakdown             | `/to-tickets`                               |
-| Minimal fix / YAGNI          | Just code + `/ponytail` (always-on)         |
-| Hard bug                     | `/systematic-debugging` or Spec Kit bug ext |
+| Goal                       | Prefer                                      |
+| -------------------------- | ------------------------------------------- |
+| Align / grill before build | `/grill-me` or `/grill-with-docs`           |
+| Formal SDD for a feature   | `/speckit-specify` → `/speckit-plan` → …    |
+| Ticket breakdown           | `/to-tickets`                               |
+| Minimal fix / YAGNI        | Just code + `/ponytail` (always-on)         |
+| Hard bug                   | `/systematic-debugging` or Spec Kit bug ext |
 
 When Spec Kit guidance conflicts with `.cursor/rules/`, Octopus rules win.
 Do not install Spec Kit session-start hooks that auto-force skill checks on

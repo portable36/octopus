@@ -1,6 +1,7 @@
 import { authedRequest } from '@/lib/auth-api';
 
-export type StoreWizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
+export type StoreWizardStep =
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
 
 export type StoreWizardPayload = {
   basic?: {
@@ -132,9 +133,7 @@ export function submitStoreDraft(
 }
 
 export function getStoreProvisioningStatus(storeId: string): Promise<ProvisioningStatus> {
-  return authedRequest<ProvisioningStatus>(
-    `/stores/${encodeURIComponent(storeId)}/provisioning`,
-  );
+  return authedRequest<ProvisioningStatus>(`/stores/${encodeURIComponent(storeId)}/provisioning`);
 }
 
 export function retryStoreProvisioning(storeId: string): Promise<{ ok: boolean }> {

@@ -29,12 +29,7 @@ export class RedisLoginRateLimiterAdapter implements LoginRateLimiter {
   }
 
   public async recordFailure(key: string): Promise<void> {
-    await this.redis.eval(
-      RECORD_FAILURE_SCRIPT,
-      1,
-      this.rateKey(key),
-      String(WINDOW_SECONDS),
-    );
+    await this.redis.eval(RECORD_FAILURE_SCRIPT, 1, this.rateKey(key), String(WINDOW_SECONDS));
   }
 
   private rateKey(key: string): string {

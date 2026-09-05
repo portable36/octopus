@@ -9,7 +9,11 @@ import {
   SEO_DISCOVERY_QUEUE,
   type SeoDiscoveryJobName,
 } from './seo-discovery.constants';
-import type { MetaCapiEnqueueInput, SeoDiscoveryJobPayload, SeoDiscoveryMaintenanceJobPayload } from './seo-discovery-job.types';
+import type {
+  MetaCapiEnqueueInput,
+  SeoDiscoveryJobPayload,
+  SeoDiscoveryMaintenanceJobPayload,
+} from './seo-discovery-job.types';
 import { SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS } from './seo-search-console-job.options';
 
 @Injectable()
@@ -53,7 +57,9 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
 
   public async enqueuePingSearchConsole(): Promise<void> {
     if (this.config.isTest || !this.config.outboxDispatchEnabled) {
-      this.logger.debug('Search Console ping enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
+      this.logger.debug(
+        'Search Console ping enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).',
+      );
       return;
     }
 
@@ -74,7 +80,9 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
 
   public async enqueueVerifySeoHealth(): Promise<void> {
     if (this.config.isTest || !this.config.outboxDispatchEnabled) {
-      this.logger.warn('SEO health verification enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
+      this.logger.warn(
+        'SEO health verification enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).',
+      );
       return;
     }
 

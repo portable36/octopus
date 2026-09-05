@@ -164,7 +164,10 @@ export class ValidateStoreDraftHandler {
     draftId: string,
     actorUserId: string,
     actorRoles: readonly string[],
-  ): Promise<{ readonly valid: boolean; readonly issues: readonly { field: string; message: string }[] }> {
+  ): Promise<{
+    readonly valid: boolean;
+    readonly issues: readonly { field: string; message: string }[];
+  }> {
     const draft = await this.drafts.findById(draftId);
     if (!draft) {
       throw new StoreDraftNotFoundError();
@@ -205,7 +208,9 @@ export class SubmitStoreDraftHandler {
     }
     await assertVendorAccess(this.vendors, draft.vendorId, actorUserId, actorRoles);
     if (draft.status !== 'editing') {
-      throw new StoreDraftValidationError([{ field: 'status', message: 'Draft already submitted.' }]);
+      throw new StoreDraftValidationError([
+        { field: 'status', message: 'Draft already submitted.' },
+      ]);
     }
 
     const validation = validateWizardPayload(draft.payload);
@@ -239,9 +244,7 @@ export class SubmitStoreDraftHandler {
       ...(draft.payload.location?.addressLine1 !== undefined
         ? { addressLine1: draft.payload.location.addressLine1 }
         : {}),
-      ...(draft.payload.location?.city !== undefined
-        ? { city: draft.payload.location.city }
-        : {}),
+      ...(draft.payload.location?.city !== undefined ? { city: draft.payload.location.city } : {}),
       ...(basic.phone !== undefined ? { phone: basic.phone } : {}),
       ...(basic.email !== undefined ? { email: basic.email } : {}),
       ...(basic.supportEmail !== undefined ? { supportEmail: basic.supportEmail } : {}),
@@ -276,9 +279,10 @@ export class SubmitStoreDraftHandler {
       payload: draft.payload,
     });
 
-    const finalDraft =
-      (await this.drafts.findById(draftId)) ??
-      ({ ...submittedDraft, status: 'provisioned' as const });
+    const finalDraft = (await this.drafts.findById(draftId)) ?? {
+      ...submittedDraft,
+      status: 'provisioned' as const,
+    };
     if (finalDraft.storeId) {
       const refreshedStore = await this.stores.findById(finalDraft.storeId);
       if (refreshedStore?.status === 'active') {
@@ -286,6 +290,9 @@ export class SubmitStoreDraftHandler {
       }
     }
 
-    return { draft: (await this.drafts.findById(draftId)) ?? submittedDraft, storeId: store.id.value };
+    return {
+      draft: (await this.drafts.findById(draftId)) ?? submittedDraft,
+      storeId: store.id.value,
+    };
   }
 }

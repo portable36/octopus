@@ -45,6 +45,11 @@ import { NotificationController } from './presentation/http/notification.control
     { provide: NOTIFICATION_OUTBOX_HANDLER, useExisting: NotificationEventConsumer },
     { provide: NOTIFICATION_CONFIG_PROVISIONER, useExisting: NotificationConfigProvisionerAdapter },
   ],
-  exports: [NOTIFICATION_PORT, NOTIFICATION_OUTBOX_HANDLER, NOTIFICATION_CONFIG_PROVISIONER, NotificationHandlers],
+  exports: [
+    NOTIFICATION_PORT,
+    NOTIFICATION_OUTBOX_HANDLER,
+    NOTIFICATION_CONFIG_PROVISIONER,
+    NotificationHandlers,
+  ],
 })
 export class NotificationModule {}

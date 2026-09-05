@@ -36,6 +36,14 @@ export function toAuthoringVariantDto(variant: Variant): AuthoringVariantDto {
     name: variant.name,
     status: variant.status,
     barcode: variant.barcode ?? null,
+    weightGrams: variant.weight?.grams ?? null,
+    dimensions: variant.dimensions
+      ? {
+          lengthMillimeters: variant.dimensions.lengthMillimeters,
+          widthMillimeters: variant.dimensions.widthMillimeters,
+          heightMillimeters: variant.dimensions.heightMillimeters,
+        }
+      : null,
     basePriceMinor: variant.basePrice?.amountMinorUnits ?? null,
     currencyCode: variant.currency ?? null,
     attributes: variant.attributes,

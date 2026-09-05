@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type { Env } from '../../../../config/env.validation';
-import {
-  SYSTEM_SETTING_KEYS,
-  type SystemSettingKey,
-} from '../../domain/system-setting-keys';
+import { SYSTEM_SETTING_KEYS, type SystemSettingKey } from '../../domain/system-setting-keys';
 import { SystemSettingsService } from './system-settings.service';
 
 export type MetaCapiEnvView = {
@@ -61,25 +58,38 @@ export class SystemSettingsRuntimeBridge {
   }
 
   public async resolveMetaCapiEnv(): Promise<MetaCapiEnvView> {
-    const [metaPixelId, metaAccessToken, metaCapiDataSource, optionsRaw, country, state, gemVersion, gemEnv] =
-      await Promise.all([
-        this.resolveString(SYSTEM_SETTING_KEYS.META_PIXEL_ID, this.config.metaPixelId),
-        this.resolveString(SYSTEM_SETTING_KEYS.META_ACCESS_TOKEN, this.config.metaAccessToken),
-        this.settings.getSetting<Env['META_CAPI_DATA_SOURCE']>(SYSTEM_SETTING_KEYS.META_CAPI_DATA_SOURCE),
-        this.resolveString(
-          SYSTEM_SETTING_KEYS.META_ANDROMEDA_DATA_PROCESSING_OPTIONS,
-          this.config.metaAndromedaDataProcessingOptionsRaw,
-        ),
-        this.resolveNumber(
-          SYSTEM_SETTING_KEYS.META_ANDROMEDA_COUNTRY,
-          this.config.metaAndromedaCountry ?? 0,
-        ),
-        this.resolveNumber(SYSTEM_SETTING_KEYS.META_ANDROMEDA_STATE, this.config.metaAndromedaState ?? 0),
-        this.resolveString(SYSTEM_SETTING_KEYS.GEM_SCHEMA_VERSION, this.config.gemSchemaVersion),
-        this.settings.getSetting<Env['GEM_TRACKING_ENVIRONMENT']>(
-          SYSTEM_SETTING_KEYS.GEM_TRACKING_ENVIRONMENT,
-        ),
-      ]);
+    const [
+      metaPixelId,
+      metaAccessToken,
+      metaCapiDataSource,
+      optionsRaw,
+      country,
+      state,
+      gemVersion,
+      gemEnv,
+    ] = await Promise.all([
+      this.resolveString(SYSTEM_SETTING_KEYS.META_PIXEL_ID, this.config.metaPixelId),
+      this.resolveString(SYSTEM_SETTING_KEYS.META_ACCESS_TOKEN, this.config.metaAccessToken),
+      this.settings.getSetting<Env['META_CAPI_DATA_SOURCE']>(
+        SYSTEM_SETTING_KEYS.META_CAPI_DATA_SOURCE,
+      ),
+      this.resolveString(
+        SYSTEM_SETTING_KEYS.META_ANDROMEDA_DATA_PROCESSING_OPTIONS,
+        this.config.metaAndromedaDataProcessingOptionsRaw,
+      ),
+      this.resolveNumber(
+        SYSTEM_SETTING_KEYS.META_ANDROMEDA_COUNTRY,
+        this.config.metaAndromedaCountry ?? 0,
+      ),
+      this.resolveNumber(
+        SYSTEM_SETTING_KEYS.META_ANDROMEDA_STATE,
+        this.config.metaAndromedaState ?? 0,
+      ),
+      this.resolveString(SYSTEM_SETTING_KEYS.GEM_SCHEMA_VERSION, this.config.gemSchemaVersion),
+      this.settings.getSetting<Env['GEM_TRACKING_ENVIRONMENT']>(
+        SYSTEM_SETTING_KEYS.GEM_TRACKING_ENVIRONMENT,
+      ),
+    ]);
 
     const env: {
       metaPixelId?: string;

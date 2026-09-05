@@ -24,7 +24,12 @@ import { RecommendationsController } from './presentation/http/recommendations.c
 
 @Global()
 @Module({
-  imports: [DatabaseModule, AppConfigModule, CartModule, MikroOrmModule.forFeature([ProductAssociation])],
+  imports: [
+    DatabaseModule,
+    AppConfigModule,
+    CartModule,
+    MikroOrmModule.forFeature([ProductAssociation]),
+  ],
   controllers: [RecommendationsController],
   providers: [
     AiPersonalizationEnqueuerService,

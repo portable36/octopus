@@ -47,6 +47,12 @@ import { InventoryController } from './presentation/http/inventory.controller';
     { provide: INVENTORY_PORT, useClass: InventoryPortAdapter },
     { provide: WAREHOUSE_PROVISIONER, useClass: WarehouseProvisionerAdapter },
   ],
-  exports: [INVENTORY_PORT, INVENTORY_REPOSITORY, WAREHOUSE_REPOSITORY, WAREHOUSE_PROVISIONER, ReservationCommandHandler],
+  exports: [
+    INVENTORY_PORT,
+    INVENTORY_REPOSITORY,
+    WAREHOUSE_REPOSITORY,
+    WAREHOUSE_PROVISIONER,
+    ReservationCommandHandler,
+  ],
 })
 export class InventoryModule {}

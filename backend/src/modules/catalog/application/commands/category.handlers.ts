@@ -111,6 +111,42 @@ export class UpdateCategoryHandler {
     return category;
   }
 
+  public async update(
+    categoryId: string,
+    actorRoles: readonly string[],
+    patch: {
+      readonly name?: string;
+      readonly parentId?: string | null;
+      readonly sortOrder?: number;
+      readonly seoTitle?: string | null;
+      readonly seoDescription?: string | null;
+    },
+  ): Promise<Category> {
+    if (!isPlatformAdmin(actorRoles)) {
+      throw new CatalogAccessDeniedError();
+    }
+    const category = await this.require(categoryId);
+    if (patch.name !== undefined) {
+      category.rename(patch.name);
+    }
+    if (patch.parentId !== undefined) {
+      const ancestors = patch.parentId ? await this.categories.findAncestorIds(patch.parentId) : [];
+      if (patch.parentId) {
+        ancestors.push(patch.parentId);
+      }
+      category.moveTo(patch.parentId, ancestors);
+    }
+    if (patch.seoTitle !== undefined || patch.seoDescription !== undefined) {
+      category.updateSeo({
+        title: patch.seoTitle !== undefined ? patch.seoTitle : category.seo.title,
+        description:
+          patch.seoDescription !== undefined ? patch.seoDescription : category.seo.description,
+      });
+    }
+    await this.categories.save(category);
+    return category;
+  }
+
   private async require(categoryId: string): Promise<Category> {
     const category = await this.categories.findById(categoryId);
     if (!category) {
@@ -126,5 +162,9 @@ export class ListCategoriesHandler {
 
   public async execute(): Promise<Category[]> {
     return this.categories.findAll();
+  }
+
+  public async byId(id: string): Promise<Category | null> {
+    return this.categories.findById(id);
   }
 }

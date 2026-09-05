@@ -46,7 +46,10 @@ export class StoreExceptionFilter implements ExceptionFilter {
     if (exception instanceof StoreAccessDeniedError) {
       return new ForbiddenException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof StoreDraftNotFoundError || exception instanceof StoreProvisioningNotFoundError) {
+    if (
+      exception instanceof StoreDraftNotFoundError ||
+      exception instanceof StoreProvisioningNotFoundError
+    ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }
     if (exception instanceof StoreDraftValidationError) {

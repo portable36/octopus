@@ -33,7 +33,11 @@ export interface StoreProvisioningRepository {
     runId: string,
     stepName: ProvisioningStepName,
     status: ProvisioningStepStatus,
-    patch?: { readonly error?: string | null; readonly startedAt?: Date; readonly completedAt?: Date },
+    patch?: {
+      readonly error?: string | null;
+      readonly startedAt?: Date;
+      readonly completedAt?: Date;
+    },
   ): Promise<ProvisioningStepRecord>;
   saveDomain(domain: StoreDomainRecord): Promise<void>;
   existsHostname(hostname: string): Promise<boolean>;

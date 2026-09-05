@@ -1,9 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Worker, type ConnectionOptions, type Job } from 'bullmq';
 import { AppConfigService } from '../../../config/app-config.service';
-import {
-  bullmqWorkerOptions,
-} from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
+import { bullmqWorkerOptions } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import { registerBullmqQueueMetrics } from '../../../shared-kernel/infrastructure/observability/queue-metrics';
 import { ImageSitemapCacheService } from '../application/services/image-sitemap-cache.service';
 import { SeoHealthVerificationService } from '../application/services/seo-health-verification.service';
@@ -11,10 +9,7 @@ import { SitemapCacheService } from '../application/services/sitemap-cache.servi
 import { ProductFeedService } from '../feeds/product-feed.service';
 import { MetaCapiService } from '../infrastructure/services/meta-capi.service';
 import { SearchConsoleApiService } from '../infrastructure/services/search-console.service';
-import {
-  SEO_DISCOVERY_JOB_NAMES,
-  SEO_DISCOVERY_QUEUE,
-} from './seo-discovery.constants';
+import { SEO_DISCOVERY_JOB_NAMES, SEO_DISCOVERY_QUEUE } from './seo-discovery.constants';
 import type { SeoDiscoveryJobPayload } from './seo-discovery-job.types';
 import { SeoDiscoveryEnqueuerService } from './seo-discovery-enqueuer.service';
 
@@ -42,13 +37,13 @@ export class SeoDiscoveryWorker implements OnModuleInit, OnModuleDestroy {
 
   public async onModuleInit(): Promise<void> {
     if (this.config.isTest || !this.config.seoDiscoveryWorkerEnabled) {
-      this.logger.log('SEO discovery worker disabled (test or SEO_DISCOVERY_WORKER_ENABLED=false).');
+      this.logger.log(
+        'SEO discovery worker disabled (test or SEO_DISCOVERY_WORKER_ENABLED=false).',
+      );
       return;
     }
 
-    registerBullmqQueueMetrics([
-      { name: SEO_DISCOVERY_QUEUE, queue: this.enqueuer.getQueue() },
-    ]);
+    registerBullmqQueueMetrics([{ name: SEO_DISCOVERY_QUEUE, queue: this.enqueuer.getQueue() }]);
 
     this.worker = new Worker<SeoDiscoveryJobPayload>(
       SEO_DISCOVERY_QUEUE,

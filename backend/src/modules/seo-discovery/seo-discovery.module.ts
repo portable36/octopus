@@ -47,7 +47,11 @@ import { MetaCapiService } from './infrastructure/services/meta-capi.service';
 import { SearchConsoleApiService } from './infrastructure/services/search-console.service';
 import { SEO_META_CAPI_OUTBOX_HANDLER } from '../../shared-kernel/application/ports/seo-meta-capi-outbox-handler.port';
 import { SEO_PROVISIONER } from '../../shared-kernel/application/ports/seo-provisioner.port';
-import { RobotsController, ImageSitemapController, SitemapController } from './presentation/http/technical-seo.controller';
+import {
+  RobotsController,
+  ImageSitemapController,
+  SitemapController,
+} from './presentation/http/technical-seo.controller';
 import { PublicSeoController } from './presentation/http/public-seo.controller';
 import { SeoAdminController } from './presentation/controllers/seo-admin.controller';
 import { SeoNotFoundFilter } from './presentation/filters/seo-not-found.filter';
@@ -58,9 +62,21 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
     DatabaseModule,
     RedisModule,
     AppConfigModule,
-    MikroOrmModule.forFeature([Redirect, SeoOverride, CrawlErrorLog, SeoHealthIssue, SystemSetting]),
+    MikroOrmModule.forFeature([
+      Redirect,
+      SeoOverride,
+      CrawlErrorLog,
+      SeoHealthIssue,
+      SystemSetting,
+    ]),
   ],
-  controllers: [RobotsController, SitemapController, ImageSitemapController, PublicSeoController, SeoAdminController],
+  controllers: [
+    RobotsController,
+    SitemapController,
+    ImageSitemapController,
+    PublicSeoController,
+    SeoAdminController,
+  ],
   providers: [
     SeoDiscoveryEnqueuerService,
     RedirectResolutionService,

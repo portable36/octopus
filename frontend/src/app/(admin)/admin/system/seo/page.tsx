@@ -226,8 +226,8 @@ export default function AdminSeoPage() {
         )}
         {health ? (
           <p className="text-xs text-muted-foreground">
-            Health: {health.brokenRedirectsCount} broken redirect(s),{' '}
-            {health.missingMetadataCount} override(s) missing title and description.
+            Health: {health.brokenRedirectsCount} broken redirect(s), {health.missingMetadataCount}{' '}
+            override(s) missing title and description.
           </p>
         ) : null}
       </section>
@@ -347,7 +347,8 @@ export default function AdminSeoPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-medium">Artifact / job status</h2>
           <p className="text-xs text-muted-foreground">
-            Derived from cache files and config — not a live BullMQ history. Queue refresh above to regenerate.
+            Derived from cache files and config — not a live BullMQ history. Queue refresh above to
+            regenerate.
           </p>
           <ul className="space-y-1 text-sm text-muted-foreground">
             {health.recentJobs.map((job) => (

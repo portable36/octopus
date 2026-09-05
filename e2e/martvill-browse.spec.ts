@@ -42,13 +42,17 @@ test.describe('store browse', () => {
 
   test('uses browse grid layout shell when store exists', async ({ page, request }) => {
     test.skip(!(await isApiLive(request)), 'Backend API not running');
-    const response = await request.get(`${API_BASE}/public/stores/by-slug/demo-store`).catch(() => null);
+    const response = await request
+      .get(`${API_BASE}/public/stores/by-slug/demo-store`)
+      .catch(() => null);
     test.skip(!response?.ok(), 'No demo store in this environment');
 
     const store = (await response!.json()) as { slug: string };
     await page.goto(`/stores/${store.slug}`);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: /offers in this store/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 2, name: /offers in this store/i }),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Quick view' }).first()).toBeVisible();
   });
 });
@@ -56,7 +60,9 @@ test.describe('store browse', () => {
 test.describe('vendor shop browse', () => {
   test('uses browse grid when active vendor exists', async ({ page, request }) => {
     test.skip(!(await isApiLive(request)), 'Backend API not running');
-    const response = await request.get(`${API_BASE}/public/vendors/by-slug/demo-vendor`).catch(() => null);
+    const response = await request
+      .get(`${API_BASE}/public/vendors/by-slug/demo-vendor`)
+      .catch(() => null);
     test.skip(!response?.ok(), 'No demo vendor in this environment');
 
     const vendor = (await response!.json()) as { slug: string; displayName: string };

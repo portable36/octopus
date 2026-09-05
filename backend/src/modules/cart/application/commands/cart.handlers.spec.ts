@@ -51,6 +51,9 @@ describe('CartCommandHandler.validate', () => {
           currencyCode: 'BDT',
           status: 'active',
           isAvailable: true,
+          productStatus: 'published',
+          variantStatus: 'ACTIVE',
+          isSellable: true,
         },
         {
           offerId: 'offer-2',
@@ -62,6 +65,9 @@ describe('CartCommandHandler.validate', () => {
           currencyCode: 'BDT',
           status: 'active',
           isAvailable: true,
+          productStatus: 'published',
+          variantStatus: 'ACTIVE',
+          isSellable: true,
         },
       ]),
     };
@@ -122,6 +128,81 @@ describe('CartCommandHandler.validate', () => {
     await expect(
       handler.get(cart.id.value, { customerId: 'other-customer' }),
     ).rejects.toMatchObject({ code: 'CART_ACCESS_DENIED' });
+  });
+
+  it('rejects addItem and flags validate issues when offer is not sellable', async () => {
+    const cart = Cart.create({ customerId: 'customer-1' });
+    const repo: CartRepository = {
+      save: vi.fn(),
+      markCheckedOut: vi.fn(),
+      findById: vi.fn(async () => cart),
+      findActiveByCustomerId: vi.fn(),
+      findActiveByGuestToken: vi.fn(),
+    };
+    const unsellableOffer = {
+      offerId: 'offer-unsellable',
+      vendorId: 'vendor-a',
+      storeId: 'store-a',
+      productId: 'prod-1',
+      variantId: 'var-1',
+      priceMinor: 500,
+      currencyCode: 'BDT',
+      status: 'active',
+      isAvailable: true,
+      productStatus: 'draft',
+      variantStatus: 'DRAFT',
+      isSellable: false,
+    };
+    const offers = {
+      findByStoreAndVariant: vi.fn(async () => unsellableOffer),
+      findManyByStoreAndVariant: vi.fn(async () => [unsellableOffer]),
+    };
+    const handler = new CartCommandHandler(
+      repo,
+      offers as never,
+      {
+        checkStoreAvailability: vi
+          .fn()
+          .mockResolvedValue({ status: 'AVAILABLE', availableQuantity: 10 }),
+      } as never,
+      { quote: vi.fn() } as never,
+    );
+
+    // addItem fails
+    await expect(
+      handler.addItem({
+        cartId: cart.id.value,
+        owner: { customerId: 'customer-1' },
+        storeId: 'store-a',
+        variantId: 'var-1',
+        quantity: 1,
+      }),
+    ).rejects.toMatchObject({ code: 'CART_OFFER_UNAVAILABLE' });
+
+    // validate flags issue
+    cart.addItem({
+      vendorId: 'vendor-a',
+      storeId: 'store-a',
+      productId: 'prod-1',
+      variantId: 'var-1',
+      offerId: 'offer-unsellable',
+      quantity: 1,
+      unitPriceSnapshotMinor: 500,
+      currencyCode: 'BDT',
+    });
+
+    const result = await handler.validate({
+      cartId: cart.id.value,
+      owner: { customerId: 'customer-1' },
+    });
+    expect(result.valid).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'OFFER_UNAVAILABLE',
+        }),
+      ]),
+    );
   });
 });
 

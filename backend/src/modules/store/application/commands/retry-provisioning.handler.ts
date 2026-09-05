@@ -55,9 +55,7 @@ export class RetryProvisioningHandler {
     }
 
     const run =
-      existingRun.status === 'failed'
-        ? await this.provisioning.createRun(storeId)
-        : existingRun;
+      existingRun.status === 'failed' ? await this.provisioning.createRun(storeId) : existingRun;
 
     const draft = await this.findDraftPayload(storeId);
     await this.orchestrator.execute({

@@ -30,10 +30,13 @@ export class CatalogAuthorizationService {
     actorUserId: string,
     actorRoles: readonly string[],
   ): void {
+    if (actorRoles.includes('CUSTOMER')) {
+      throw new CatalogAccessDeniedError();
+    }
     if (actorRoles.includes('PLATFORM_ADMIN')) {
       return;
     }
-    if (vendor.staffUserIds.includes(actorUserId)) {
+    if (vendor.staffUserIds.includes(actorUserId) || vendor.ownerUserId === actorUserId) {
       return;
     }
     throw new CatalogAccessDeniedError();
@@ -44,10 +47,16 @@ export class CatalogAuthorizationService {
     actorUserId: string,
     actorRoles: readonly string[],
   ): void {
-    if (actorRoles.includes('PLATFORM_ADMIN') || actorRoles.includes('CUSTOMER')) {
+    if (actorRoles.includes('CUSTOMER')) {
+      throw new CatalogAccessDeniedError();
+    }
+    if (actorRoles.includes('PLATFORM_ADMIN')) {
       return;
     }
-    if (vendor && vendor.staffUserIds.includes(actorUserId)) {
+    if (
+      vendor &&
+      (vendor.staffUserIds.includes(actorUserId) || vendor.ownerUserId === actorUserId)
+    ) {
       return;
     }
     throw new CatalogAccessDeniedError();

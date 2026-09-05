@@ -1,7 +1,5 @@
 {
-  "namespaces": [
-    "public"
-  ],
+  "namespaces": ["public"],
   "name": "public",
   "tables": [
     {
@@ -203,9 +201,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "audit_events_created_at_idx",
@@ -213,9 +209,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "audit_events_pkey",
@@ -427,11 +421,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "cart_id",
-            "store_id",
-            "variant_id"
-          ],
+          "columnNames": ["cart_id", "store_id", "variant_id"],
           "composite": true,
           "constraint": false,
           "keyName": "cart_lines_cart_store_variant_unique",
@@ -439,9 +429,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "cart_lines_pkey",
@@ -449,9 +437,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "cart_lines_vendor_id_idx",
@@ -475,80 +461,56 @@
       ],
       "foreignKeys": {
         "cart_lines_cart_id_fkey": {
-          "columnNames": [
-            "cart_id"
-          ],
+          "columnNames": ["cart_id"],
           "constraintName": "cart_lines_cart_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.carts",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "cart_lines_offer_id_fkey": {
-          "columnNames": [
-            "offer_id"
-          ],
+          "columnNames": ["offer_id"],
           "constraintName": "cart_lines_offer_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.catalog_store_offers",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "cart_lines_product_id_fkey": {
-          "columnNames": [
-            "product_id"
-          ],
+          "columnNames": ["product_id"],
           "constraintName": "cart_lines_product_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.catalog_products",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "cart_lines_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "cart_lines_store_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "cart_lines_variant_id_fkey": {
-          "columnNames": [
-            "variant_id"
-          ],
+          "columnNames": ["variant_id"],
           "constraintName": "cart_lines_variant_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.catalog_variants",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "cart_lines_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "cart_lines_vendor_id_fkey",
           "localTableName": "public.cart_lines",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -635,11 +597,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "ACTIVE",
-            "CHECKED_OUT",
-            "ABANDONED"
-          ],
+          "enumItems": ["ACTIVE", "CHECKED_OUT", "ABANDONED"],
           "mappedType": "enum"
         },
         "version": {
@@ -695,9 +653,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "customer_id"
-          ],
+          "columnNames": ["customer_id"],
           "composite": false,
           "constraint": false,
           "keyName": "carts_active_customer_unique",
@@ -706,9 +662,7 @@
           "expression": "CREATE UNIQUE INDEX carts_active_customer_unique ON public.carts USING btree (customer_id) WHERE (((status)::text = 'ACTIVE'::text) AND (customer_id IS NOT NULL))"
         },
         {
-          "columnNames": [
-            "guest_token"
-          ],
+          "columnNames": ["guest_token"],
           "composite": false,
           "constraint": false,
           "keyName": "carts_active_guest_unique",
@@ -717,9 +671,7 @@
           "expression": "CREATE UNIQUE INDEX carts_active_guest_unique ON public.carts USING btree (guest_token) WHERE (((status)::text = 'ACTIVE'::text) AND (guest_token IS NOT NULL))"
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "carts_pkey",
@@ -912,10 +864,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "parent_id",
-            "slug"
-          ],
+          "columnNames": ["parent_id", "slug"],
           "composite": true,
           "constraint": false,
           "keyName": "catalog_categories_parent_slug_unique",
@@ -923,9 +872,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_categories_pkey",
@@ -936,15 +883,11 @@
       "checks": [],
       "foreignKeys": {
         "catalog_categories_parent_id_fkey": {
-          "columnNames": [
-            "parent_id"
-          ],
+          "columnNames": ["parent_id"],
           "constraintName": "catalog_categories_parent_id_fkey",
           "localTableName": "public.catalog_categories",
           "referencedTableName": "public.catalog_categories",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "set null"
         }
@@ -1087,9 +1030,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_outbox_pkey",
@@ -1097,9 +1038,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_outbox_unpublished_idx",
@@ -1335,9 +1274,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_products_pkey",
@@ -1345,9 +1282,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_products_vendor_id_idx",
@@ -1355,10 +1290,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "sku"
-          ],
+          "columnNames": ["vendor_id", "sku"],
           "composite": true,
           "constraint": false,
           "keyName": "catalog_products_vendor_sku_unique",
@@ -1554,9 +1486,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_store_offers_pkey",
@@ -1564,10 +1494,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "variant_id"
-          ],
+          "columnNames": ["store_id", "variant_id"],
           "composite": true,
           "constraint": false,
           "keyName": "catalog_store_offers_store_variant_unique",
@@ -1955,9 +1882,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_variants_pkey",
@@ -1965,9 +1890,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "product_id"
-          ],
+          "columnNames": ["product_id"],
           "composite": false,
           "constraint": false,
           "keyName": "catalog_variants_product_id_idx",
@@ -1975,10 +1898,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "sku"
-          ],
+          "columnNames": ["vendor_id", "sku"],
           "composite": true,
           "constraint": false,
           "keyName": "catalog_variants_vendor_sku_unique",
@@ -1989,15 +1909,11 @@
       "checks": [],
       "foreignKeys": {
         "catalog_variants_product_id_fkey": {
-          "columnNames": [
-            "product_id"
-          ],
+          "columnNames": ["product_id"],
           "constraintName": "catalog_variants_product_id_fkey",
           "localTableName": "public.catalog_variants",
           "referencedTableName": "public.catalog_products",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -2164,9 +2080,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PENDING_PAYMENT"
-          ],
+          "enumItems": ["PENDING_PAYMENT"],
           "mappedType": "enum"
         },
         "snapshot_json": {
@@ -2206,9 +2120,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "checkout_id"
-          ],
+          "columnNames": ["checkout_id"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_order_records_checkout_id_idx",
@@ -2216,9 +2128,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_order_records_idempotency_unique",
@@ -2226,9 +2136,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_order_records_pkey",
@@ -2359,9 +2267,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "REQUIRES_PAYMENT"
-          ],
+          "enumItems": ["REQUIRES_PAYMENT"],
           "mappedType": "enum"
         },
         "client_secret": {
@@ -2417,9 +2323,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_payment_intents_idempotency_unique",
@@ -2427,9 +2331,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_payment_intents_pkey",
@@ -2576,10 +2478,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "IN_PROGRESS",
-            "COMPLETED"
-          ],
+          "enumItems": ["IN_PROGRESS", "COMPLETED"],
           "mappedType": "enum"
         },
         "created_at": {
@@ -2635,9 +2534,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_submissions_idempotency_unique",
@@ -2645,9 +2542,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "checkout_submissions_pkey",
@@ -2691,11 +2586,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "general",
-            "branding",
-            "marketing"
-          ],
+          "enumItems": ["general", "branding", "marketing"],
           "mappedType": "enum"
         },
         "scope_kind": {
@@ -2711,11 +2602,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "platform",
-            "vendor",
-            "store"
-          ],
+          "enumItems": ["platform", "vendor", "store"],
           "mappedType": "enum"
         },
         "vendor_id": {
@@ -2819,9 +2706,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "configuration_documents_pkey",
@@ -2908,11 +2793,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "STEADFAST",
-            "PATHAO",
-            "MANUAL"
-          ],
+          "enumItems": ["STEADFAST", "PATHAO", "MANUAL"],
           "mappedType": "enum"
         },
         "credentials_cipher": {
@@ -3000,9 +2881,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "courier_accounts_pkey",
@@ -3010,10 +2889,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "provider"
-          ],
+          "columnNames": ["vendor_id", "provider"],
           "composite": true,
           "constraint": false,
           "keyName": "courier_accounts_vendor_provider_unique",
@@ -3024,15 +2900,11 @@
       "checks": [],
       "foreignKeys": {
         "courier_accounts_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "courier_accounts_vendor_id_fkey",
           "localTableName": "public.courier_accounts",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -3087,9 +2959,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PATHAO"
-          ],
+          "enumItems": ["PATHAO"],
           "mappedType": "enum"
         },
         "access_token_cipher": {
@@ -3161,9 +3031,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "courier_oauth_tokens_pkey",
@@ -3171,10 +3039,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "provider"
-          ],
+          "columnNames": ["vendor_id", "provider"],
           "composite": true,
           "constraint": false,
           "keyName": "courier_oauth_vendor_provider_unique",
@@ -3185,15 +3050,11 @@
       "checks": [],
       "foreignKeys": {
         "courier_oauth_tokens_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "courier_oauth_tokens_vendor_id_fkey",
           "localTableName": "public.courier_oauth_tokens",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -3288,9 +3149,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "occurred_at"
-          ],
+          "columnNames": ["occurred_at"],
           "composite": false,
           "constraint": false,
           "keyName": "crawl_error_logs_occurred_at_idx",
@@ -3298,9 +3157,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "crawl_error_logs_pkey",
@@ -3308,9 +3165,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "request_path"
-          ],
+          "columnNames": ["request_path"],
           "composite": false,
           "constraint": false,
           "keyName": "crawl_error_logs_request_path_idx",
@@ -3554,9 +3409,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "customer_addresses_pkey",
@@ -3564,9 +3417,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "customer_addresses_user_id_idx",
@@ -3666,9 +3517,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "customer_profiles_pkey",
@@ -3784,9 +3633,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "fulfillment_operations_idempotency_unique",
@@ -3794,9 +3641,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "fulfillment_operations_pkey",
@@ -3944,9 +3789,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "fulfillment_outbox_pkey",
@@ -4037,10 +3880,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "group",
-            "key"
-          ],
+          "columnNames": ["group", "key"],
           "composite": true,
           "constraint": false,
           "keyName": "global_settings_group_key_unique",
@@ -4049,10 +3889,7 @@
           "expression": "CREATE UNIQUE INDEX global_settings_group_key_unique ON public.global_settings USING btree (\"group\", key)"
         },
         {
-          "columnNames": [
-            "group",
-            "key"
-          ],
+          "columnNames": ["group", "key"],
           "composite": true,
           "constraint": false,
           "keyName": "global_settings_pkey",
@@ -4209,10 +4046,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "ACTIVE",
-            "DISABLED"
-          ],
+          "enumItems": ["ACTIVE", "DISABLED"],
           "mappedType": "enum"
         },
         "version": {
@@ -4284,9 +4118,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_items_pkey",
@@ -4294,9 +4126,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_items_store_id_idx",
@@ -4304,9 +4134,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "variant_id"
-          ],
+          "columnNames": ["variant_id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_items_variant_id_idx",
@@ -4314,10 +4142,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "warehouse_id",
-            "variant_id"
-          ],
+          "columnNames": ["warehouse_id", "variant_id"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_items_warehouse_variant_unique",
@@ -4365,54 +4190,38 @@
       ],
       "foreignKeys": {
         "inventory_items_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "inventory_items_store_id_fkey",
           "localTableName": "public.inventory_items",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_items_variant_id_fkey": {
-          "columnNames": [
-            "variant_id"
-          ],
+          "columnNames": ["variant_id"],
           "constraintName": "inventory_items_variant_id_fkey",
           "localTableName": "public.inventory_items",
           "referencedTableName": "public.catalog_variants",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "inventory_items_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "inventory_items_vendor_id_fkey",
           "localTableName": "public.inventory_items",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_items_warehouse_id_fkey": {
-          "columnNames": [
-            "warehouse_id"
-          ],
+          "columnNames": ["warehouse_id"],
           "constraintName": "inventory_items_warehouse_id_fkey",
           "localTableName": "public.inventory_items",
           "referencedTableName": "public.inventory_warehouses",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -4683,9 +4492,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_movements_pkey",
@@ -4693,10 +4500,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "reference_type",
-            "reference_id"
-          ],
+          "columnNames": ["reference_type", "reference_id"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_movements_reference_idx",
@@ -4704,11 +4508,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "variant_id",
-            "warehouse_id",
-            "created_at"
-          ],
+          "columnNames": ["variant_id", "warehouse_id", "created_at"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_movements_sku_wh_created_idx",
@@ -4726,54 +4526,38 @@
       ],
       "foreignKeys": {
         "inventory_movements_inventory_item_id_fkey": {
-          "columnNames": [
-            "inventory_item_id"
-          ],
+          "columnNames": ["inventory_item_id"],
           "constraintName": "inventory_movements_inventory_item_id_fkey",
           "localTableName": "public.inventory_movements",
           "referencedTableName": "public.inventory_items",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_movements_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "inventory_movements_store_id_fkey",
           "localTableName": "public.inventory_movements",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_movements_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "inventory_movements_vendor_id_fkey",
           "localTableName": "public.inventory_movements",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_movements_warehouse_id_fkey": {
-          "columnNames": [
-            "warehouse_id"
-          ],
+          "columnNames": ["warehouse_id"],
           "constraintName": "inventory_movements_warehouse_id_fkey",
           "localTableName": "public.inventory_movements",
           "referencedTableName": "public.inventory_warehouses",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -4876,10 +4660,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "COMPLETED",
-            "FAILED"
-          ],
+          "enumItems": ["COMPLETED", "FAILED"],
           "mappedType": "enum"
         },
         "created_at": {
@@ -4903,9 +4684,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_operations_idempotency_unique",
@@ -4913,9 +4692,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_operations_pkey",
@@ -5063,9 +4840,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_outbox_pkey",
@@ -5073,9 +4848,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_outbox_unpublished_idx",
@@ -5239,14 +5012,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PENDING",
-            "ACTIVE",
-            "RELEASED",
-            "EXPIRED",
-            "CONSUMED",
-            "CANCELLED"
-          ],
+          "enumItems": ["PENDING", "ACTIVE", "RELEASED", "EXPIRED", "CONSUMED", "CANCELLED"],
           "mappedType": "enum"
         },
         "expires_at": {
@@ -5302,9 +5068,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_reservations_order_id_idx",
@@ -5312,9 +5076,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_reservations_pkey",
@@ -5322,10 +5084,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "variant_id",
-            "warehouse_id"
-          ],
+          "columnNames": ["variant_id", "warehouse_id"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_reservations_sku_warehouse_idx",
@@ -5333,10 +5092,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "status",
-            "expires_at"
-          ],
+          "columnNames": ["status", "expires_at"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_reservations_status_expires_idx",
@@ -5354,67 +5110,47 @@
       ],
       "foreignKeys": {
         "inventory_reservations_inventory_item_id_fkey": {
-          "columnNames": [
-            "inventory_item_id"
-          ],
+          "columnNames": ["inventory_item_id"],
           "constraintName": "inventory_reservations_inventory_item_id_fkey",
           "localTableName": "public.inventory_reservations",
           "referencedTableName": "public.inventory_items",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_reservations_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "inventory_reservations_store_id_fkey",
           "localTableName": "public.inventory_reservations",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_reservations_variant_id_fkey": {
-          "columnNames": [
-            "variant_id"
-          ],
+          "columnNames": ["variant_id"],
           "constraintName": "inventory_reservations_variant_id_fkey",
           "localTableName": "public.inventory_reservations",
           "referencedTableName": "public.catalog_variants",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "inventory_reservations_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "inventory_reservations_vendor_id_fkey",
           "localTableName": "public.inventory_reservations",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_reservations_warehouse_id_fkey": {
-          "columnNames": [
-            "warehouse_id"
-          ],
+          "columnNames": ["warehouse_id"],
           "constraintName": "inventory_reservations_warehouse_id_fkey",
           "localTableName": "public.inventory_reservations",
           "referencedTableName": "public.inventory_warehouses",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -5517,10 +5253,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "ACTIVE",
-            "DISABLED"
-          ],
+          "enumItems": ["ACTIVE", "DISABLED"],
           "mappedType": "enum"
         },
         "address_line": {
@@ -5576,9 +5309,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_warehouses_pkey",
@@ -5586,10 +5317,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "code"
-          ],
+          "columnNames": ["store_id", "code"],
           "composite": true,
           "constraint": false,
           "keyName": "inventory_warehouses_store_code_unique",
@@ -5597,9 +5325,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "inventory_warehouses_vendor_id_idx",
@@ -5610,28 +5336,20 @@
       "checks": [],
       "foreignKeys": {
         "inventory_warehouses_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "inventory_warehouses_store_id_fkey",
           "localTableName": "public.inventory_warehouses",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "inventory_warehouses_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "inventory_warehouses_vendor_id_fkey",
           "localTableName": "public.inventory_warehouses",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -5686,11 +5404,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "ga4_mp",
-            "meta_capi",
-            "audit"
-          ],
+          "enumItems": ["ga4_mp", "meta_capi", "audit"],
           "mappedType": "enum"
         },
         "transaction_id": {
@@ -5754,11 +5468,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "SENT",
-            "SKIPPED",
-            "FAILED"
-          ],
+          "enumItems": ["SENT", "SKIPPED", "FAILED"],
           "mappedType": "enum"
         },
         "detail": {
@@ -5798,10 +5508,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "event_id",
-            "channel"
-          ],
+          "columnNames": ["event_id", "channel"],
           "composite": true,
           "constraint": false,
           "keyName": "marketing_events_event_id_channel_uidx",
@@ -5809,9 +5516,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "marketing_events_pkey",
@@ -5975,9 +5680,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "media_assets_pkey",
@@ -5985,9 +5688,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "storage_key"
-          ],
+          "columnNames": ["storage_key"],
           "composite": false,
           "constraint": false,
           "keyName": "media_assets_storage_key_idx",
@@ -6054,12 +5755,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "EMAIL",
-            "IN_APP",
-            "SMS",
-            "PUSH"
-          ],
+          "enumItems": ["EMAIL", "IN_APP", "SMS", "PUSH"],
           "mappedType": "enum"
         },
         "attempt_number": {
@@ -6091,10 +5787,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "SENT",
-            "FAILED"
-          ],
+          "enumItems": ["SENT", "FAILED"],
           "mappedType": "enum"
         },
         "provider_message_id": {
@@ -6150,10 +5843,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "notification_id",
-            "created_at"
-          ],
+          "columnNames": ["notification_id", "created_at"],
           "composite": true,
           "constraint": false,
           "keyName": "notification_delivery_attempts_notification_idx",
@@ -6161,9 +5851,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "notification_delivery_attempts_pkey",
@@ -6181,15 +5869,11 @@
       ],
       "foreignKeys": {
         "notification_delivery_attempts_notification_id_fkey": {
-          "columnNames": [
-            "notification_id"
-          ],
+          "columnNames": ["notification_id"],
           "constraintName": "notification_delivery_attempts_notification_id_fkey",
           "localTableName": "public.notification_delivery_attempts",
           "referencedTableName": "public.notifications",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -6268,9 +5952,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "notification_preferences_pkey",
@@ -6330,10 +6012,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "EMAIL",
-            "IN_APP"
-          ],
+          "enumItems": ["EMAIL", "IN_APP"],
           "mappedType": "enum"
         },
         "locale": {
@@ -6349,10 +6028,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "en",
-            "bn"
-          ],
+          "enumItems": ["en", "bn"],
           "mappedType": "enum"
         },
         "version": {
@@ -6424,12 +6100,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "template_key",
-            "channel",
-            "locale",
-            "version"
-          ],
+          "columnNames": ["template_key", "channel", "locale", "version"],
           "composite": true,
           "constraint": false,
           "keyName": "notification_templates_key_channel_locale_version_uq",
@@ -6437,9 +6108,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "notification_templates_pkey",
@@ -6554,10 +6223,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "EMAIL",
-            "IN_APP"
-          ],
+          "enumItems": ["EMAIL", "IN_APP"],
           "mappedType": "enum"
         },
         "locale": {
@@ -6573,10 +6239,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "en",
-            "bn"
-          ],
+          "enumItems": ["en", "bn"],
           "mappedType": "enum"
         },
         "template_key": {
@@ -6672,12 +6335,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PENDING",
-            "SENT",
-            "FAILED",
-            "SKIPPED"
-          ],
+          "enumItems": ["PENDING", "SENT", "FAILED", "SKIPPED"],
           "mappedType": "enum"
         },
         "read_at": {
@@ -6717,12 +6375,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "event_id",
-            "recipient_user_id",
-            "notification_type",
-            "channel"
-          ],
+          "columnNames": ["event_id", "recipient_user_id", "notification_type", "channel"],
           "composite": true,
           "constraint": false,
           "keyName": "notifications_idempotency_uq",
@@ -6730,9 +6383,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "notifications_pkey",
@@ -6740,10 +6391,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "recipient_user_id",
-            "created_at"
-          ],
+          "columnNames": ["recipient_user_id", "created_at"],
           "composite": true,
           "constraint": false,
           "keyName": "notifications_recipient_created_idx",
@@ -6751,9 +6399,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "recipient_user_id"
-          ],
+          "columnNames": ["recipient_user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "notifications_recipient_unread_idx",
@@ -7030,10 +6676,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "order_id",
-            "line_id"
-          ],
+          "columnNames": ["order_id", "line_id"],
           "composite": true,
           "constraint": false,
           "keyName": "order_lines_order_line_unique",
@@ -7041,9 +6684,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "order_lines_pkey",
@@ -7073,15 +6714,11 @@
       ],
       "foreignKeys": {
         "order_lines_order_id_fkey": {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "constraintName": "order_lines_order_id_fkey",
           "localTableName": "public.order_lines",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -7224,9 +6861,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "order_outbox_pkey",
@@ -7234,9 +6869,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "order_outbox_unpublished_idx",
@@ -7604,13 +7237,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PENDING",
-            "PAID",
-            "FAILED",
-            "REFUND_REQUESTED",
-            "REFUNDED"
-          ],
+          "enumItems": ["PENDING", "PAID", "FAILED", "REFUND_REQUESTED", "REFUNDED"],
           "mappedType": "enum"
         },
         "fulfillment_status": {
@@ -7626,12 +7253,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "UNFULFILLED",
-            "PARTIALLY_FULFILLED",
-            "FULFILLED",
-            "NOT_APPLICABLE"
-          ],
+          "enumItems": ["UNFULFILLED", "PARTIALLY_FULFILLED", "FULFILLED", "NOT_APPLICABLE"],
           "mappedType": "enum"
         },
         "version": {
@@ -7695,12 +7317,7 @@
           "scale": null,
           "default": "'SSLCOMMERZ'",
           "comment": null,
-          "enumItems": [
-            "COD",
-            "SSLCOMMERZ",
-            "BKASH",
-            "NAGAD"
-          ],
+          "enumItems": ["COD", "SSLCOMMERZ", "BKASH", "NAGAD"],
           "mappedType": "enum"
         },
         "attribution_json": {
@@ -7724,9 +7341,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "customer_id"
-          ],
+          "columnNames": ["customer_id"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_customer_id_idx",
@@ -7734,9 +7349,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_idempotency_unique",
@@ -7744,9 +7357,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "order_number"
-          ],
+          "columnNames": ["order_number"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_order_number_unique",
@@ -7754,9 +7365,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_pkey",
@@ -7764,9 +7373,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_store_id_idx",
@@ -7774,9 +7381,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "orders_vendor_id_idx",
@@ -7800,28 +7405,20 @@
       ],
       "foreignKeys": {
         "orders_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "orders_store_id_fkey",
           "localTableName": "public.orders",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "orders_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "orders_vendor_id_fkey",
           "localTableName": "public.orders",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -7940,12 +7537,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "COD",
-            "SSLCOMMERZ",
-            "BKASH",
-            "NAGAD"
-          ],
+          "enumItems": ["COD", "SSLCOMMERZ", "BKASH", "NAGAD"],
           "mappedType": "enum"
         },
         "provider": {
@@ -8088,9 +7680,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "checkout_id"
-          ],
+          "columnNames": ["checkout_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_intents_checkout_id_idx",
@@ -8098,9 +7688,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_intents_order_id_unique",
@@ -8108,9 +7696,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_intents_pkey",
@@ -8118,9 +7704,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_intents_store_id_idx",
@@ -8144,41 +7728,29 @@
       ],
       "foreignKeys": {
         "payment_intents_order_id_fkey": {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "constraintName": "payment_intents_order_id_fkey",
           "localTableName": "public.payment_intents",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "payment_intents_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "payment_intents_store_id_fkey",
           "localTableName": "public.payment_intents",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "payment_intents_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "payment_intents_vendor_id_fkey",
           "localTableName": "public.payment_intents",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -8289,9 +7861,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_operations_idempotency_unique",
@@ -8299,9 +7869,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_operations_pkey",
@@ -8449,9 +8017,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_outbox_pkey",
@@ -8459,9 +8025,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_outbox_unpublished_idx",
@@ -8625,10 +8189,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "MANUAL",
-            "ORIGINAL_PROVIDER"
-          ],
+          "enumItems": ["MANUAL", "ORIGINAL_PROVIDER"],
           "mappedType": "enum"
         },
         "status": {
@@ -8644,11 +8205,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PENDING",
-            "SUCCEEDED",
-            "FAILED"
-          ],
+          "enumItems": ["PENDING", "SUCCEEDED", "FAILED"],
           "mappedType": "enum"
         },
         "reason": {
@@ -8768,9 +8325,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_refunds_order_id_idx",
@@ -8778,9 +8333,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "payment_intent_id"
-          ],
+          "columnNames": ["payment_intent_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_refunds_payment_intent_id_idx",
@@ -8788,9 +8341,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_refunds_pkey",
@@ -8798,9 +8349,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_refunds_store_id_idx",
@@ -8818,41 +8367,29 @@
       ],
       "foreignKeys": {
         "payment_refunds_payment_intent_id_fkey": {
-          "columnNames": [
-            "payment_intent_id"
-          ],
+          "columnNames": ["payment_intent_id"],
           "constraintName": "payment_refunds_payment_intent_id_fkey",
           "localTableName": "public.payment_refunds",
           "referencedTableName": "public.payment_intents",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "payment_refunds_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "payment_refunds_store_id_fkey",
           "localTableName": "public.payment_refunds",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "payment_refunds_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "payment_refunds_vendor_id_fkey",
           "localTableName": "public.payment_refunds",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -9027,9 +8564,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_transactions_idempotency_unique",
@@ -9037,9 +8572,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payment_transactions_pkey",
@@ -9057,28 +8590,20 @@
       ],
       "foreignKeys": {
         "payment_transactions_order_id_fkey": {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "constraintName": "payment_transactions_order_id_fkey",
           "localTableName": "public.payment_transactions",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "payment_transactions_payment_intent_id_fkey": {
-          "columnNames": [
-            "payment_intent_id"
-          ],
+          "columnNames": ["payment_intent_id"],
           "constraintName": "payment_transactions_payment_intent_id_fkey",
           "localTableName": "public.payment_transactions",
           "referencedTableName": "public.payment_intents",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -9221,9 +8746,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "payout_outbox_pkey",
@@ -9231,9 +8754,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "payout_outbox_unpublished_idx",
@@ -9293,9 +8814,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "platform_schema_lock_pkey",
@@ -9379,9 +8898,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipt_sequences_pkey",
@@ -9389,10 +8906,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "day_key"
-          ],
+          "columnNames": ["store_id", "day_key"],
           "composite": true,
           "constraint": false,
           "keyName": "pos_receipt_sequences_store_day_unique",
@@ -9410,15 +8924,11 @@
       ],
       "foreignKeys": {
         "pos_receipt_sequences_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "pos_receipt_sequences_store_id_fkey",
           "localTableName": "public.pos_receipt_sequences",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -9753,9 +9263,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipt_templates_pkey",
@@ -9763,9 +9271,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipt_templates_store_id_unique",
@@ -9773,9 +9279,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipt_templates_vendor_id_idx",
@@ -9799,28 +9303,20 @@
       ],
       "foreignKeys": {
         "pos_receipt_templates_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "pos_receipt_templates_store_id_fkey",
           "localTableName": "public.pos_receipt_templates",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "pos_receipt_templates_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "pos_receipt_templates_vendor_id_fkey",
           "localTableName": "public.pos_receipt_templates",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -9987,11 +9483,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "REQUESTED",
-            "PRINTED",
-            "FAILED"
-          ],
+          "enumItems": ["REQUESTED", "PRINTED", "FAILED"],
           "mappedType": "enum"
         },
         "created_at": {
@@ -10031,9 +9523,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipts_pkey",
@@ -10041,10 +9531,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "receipt_number"
-          ],
+          "columnNames": ["store_id", "receipt_number"],
           "composite": true,
           "constraint": false,
           "keyName": "pos_receipts_store_receipt_number_unique",
@@ -10052,10 +9539,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "store_id",
-            "sale_id"
-          ],
+          "columnNames": ["store_id", "sale_id"],
           "composite": true,
           "constraint": false,
           "keyName": "pos_receipts_store_sale_unique",
@@ -10063,9 +9547,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "pos_receipts_vendor_id_idx",
@@ -10076,41 +9558,29 @@
       "checks": [],
       "foreignKeys": {
         "pos_receipts_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "pos_receipts_store_id_fkey",
           "localTableName": "public.pos_receipts",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "pos_receipts_template_id_fkey": {
-          "columnNames": [
-            "template_id"
-          ],
+          "columnNames": ["template_id"],
           "constraintName": "pos_receipts_template_id_fkey",
           "localTableName": "public.pos_receipts",
           "referencedTableName": "public.pos_receipt_templates",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "no action"
         },
         "pos_receipts_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "pos_receipts_vendor_id_fkey",
           "localTableName": "public.pos_receipts",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -10253,9 +9723,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "pricing_promotion_usages_idempotency_unique",
@@ -10263,9 +9731,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "pricing_promotion_usages_pkey",
@@ -10273,10 +9739,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "promotion_id",
-            "customer_id"
-          ],
+          "columnNames": ["promotion_id", "customer_id"],
           "composite": true,
           "constraint": false,
           "keyName": "pricing_promotion_usages_promo_customer_idx",
@@ -10287,41 +9750,29 @@
       "checks": [],
       "foreignKeys": {
         "pricing_promotion_usages_promotion_id_fkey": {
-          "columnNames": [
-            "promotion_id"
-          ],
+          "columnNames": ["promotion_id"],
           "constraintName": "pricing_promotion_usages_promotion_id_fkey",
           "localTableName": "public.pricing_promotion_usages",
           "referencedTableName": "public.pricing_promotions",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "pricing_promotion_usages_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "pricing_promotion_usages_store_id_fkey",
           "localTableName": "public.pricing_promotion_usages",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "pricing_promotion_usages_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "pricing_promotion_usages_vendor_id_fkey",
           "localTableName": "public.pricing_promotion_usages",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -10424,10 +9875,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "PERCENTAGE",
-            "FIXED"
-          ],
+          "enumItems": ["PERCENTAGE", "FIXED"],
           "mappedType": "enum"
         },
         "discount_value": {
@@ -10491,13 +9939,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "ALL",
-            "PRODUCT",
-            "CATEGORY",
-            "VENDOR",
-            "STORE"
-          ],
+          "enumItems": ["ALL", "PRODUCT", "CATEGORY", "VENDOR", "STORE"],
           "mappedType": "enum"
         },
         "scope_ids": {
@@ -10609,11 +10051,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "DRAFT",
-            "ACTIVE",
-            "DISABLED"
-          ],
+          "enumItems": ["DRAFT", "ACTIVE", "DISABLED"],
           "mappedType": "enum"
         },
         "created_at": {
@@ -10653,9 +10091,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "pricing_promotions_pkey",
@@ -10663,9 +10099,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "status"
-          ],
+          "columnNames": ["status"],
           "composite": false,
           "constraint": false,
           "keyName": "pricing_promotions_status_idx",
@@ -10673,9 +10107,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "pricing_promotions_store_id_idx",
@@ -10683,10 +10115,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "coupon_code"
-          ],
+          "columnNames": ["vendor_id", "coupon_code"],
           "composite": true,
           "constraint": false,
           "keyName": "pricing_promotions_vendor_coupon_unique",
@@ -10717,28 +10146,20 @@
       ],
       "foreignKeys": {
         "pricing_promotions_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "pricing_promotions_store_id_fkey",
           "localTableName": "public.pricing_promotions",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         },
         "pricing_promotions_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "pricing_promotions_vendor_id_fkey",
           "localTableName": "public.pricing_promotions",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -10833,9 +10254,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "associated_product_id"
-          ],
+          "columnNames": ["associated_product_id"],
           "composite": false,
           "constraint": false,
           "keyName": "product_associations_associated_product_id_idx",
@@ -10843,9 +10262,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "product_associations_pkey",
@@ -10853,10 +10270,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "product_id",
-            "associated_product_id"
-          ],
+          "columnNames": ["product_id", "associated_product_id"],
           "composite": true,
           "constraint": true,
           "keyName": "product_associations_product_associated_uidx",
@@ -10864,9 +10278,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "product_id"
-          ],
+          "columnNames": ["product_id"],
           "composite": false,
           "constraint": false,
           "keyName": "product_associations_product_id_idx",
@@ -10874,10 +10286,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "product_id",
-            "co_purchase_score"
-          ],
+          "columnNames": ["product_id", "co_purchase_score"],
           "composite": true,
           "constraint": false,
           "keyName": "product_associations_product_score_idx",
@@ -11112,9 +10521,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "payment_status"
-          ],
+          "columnNames": ["payment_status"],
           "composite": false,
           "constraint": false,
           "keyName": "reporting_order_facts_payment_status_idx",
@@ -11122,9 +10529,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "reporting_order_facts_pkey",
@@ -11132,9 +10537,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "reporting_order_facts_store_idx",
@@ -11142,9 +10545,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "reporting_order_facts_vendor_idx",
@@ -11273,9 +10674,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "return_operations_idempotency_key_unique",
@@ -11283,9 +10682,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "return_operations_pkey",
@@ -11636,9 +11033,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "return_requests_order_id_idx",
@@ -11646,9 +11041,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "return_requests_pkey",
@@ -11656,9 +11049,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "return_requests_store_id_idx",
@@ -11676,41 +11067,29 @@
       ],
       "foreignKeys": {
         "return_requests_order_id_fkey": {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "constraintName": "return_requests_order_id_fkey",
           "localTableName": "public.return_requests",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "return_requests_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "return_requests_store_id_fkey",
           "localTableName": "public.return_requests",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "return_requests_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "return_requests_vendor_id_fkey",
           "localTableName": "public.return_requests",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -11853,9 +11232,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "returns_outbox_pkey",
@@ -11863,9 +11240,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "created_at"
-          ],
+          "columnNames": ["created_at"],
           "composite": false,
           "constraint": false,
           "keyName": "returns_outbox_unpublished_idx",
@@ -11949,10 +11324,7 @@
           "scale": null,
           "default": "'pending'",
           "comment": null,
-          "enumItems": [
-            "active",
-            "pending"
-          ],
+          "enumItems": ["active", "pending"],
           "mappedType": "enum"
         },
         "created_at": {
@@ -11992,9 +11364,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "search_synonym_mappings_pkey",
@@ -12002,9 +11372,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "source_term"
-          ],
+          "columnNames": ["source_term"],
           "composite": false,
           "constraint": true,
           "keyName": "search_synonym_mappings_source_term_uidx",
@@ -12136,10 +11504,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "needs_review",
-            "occurrence_count"
-          ],
+          "columnNames": ["needs_review", "occurrence_count"],
           "composite": true,
           "constraint": false,
           "keyName": "search_zero_result_queries_needs_review_idx",
@@ -12147,9 +11512,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "normalized_query"
-          ],
+          "columnNames": ["normalized_query"],
           "composite": false,
           "constraint": true,
           "keyName": "search_zero_result_queries_normalized_query_uidx",
@@ -12157,9 +11520,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "search_zero_result_queries_pkey",
@@ -12170,15 +11531,11 @@
       "checks": [],
       "foreignKeys": {
         "search_zero_result_queries_mapped_synonym_id_fkey": {
-          "columnNames": [
-            "mapped_synonym_id"
-          ],
+          "columnNames": ["mapped_synonym_id"],
           "constraintName": "search_zero_result_queries_mapped_synonym_id_fkey",
           "localTableName": "public.search_zero_result_queries",
           "referencedTableName": "public.search_synonym_mappings",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "cascade",
           "deleteRule": "set null"
         }
@@ -12249,10 +11606,7 @@
           "scale": null,
           "default": "'warning'",
           "comment": null,
-          "enumItems": [
-            "warning",
-            "error"
-          ],
+          "enumItems": ["warning", "error"],
           "mappedType": "enum"
         },
         "detail": {
@@ -12292,9 +11646,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_health_issues_pkey",
@@ -12302,9 +11654,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "scanned_at"
-          ],
+          "columnNames": ["scanned_at"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_health_issues_scanned_at_idx",
@@ -12312,9 +11662,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "url"
-          ],
+          "columnNames": ["url"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_health_issues_url_idx",
@@ -12358,11 +11706,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "product",
-            "category",
-            "cms"
-          ],
+          "enumItems": ["product", "category", "cms"],
           "mappedType": "enum"
         },
         "entity_id": {
@@ -12482,10 +11826,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "entity_type",
-            "entity_id"
-          ],
+          "columnNames": ["entity_type", "entity_id"],
           "composite": true,
           "constraint": false,
           "keyName": "seo_overrides_entity_type_entity_id_idx",
@@ -12493,10 +11834,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "entity_type",
-            "entity_id"
-          ],
+          "columnNames": ["entity_type", "entity_id"],
           "composite": true,
           "constraint": false,
           "keyName": "seo_overrides_entity_type_entity_id_uidx",
@@ -12504,9 +11842,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_overrides_pkey",
@@ -12622,9 +11958,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_redirects_pkey",
@@ -12632,9 +11966,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "source_path"
-          ],
+          "columnNames": ["source_path"],
           "composite": false,
           "constraint": false,
           "keyName": "seo_redirects_source_path_uidx",
@@ -12731,9 +12063,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "shipment_lines_pkey",
@@ -12741,10 +12071,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "shipment_id",
-            "order_line_id"
-          ],
+          "columnNames": ["shipment_id", "order_line_id"],
           "composite": true,
           "constraint": false,
           "keyName": "shipment_lines_shipment_line_unique",
@@ -12762,15 +12089,11 @@
       ],
       "foreignKeys": {
         "shipment_lines_shipment_id_fkey": {
-          "columnNames": [
-            "shipment_id"
-          ],
+          "columnNames": ["shipment_id"],
           "constraintName": "shipment_lines_shipment_id_fkey",
           "localTableName": "public.shipment_lines",
           "referencedTableName": "public.shipments",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -12873,11 +12196,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "STEADFAST",
-            "PATHAO",
-            "MANUAL"
-          ],
+          "enumItems": ["STEADFAST", "PATHAO", "MANUAL"],
           "mappedType": "enum"
         },
         "status": {
@@ -13134,9 +12453,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "shipments_idempotency_unique",
@@ -13144,9 +12461,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "composite": false,
           "constraint": false,
           "keyName": "shipments_order_id_idx",
@@ -13154,9 +12469,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "shipments_pkey",
@@ -13164,9 +12477,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "shipments_store_id_idx",
@@ -13190,41 +12501,29 @@
       ],
       "foreignKeys": {
         "shipments_order_id_fkey": {
-          "columnNames": [
-            "order_id"
-          ],
+          "columnNames": ["order_id"],
           "constraintName": "shipments_order_id_fkey",
           "localTableName": "public.shipments",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "shipments_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "shipments_store_id_fkey",
           "localTableName": "public.shipments",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "shipments_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "shipments_vendor_id_fkey",
           "localTableName": "public.shipments",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -13351,9 +12650,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "hostname"
-          ],
+          "columnNames": ["hostname"],
           "composite": false,
           "constraint": true,
           "keyName": "store_domains_hostname_unique",
@@ -13361,9 +12658,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_domains_pkey",
@@ -13371,9 +12666,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_domains_store_idx",
@@ -13537,9 +12830,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_onboarding_drafts_pkey",
@@ -13547,10 +12838,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "status"
-          ],
+          "columnNames": ["vendor_id", "status"],
           "composite": true,
           "constraint": false,
           "keyName": "store_onboarding_drafts_vendor_idx",
@@ -13698,9 +12986,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_outbox_pkey",
@@ -13708,11 +12994,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "published_at",
-            "retry_count",
-            "created_at"
-          ],
+          "columnNames": ["published_at", "retry_count", "created_at"],
           "composite": true,
           "constraint": false,
           "keyName": "store_outbox_unpublished_idx",
@@ -13829,9 +13111,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_provisioning_runs_pkey",
@@ -13839,10 +13119,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "started_at"
-          ],
+          "columnNames": ["store_id", "started_at"],
           "composite": true,
           "constraint": false,
           "keyName": "store_provisioning_runs_store_idx",
@@ -13990,9 +13267,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_provisioning_steps_pkey",
@@ -14000,10 +13275,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "run_id",
-            "step_name"
-          ],
+          "columnNames": ["run_id", "step_name"],
           "composite": true,
           "constraint": true,
           "keyName": "store_provisioning_steps_run_step_unique",
@@ -14103,9 +13375,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_staff_pkey",
@@ -14113,10 +13383,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id",
-            "user_id"
-          ],
+          "columnNames": ["store_id", "user_id"],
           "composite": true,
           "constraint": false,
           "keyName": "store_staff_store_user_unique",
@@ -14124,9 +13391,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "store_staff_user_id_idx",
@@ -14137,15 +13402,11 @@
       "checks": [],
       "foreignKeys": {
         "store_staff_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "store_staff_store_id_fkey",
           "localTableName": "public.store_staff",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -14656,9 +13917,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "stores_pkey",
@@ -14666,9 +13925,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "status"
-          ],
+          "columnNames": ["status"],
           "composite": false,
           "constraint": false,
           "keyName": "stores_status_idx",
@@ -14676,9 +13933,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "stores_vendor_id_idx",
@@ -14686,10 +13941,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "store_code"
-          ],
+          "columnNames": ["vendor_id", "store_code"],
           "composite": true,
           "constraint": false,
           "keyName": "stores_vendor_id_store_code_unique",
@@ -14697,10 +13949,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "slug"
-          ],
+          "columnNames": ["vendor_id", "slug"],
           "composite": true,
           "constraint": false,
           "keyName": "stores_vendor_slug_unique",
@@ -14730,15 +13979,11 @@
       ],
       "foreignKeys": {
         "stores_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "stores_vendor_id_fkey",
           "localTableName": "public.stores",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -14801,9 +14046,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "key"
-          ],
+          "columnNames": ["key"],
           "composite": false,
           "constraint": false,
           "keyName": "system_settings_pkey",
@@ -14903,9 +14146,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "tenant_isolation_samples_pkey",
@@ -14913,9 +14154,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "tenant_isolation_samples_store_id_idx",
@@ -14923,9 +14162,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "tenant_isolation_samples_vendor_id_idx",
@@ -15041,9 +14278,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "user_memberships_pkey",
@@ -15051,9 +14286,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "user_memberships_user_id_unique",
@@ -15061,9 +14294,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "user_memberships_vendor_id_idx",
@@ -15275,9 +14506,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "email"
-          ],
+          "columnNames": ["email"],
           "composite": false,
           "constraint": false,
           "keyName": "users_email_unique",
@@ -15285,9 +14514,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "users_pkey",
@@ -15387,9 +14614,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_ledger_balances_pkey",
@@ -15413,15 +14638,11 @@
       ],
       "foreignKeys": {
         "vendor_ledger_balances_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "vendor_ledger_balances_vendor_id_fkey",
           "localTableName": "public.vendor_ledger_balances",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -15492,13 +14713,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "SALE",
-            "COMMISSION",
-            "REFUND",
-            "ADJUSTMENT",
-            "PAYOUT"
-          ],
+          "enumItems": ["SALE", "COMMISSION", "REFUND", "ADJUSTMENT", "PAYOUT"],
           "mappedType": "enum"
         },
         "direction": {
@@ -15514,10 +14729,7 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": [
-            "CREDIT",
-            "DEBIT"
-          ],
+          "enumItems": ["CREDIT", "DEBIT"],
           "mappedType": "enum"
         },
         "amount_minor": {
@@ -15685,10 +14897,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "vendor_id",
-            "available_at"
-          ],
+          "columnNames": ["vendor_id", "available_at"],
           "composite": true,
           "constraint": false,
           "keyName": "vendor_ledger_entries_available_at_idx",
@@ -15696,9 +14905,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_ledger_entries_idempotency_unique",
@@ -15706,9 +14913,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_ledger_entries_pkey",
@@ -15716,11 +14921,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "entry_type",
-            "reference_type",
-            "reference_id"
-          ],
+          "columnNames": ["entry_type", "reference_type", "reference_id"],
           "composite": true,
           "constraint": false,
           "keyName": "vendor_ledger_entries_ref_unique",
@@ -15728,9 +14929,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_ledger_entries_store_id_idx",
@@ -15738,10 +14937,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "occurred_at"
-          ],
+          "columnNames": ["vendor_id", "occurred_at"],
           "composite": true,
           "constraint": false,
           "keyName": "vendor_ledger_entries_vendor_id_idx",
@@ -15759,28 +14955,20 @@
       ],
       "foreignKeys": {
         "vendor_ledger_entries_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "vendor_ledger_entries_store_id_fkey",
           "localTableName": "public.vendor_ledger_entries",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "vendor_ledger_entries_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "vendor_ledger_entries_vendor_id_fkey",
           "localTableName": "public.vendor_ledger_entries",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -16139,9 +15327,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "idempotency_key"
-          ],
+          "columnNames": ["idempotency_key"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_payouts_idempotency_unique",
@@ -16149,9 +15335,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_payouts_pkey",
@@ -16159,9 +15343,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_payouts_store_id_idx",
@@ -16169,10 +15351,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "status"
-          ],
+          "columnNames": ["vendor_id", "status"],
           "composite": true,
           "constraint": false,
           "keyName": "vendor_payouts_vendor_status_idx",
@@ -16196,28 +15375,20 @@
       ],
       "foreignKeys": {
         "vendor_payouts_store_id_fkey": {
-          "columnNames": [
-            "store_id"
-          ],
+          "columnNames": ["store_id"],
           "constraintName": "vendor_payouts_store_id_fkey",
           "localTableName": "public.vendor_payouts",
           "referencedTableName": "public.stores",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         },
         "vendor_payouts_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "vendor_payouts_vendor_id_fkey",
           "localTableName": "public.vendor_payouts",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "restrict"
         }
@@ -16312,9 +15483,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_staff_pkey",
@@ -16322,9 +15491,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendor_staff_user_id_idx",
@@ -16332,10 +15499,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "vendor_id",
-            "user_id"
-          ],
+          "columnNames": ["vendor_id", "user_id"],
           "composite": true,
           "constraint": false,
           "keyName": "vendor_staff_vendor_user_unique",
@@ -16346,15 +15510,11 @@
       "checks": [],
       "foreignKeys": {
         "vendor_staff_vendor_id_fkey": {
-          "columnNames": [
-            "vendor_id"
-          ],
+          "columnNames": ["vendor_id"],
           "constraintName": "vendor_staff_vendor_id_fkey",
           "localTableName": "public.vendor_staff",
           "referencedTableName": "public.vendors",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "updateRule": "no action",
           "deleteRule": "cascade"
         }
@@ -16753,9 +15913,7 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "owner_user_id"
-          ],
+          "columnNames": ["owner_user_id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendors_owner_user_id_idx",
@@ -16763,9 +15921,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": false,
           "keyName": "vendors_pkey",
@@ -16773,9 +15929,7 @@
           "primary": true
         },
         {
-          "columnNames": [
-            "slug"
-          ],
+          "columnNames": ["slug"],
           "composite": false,
           "constraint": false,
           "keyName": "vendors_slug_unique",
@@ -16783,9 +15937,7 @@
           "primary": false
         },
         {
-          "columnNames": [
-            "status"
-          ],
+          "columnNames": ["status"],
           "composite": false,
           "constraint": false,
           "keyName": "vendors_status_idx",

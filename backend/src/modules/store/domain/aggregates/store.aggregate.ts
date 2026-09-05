@@ -107,7 +107,9 @@ export class Store extends AggregateRoot<UniqueID> {
       throw new StoreDomainError('Unable to derive a valid store slug.');
     }
 
-    const storeCode = input.storeCode ? normalizeStoreCode(input.storeCode) : deriveStoreCode(displayName);
+    const storeCode = input.storeCode
+      ? normalizeStoreCode(input.storeCode)
+      : deriveStoreCode(displayName);
     if (storeCode.length < 3) {
       throw new StoreDomainError('Store code must be at least 3 characters.');
     }

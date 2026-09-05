@@ -15,7 +15,6 @@ export type CheckAbandonedCartJobPayload = {
 };
 
 export type AiPersonalizationJobPayload =
-  | AnalyzePurchasePatternsJobPayload
-  | CheckAbandonedCartJobPayload;
+  AnalyzePurchasePatternsJobPayload | CheckAbandonedCartJobPayload;
 
 export type { AiPersonalizationJobName };

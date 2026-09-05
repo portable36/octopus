@@ -79,16 +79,19 @@ export class PublicCatalogQueryHandler {
         code: 'PRODUCT_NOT_FOUND',
       });
     }
-    const variants = await this.variants.findByProductId(productId);
-    const offers = await this.offers.findActiveByProductId(productId);
+    const allVariants = await this.variants.findByProductId(productId);
+    const activeVariants = allVariants.filter((v) => v.status === 'ACTIVE');
+    const activeVariantIds = new Set(activeVariants.map((v) => v.id.value));
+    const allOffers = await this.offers.findActiveByProductId(productId);
+    const activeOffers = allOffers.filter((o) => activeVariantIds.has(o.variantId));
     const mediaUrls = await this.resolveMediaUrls([
       ...product.media.map((item) => item.mediaId),
-      ...variants.flatMap((variant) => variant.media.map((item) => item.mediaId)),
+      ...activeVariants.flatMap((variant) => variant.media.map((item) => item.mediaId)),
     ]);
     return toStorefrontProductDto({
       product,
-      variants,
-      offers,
+      variants: activeVariants,
+      offers: activeOffers,
       slug: slugify(product.name),
       mediaUrls,
     });

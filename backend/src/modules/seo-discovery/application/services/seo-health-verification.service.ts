@@ -33,7 +33,10 @@ export class SeoHealthVerificationService {
     @Inject(AppConfigService) private readonly config: AppConfigService,
   ) {}
 
-  public async verifyTopProductRoutes(): Promise<{ readonly scanned: number; readonly issues: number }> {
+  public async verifyTopProductRoutes(): Promise<{
+    readonly scanned: number;
+    readonly issues: number;
+  }> {
     const siteUrl = this.config.seoPublicSiteUrl.replace(/\/$/, '');
     const routes = await this.listTopProductRoutes(MAX_ROUTES);
     const titleCounts = new Map<string, number>();
@@ -105,7 +108,9 @@ export class SeoHealthVerificationService {
       issues: issues.length,
     });
 
-    this.logger.log(`SEO health verification complete: ${routes.length} routes, ${issues.length} issues.`);
+    this.logger.log(
+      `SEO health verification complete: ${routes.length} routes, ${issues.length} issues.`,
+    );
     return { scanned: routes.length, issues: issues.length };
   }
 

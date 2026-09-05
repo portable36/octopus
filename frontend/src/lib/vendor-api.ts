@@ -95,6 +95,12 @@ export type VendorVariant = {
   barcode: string | null;
   basePriceMinor: number | null;
   currencyCode: string | null;
+  weightGrams?: number | null;
+  dimensions?: {
+    lengthMillimeters: number;
+    widthMillimeters: number;
+    heightMillimeters: number;
+  } | null;
 };
 
 export type CatalogCategory = {
@@ -103,6 +109,11 @@ export type CatalogCategory = {
   slug: string;
   parentId: string | null;
   status: string;
+  sortOrder?: number;
+  seo?: {
+    title: string | null;
+    description: string | null;
+  };
 };
 
 export type StoreOffer = {
@@ -366,6 +377,12 @@ export function createProductVariant(
     barcode?: string;
     basePriceMinor?: number;
     currencyCode?: string;
+    weightGrams?: number;
+    dimensions?: {
+      lengthMillimeters: number;
+      widthMillimeters: number;
+      heightMillimeters: number;
+    };
   },
 ): Promise<VendorVariant> {
   return authedRequest<VendorVariant>(`/products/${encodeURIComponent(productId)}/variants`, {
@@ -388,6 +405,45 @@ export function archiveVariant(variantId: string): Promise<VendorVariant> {
 
 export function listCatalogCategories(): Promise<CatalogCategory[]> {
   return authedRequest<CatalogCategory[]>('/categories');
+}
+
+export function adminCreateCategory(input: {
+  name: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+}): Promise<CatalogCategory> {
+  return authedRequest<CatalogCategory>('/categories', {
+    method: 'POST',
+    body: input,
+  });
+}
+
+export function adminGetCategory(categoryId: string): Promise<CatalogCategory> {
+  return authedRequest<CatalogCategory>(`/categories/${encodeURIComponent(categoryId)}`);
+}
+
+export function adminUpdateCategory(
+  categoryId: string,
+  input: {
+    name?: string;
+    parentId?: string | null;
+    sortOrder?: number;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
+  },
+): Promise<CatalogCategory> {
+  return authedRequest<CatalogCategory>(`/categories/${encodeURIComponent(categoryId)}`, {
+    method: 'PATCH',
+    body: input,
+  });
+}
+
+export function adminArchiveCategory(categoryId: string): Promise<CatalogCategory> {
+  return authedRequest<CatalogCategory>(`/categories/${encodeURIComponent(categoryId)}/archive`, {
+    method: 'POST',
+  });
 }
 
 export function createStoreOffer(input: {

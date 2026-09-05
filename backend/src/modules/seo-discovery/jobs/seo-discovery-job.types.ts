@@ -1,4 +1,7 @@
-import type { MetaCapiUserDataInput, MetaCapiCustomData } from '../infrastructure/services/meta-capi.types';
+import type {
+  MetaCapiUserDataInput,
+  MetaCapiCustomData,
+} from '../infrastructure/services/meta-capi.types';
 import type { SeoDiscoveryJobName } from './seo-discovery.constants';
 
 export type SeoDiscoveryMaintenanceJobPayload = {
@@ -16,6 +19,7 @@ export type SeoDiscoveryMetaCapiJobPayload = {
   readonly customData: MetaCapiCustomData;
 };
 
-export type SeoDiscoveryJobPayload = SeoDiscoveryMaintenanceJobPayload | SeoDiscoveryMetaCapiJobPayload;
+export type SeoDiscoveryJobPayload =
+  SeoDiscoveryMaintenanceJobPayload | SeoDiscoveryMetaCapiJobPayload;
 
 export type MetaCapiEnqueueInput = Omit<SeoDiscoveryMetaCapiJobPayload, 'jobName' | 'requestedAt'>;

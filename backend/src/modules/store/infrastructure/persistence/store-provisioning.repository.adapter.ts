@@ -127,7 +127,11 @@ export class StoreProvisioningRepositoryAdapter implements StoreProvisioningRepo
     runId: string,
     stepName: ProvisioningStepName,
     status: ProvisioningStepStatus,
-    patch?: { readonly error?: string | null; readonly startedAt?: Date; readonly completedAt?: Date },
+    patch?: {
+      readonly error?: string | null;
+      readonly startedAt?: Date;
+      readonly completedAt?: Date;
+    },
   ): Promise<ProvisioningStepRecord> {
     return withRlsContext(this.em, async (tx) => {
       let entity = await tx.findOne(StoreProvisioningStepOrmEntity, { runId, stepName });

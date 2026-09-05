@@ -87,7 +87,10 @@ export function mapSeoSystemSettingsToForm(
   settings: Record<string, unknown>,
 ): SeoSystemSettingsForm {
   return {
-    SEO_SITEMAP_CRON: asString(settings.SEO_SITEMAP_CRON, DEFAULT_SEO_SYSTEM_SETTINGS.SEO_SITEMAP_CRON),
+    SEO_SITEMAP_CRON: asString(
+      settings.SEO_SITEMAP_CRON,
+      DEFAULT_SEO_SYSTEM_SETTINGS.SEO_SITEMAP_CRON,
+    ),
     SITEMAP_ITEMS_PER_CHUNK: asString(
       settings.SITEMAP_ITEMS_PER_CHUNK,
       DEFAULT_SEO_SYSTEM_SETTINGS.SITEMAP_ITEMS_PER_CHUNK,
@@ -146,7 +149,9 @@ export function mapGlobalConfigToOperationsForm(
       catalog.default_currency_code,
       DEFAULT_OPERATIONS_SETTINGS.default_currency_code,
     ),
-    hide_out_of_stock: Boolean(catalog.hide_out_of_stock ?? DEFAULT_OPERATIONS_SETTINGS.hide_out_of_stock),
+    hide_out_of_stock: Boolean(
+      catalog.hide_out_of_stock ?? DEFAULT_OPERATIONS_SETTINGS.hide_out_of_stock,
+    ),
     low_stock_threshold: asString(
       catalog.low_stock_threshold,
       DEFAULT_OPERATIONS_SETTINGS.low_stock_threshold,
@@ -223,7 +228,9 @@ export function marketingSystemFormToPatch(
   };
 }
 
-export function operationsFormToPatch(form: OperationsSettingsForm): Record<string, Record<string, unknown>> {
+export function operationsFormToPatch(
+  form: OperationsSettingsForm,
+): Record<string, Record<string, unknown>> {
   return {
     catalog: {
       default_currency_code: form.default_currency_code.trim().toUpperCase(),

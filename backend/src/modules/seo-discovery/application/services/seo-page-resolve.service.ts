@@ -110,8 +110,7 @@ export class SeoPageResolveService {
         defaults: {
           title: category.seoTitle?.trim() || category.name,
           description:
-            enrichedDescription?.trim() ||
-            `${category.name} on ${new URL(siteUrl).hostname}`,
+            enrichedDescription?.trim() || `${category.name} on ${new URL(siteUrl).hostname}`,
           canonicalUrl,
         },
       });

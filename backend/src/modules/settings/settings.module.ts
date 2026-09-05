@@ -42,6 +42,11 @@ import { PublicStorefrontConfigController } from './presentation/http/public-sto
     { provide: VENDOR_REGISTRATION_POLICY, useExisting: VendorRegistrationPolicyAdapter },
     { provide: STORE_SETTINGS_PROVISIONER, useExisting: StoreSettingsProvisionerAdapter },
   ],
-  exports: [SettingsHandlers, MARKETING_SETTINGS_PORT, VENDOR_REGISTRATION_POLICY, STORE_SETTINGS_PROVISIONER],
+  exports: [
+    SettingsHandlers,
+    MARKETING_SETTINGS_PORT,
+    VENDOR_REGISTRATION_POLICY,
+    STORE_SETTINGS_PROVISIONER,
+  ],
 })
 export class SettingsModule {}

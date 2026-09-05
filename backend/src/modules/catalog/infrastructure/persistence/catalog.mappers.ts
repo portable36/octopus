@@ -3,6 +3,8 @@ import { Product } from '../../domain/aggregates/product.aggregate';
 import { Variant } from '../../domain/aggregates/variant.aggregate';
 import { Category } from '../../domain/aggregates/category.aggregate';
 import { StoreOffer } from '../../domain/aggregates/store-offer.aggregate';
+import { Dimensions } from '../../domain/value-objects/dimensions.value-object';
+import { Weight } from '../../domain/value-objects/weight.value-object';
 import type { CatalogAttributeAssignment, CatalogMediaReference } from '../../domain/catalog.types';
 import type {
   VariantAttributeAssignment,
@@ -70,6 +72,23 @@ export function variantToDomain(entity: VariantOrmEntity): Variant {
     ...(entity.compareAtPriceMinor !== null
       ? { compareAtPrice: Money.create(entity.compareAtPriceMinor, currency) }
       : {}),
+    ...(entity.weightGrams !== null && entity.weightGrams !== undefined
+      ? { weight: Weight.create(entity.weightGrams) }
+      : {}),
+    ...(entity.lengthMm !== null &&
+    entity.lengthMm !== undefined &&
+    entity.widthMm !== null &&
+    entity.widthMm !== undefined &&
+    entity.heightMm !== null &&
+    entity.heightMm !== undefined
+      ? {
+          dimensions: Dimensions.create({
+            lengthMillimeters: entity.lengthMm,
+            widthMillimeters: entity.widthMm,
+            heightMillimeters: entity.heightMm,
+          }),
+        }
+      : {}),
     status: entity.status,
     attributes: entity.attributes as VariantAttributeAssignment[],
     media: entity.media as VariantMediaReference[],
@@ -105,6 +124,10 @@ export function applyVariantToOrm(
   entity.basePriceMinor = variant.basePrice?.amountMinorUnits ?? null;
   entity.compareAtPriceMinor = variant.compareAtPrice?.amountMinorUnits ?? null;
   entity.currencyCode = variant.currency ?? null;
+  entity.weightGrams = variant.weight?.grams ?? null;
+  entity.lengthMm = variant.dimensions?.lengthMillimeters ?? null;
+  entity.widthMm = variant.dimensions?.widthMillimeters ?? null;
+  entity.heightMm = variant.dimensions?.heightMillimeters ?? null;
   entity.status = variant.status;
   entity.attributes = [...variant.attributes];
   entity.media = [...variant.media];

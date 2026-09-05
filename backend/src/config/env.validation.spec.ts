@@ -31,8 +31,7 @@ const productionBase = {
   GEM_SCHEMA_VERSION: '2.4.0',
   GEM_TRACKING_ENVIRONMENT: 'production',
   GOOGLE_SERVICES_CLIENT_EMAIL: 'svc@project.iam.gserviceaccount.com',
-  GOOGLE_SERVICES_PRIVATE_KEY:
-    '-----BEGIN PRIVATE KEY-----\\nLINE\\n-----END PRIVATE KEY-----',
+  GOOGLE_SERVICES_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nLINE\\n-----END PRIVATE KEY-----',
 } as const;
 
 describe('env.validation', () => {

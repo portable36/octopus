@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const {
   openSqliteReadOnly,
@@ -12,16 +12,12 @@ const {
   checkIntegrity,
   createBackup,
   removeBackup,
-} = require("./db");
-const { randomUUID } = require("crypto");
+} = require('./db');
+const { randomUUID } = require('crypto');
 const fs = require('fs');
-const path = require("path");
+const path = require('path');
 
-async function buildExportObject(
-  wsUri,
-  glUri,
-  selectedComposerIds = undefined,
-) {
+async function buildExportObject(wsUri, glUri, selectedComposerIds = undefined) {
   // Use read-only mode for export (no changes to source databases)
   const wsDb = await openSqliteReadOnly(wsUri.fsPath);
   const glDb = await openSqliteReadOnly(glUri.fsPath);
@@ -45,8 +41,7 @@ async function buildExportObject(
       if (composerData && Array.isArray(composerData.allComposers)) {
         const wsHash = path.basename(path.dirname(wsUri.fsPath));
         composerData.allComposers = composerData.allComposers.filter(
-          (c) =>
-            c && c.workspaceIdentifier && c.workspaceIdentifier.id === wsHash,
+          (c) => c && c.workspaceIdentifier && c.workspaceIdentifier.id === wsHash,
         );
       }
     }
@@ -55,9 +50,7 @@ async function buildExportObject(
     }
     let allComposers = composerData.allComposers;
     if (workspaceComposerIds) {
-      allComposers = allComposers.filter(
-        (c) => c && workspaceComposerIds.has(c.composerId),
-      );
+      allComposers = allComposers.filter((c) => c && workspaceComposerIds.has(c.composerId));
     }
     if (Array.isArray(selectedComposerIds) && selectedComposerIds.length > 0) {
       const set = new Set(selectedComposerIds);
@@ -104,7 +97,7 @@ async function importFromObject(obj, wsUri, glUri) {
 
   try {
     // Create backups before any modifications
-    console.log("[import] Creating backups...");
+    console.log('[import] Creating backups...');
     wsBackupPath = createBackup(wsUri.fsPath);
     glBackupPath = createBackup(glUri.fsPath);
     console.log(`[import] Workspace backup: ${wsBackupPath}`);
@@ -117,8 +110,8 @@ async function importFromObject(obj, wsUri, glUri) {
     if (!wsIntegrity || !glIntegrity) {
       throw new Error(
         `Database integrity check failed before import. ` +
-          `Workspace DB: ${wsIntegrity ? "OK" : "CORRUPTED"}, ` +
-          `Global DB: ${glIntegrity ? "OK" : "CORRUPTED"}. ` +
+          `Workspace DB: ${wsIntegrity ? 'OK' : 'CORRUPTED'}, ` +
+          `Global DB: ${glIntegrity ? 'OK' : 'CORRUPTED'}. ` +
           `Import aborted to prevent further damage.`,
       );
     }
@@ -132,9 +125,7 @@ async function importFromObject(obj, wsUri, glUri) {
     }
 
     // Add bubbles
-    for (const [composerId, composerBubbles] of Object.entries(
-      obj.bubbles || {},
-    )) {
+    for (const [composerId, composerBubbles] of Object.entries(obj.bubbles || {})) {
       if (!Array.isArray(composerBubbles)) continue;
       for (const bubble of composerBubbles) {
         if (!bubble || !bubble.key || !bubble.value) continue;
@@ -144,26 +135,17 @@ async function importFromObject(obj, wsUri, glUri) {
 
     // Insert into global DB using sqlite3 CLI (handles WAL properly)
     if (kvPairs.length > 0) {
-      console.log(
-        `[import] Inserting ${kvPairs.length} KV pairs into global DB...`,
-      );
+      console.log(`[import] Inserting ${kvPairs.length} KV pairs into global DB...`);
       inserted = insertKVWithCLI(glUri.fsPath, kvPairs);
       console.log(`[import] Inserted ${inserted} KV pairs`);
     }
 
     // Update workspace DB with new composer list
     // First read current data using CLI
-    const currentJson = readItemTableWithCLI(
-      wsUri.fsPath,
-      "composer.composerData",
-    );
+    const currentJson = readItemTableWithCLI(wsUri.fsPath, 'composer.composerData');
     const current = currentJson ? JSON.parse(currentJson) : {};
-    const currentList = Array.isArray(current.allComposers)
-      ? current.allComposers
-      : [];
-    const existingIds = new Set(
-      currentList.map((c) => c.composerId).filter(Boolean),
-    );
+    const currentList = Array.isArray(current.allComposers) ? current.allComposers : [];
+    const existingIds = new Set(currentList.map((c) => c.composerId).filter(Boolean));
 
     const additions = [];
     for (const c of obj.allComposers || []) {
@@ -186,26 +168,19 @@ async function importFromObject(obj, wsUri, glUri) {
         ...current,
         allComposers: currentList.concat(additions),
         selectedComposerIds: [...currentSelected, ...newSelected],
-        lastFocusedComposerIds: [
-          ...newSelected,
-          ...(current.lastFocusedComposerIds || []),
-        ].slice(0, 10),
+        lastFocusedComposerIds: [...newSelected, ...(current.lastFocusedComposerIds || [])].slice(
+          0,
+          10,
+        ),
       };
       const mergedJson = JSON.stringify(merged);
-      console.log(
-        `[import] Adding ${additions.length} composers to workspace DB...`,
-      );
-      updateItemTableWithCLI(wsUri.fsPath, "composer.composerData", mergedJson);
+      console.log(`[import] Adding ${additions.length} composers to workspace DB...`);
+      updateItemTableWithCLI(wsUri.fsPath, 'composer.composerData', mergedJson);
     }
 
     // Also update global composer.composerHeaders so Cursor can find the new chats
-    const glHeadersJson = readItemTableWithCLI(
-      glUri.fsPath,
-      "composer.composerHeaders",
-    );
-    const glHeaders = glHeadersJson
-      ? JSON.parse(glHeadersJson)
-      : { allComposers: [] };
+    const glHeadersJson = readItemTableWithCLI(glUri.fsPath, 'composer.composerHeaders');
+    const glHeaders = glHeadersJson ? JSON.parse(glHeadersJson) : { allComposers: [] };
     const glExistingIds = new Set(
       (glHeaders.allComposers || []).map((c) => c.composerId).filter(Boolean),
     );
@@ -215,15 +190,12 @@ async function importFromObject(obj, wsUri, glUri) {
     // Try to read the workspace folder path from workspace.json
     let workspaceFolderPath = null;
     try {
-      const wsJsonPath = path.join(
-        path.dirname(wsUri.fsPath),
-        "workspace.json",
-      );
+      const wsJsonPath = path.join(path.dirname(wsUri.fsPath), 'workspace.json');
       if (fs.existsSync(wsJsonPath)) {
-        const wsJson = JSON.parse(fs.readFileSync(wsJsonPath, "utf8"));
-        if (wsJson && typeof wsJson.folder === "string") {
+        const wsJson = JSON.parse(fs.readFileSync(wsJsonPath, 'utf8'));
+        if (wsJson && typeof wsJson.folder === 'string') {
           let p = wsJson.folder;
-          if (p.startsWith("file://")) {
+          if (p.startsWith('file://')) {
             try {
               const url = new URL(p);
               p = url.pathname;
@@ -256,9 +228,9 @@ async function importFromObject(obj, wsUri, glUri) {
               $mid: 1,
               fsPath: workspaceFolderPath,
               _sep: 1,
-              external: "file://" + workspaceFolderPath.replace(/\\/g, "/"),
-              path: workspaceFolderPath.replace(/\\/g, "/"),
-              scheme: "file",
+              external: 'file://' + workspaceFolderPath.replace(/\\/g, '/'),
+              path: workspaceFolderPath.replace(/\\/g, '/'),
+              scheme: 'file',
             },
           };
         } else {
@@ -266,18 +238,9 @@ async function importFromObject(obj, wsUri, glUri) {
         }
       }
 
-      glHeaders.allComposers = [
-        ...(glHeaders.allComposers || []),
-        ...glAdditions,
-      ];
-      console.log(
-        `[import] Adding ${glAdditions.length} composers to global composerHeaders...`,
-      );
-      updateItemTableWithCLI(
-        glUri.fsPath,
-        "composer.composerHeaders",
-        JSON.stringify(glHeaders),
-      );
+      glHeaders.allComposers = [...(glHeaders.allComposers || []), ...glAdditions];
+      console.log(`[import] Adding ${glAdditions.length} composers to global composerHeaders...`);
+      updateItemTableWithCLI(glUri.fsPath, 'composer.composerHeaders', JSON.stringify(glHeaders));
     }
 
     // Verify integrity after changes
@@ -287,26 +250,19 @@ async function importFromObject(obj, wsUri, glUri) {
     if (!wsIntegrityAfter || !glIntegrityAfter) {
       throw new Error(
         `Database integrity check failed after import. ` +
-          `Workspace DB: ${wsIntegrityAfter ? "OK" : "CORRUPTED"}, ` +
-          `Global DB: ${glIntegrityAfter ? "OK" : "CORRUPTED"}. `,
+          `Workspace DB: ${wsIntegrityAfter ? 'OK' : 'CORRUPTED'}, ` +
+          `Global DB: ${glIntegrityAfter ? 'OK' : 'CORRUPTED'}. `,
       );
     }
 
     // Get verification info
-    const verifyJson = readItemTableWithCLI(
-      wsUri.fsPath,
-      "composer.composerData",
-    );
+    const verifyJson = readItemTableWithCLI(wsUri.fsPath, 'composer.composerData');
     const verify = verifyJson ? JSON.parse(verifyJson) : {};
-    const verifyList = Array.isArray(verify.allComposers)
-      ? verify.allComposers
-      : [];
-    const verifyIds = new Set(
-      verifyList.map((c) => c.composerId).filter(Boolean),
-    );
+    const verifyList = Array.isArray(verify.allComposers) ? verify.allComposers : [];
+    const verifyIds = new Set(verifyList.map((c) => c.composerId).filter(Boolean));
 
     // Success - clean up backups
-    console.log("[import] Success! Cleaning up backups...");
+    console.log('[import] Success! Cleaning up backups...');
     removeBackup(wsBackupPath);
     removeBackup(glBackupPath);
 
@@ -318,9 +274,9 @@ async function importFromObject(obj, wsUri, glUri) {
       },
     };
   } catch (err) {
-    console.error("[import] Error during import:", err);
+    console.error('[import] Error during import:', err);
     // Keep backups on error for manual recovery
-    console.log("[import] Backups preserved for recovery:");
+    console.log('[import] Backups preserved for recovery:');
     if (wsBackupPath) console.log(`  Workspace: ${wsBackupPath}`);
     if (glBackupPath) console.log(`  Global: ${glBackupPath}`);
     throw err;
@@ -355,9 +311,7 @@ function cloneExportObjectForCopy(obj) {
   }
 
   // Clone bubbles with new IDs
-  for (const [oldComposerId, composerBubbles] of Object.entries(
-    obj.bubbles || {},
-  )) {
+  for (const [oldComposerId, composerBubbles] of Object.entries(obj.bubbles || {})) {
     const newComposerId = idMap[oldComposerId];
     if (!newComposerId || !Array.isArray(composerBubbles)) continue;
     const newBubbles = [];
@@ -367,8 +321,8 @@ function cloneExportObjectForCopy(obj) {
       bubbleIdMap[bubble.bubbleId] = newBubbleId;
       const newKey = `bubbleId:${newComposerId}:${newBubbleId}`;
       // Update bubble value to replace old bubbleId references
-      let bubbleValue = bubble.value || "";
-      if (typeof bubbleValue === "string") {
+      let bubbleValue = bubble.value || '';
+      if (typeof bubbleValue === 'string') {
         bubbleValue = bubbleValue.split(bubble.bubbleId).join(newBubbleId);
         bubbleValue = bubbleValue.split(oldComposerId).join(newComposerId);
       }
@@ -387,7 +341,7 @@ function cloneExportObjectForCopy(obj) {
   for (const [oldId, val] of Object.entries(obj.composers || {})) {
     const newId = idMap[oldId];
     if (!newId) continue;
-    let text = typeof val === "string" ? val : String(val);
+    let text = typeof val === 'string' ? val : String(val);
     try {
       const parsed = JSON.parse(text);
       parsed.composerId = newId;
@@ -413,9 +367,7 @@ function cloneExportObjectForCopy(obj) {
   for (const [oldId, newId] of Object.entries(idMap)) {
     if (!cloned.composers[newId]) {
       // Find the composer metadata
-      const composerMeta = cloned.allComposers.find(
-        (c) => c.composerId === newId,
-      );
+      const composerMeta = cloned.allComposers.find((c) => c.composerId === newId);
       const defaultData = {
         composerId: newId,
         tabs: [],
@@ -438,29 +390,18 @@ async function removeComposersFromWorkspace(wsUri, composerIdsToRemove) {
   const backupPath = createBackup(wsUri.fsPath);
 
   try {
-    const currentJson = readItemTableWithCLI(
-      wsUri.fsPath,
-      "composer.composerData",
-    );
+    const currentJson = readItemTableWithCLI(wsUri.fsPath, 'composer.composerData');
     const current = currentJson ? JSON.parse(currentJson) : {};
-    const currentList = Array.isArray(current.allComposers)
-      ? current.allComposers
-      : [];
+    const currentList = Array.isArray(current.allComposers) ? current.allComposers : [];
     const removeSet = new Set(composerIdsToRemove);
-    const nextList = currentList.filter(
-      (c) => !c || !c.composerId || !removeSet.has(c.composerId),
-    );
+    const nextList = currentList.filter((c) => !c || !c.composerId || !removeSet.has(c.composerId));
     const merged = { ...current, allComposers: nextList };
-    updateItemTableWithCLI(
-      wsUri.fsPath,
-      "composer.composerData",
-      JSON.stringify(merged),
-    );
+    updateItemTableWithCLI(wsUri.fsPath, 'composer.composerData', JSON.stringify(merged));
 
     // Success - remove backup
     removeBackup(backupPath);
   } catch (err) {
-    console.error("[remove] Error removing composers:", err);
+    console.error('[remove] Error removing composers:', err);
     console.log(`[remove] Backup preserved: ${backupPath}`);
     throw err;
   }

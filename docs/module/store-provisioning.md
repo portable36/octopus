@@ -32,14 +32,14 @@ Each step is recorded in `store_provisioning_steps` with status, timestamps, err
 
 ## APIs
 
-| Method | Path |
-|--------|------|
-| POST | `/stores/drafts` |
-| GET/PATCH | `/stores/drafts/:draftId` |
-| POST | `/stores/drafts/:draftId/validate` |
-| POST | `/stores/drafts/:draftId/submit` |
-| GET | `/stores/:storeId/provisioning` |
-| POST | `/stores/:storeId/provisioning/retry` |
+| Method    | Path                                  |
+| --------- | ------------------------------------- |
+| POST      | `/stores/drafts`                      |
+| GET/PATCH | `/stores/drafts/:draftId`             |
+| POST      | `/stores/drafts/:draftId/validate`    |
+| POST      | `/stores/drafts/:draftId/submit`      |
+| GET       | `/stores/:storeId/provisioning`       |
+| POST      | `/stores/:storeId/provisioning/retry` |
 
 ## Events (store outbox)
 

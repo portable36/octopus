@@ -65,7 +65,9 @@ export class SystemSettingsService {
       return { updated: [] };
     }
 
-    const invalidKeys = entries.map(([key]) => key).filter((key) => !isAllowedSystemSettingKey(key));
+    const invalidKeys = entries
+      .map(([key]) => key)
+      .filter((key) => !isAllowedSystemSettingKey(key));
     if (invalidKeys.length > 0) {
       throw new BadRequestException(`Unsupported system setting keys: ${invalidKeys.join(', ')}`);
     }

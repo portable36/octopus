@@ -19,8 +19,7 @@ import { SeoDiscoveryWorker } from '../jobs/seo-discovery.worker';
 describe('Search Console notification pipeline', () => {
   describe('normalizeGoogleServicePrivateKey', () => {
     it('converts escaped newline sequences into real PEM line breaks', () => {
-      const key =
-        '-----BEGIN PRIVATE KEY-----\\nABC\\nDEF\\n-----END PRIVATE KEY-----';
+      const key = '-----BEGIN PRIVATE KEY-----\\nABC\\nDEF\\n-----END PRIVATE KEY-----';
       expect(normalizeGoogleServicePrivateKey(key)).toBe(
         '-----BEGIN PRIVATE KEY-----\nABC\nDEF\n-----END PRIVATE KEY-----',
       );
@@ -122,7 +121,9 @@ describe('Search Console notification pipeline', () => {
       const pem = privateKey.export({ type: 'pkcs1', format: 'pem' }).toString();
       const escapedPem = pem.replace(/\n/g, '\\n');
 
-      const fetchMock = vi.fn(async () => new Response(JSON.stringify({ access_token: 'ok' }), { status: 200 }));
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify({ access_token: 'ok' }), { status: 200 }),
+      );
       global.fetch = fetchMock as typeof fetch;
 
       await fetchGoogleAccessToken('svc@test.iam.gserviceaccount.com', escapedPem);
@@ -136,7 +137,9 @@ describe('Search Console notification pipeline', () => {
     it('throws on Search Console HTTP failure so BullMQ can retry', async () => {
       vi.spyOn(googleServiceAccountAuth, 'fetchGoogleAccessToken').mockResolvedValue('retry-token');
 
-      global.fetch = vi.fn(async () => new Response('quota exceeded', { status: 429 })) as typeof fetch;
+      global.fetch = vi.fn(
+        async () => new Response('quota exceeded', { status: 429 }),
+      ) as typeof fetch;
 
       const config = {
         seoPublicSiteUrl: 'https://shop.example.com',

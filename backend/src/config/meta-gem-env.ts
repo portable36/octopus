@@ -32,12 +32,16 @@ export function parseMetaAndromedaDataProcessingOptionsList(
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new Error('META_ANDROMEDA_DATA_PROCESSING_OPTIONS must be valid JSON (e.g. ["LDU"] or []).');
+    throw new Error(
+      'META_ANDROMEDA_DATA_PROCESSING_OPTIONS must be valid JSON (e.g. ["LDU"] or []).',
+    );
   }
 
   const result = metaAndromedaOptionsListSchema.safeParse(parsed);
   if (!result.success) {
-    throw new Error('META_ANDROMEDA_DATA_PROCESSING_OPTIONS must be a JSON array of "LDU" tokens (or []).');
+    throw new Error(
+      'META_ANDROMEDA_DATA_PROCESSING_OPTIONS must be a JSON array of "LDU" tokens (or []).',
+    );
   }
 
   return result.data;

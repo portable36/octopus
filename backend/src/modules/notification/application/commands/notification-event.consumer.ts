@@ -66,7 +66,9 @@ export class NotificationEventConsumer implements NotificationOutboxHandler {
     const cartId = String(payload['cartId'] ?? '');
     const customerId = payload['customerId'] == null ? null : String(payload['customerId']);
     if (!cartId || !customerId) {
-      this.logger.debug(`CartAbandonedEvent ${cartId || 'unknown'} has no customer; skip notification.`);
+      this.logger.debug(
+        `CartAbandonedEvent ${cartId || 'unknown'} has no customer; skip notification.`,
+      );
       return;
     }
 

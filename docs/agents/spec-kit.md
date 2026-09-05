@@ -24,12 +24,12 @@ specify init --here --force --non-interactive --integration cursor-agent --scrip
 
 ## Layout
 
-| Path | Role |
-| ---- | ---- |
-| `.specify/` | Templates, PowerShell scripts, workflows, extensions, constitution |
-| `.specify/memory/constitution.md` | Project principles for Spec Kit commands |
-| `.cursor/skills/speckit-*/` | Cursor Agent skills (`/speckit-*`) |
-| `specs/` | Feature specs created by `/speckit-specify` (created on first use) |
+| Path                              | Role                                                               |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `.specify/`                       | Templates, PowerShell scripts, workflows, extensions, constitution |
+| `.specify/memory/constitution.md` | Project principles for Spec Kit commands                           |
+| `.cursor/skills/speckit-*/`       | Cursor Agent skills (`/speckit-*`)                                 |
+| `specs/`                          | Feature specs created by `/speckit-specify` (created on first use) |
 
 Machine-local Spec Kit pointers under `.specify/` (for example `feature.json`)
 are gitignored via `.specify/.gitignore`.

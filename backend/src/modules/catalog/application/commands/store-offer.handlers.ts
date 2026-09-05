@@ -8,6 +8,7 @@ import {
   CatalogApplicationError,
   ProductNotFoundError,
   StoreOfferNotFoundError,
+  StoreOfferNotSellableError,
   VariantNotFoundError,
 } from '../errors/catalog.errors';
 import { PRODUCT_REPOSITORY, type ProductRepository } from '../ports/product-repository.interface';
@@ -81,6 +82,8 @@ export class CreateStoreOfferHandler {
 export class StoreOfferLifecycleHandler {
   constructor(
     @Inject(STORE_OFFER_REPOSITORY) private readonly offers: StoreOfferRepository,
+    @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepository,
+    @Inject(VARIANT_REPOSITORY) private readonly variants: VariantRepository,
     @Inject(CatalogAuthorizationService) private readonly authz: CatalogAuthorizationService,
   ) {}
 
@@ -90,6 +93,14 @@ export class StoreOfferLifecycleHandler {
     actorRoles: readonly string[],
   ): Promise<StoreOffer> {
     const offer = await this.requireOwned(offerId, actorUserId, actorRoles);
+    const product = await this.products.findById(offer.productId);
+    if (!product || product.status !== 'published') {
+      throw new StoreOfferNotSellableError('Cannot activate offer: product must be published.');
+    }
+    const variant = await this.variants.findById(offer.variantId);
+    if (!variant || variant.status !== 'ACTIVE') {
+      throw new StoreOfferNotSellableError('Cannot activate offer: variant must be active.');
+    }
     offer.activate();
     await this.offers.save(offer);
     return offer;

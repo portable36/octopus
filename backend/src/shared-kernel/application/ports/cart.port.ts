@@ -37,6 +37,7 @@ export interface CartValidationIssueDto {
 }
 
 export interface CartPort {
+  findCartById(cartId: string): Promise<CartSnapshotDto | null>;
   getOwnedCart(cartId: string, owner: CartOwnerRef): Promise<CartSnapshotDto>;
   validate(
     cartId: string,

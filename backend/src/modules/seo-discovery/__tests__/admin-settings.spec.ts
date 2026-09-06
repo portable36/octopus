@@ -5,7 +5,7 @@ import { SystemSetting } from '../infrastructure/entities/system-setting.entity'
 import {
   SYSTEM_SETTING_CACHE_PREFIX,
   SystemSettingsService,
-} from '../application/services/system-settings.service';
+} from '../infrastructure/services/system-settings.service';
 
 function createEntityManagerMock() {
   const store = new Map<string, SystemSetting>();

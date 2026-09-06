@@ -3,12 +3,16 @@ import {
   Catch,
   ExceptionFilter,
   HttpStatus,
+  Inject,
   NotFoundException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Rfc7807ExceptionFilter } from '../../../../shared-kernel/infrastructure/filters/rfc7807-exception.filter';
 import { normalizeRequestPath } from '../../domain/normalize-path';
-import { CrawlErrorLogService } from '../../application/services/crawl-error-log.service';
+import {
+  CRAWL_ERROR_LOG_PORT,
+  type CrawlErrorLogPort,
+} from '../../application/ports/crawl-error-log.port';
 import { RedirectResolutionService } from '../../application/services/redirect-resolution.service';
 
 @Catch(NotFoundException)
@@ -16,7 +20,7 @@ export class SeoNotFoundFilter implements ExceptionFilter {
   private readonly problemFilter = new Rfc7807ExceptionFilter();
 
   constructor(
-    private readonly crawlErrors: CrawlErrorLogService,
+    @Inject(CRAWL_ERROR_LOG_PORT) private readonly crawlErrors: CrawlErrorLogPort,
     private readonly redirects: RedirectResolutionService,
   ) {}
 

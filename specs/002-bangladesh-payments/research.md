@@ -6,6 +6,7 @@
 ## 1. Gateway Specifications & Protocols
 
 ### 1.1 SSLCommerz
+
 - **Integration Model**: Hosted Payment Gateway with Redirection.
 - **Base URLs**:
   - Sandbox: `https://sandbox.sslcommerz.com`
@@ -20,6 +21,7 @@
   - Query parameters: `bank_tran_id`, `refund_amount`, `refund_remarks`, `store_id`, `store_passwd`, `format='json'`.
 
 ### 1.2 bKash (Tokenized Checkout v1.2.0-beta)
+
 - **Integration Model**: Merchant Tokenized Checkout API.
 - **Base URLs**:
   - Sandbox: `https://tokenized.sandbox.bka.sh/v1.2.0-beta`
@@ -42,6 +44,7 @@
   - Body: `{ paymentID, trxID, amount, sku, reason }`.
 
 ### 1.3 Nagad (Direct Merchant Integration)
+
 - **Integration Model**: Sensitive Data Encrypted Direct Merchant API.
 - **Base URLs**:
   - Sandbox: `http://sandbox.mynagad.com:10080/remote-payment-gateway-1.0/api/dfs`
@@ -59,6 +62,7 @@
 ## 2. Replay Prevention & Concurrency Control
 
 In high-concurrency e-commerce environments, payment webhooks and user return redirects may arrive concurrently.
+
 - **Redis Replay Guard**:
   ```typescript
   const lockKey = `payment:replay:${provider}:${providerTransactionId}`;
@@ -80,6 +84,7 @@ In high-concurrency e-commerce environments, payment webhooks and user return re
 ## 3. Dual-Mode Mock & Simulation Architecture
 
 To ensure 100% test reproducibility without external bank sandbox dependencies:
+
 - When credentials (`SSLCOMMERZ_STORE_ID`, `BKASH_APP_KEY`, `NAGAD_MERCHANT_ID`) are missing or when `PAYMENT_GATEWAY_MODE=sandbox-mock`:
   - `SslCommerzGatewayAdapter`, `BkashGatewayAdapter`, and `NagadGatewayAdapter` operate in **Simulated Mode**.
   - `initializeSession` returns a deterministic simulated redirect URL:

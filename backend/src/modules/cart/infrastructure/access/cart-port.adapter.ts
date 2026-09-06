@@ -13,6 +13,11 @@ import type { Cart } from '../../domain/aggregates/cart.aggregate';
 export class CartPortAdapter implements CartPort {
   constructor(@Inject(CartCommandHandler) private readonly carts: CartCommandHandler) {}
 
+  public async findCartById(cartId: string): Promise<CartSnapshotDto | null> {
+    const cart = await this.carts.findById(cartId);
+    return cart ? this.toSnapshot(cart) : null;
+  }
+
   public async getOwnedCart(cartId: string, owner: CartOwnerRef): Promise<CartSnapshotDto> {
     const cart = await this.carts.get(cartId, owner);
     return this.toSnapshot(cart);

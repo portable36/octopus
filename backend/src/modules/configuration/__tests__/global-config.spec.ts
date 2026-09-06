@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GLOBAL_CONFIG_CACHE_PREFIX,
   GlobalConfigService,
-} from '../application/services/global-config.service';
+} from '../infrastructure/services/global-config.service';
 import { GLOBAL_CONFIG_GROUPS, GLOBAL_CONFIG_KEYS } from '../domain/global-config-keys';
 import { GlobalSetting } from '../infrastructure/entities/global-setting.entity';
 

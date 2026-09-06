@@ -13,10 +13,13 @@ import {
   type UpsertSeoOverrideInput,
 } from '../ports/seo-override-repository.interface';
 import { SeoDiscoveryEnqueuerService } from '../../jobs/seo-discovery-enqueuer.service';
-import { CrawlErrorLogService } from './crawl-error-log.service';
-import { SeoHealthVerificationService } from './seo-health-verification.service';
+import { CRAWL_ERROR_LOG_PORT, type CrawlErrorLogPort } from '../ports/crawl-error-log.port';
+import {
+  SEO_HEALTH_VERIFICATION_PORT,
+  type SeoHealthVerificationPort,
+} from '../ports/seo-health-verification.port';
 import { SystemSettingsRuntimeBridge } from './system-settings-runtime.bridge';
-import { SystemSettingsService } from './system-settings.service';
+import { SYSTEM_SETTINGS_PORT, type SystemSettingsPort } from '../ports/system-settings.port';
 
 export type SeoArtifactSyncStatus = {
   readonly status: 'fresh' | 'stale' | 'missing';
@@ -51,9 +54,9 @@ export class SeoAdminService {
     @Inject(REDIRECT_REPOSITORY) private readonly redirects: RedirectRepository,
     private readonly config: AppConfigService,
     private readonly enqueuer: SeoDiscoveryEnqueuerService,
-    private readonly crawlErrors: CrawlErrorLogService,
-    private readonly seoHealth: SeoHealthVerificationService,
-    private readonly systemSettings: SystemSettingsService,
+    @Inject(CRAWL_ERROR_LOG_PORT) private readonly crawlErrors: CrawlErrorLogPort,
+    @Inject(SEO_HEALTH_VERIFICATION_PORT) private readonly seoHealth: SeoHealthVerificationPort,
+    @Inject(SYSTEM_SETTINGS_PORT) private readonly systemSettings: SystemSettingsPort,
     private readonly runtimeSettings: SystemSettingsRuntimeBridge,
   ) {}
 

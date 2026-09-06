@@ -6,6 +6,7 @@
 ## 1. Domain Entities & Value Objects
 
 ### 1.1 `PaymentIntent` Aggregate Extensions
+
 - **Status Lifecycle**:
   ```text
   [For COD]
@@ -28,7 +29,9 @@
     - Appends domain event `PaymentCaptured`.
 
 ### 1.2 `PaymentTransaction` Entity
+
 Stores transaction evidence for both COD cash collection and digital gateway capture:
+
 - `id: uuid`
 - `paymentIntentId: uuid`
 - `orderId: uuid`
@@ -41,6 +44,7 @@ Stores transaction evidence for both COD cash collection and digital gateway cap
 - `createdAt: Date`
 
 ### 1.3 `PaymentOutbox` Events
+
 - Event type: `PaymentCaptured`
 - Version: `1`
 - Payload:
@@ -64,11 +68,13 @@ Stores transaction evidence for both COD cash collection and digital gateway cap
 ## 2. In-Memory / Distributed Caches (Redis)
 
 ### 2.1 Replay Guard Keys
+
 - Key pattern: `payment:replay:{provider}:{providerTransactionId}`
 - TTL: `86400` seconds (24 hours)
 - Value: `CAPTURED`
 
 ### 2.2 bKash Token Cache
+
 - Key pattern: `payment:bkash:id_token`
 - TTL: `3500` seconds (58 minutes, token valid for 1 hour)
 - Value: `<id_token>`
@@ -78,6 +84,7 @@ Stores transaction evidence for both COD cash collection and digital gateway cap
 ## 3. Schema & Migration Changes
 
 Because `PaymentIntentOrmEntity` and `PaymentTransactionOrmEntity` already have extensible columns and `PaymentRefundOrmEntity` already has `provider_refund_id`, `provider_response_code`, and `provider_received_at`, we can add:
+
 - Add nullable `provider_transaction_id` and `gateway_reference_id` to `payment_intents`.
 - Add `captured_at` timestamp to `payment_intents`.
-All additions are strictly non-breaking and additive with default nulls.
+  All additions are strictly non-breaking and additive with default nulls.

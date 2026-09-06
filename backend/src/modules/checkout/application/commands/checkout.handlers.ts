@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
-import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
 import {
+  GLOBAL_CONFIG_PORT,
   GLOBAL_CONFIG_GROUPS,
   GLOBAL_CONFIG_KEYS,
-} from '../../../configuration/domain/global-config-keys';
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 import {
   CART_PORT,
   type CartOwnerRef,
@@ -96,7 +97,7 @@ export class CheckoutSubmitHandler {
     @Inject(STORE_ACCESS) private readonly stores: StoreAccessPort,
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
     @Inject(AppConfigService) private readonly config: AppConfigService,
-    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
+    @Inject(GLOBAL_CONFIG_PORT) private readonly globalConfig: GlobalConfigPort,
   ) {}
 
   public async submit(input: SubmitCheckoutInput): Promise<CheckoutOutcome> {

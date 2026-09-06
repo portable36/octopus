@@ -6,9 +6,11 @@
 ## 1. Storefront / Client Endpoints
 
 ### 1.1 Initiate Gateway Session (`POST /api/v1/payments/:paymentIntentId/initiate-session`)
+
 Used by the storefront during online checkout when `paymentMethod` is `SSLCOMMERZ`, `BKASH`, or `NAGAD`.
 
 **Request**:
+
 ```http
 POST /api/v1/payments/c1d88bb4-0000-4000-8000-000000000001/initiate-session HTTP/1.1
 Content-Type: application/json
@@ -18,6 +20,7 @@ Authorization: Bearer <customer_or_checkout_token>
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "paymentIntentId": "c1d88bb4-0000-4000-8000-000000000001",
@@ -36,9 +39,11 @@ Authorization: Bearer <customer_or_checkout_token>
 Public endpoints unauthenticated by user bearer tokens, secured by gateway parameters, IPN payload validation, and server-to-server secondary verification.
 
 ### 2.1 SSLCommerz Callback (`POST /api/v1/payments/gateways/sslcommerz/callback`)
+
 Receives customer return from SSLCommerz.
 
 **Request (Form URL Encoded or JSON)**:
+
 ```http
 POST /api/v1/payments/gateways/sslcommerz/callback HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
@@ -48,6 +53,7 @@ tran_id=c1d88bb4-0000-4000-8000-000000000001&val_id=260905123456&status=VALID&am
 
 **Response (302 Redirect or 200 OK)**:
 Redirects browser to storefront order status page `/checkout/payment-return?orderId=...&status=PAID` or returns:
+
 ```json
 {
   "success": true,
@@ -58,9 +64,11 @@ Redirects browser to storefront order status page `/checkout/payment-return?orde
 ```
 
 ### 2.2 SSLCommerz IPN (`POST /api/v1/payments/gateways/sslcommerz/ipn`)
+
 Background server-to-server notification from SSLCommerz.
 
 **Response (200 OK)**:
+
 ```json
 {
   "received": true
@@ -68,9 +76,11 @@ Background server-to-server notification from SSLCommerz.
 ```
 
 ### 2.3 bKash Callback (`POST /api/v1/payments/gateways/bkash/callback`)
+
 Receives customer return or server webhook from bKash.
 
 **Request (JSON / Query)**:
+
 ```http
 POST /api/v1/payments/gateways/bkash/callback HTTP/1.1
 Content-Type: application/json
@@ -83,6 +93,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "success": true,
@@ -93,9 +104,11 @@ Content-Type: application/json
 ```
 
 ### 2.4 Nagad Callback (`POST /api/v1/payments/gateways/nagad/callback`)
+
 Receives customer return or server webhook from Nagad.
 
 **Request (JSON / Query)**:
+
 ```http
 POST /api/v1/payments/gateways/nagad/callback HTTP/1.1
 Content-Type: application/json
@@ -108,6 +121,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK)**:
+
 ```json
 {
   "success": true,
@@ -124,6 +138,7 @@ Content-Type: application/json
 Handled by existing `POST /api/v1/payments/:paymentIntentId/refunds`, which now delegates gateway payments to `PaymentGatewayRefundDispatcher`.
 
 **Request**:
+
 ```http
 POST /api/v1/payments/c1d88bb4-0000-4000-8000-000000000001/refunds HTTP/1.1
 Content-Type: application/json
@@ -138,6 +153,7 @@ Idempotency-Key: refund_idempotency_key_12345
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "refundId": "ref_uuid_here",

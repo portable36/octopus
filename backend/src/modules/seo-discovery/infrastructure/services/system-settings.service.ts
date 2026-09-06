@@ -3,13 +3,14 @@ import { EntityManager } from '@mikro-orm/core';
 import type Redis from 'ioredis';
 import { REDIS_CLIENT } from '../../../../shared-kernel/infrastructure/redis/redis.constants';
 import { isAllowedSystemSettingKey } from '../../domain/system-setting-keys';
-import { SystemSetting } from '../../infrastructure/entities/system-setting.entity';
+import { SystemSetting } from '../entities/system-setting.entity';
+import { type SystemSettingsPort } from '../../application/ports/system-settings.port';
 
 export const SYSTEM_SETTING_CACHE_PREFIX = 'seo:system-setting:';
 export const SYSTEM_SETTING_CACHE_TTL_SECONDS = 86_400;
 
 @Injectable()
-export class SystemSettingsService {
+export class SystemSettingsService implements SystemSettingsPort {
   private readonly logger = new Logger(SystemSettingsService.name);
 
   constructor(

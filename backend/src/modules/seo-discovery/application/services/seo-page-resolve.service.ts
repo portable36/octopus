@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { StructuredData } from '../../domain/seo.types';
 import { parsePublicSeoPath } from '../../domain/parse-seo-path';
-import { CatalogSeoFactsAdapter } from '../../infrastructure/access/catalog-seo-facts.adapter';
+import { CATALOG_SEO_FACTS, type CatalogSeoFactsPort } from '../ports/catalog-seo-facts.port';
 import { StructuredDataEngine } from '../../structured-data/structured-data.engine';
 import { SemanticSeoService } from './semantic-seo.service';
 import { SeoMetadataService } from './seo-metadata.service';
@@ -15,7 +15,7 @@ export type PublicSeoResolveResponse = {
 @Injectable()
 export class SeoPageResolveService {
   constructor(
-    private readonly facts: CatalogSeoFactsAdapter,
+    @Inject(CATALOG_SEO_FACTS) private readonly facts: CatalogSeoFactsPort,
     private readonly metadata: SeoMetadataService,
     private readonly structuredData: StructuredDataEngine,
     private readonly semanticSeo: SemanticSeoService,

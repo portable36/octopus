@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 import {
@@ -7,7 +7,10 @@ import {
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
 import { SearchReindexHandler } from '../../application/commands/search-reindex.handler';
-import { SearchSynonymService } from '../../application/services/search-synonym.service';
+import {
+  SEARCH_SYNONYM_PORT,
+  type SearchSynonymPort,
+} from '../../application/ports/search-synonym.port';
 
 class CreateSynonymDto {
   @IsString()
@@ -36,7 +39,7 @@ class MapZeroResultDto {
 export class AdminSearchController {
   constructor(
     private readonly reindex: SearchReindexHandler,
-    private readonly searchSynonyms: SearchSynonymService,
+    @Inject(SEARCH_SYNONYM_PORT) private readonly searchSynonyms: SearchSynonymPort,
   ) {}
 
   @Post('reindex')

@@ -11,7 +11,10 @@ import {
 import type { PaymentIntentStatus, PaymentMethod } from '../../domain/payment.types';
 import { PaymentNotFoundError, PaymentProviderUnavailableError } from '../errors/payment.errors';
 import { PAYMENT_REPOSITORY, type PaymentRepository } from '../ports/payment-repository.interface';
-import { PaymentGatewayRegistry } from '../../infrastructure/gateways/payment-gateway-registry';
+import {
+  PAYMENT_GATEWAY_REGISTRY,
+  type PaymentGatewayRegistryPort,
+} from '../ports/payment-gateway-registry.port';
 
 export interface ProcessGatewayCallbackInput {
   readonly provider: PaymentMethod;
@@ -35,7 +38,7 @@ export class ProcessGatewayCallbackHandler {
 
   constructor(
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
-    @Inject(PaymentGatewayRegistry) private readonly gatewayRegistry: PaymentGatewayRegistry,
+    @Inject(PAYMENT_GATEWAY_REGISTRY) private readonly gatewayRegistry: PaymentGatewayRegistryPort,
     @Inject(ORDER_PORT) private readonly orders: OrderPort,
     @Optional() @Inject(AUDIT_PORT) private readonly audit?: AuditPort,
     @Optional() @Inject(REDIS_CLIENT) private readonly redis?: Redis,

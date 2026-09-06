@@ -1,11 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { randomUUID } from 'node:crypto';
-import { CrawlErrorLog } from '../../infrastructure/entities/crawl-error-log.entity';
+import { CrawlErrorLog } from '../entities/crawl-error-log.entity';
 import { normalizeRequestPath } from '../../domain/normalize-path';
+import {
+  type CrawlErrorLogPort,
+  type CrawlErrorEntryDto,
+} from '../../application/ports/crawl-error-log.port';
 
 @Injectable()
-export class CrawlErrorLogService {
+export class CrawlErrorLogService implements CrawlErrorLogPort {
   constructor(@Inject(EntityManager) private readonly em: EntityManager) {}
 
   public async logNotFound(input: {
@@ -32,14 +36,7 @@ export class CrawlErrorLogService {
     return this.em.count(CrawlErrorLog, { occurredAt: { $gte: since } });
   }
 
-  public async listRecent(limit = 50): Promise<
-    readonly {
-      readonly id: string;
-      readonly requestPath: string;
-      readonly httpMethod: string;
-      readonly occurredAt: Date;
-    }[]
-  > {
+  public async listRecent(limit = 50): Promise<readonly CrawlErrorEntryDto[]> {
     const rows = await this.em.find(
       CrawlErrorLog,
       {},

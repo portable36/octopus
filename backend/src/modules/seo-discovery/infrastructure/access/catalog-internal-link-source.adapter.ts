@@ -2,12 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type { InternalLinkTarget } from '../../domain/embed-internal-links';
+import type { CatalogInternalLinkSourcePort } from '../../application/ports/catalog-internal-link-source.port';
 
 type CategoryRow = { name: string; slug: string };
 type BrandTagRow = { tag: string; usage_count: number };
 
 @Injectable()
-export class CatalogInternalLinkSourceAdapter {
+export class CatalogInternalLinkSourceAdapter implements CatalogInternalLinkSourcePort {
   constructor(
     @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(AppConfigService) private readonly config: AppConfigService,

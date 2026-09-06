@@ -1,12 +1,13 @@
 import { Injectable, Optional } from '@nestjs/common';
 import type { PaymentMethod } from '../../domain/payment.types';
 import type { PaymentGatewayPort } from '../../domain/ports/payment-gateway.port';
+import type { PaymentGatewayRegistryPort } from '../../application/ports/payment-gateway-registry.port';
 import { SslCommerzGatewayAdapter } from './sslcommerz-gateway.adapter';
 import { BkashGatewayAdapter } from './bkash-gateway.adapter';
 import { NagadGatewayAdapter } from './nagad-gateway.adapter';
 
 @Injectable()
-export class PaymentGatewayRegistry {
+export class PaymentGatewayRegistry implements PaymentGatewayRegistryPort {
   private readonly adapters = new Map<PaymentMethod, PaymentGatewayPort>();
 
   constructor(

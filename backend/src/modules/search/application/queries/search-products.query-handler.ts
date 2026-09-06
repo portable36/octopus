@@ -13,7 +13,7 @@ import {
   PRODUCT_SEARCH_INDEX,
   type ProductSearchIndexPort,
 } from '../ports/product-search-index.port';
-import { SearchSynonymService } from '../services/search-synonym.service';
+import { SEARCH_SYNONYM_PORT, type SearchSynonymPort } from '../ports/search-synonym.port';
 
 export type EnrichedSearchProductsResultDto = Omit<SearchProductsResultDto, 'hits'> & {
   readonly hits: readonly SearchProductHitDto[];
@@ -24,7 +24,7 @@ export class SearchProductsQueryHandler {
   constructor(
     @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
     @Inject(MEDIA_ASSET_ACCESS) private readonly mediaAccess: MediaAssetAccessPort,
-    private readonly searchSynonyms: SearchSynonymService,
+    @Inject(SEARCH_SYNONYM_PORT) private readonly searchSynonyms: SearchSynonymPort,
   ) {}
 
   public async execute(query: SearchProductsQueryDto): Promise<EnrichedSearchProductsResultDto> {

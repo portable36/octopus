@@ -9,8 +9,12 @@ import {
   extractTitleTags,
   type SeoHealthIssueFinding,
 } from '../../domain/analyze-page-seo-health';
-import { SeoHealthIssue } from '../../infrastructure/entities/seo-health-issue.entity';
+import { SeoHealthIssue } from '../entities/seo-health-issue.entity';
 import { assertAllowedOutboundUrl } from '../../../../shared-kernel/infrastructure/security/assert-allowed-outbound-url';
+import {
+  type SeoHealthVerificationPort,
+  type SeoHealthIssueDto,
+} from '../../application/ports/seo-health-verification.port';
 
 const MAX_ROUTES = 500;
 const FETCH_TIMEOUT_MS = 8_000;
@@ -25,7 +29,7 @@ type HealthLastScanFile = {
 };
 
 @Injectable()
-export class SeoHealthVerificationService {
+export class SeoHealthVerificationService implements SeoHealthVerificationPort {
   private readonly logger = new Logger(SeoHealthVerificationService.name);
 
   constructor(
@@ -135,16 +139,7 @@ export class SeoHealthVerificationService {
     return latest?.scannedAt ?? null;
   }
 
-  public async listIssues(limit = 100): Promise<
-    readonly {
-      readonly id: string;
-      readonly url: string;
-      readonly issueType: string;
-      readonly severity: string;
-      readonly detail: string;
-      readonly scannedAt: Date;
-    }[]
-  > {
+  public async listIssues(limit = 100): Promise<readonly SeoHealthIssueDto[]> {
     const rows = await this.em.find(
       SeoHealthIssue,
       {},

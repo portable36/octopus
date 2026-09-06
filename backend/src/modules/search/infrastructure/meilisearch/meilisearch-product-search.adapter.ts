@@ -9,11 +9,12 @@ import type {
 import type { ProductSearchIndexPort } from '../../../../shared-kernel/application/ports/product-search-index.port';
 import type { CatalogOfferSearchSourceDto } from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
 import { buildOfferSearchDocument } from '../../domain/services/build-offer-search-document';
-import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
 import {
+  GLOBAL_CONFIG_PORT,
   GLOBAL_CONFIG_GROUPS,
   GLOBAL_CONFIG_KEYS,
-} from '../../../configuration/domain/global-config-keys';
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 import { withExternalSpan } from '../../../../shared-kernel/infrastructure/observability/external-span';
 
 const SEARCHABLE = ['name', 'sku', 'shortDescription', 'slug', 'semanticText'] as const;
@@ -39,7 +40,7 @@ export class MeilisearchProductSearchAdapter implements ProductSearchIndexPort, 
 
   constructor(
     @Inject(AppConfigService) private readonly config: AppConfigService,
-    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
+    @Inject(GLOBAL_CONFIG_PORT) private readonly globalConfig: GlobalConfigPort,
   ) {
     this.client = new MeiliSearch({
       host: this.config.meilisearchHost,

@@ -12,6 +12,7 @@ import {
   ListPaymentIntentsHandler,
 } from './application/commands/payment.handlers';
 import { ProcessGatewayCallbackHandler } from './application/commands/payment-gateway.handlers';
+import { PAYMENT_GATEWAY_REGISTRY } from './application/ports/payment-gateway-registry.port';
 import { PAYMENT_REFUND_GATEWAY } from './application/ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY } from './application/ports/payment-repository.interface';
 import { PaymentAuthorizationService } from './application/services/payment-authorization.service';
@@ -60,6 +61,7 @@ import { PaymentGatewayController } from './presentation/http/payment-gateway.co
     BkashGatewayAdapter,
     NagadGatewayAdapter,
     PaymentGatewayRegistry,
+    { provide: PAYMENT_GATEWAY_REGISTRY, useExisting: PaymentGatewayRegistry },
     PaymentGatewayRefundDispatcher,
     { provide: PAYMENT_REPOSITORY, useClass: PaymentRepositoryAdapter },
     { provide: PAYMENT_REFUND_GATEWAY, useClass: PaymentGatewayRefundDispatcher },
@@ -74,6 +76,7 @@ import { PaymentGatewayController } from './presentation/http/payment-gateway.co
     CreateRefundHandler,
     ProcessGatewayCallbackHandler,
     PaymentGatewayRegistry,
+    PAYMENT_GATEWAY_REGISTRY,
   ],
 })
 export class PaymentModule {}

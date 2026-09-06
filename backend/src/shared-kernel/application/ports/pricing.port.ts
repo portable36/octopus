@@ -63,7 +63,19 @@ export interface RecordPromotionUsageInput {
   readonly idempotencyKey: string;
 }
 
+export interface CreateRecoveryPromotionInput {
+  readonly vendorId: string;
+  readonly storeId: string;
+  readonly name: string;
+  readonly couponCode: string;
+  readonly discountPercent: number;
+  readonly currencyCode: string;
+  readonly startsAt: Date;
+  readonly endsAt: Date;
+}
+
 export interface PricingPort {
   quote(input: PricingQuoteRequest): Promise<PricingQuoteResult>;
   recordUsage(input: RecordPromotionUsageInput): Promise<void>;
+  createRecoveryPromotion(input: CreateRecoveryPromotionInput): Promise<void>;
 }

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type { Env } from '../../../../config/env.validation';
 import { SYSTEM_SETTING_KEYS, type SystemSettingKey } from '../../domain/system-setting-keys';
-import { SystemSettingsService } from './system-settings.service';
+import { SYSTEM_SETTINGS_PORT, type SystemSettingsPort } from '../ports/system-settings.port';
 
 export type MetaCapiEnvView = {
   readonly metaPixelId?: string;
@@ -18,7 +18,7 @@ export type MetaCapiEnvView = {
 @Injectable()
 export class SystemSettingsRuntimeBridge {
   constructor(
-    private readonly settings: SystemSettingsService,
+    @Inject(SYSTEM_SETTINGS_PORT) private readonly settings: SystemSettingsPort,
     private readonly config: AppConfigService,
   ) {}
 

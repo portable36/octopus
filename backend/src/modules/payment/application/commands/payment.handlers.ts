@@ -32,7 +32,10 @@ import {
 } from '../ports/payment-refund-gateway.port';
 import { PAYMENT_REPOSITORY, type PaymentRepository } from '../ports/payment-repository.interface';
 import { PaymentAuthorizationService } from '../services/payment-authorization.service';
-import { PaymentGatewayRegistry } from '../../infrastructure/gateways/payment-gateway-registry';
+import {
+  PAYMENT_GATEWAY_REGISTRY,
+  type PaymentGatewayRegistryPort,
+} from '../ports/payment-gateway-registry.port';
 import { recordPaymentFailure } from '../../../../shared-kernel/infrastructure/observability/business-metrics';
 
 @Injectable()
@@ -40,8 +43,8 @@ export class CreatePaymentIntentHandler {
   constructor(
     @Inject(PAYMENT_REPOSITORY) private readonly payments: PaymentRepository,
     @Optional()
-    @Inject(PaymentGatewayRegistry)
-    private readonly gatewayRegistry?: PaymentGatewayRegistry,
+    @Inject(PAYMENT_GATEWAY_REGISTRY)
+    private readonly gatewayRegistry?: PaymentGatewayRegistryPort,
   ) {}
 
   public async execute(input: CreatePaymentIntentInput): Promise<CreatePaymentIntentResult> {

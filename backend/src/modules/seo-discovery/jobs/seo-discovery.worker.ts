@@ -4,7 +4,10 @@ import { AppConfigService } from '../../../config/app-config.service';
 import { bullmqWorkerOptions } from '../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import { registerBullmqQueueMetrics } from '../../../shared-kernel/infrastructure/observability/queue-metrics';
 import { ImageSitemapCacheService } from '../application/services/image-sitemap-cache.service';
-import { SeoHealthVerificationService } from '../application/services/seo-health-verification.service';
+import {
+  SEO_HEALTH_VERIFICATION_PORT,
+  type SeoHealthVerificationPort,
+} from '../application/ports/seo-health-verification.port';
 import { SitemapCacheService } from '../application/services/sitemap-cache.service';
 import { ProductFeedService } from '../feeds/product-feed.service';
 import { MetaCapiService } from '../infrastructure/services/meta-capi.service';
@@ -25,7 +28,7 @@ export class SeoDiscoveryWorker implements OnModuleInit, OnModuleDestroy {
     private readonly sitemapCache: SitemapCacheService,
     private readonly productFeeds: ProductFeedService,
     private readonly metaCapi: MetaCapiService,
-    private readonly seoHealth: SeoHealthVerificationService,
+    @Inject(SEO_HEALTH_VERIFICATION_PORT) private readonly seoHealth: SeoHealthVerificationPort,
     private readonly imageSitemapCache: ImageSitemapCacheService,
     private readonly searchConsole: SearchConsoleApiService,
   ) {

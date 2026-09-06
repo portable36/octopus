@@ -3,7 +3,6 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ABANDONED_CART_OUTBOX_HANDLER } from '../../shared-kernel/application/ports/abandoned-cart-outbox-handler.port';
 import { ABANDONED_CART_RECOVERY_PORT } from '../../shared-kernel/application/ports/abandoned-cart-recovery.port';
 import { AppConfigModule } from '../../config/app-config.module';
-import { CartModule } from '../cart/cart.module';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import { COMPLETED_ORDER_BASKETS_PORT } from './application/ports/completed-order-baskets.port';
 import { PRODUCT_ASSOCIATION_REPOSITORY } from './application/ports/product-association-repository.interface';
@@ -15,6 +14,7 @@ import { AbandonedCartOutboxHandlerAdapter } from './infrastructure/access/aband
 import { AbandonedCartRecoveryPortAdapter } from './infrastructure/access/abandoned-cart-recovery-port.adapter';
 import { CompletedOrderBasketsAdapter } from './infrastructure/access/completed-order-baskets.adapter';
 import { ProductAssociation } from './infrastructure/entities/product-association.entity';
+import { CART_ABANDONED_OUTBOX_PUBLISHER } from './application/ports/cart-abandoned-outbox-publisher.port';
 import { CartAbandonedOutboxPublisher } from './infrastructure/persistence/cart-abandoned-outbox.publisher';
 import { ProductAssociationRepositoryAdapter } from './infrastructure/persistence/product-association.repository.adapter';
 import { AbandonedCartSchedulerService } from './jobs/abandoned-cart-scheduler.service';
@@ -24,17 +24,13 @@ import { RecommendationsController } from './presentation/http/recommendations.c
 
 @Global()
 @Module({
-  imports: [
-    DatabaseModule,
-    AppConfigModule,
-    CartModule,
-    MikroOrmModule.forFeature([ProductAssociation]),
-  ],
+  imports: [DatabaseModule, AppConfigModule, MikroOrmModule.forFeature([ProductAssociation])],
   controllers: [RecommendationsController],
   providers: [
     AiPersonalizationEnqueuerService,
     AbandonedCartSchedulerService,
     CartAbandonedOutboxPublisher,
+    { provide: CART_ABANDONED_OUTBOX_PUBLISHER, useClass: CartAbandonedOutboxPublisher },
     AiRecommendationService,
     CoPurchaseAnalyzerService,
     PurchasePatternAnalysisService,

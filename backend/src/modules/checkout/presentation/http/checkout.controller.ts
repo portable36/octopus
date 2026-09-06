@@ -14,11 +14,12 @@ import {
 } from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { CheckoutSubmitHandler } from '../../application/commands/checkout.handlers';
 import { CheckoutAccessDeniedError } from '../../application/errors/checkout.errors';
-import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
 import {
+  GLOBAL_CONFIG_PORT,
   GLOBAL_CONFIG_GROUPS,
   GLOBAL_CONFIG_KEYS,
-} from '../../../configuration/domain/global-config-keys';
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 import { SubmitCheckoutDto } from './dto/checkout.dto';
 import { CheckoutExceptionFilter } from './filters/checkout-exception.filter';
 
@@ -36,7 +37,7 @@ export class CheckoutController {
   constructor(
     private readonly checkout: CheckoutSubmitHandler,
     @Inject(API_RATE_LIMITER) private readonly rateLimiter: ApiRateLimiter,
-    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
+    @Inject(GLOBAL_CONFIG_PORT) private readonly globalConfig: GlobalConfigPort,
   ) {}
 
   @Public()

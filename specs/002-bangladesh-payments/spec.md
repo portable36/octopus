@@ -7,6 +7,7 @@
 **Status**: Draft
 
 **Input**: User choices from Grill round:
+
 - Q1 = A: Build all three gateways (SSLCommerz, bKash Tokenized Checkout, Nagad Direct) behind a unified `PaymentGatewayPort` / `PaymentProviderAdapter` architecture.
 - Q2 = A: Hosted gateway redirection with server-side validation.
 - Q3 = A: Dual-mode adapters (Live HTTP with Mock / Simulation fallback when credentials absent or in mock mode).

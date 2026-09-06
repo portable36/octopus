@@ -5,7 +5,8 @@ import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/d
 import { SearchReindexHandler } from './application/commands/search-reindex.handler';
 import { SearchProductsQueryHandler } from './application/queries/search-products.query-handler';
 import { EnrichedSearchDtoService } from './application/services/enriched-search-dto.service';
-import { SearchSynonymService } from './application/services/search-synonym.service';
+import { SEARCH_SYNONYM_PORT } from './application/ports/search-synonym.port';
+import { SearchSynonymService } from './infrastructure/services/search-synonym.service';
 import { SEARCH_REINDEX_ENQUEUER } from './application/ports/search-reindex-enqueuer.port';
 import { SearchReindexEnqueuerAdapter } from './infrastructure/bullmq/search-reindex-enqueuer.adapter';
 import { SearchSynonymMapping } from './infrastructure/entities/search-synonym-mapping.entity';
@@ -29,6 +30,10 @@ import { SearchController } from './presentation/http/search.controller';
     EnrichedSearchDtoService,
     SearchSynonymService,
     {
+      provide: SEARCH_SYNONYM_PORT,
+      useExisting: SearchSynonymService,
+    },
+    {
       provide: PRODUCT_SEARCH_INDEX,
       useExisting: MeilisearchProductSearchAdapter,
     },
@@ -37,6 +42,11 @@ import { SearchController } from './presentation/http/search.controller';
       useExisting: SearchReindexEnqueuerAdapter,
     },
   ],
-  exports: [PRODUCT_SEARCH_INDEX, EnrichedSearchDtoService, SearchSynonymService],
+  exports: [
+    PRODUCT_SEARCH_INDEX,
+    EnrichedSearchDtoService,
+    SEARCH_SYNONYM_PORT,
+    SearchSynonymService,
+  ],
 })
 export class SearchModule {}

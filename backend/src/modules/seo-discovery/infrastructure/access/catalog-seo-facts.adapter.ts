@@ -1,28 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { AppConfigService } from '../../../../config/app-config.service';
+import {
+  type CatalogSeoFactsPort,
+  type ProductSeoFacts,
+  type CategorySeoFacts,
+} from '../../application/ports/catalog-seo-facts.port';
 
-export type ProductSeoFacts = {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string | null;
-  readonly sku: string;
-  readonly imageUrl: string | null;
-  readonly offers: readonly {
-    readonly sku: string;
-    readonly priceMinor: number;
-    readonly currencyCode: string;
-    readonly isAvailable: boolean;
-  }[];
-};
-
-export type CategorySeoFacts = {
-  readonly id: string;
-  readonly name: string;
-  readonly slug: string;
-  readonly seoTitle: string | null;
-  readonly seoDescription: string | null;
-};
+export type { ProductSeoFacts, CategorySeoFacts };
 
 type OfferRow = {
   sku: string;
@@ -39,7 +24,7 @@ type ProductRow = {
 };
 
 @Injectable()
-export class CatalogSeoFactsAdapter {
+export class CatalogSeoFactsAdapter implements CatalogSeoFactsPort {
   constructor(
     @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(AppConfigService) private readonly config: AppConfigService,

@@ -79,12 +79,7 @@ export class PaymentGatewayController {
     if (res?.redirect && this.isBrowserNavigation(req)) {
       res.redirect(
         303,
-        this.getReceiptUrl(
-          outcome.status,
-          outcome.orderId,
-          outcome.paymentIntentId,
-          'SSLCOMMERZ',
-        ),
+        this.getReceiptUrl(outcome.status, outcome.orderId, outcome.paymentIntentId, 'SSLCOMMERZ'),
       );
       return;
     }
@@ -157,12 +152,7 @@ export class PaymentGatewayController {
     if (res?.redirect && this.isBrowserNavigation(req)) {
       res.redirect(
         303,
-        this.getReceiptUrl(
-          outcome.status,
-          outcome.orderId,
-          outcome.paymentIntentId,
-          'BKASH',
-        ),
+        this.getReceiptUrl(outcome.status, outcome.orderId, outcome.paymentIntentId, 'BKASH'),
       );
       return;
     }
@@ -192,12 +182,7 @@ export class PaymentGatewayController {
     if (res?.redirect && this.isBrowserNavigation(req)) {
       res.redirect(
         303,
-        this.getReceiptUrl(
-          outcome.status,
-          outcome.orderId,
-          outcome.paymentIntentId,
-          'NAGAD',
-        ),
+        this.getReceiptUrl(outcome.status, outcome.orderId, outcome.paymentIntentId, 'NAGAD'),
       );
       return;
     }

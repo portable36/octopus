@@ -36,11 +36,12 @@ import {
   type WarehouseRepository,
 } from '../ports/warehouse-repository.interface';
 import { InventoryAuthorizationService } from '../services/inventory-authorization.service';
-import { GlobalConfigService } from '../../../configuration/application/services/global-config.service';
 import {
+  GLOBAL_CONFIG_PORT,
   GLOBAL_CONFIG_GROUPS,
   GLOBAL_CONFIG_KEYS,
-} from '../../../configuration/domain/global-config-keys';
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 
 @Injectable()
 export class WarehouseCommandHandler {
@@ -95,7 +96,7 @@ export class StockCommandHandler {
     @Inject(CATALOG_VARIANT_ACCESS) private readonly variants: CatalogVariantAccessPort,
     @Inject(InventoryAuthorizationService) private readonly auth: InventoryAuthorizationService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
-    @Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService,
+    @Inject(GLOBAL_CONFIG_PORT) private readonly globalConfig: GlobalConfigPort,
   ) {}
 
   public async ensureItem(input: {

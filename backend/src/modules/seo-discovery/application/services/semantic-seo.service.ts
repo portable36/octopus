@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { embedInternalLinks } from '../../domain/embed-internal-links';
-import { CatalogInternalLinkSourceAdapter } from '../../infrastructure/access/catalog-internal-link-source.adapter';
+import { Inject, Injectable } from '@nestjs/common';
+import { embedInternalLinks, type InternalLinkTarget } from '../../domain/embed-internal-links';
+import {
+  CATALOG_INTERNAL_LINK_SOURCE,
+  type CatalogInternalLinkSourcePort,
+} from '../ports/catalog-internal-link-source.port';
 
 const MAX_INTERNAL_LINKS = 3;
 
@@ -8,10 +11,13 @@ const MAX_INTERNAL_LINKS = 3;
 export class SemanticSeoService {
   private targetsCache: {
     readonly expiresAt: number;
-    readonly targets: Awaited<ReturnType<CatalogInternalLinkSourceAdapter['listLinkTargets']>>;
+    readonly targets: readonly InternalLinkTarget[];
   } | null = null;
 
-  constructor(private readonly linkSource: CatalogInternalLinkSourceAdapter) {}
+  constructor(
+    @Inject(CATALOG_INTERNAL_LINK_SOURCE)
+    private readonly linkSource: CatalogInternalLinkSourcePort,
+  ) {}
 
   /**
    * Scan a product or category description and embed contextual internal links
@@ -27,9 +33,7 @@ export class SemanticSeoService {
     return embedInternalLinks(description, targets, MAX_INTERNAL_LINKS);
   }
 
-  private async loadTargets(): Promise<
-    Awaited<ReturnType<CatalogInternalLinkSourceAdapter['listLinkTargets']>>
-  > {
+  private async loadTargets(): Promise<readonly InternalLinkTarget[]> {
     const now = Date.now();
     if (this.targetsCache && this.targetsCache.expiresAt > now) {
       return this.targetsCache.targets;

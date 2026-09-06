@@ -6,15 +6,16 @@ import {
   GLOBAL_CONFIG_DEFAULTS,
   isAllowedGlobalConfigKey,
   resolveGlobalConfigDefault,
-} from '../../domain/global-config-keys';
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 import { parseGlobalConfigValue } from '../../domain/global-config.schema';
-import { GlobalSetting } from '../../infrastructure/entities/global-setting.entity';
+import { GlobalSetting } from '../entities/global-setting.entity';
 
 export const GLOBAL_CONFIG_CACHE_PREFIX = 'global-config:';
 export const GLOBAL_CONFIG_CACHE_TTL_SECONDS = 86_400;
 
 @Injectable()
-export class GlobalConfigService {
+export class GlobalConfigService implements GlobalConfigPort {
   private readonly logger = new Logger(GlobalConfigService.name);
 
   constructor(

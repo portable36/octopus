@@ -1,14 +1,10 @@
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
-import { Promotion } from '../../../pricing/domain/aggregates/promotion.aggregate';
+import { CART_PORT, type CartPort } from '../../../../shared-kernel/application/ports/cart.port';
 import {
-  PROMOTION_REPOSITORY,
-  type PromotionRepository,
-} from '../../../pricing/application/ports/promotion-repository.interface';
-import {
-  CART_REPOSITORY,
-  type CartRepository,
-} from '../../../cart/application/ports/cart-repository.interface';
+  PRICING_PORT,
+  type PricingPort,
+} from '../../../../shared-kernel/application/ports/pricing.port';
 import type { AbandonedCartOutboxHandler } from '../../../../shared-kernel/application/ports/abandoned-cart-outbox-handler.port';
 import type { AbandonedCartRecoveryPort } from '../../../../shared-kernel/application/ports/abandoned-cart-recovery.port';
 import {
@@ -17,7 +13,10 @@ import {
   type CartAbandonedEventPayload,
   generateRecoveryCouponCode,
 } from '../abandoned-cart.types';
-import { CartAbandonedOutboxPublisher } from '../../infrastructure/persistence/cart-abandoned-outbox.publisher';
+import {
+  CART_ABANDONED_OUTBOX_PUBLISHER,
+  type CartAbandonedOutboxPublisherPort,
+} from '../ports/cart-abandoned-outbox-publisher.port';
 import { AbandonedCartSchedulerService } from '../../jobs/abandoned-cart-scheduler.service';
 
 const PURCHASE_CANCEL_EVENTS = new Set(['OrderCreated', 'OrderPaid', 'PaymentProcessed']);
@@ -31,15 +30,15 @@ export class AbandonedCartRecoveryService
   constructor(
     @Inject(forwardRef(() => AbandonedCartSchedulerService))
     private readonly scheduler: AbandonedCartSchedulerService,
-    @Inject(CART_REPOSITORY) private readonly carts: CartRepository,
-    @Inject(PROMOTION_REPOSITORY) private readonly promotions: PromotionRepository,
-    @Inject(forwardRef(() => CartAbandonedOutboxPublisher))
-    private readonly outboxPublisher: CartAbandonedOutboxPublisher,
+    @Inject(CART_PORT) private readonly carts: CartPort,
+    @Inject(PRICING_PORT) private readonly pricing: PricingPort,
+    @Inject(CART_ABANDONED_OUTBOX_PUBLISHER)
+    private readonly outboxPublisher: CartAbandonedOutboxPublisherPort,
     @Inject(EntityManager) private readonly em: EntityManager,
   ) {}
 
   public async onCartUpdated(cartId: string): Promise<void> {
-    const cart = await this.carts.findById(cartId);
+    const cart = await this.carts.findCartById(cartId);
     if (!cart || cart.status !== 'ACTIVE' || cart.lines.length === 0) {
       await this.scheduler.cancelCartCheck(cartId);
       return;
@@ -71,7 +70,7 @@ export class AbandonedCartRecoveryService
   }
 
   public async processAbandonedCart(cartId: string): Promise<void> {
-    const cart = await this.carts.findById(cartId);
+    const cart = await this.carts.findCartById(cartId);
     if (!cart || cart.status !== 'ACTIVE' || cart.lines.length === 0) {
       this.logger.debug(`Cart ${cartId} no longer abandoned-eligible; skip recovery.`);
       return;
@@ -82,22 +81,16 @@ export class AbandonedCartRecoveryService
     const startsAt = new Date();
     const endsAt = new Date(startsAt.getTime() + ABANDONED_CART_COUPON_TTL_MS);
 
-    const promotion = Promotion.create({
+    await this.pricing.createRecoveryPromotion({
       vendorId: firstLine.vendorId,
       storeId: firstLine.storeId,
       name: 'Abandoned cart recovery',
       couponCode,
-      discountType: 'PERCENTAGE',
-      discountValue: ABANDONED_CART_DISCOUNT_PERCENT,
+      discountPercent: ABANDONED_CART_DISCOUNT_PERCENT,
       currencyCode: firstLine.currencyCode,
-      scope: 'STORE',
-      usageLimit: 1,
-      perCustomerLimit: 1,
       startsAt,
       endsAt,
     });
-    promotion.activate();
-    await this.promotions.save(promotion);
 
     const subtotalMinor = cart.lines.reduce(
       (sum, line) => sum + line.unitPriceSnapshotMinor * line.quantity,
@@ -105,14 +98,14 @@ export class AbandonedCartRecoveryService
     );
 
     const eventPayload: CartAbandonedEventPayload = {
-      cartId: cart.id.value,
+      cartId: cart.cartId,
       customerId: cart.customerId,
       guestToken: cart.guestToken,
       couponCode,
       couponExpiresAt: endsAt.toISOString(),
       currencyCode: cart.currencyCode ?? firstLine.currencyCode,
       subtotalMinor,
-      items: cart.lineSnapshots().map((line) => ({
+      items: cart.lines.map((line) => ({
         productId: line.productId,
         variantId: line.variantId,
         offerId: line.offerId,
@@ -121,7 +114,7 @@ export class AbandonedCartRecoveryService
       })),
     };
 
-    await this.outboxPublisher.publish(cart.id.value, eventPayload);
+    await this.outboxPublisher.publish(cart.cartId, eventPayload);
     this.logger.log(`Dispatched CartAbandonedEvent for cart ${cartId}.`);
   }
 

@@ -70,6 +70,10 @@ export class CartCommandHandler {
     return cart;
   }
 
+  public async findById(cartId: string): Promise<Cart | null> {
+    return this.carts.findById(cartId);
+  }
+
   public async addItem(input: {
     readonly cartId: string;
     readonly owner: CartOwner;

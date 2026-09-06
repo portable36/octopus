@@ -6,31 +6,18 @@ import {
   type ProductSearchIndexPort,
 } from '../../../../shared-kernel/application/ports/product-search-index.port';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
-import { SearchSynonymMapping } from '../../infrastructure/entities/search-synonym-mapping.entity';
-import { SearchZeroResultQuery } from '../../infrastructure/entities/search-zero-result-query.entity';
+import { SearchSynonymMapping } from '../entities/search-synonym-mapping.entity';
+import { SearchZeroResultQuery } from '../entities/search-zero-result-query.entity';
+import {
+  type SearchSynonymPort,
+  type SearchSynonymDto,
+  type ZeroResultQueryDto,
+} from '../../application/ports/search-synonym.port';
 
 const ZERO_RESULT_REVIEW_THRESHOLD = 3;
 
-export type SearchSynonymDto = {
-  readonly id: string;
-  readonly sourceTerm: string;
-  readonly targetTerms: readonly string[];
-  readonly status: 'active' | 'pending';
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-};
-
-export type ZeroResultQueryDto = {
-  readonly id: string;
-  readonly normalizedQuery: string;
-  readonly occurrenceCount: number;
-  readonly needsReview: boolean;
-  readonly mappedSynonymId: string | null;
-  readonly lastSeenAt: Date;
-};
-
 @Injectable()
-export class SearchSynonymService {
+export class SearchSynonymService implements SearchSynonymPort {
   constructor(
     @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(PRODUCT_SEARCH_INDEX) private readonly searchIndex: ProductSearchIndexPort,
@@ -91,7 +78,7 @@ export class SearchSynonymService {
   public async createSynonym(input: {
     readonly sourceTerm: string;
     readonly targetTerms: readonly string[];
-    readonly activate?: boolean;
+    readonly activateImmediately?: boolean;
   }): Promise<SearchSynonymDto> {
     const sourceTerm = normalizeSearchQuery(input.sourceTerm);
     const targetTerms = [...new Set(input.targetTerms.map((term) => term.trim()).filter(Boolean))];
@@ -107,12 +94,12 @@ export class SearchSynonymService {
           id: randomUUID(),
           sourceTerm,
           targetTerms,
-          status: input.activate ? 'active' : 'pending',
+          status: input.activateImmediately ? 'active' : 'pending',
           createdAt: new Date(),
           updatedAt: new Date(),
         });
       entity.targetTerms = targetTerms;
-      entity.status = input.activate ? 'active' : entity.status;
+      entity.status = input.activateImmediately ? 'active' : entity.status;
       entity.updatedAt = new Date();
       tx.persist(entity);
       await tx.flush();
@@ -155,7 +142,7 @@ export class SearchSynonymService {
     const synonym = await this.createSynonym({
       sourceTerm: query.normalizedQuery,
       targetTerms,
-      activate: true,
+      activateImmediately: true,
     });
 
     const updatedQuery = await withRlsContext(this.em, async (tx) => {

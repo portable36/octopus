@@ -2,7 +2,10 @@ import { Body, Controller, Get, Inject, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsObject } from 'class-validator';
 import { RequirePermissions } from '../../../../shared-kernel/presentation/http/require-permissions.decorator';
-import { GlobalConfigService } from '../../application/services/global-config.service';
+import {
+  GLOBAL_CONFIG_PORT,
+  type GlobalConfigPort,
+} from '../../../../shared-kernel/application/ports/global-config.port';
 
 class PatchGlobalConfigDto {
   @IsObject()
@@ -14,7 +17,7 @@ class PatchGlobalConfigDto {
 @ApiBearerAuth()
 @RequirePermissions('settings.read')
 export class GlobalConfigAdminController {
-  constructor(@Inject(GlobalConfigService) private readonly globalConfig: GlobalConfigService) {}
+  constructor(@Inject(GLOBAL_CONFIG_PORT) private readonly globalConfig: GlobalConfigPort) {}
 
   @Get()
   @ApiOperation({ summary: 'List all platform global settings grouped by category' })

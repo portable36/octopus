@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppConfigModule } from '../../config/app-config.module';
@@ -8,13 +8,18 @@ import { REDIRECT_REPOSITORY } from './application/ports/redirect-repository.int
 import { SEO_OVERRIDE_REPOSITORY } from './application/ports/seo-override-repository.interface';
 import { SITEMAP_SOURCE } from './application/ports/sitemap-source.port';
 import { IMAGE_SITEMAP_SOURCE } from './application/ports/image-sitemap-source.port';
-import { CrawlErrorLogService } from './application/services/crawl-error-log.service';
+import { CRAWL_ERROR_LOG_PORT } from './application/ports/crawl-error-log.port';
+import { CATALOG_INTERNAL_LINK_SOURCE } from './application/ports/catalog-internal-link-source.port';
+import { CATALOG_SEO_FACTS } from './application/ports/catalog-seo-facts.port';
+import { SEO_HEALTH_VERIFICATION_PORT } from './application/ports/seo-health-verification.port';
+import { SYSTEM_SETTINGS_PORT } from './application/ports/system-settings.port';
+import { CrawlErrorLogService } from './infrastructure/services/crawl-error-log.service';
 import { RedirectResolutionService } from './application/services/redirect-resolution.service';
 import { SemanticSeoService } from './application/services/semantic-seo.service';
 import { SeoAdminService } from './application/services/seo-admin.service';
 import { SystemSettingsRuntimeBridge } from './application/services/system-settings-runtime.bridge';
-import { SystemSettingsService } from './application/services/system-settings.service';
-import { SeoHealthVerificationService } from './application/services/seo-health-verification.service';
+import { SystemSettingsService } from './infrastructure/services/system-settings.service';
+import { SeoHealthVerificationService } from './infrastructure/services/seo-health-verification.service';
 import { RobotsPolicyService } from './application/services/robots-policy.service';
 import { ImageSitemapCacheService } from './application/services/image-sitemap-cache.service';
 import { ImageSitemapDeliveryService } from './application/services/image-sitemap-delivery.service';
@@ -109,6 +114,26 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
     CatalogInternalLinkSourceAdapter,
     CatalogProductFeedSourceAdapter,
     {
+      provide: CRAWL_ERROR_LOG_PORT,
+      useExisting: CrawlErrorLogService,
+    },
+    {
+      provide: CATALOG_INTERNAL_LINK_SOURCE,
+      useExisting: CatalogInternalLinkSourceAdapter,
+    },
+    {
+      provide: CATALOG_SEO_FACTS,
+      useExisting: CatalogSeoFactsAdapter,
+    },
+    {
+      provide: SEO_HEALTH_VERIFICATION_PORT,
+      useExisting: SeoHealthVerificationService,
+    },
+    {
+      provide: SYSTEM_SETTINGS_PORT,
+      useExisting: SystemSettingsService,
+    },
+    {
       provide: APP_FILTER,
       useClass: SeoNotFoundFilter,
     },
@@ -140,6 +165,7 @@ import { StructuredDataEngine } from './structured-data/structured-data.engine';
   ],
   exports: [SeoDiscoveryFacade, SEO_META_CAPI_OUTBOX_HANDLER, SEO_PROVISIONER],
 })
+@Global()
 export class SeoDiscoveryModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer

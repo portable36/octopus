@@ -42,6 +42,7 @@ Implement the complete Phase 11 payment gateway layer supporting all primary Ban
 **Target Platform**: Linux / Windows multi-vendor server runtime  
 **Project Type**: NestJS Modular Monolith with DDD and Clean Architecture  
 **Constraints**:
+
 - Integer minor units (`amountMinor` in paisa). Zero floating point arithmetic (`.cursor/rules/08-payments-finance.mdc`).
 - Zero trust on frontend redirects. Order `markPaid` only on server-verified secondary query (`.cursor/rules/37-order-payment.mdc`).
 - High-entropy idempotency and Redis replay prevention (`.cursor/rules/09-payments-bangladesh.mdc`).

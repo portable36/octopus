@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { randomUUID } from 'node:crypto';
 import type { CartAbandonedEventPayload } from '../../application/abandoned-cart.types';
+import type { CartAbandonedOutboxPublisherPort } from '../../application/ports/cart-abandoned-outbox-publisher.port';
 
 @Injectable()
-export class CartAbandonedOutboxPublisher {
+export class CartAbandonedOutboxPublisher implements CartAbandonedOutboxPublisherPort {
   constructor(private readonly em: EntityManager) {}
 
   public async publish(cartId: string, payload: CartAbandonedEventPayload): Promise<void> {

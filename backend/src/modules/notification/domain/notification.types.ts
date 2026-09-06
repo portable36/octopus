@@ -1,4 +1,4 @@
-export type NotificationChannel = 'EMAIL' | 'IN_APP';
+export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS';
 export type NotificationLocale = 'en' | 'bn';
 export type DeliveryStatus = 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED';
 
@@ -17,6 +17,7 @@ export type NotificationRecord = {
   readonly eventId: string;
   readonly recipientUserId: string;
   readonly recipientEmail: string | null;
+  readonly recipientPhone?: string | null;
   readonly notificationType: string;
   readonly channel: NotificationChannel;
   readonly locale: NotificationLocale;

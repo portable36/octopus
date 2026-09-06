@@ -18,6 +18,8 @@ export type PublicStore = {
   description: string | null;
   currencyCode: string;
   acceptsOnlineOrders: boolean;
+  city?: string | null;
+  region?: string | null;
 };
 
 export type PublicVendorShop = {
@@ -144,6 +146,10 @@ export async function fetchPublicStoreBySlug(
 ): Promise<PublicStore> {
   const qs = vendorId ? `?vendorId=${encodeURIComponent(vendorId)}` : '';
   return apiRequest<PublicStore>(`/public/stores/by-slug/${encodeURIComponent(slug)}${qs}`);
+}
+
+export async function fetchPublicStores(): Promise<PublicStore[]> {
+  return apiRequest<PublicStore[]>('/public/stores');
 }
 
 export async function fetchPublicVendorShopBySlug(slug: string): Promise<PublicVendorShop> {

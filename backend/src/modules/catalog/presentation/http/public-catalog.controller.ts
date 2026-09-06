@@ -37,6 +37,13 @@ export class PublicCatalogController {
   }
 
   @Public()
+  @Get('stores')
+  @ApiOperation({ summary: 'List public active stores across vendors' })
+  listStores() {
+    return this.browse.listActiveStores();
+  }
+
+  @Public()
   @Get('stores/by-slug/:slug')
   @ApiOperation({ summary: 'Get active store by slug (optional vendorId to disambiguate)' })
   getStore(@Param('slug') slug: string, @Query() query: StoreBySlugQueryDto) {

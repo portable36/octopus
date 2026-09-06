@@ -60,4 +60,50 @@ describe('NotificationEventConsumer', () => {
     await consumer.handle('ShipmentDelivered', { orderId: 'ord-1', shipmentId: 'ship-1' });
     expect(notifications.notify).not.toHaveBeenCalled();
   });
+
+  it('notifies customer on ShipmentShipped with SMS and tracking code', async () => {
+    const notifications = {
+      notify: vi.fn().mockResolvedValue({ notificationIds: ['n2'], created: true }),
+    };
+    const orders = {
+      getNotificationSnapshot: vi.fn().mockResolvedValue({
+        orderId: 'ord-2',
+        orderNumber: 'ORD-2',
+        customerId: 'user-2',
+        totalMinor: 25000,
+        currencyCode: 'BDT',
+      }),
+    };
+    const contacts = { findEmailByUserId: vi.fn().mockResolvedValue('user2@example.com') };
+    const consumer = new NotificationEventConsumer(
+      notifications as never,
+      orders as never,
+      contacts as never,
+    );
+
+    await consumer.handle('ShipmentShipped', {
+      orderId: 'ord-2',
+      shipmentId: 'ship-2',
+      trackingCode: 'TRACK-1234',
+      provider: 'STEADFAST',
+      recipientPhone: '01711223344',
+    });
+
+    expect(notifications.notify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventId: 'notify:ship_shipped:ship-2',
+        recipientUserId: 'user-2',
+        recipientEmail: 'user2@example.com',
+        recipientPhone: '01711223344',
+        type: 'fulfillment.shipment_shipped',
+        category: 'TRANSACTIONAL',
+        channels: ['IN_APP', 'EMAIL', 'SMS'],
+        data: expect.objectContaining({
+          orderNumber: 'ORD-2',
+          trackingCode: 'TRACK-1234',
+          courier: 'STEADFAST',
+        }),
+      }),
+    );
+  });
 });

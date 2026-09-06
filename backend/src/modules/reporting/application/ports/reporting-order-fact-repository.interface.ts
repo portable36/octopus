@@ -49,6 +49,42 @@ export type StorePerformanceRow = {
   readonly commissionMinor: number;
 };
 
+export type TrendDataPoint = {
+  readonly date: string;
+  readonly orderCount: number;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+  readonly commissionMinor: number;
+  readonly aovMinor: number;
+};
+
+export type PaymentMethodSummary = {
+  readonly paymentMethod: string;
+  readonly orderCount: number;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+};
+
+export type DetailedSalesAnalytics = {
+  readonly summary: OrderReportSummary;
+  readonly aovMinor: number;
+  readonly trends: readonly TrendDataPoint[];
+  readonly paymentMethods: readonly PaymentMethodSummary[];
+};
+
+export type ScopedAnalyticsSummary = {
+  readonly scopeId: string;
+  readonly scopeType: 'VENDOR' | 'STORE';
+  readonly currencies: readonly ScopeReportCurrencyBucket[];
+  readonly orderCount: number;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+  readonly commissionMinor: number;
+  readonly aovMinor: number;
+  readonly trends: readonly TrendDataPoint[];
+  readonly paymentMethods: readonly PaymentMethodSummary[];
+};
+
 export const REPORTING_ORDER_FACT_REPOSITORY = Symbol('REPORTING_ORDER_FACT_REPOSITORY');
 
 export interface ReportingOrderFactRepository {
@@ -56,4 +92,7 @@ export interface ReportingOrderFactRepository {
   summarizeOrders(): Promise<OrderReportSummary>;
   summarizeVendors(): Promise<readonly VendorPerformanceRow[]>;
   summarizeStores(): Promise<readonly StorePerformanceRow[]>;
+  getSalesAnalytics(days?: number): Promise<DetailedSalesAnalytics>;
+  getVendorAnalytics(vendorId: string, days?: number): Promise<ScopedAnalyticsSummary>;
+  getStoreAnalytics(storeId: string, days?: number): Promise<ScopedAnalyticsSummary>;
 }

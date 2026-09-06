@@ -14,6 +14,7 @@ import { fetchStorefrontConfig } from '@/lib/storefront-config-api';
 const NAV = [
   { href: '/', label: 'Home' },
   { href: '/categories', label: 'Categories' },
+  { href: '/stores', label: 'Stores' },
   { href: '/search', label: 'Search' },
 ] as const;
 

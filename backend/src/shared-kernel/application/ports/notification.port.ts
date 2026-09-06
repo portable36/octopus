@@ -1,6 +1,6 @@
 export const NOTIFICATION_PORT = Symbol('NOTIFICATION_PORT');
 
-export type NotificationChannel = 'EMAIL' | 'IN_APP';
+export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS';
 export type NotificationLocale = 'en' | 'bn';
 /** SECURITY/TRANSACTIONAL ignore marketing prefs; MARKETING is gated. */
 export type NotificationCategory = 'SECURITY' | 'TRANSACTIONAL' | 'MARKETING';
@@ -8,7 +8,8 @@ export type NotificationCategory = 'SECURITY' | 'TRANSACTIONAL' | 'MARKETING';
 export type NotifyCommand = {
   readonly eventId: string;
   readonly recipientUserId: string;
-  readonly recipientEmail?: string | null;
+  readonly recipientEmail?: string | null | undefined;
+  readonly recipientPhone?: string | null | undefined;
   readonly type: string;
   readonly templateKey: string;
   readonly category: NotificationCategory;

@@ -49,6 +49,22 @@ export class NotificationEventConsumer implements NotificationOutboxHandler {
       });
       return;
     }
+    if (eventType === 'ShipmentShipped') {
+      await this.notifyForOrder(payload, {
+        type: 'fulfillment.shipment_shipped',
+        templateKey: 'fulfillment.shipment_shipped',
+        eventIdPrefix: 'notify:ship_shipped',
+      });
+      return;
+    }
+    if (eventType === 'ShipmentOutForDelivery') {
+      await this.notifyForOrder(payload, {
+        type: 'fulfillment.shipment_out_for_delivery',
+        templateKey: 'fulfillment.shipment_out_for_delivery',
+        eventIdPrefix: 'notify:ship_out_delivery',
+      });
+      return;
+    }
     if (eventType === 'ShipmentDelivered') {
       await this.notifyForOrder(payload, {
         type: 'fulfillment.shipment_delivered',
@@ -122,16 +138,25 @@ export class NotificationEventConsumer implements NotificationOutboxHandler {
         ? `${meta.eventIdPrefix}:${shipmentId}`
         : `${meta.eventIdPrefix}:${orderId}`;
 
+    const phone =
+      payload['recipientPhone'] != null ? String(payload['recipientPhone']).trim() : null;
+    const channels: ('IN_APP' | 'EMAIL' | 'SMS')[] = phone
+      ? ['IN_APP', 'EMAIL', 'SMS']
+      : ['IN_APP', 'EMAIL'];
+
     await this.notifications.notify({
       eventId,
       recipientUserId: snapshot.customerId,
       recipientEmail: email,
+      recipientPhone: phone,
       type: meta.type,
       templateKey: meta.templateKey,
       category: 'TRANSACTIONAL',
-      channels: ['IN_APP', 'EMAIL'],
+      channels,
       data: {
         orderNumber: snapshot.orderNumber,
+        trackingCode: String(payload['trackingCode'] ?? ''),
+        courier: String(payload['provider'] ?? 'Courier'),
         amountLabel: amountLabel(
           Number.isFinite(amountMinor) ? amountMinor : snapshot.totalMinor,
           currencyCode,

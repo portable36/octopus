@@ -35,3 +35,27 @@ export class ReceiptAlreadyExistsError extends PosApplicationError {
     this.name = 'ReceiptAlreadyExistsError';
   }
 }
+
+export class RegisterNotFoundError extends PosApplicationError {
+  constructor() {
+    super('Register not found.', 'REGISTER_NOT_FOUND');
+    this.name = 'RegisterNotFoundError';
+  }
+}
+
+export class RegisterCodeAlreadyExistsError extends PosApplicationError {
+  constructor(code: string) {
+    super(
+      `Register with code "${code}" already exists for this store.`,
+      'REGISTER_CODE_ALREADY_EXISTS',
+    );
+    this.name = 'RegisterCodeAlreadyExistsError';
+  }
+}
+
+export class RegisterInactiveError extends PosApplicationError {
+  constructor() {
+    super('Register is not active.', 'REGISTER_INACTIVE');
+    this.name = 'RegisterInactiveError';
+  }
+}

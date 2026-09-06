@@ -115,6 +115,48 @@ export async function fetchOrder(orderId: string): Promise<OrderSummary> {
   return authedRequest<OrderSummary>(`/orders/${encodeURIComponent(orderId)}`);
 }
 
+export interface OrderTimelineMilestone {
+  code: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  completed: boolean;
+  current: boolean;
+}
+
+export interface OrderShipmentInfo {
+  shipmentId: string;
+  provider: string;
+  status: string;
+  providerStatus: string;
+  trackingCode: string | null;
+  providerConsignmentId: string | null;
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderTrackingTimeline {
+  orderId: string;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  paymentMethod: string;
+  currencyCode: string;
+  totalMinor: number;
+  createdAt: string;
+  updatedAt: string;
+  shipments: readonly OrderShipmentInfo[];
+  milestones: readonly OrderTimelineMilestone[];
+}
+
+export async function fetchOrderTracking(orderId: string): Promise<OrderTrackingTimeline> {
+  return authedRequest<OrderTrackingTimeline>(`/orders/${encodeURIComponent(orderId)}/tracking`);
+}
+
 export async function requestOrderRefund(orderId: string): Promise<OrderSummary> {
   return authedRequest<OrderSummary>(`/orders/${encodeURIComponent(orderId)}/request-refund`, {
     method: 'POST',

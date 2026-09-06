@@ -30,6 +30,14 @@ export class StoreAccessAdapter implements StoreAccessPort {
     const stores = await this.stores.findByVendorId(vendorId);
     return stores.filter((store) => store.status === 'active').map(toSnapshot);
   }
+
+  public async listActiveStores(limit = 100): Promise<readonly StoreAccessSnapshot[]> {
+    const stores = await this.stores.listAll();
+    return stores
+      .filter((store) => store.status === 'active')
+      .slice(0, limit)
+      .map(toSnapshot);
+  }
 }
 
 function toSnapshot(store: Store): StoreAccessSnapshot {

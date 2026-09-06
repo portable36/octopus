@@ -16,6 +16,7 @@ import {
   type ReturnRecord,
 } from '@/lib/account-api';
 import { formatMoney } from '@/lib/storefront-api';
+import { OrderTrackingTimelineWidget } from '@/features/orders/order-tracking-timeline';
 
 export default function AccountOrderDetailPage() {
   const params = useParams<{ orderId: string }>();
@@ -122,6 +123,8 @@ export default function AccountOrderDetailPage() {
           {error}
         </p>
       ) : null}
+
+      <OrderTrackingTimelineWidget orderId={order.id} />
 
       <section className="space-y-2 border border-border p-4" aria-labelledby="pay-status">
         <h2 id="pay-status" className="text-sm font-medium">

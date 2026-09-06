@@ -597,3 +597,71 @@ export function getAdminStoreReportSummary(token: string): Promise<AdminStorePer
     headers: authHeaders(token),
   });
 }
+
+export type AdminTrendDataPoint = {
+  date: string;
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  commissionMinor: number;
+  aovMinor: number;
+};
+
+export type AdminPaymentMethodSummary = {
+  paymentMethod: string;
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+};
+
+export type AdminSalesAnalytics = {
+  summary: AdminOrderReportSummary;
+  aovMinor: number;
+  trends: AdminTrendDataPoint[];
+  paymentMethods: AdminPaymentMethodSummary[];
+};
+
+export type AdminScopedAnalyticsSummary = {
+  scopeId: string;
+  scopeType: 'VENDOR' | 'STORE';
+  currencies: AdminOrderReportCurrency[];
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  commissionMinor: number;
+  aovMinor: number;
+  trends: AdminTrendDataPoint[];
+  paymentMethods: AdminPaymentMethodSummary[];
+};
+
+export function getAdminSalesTrends(token: string, days = 30): Promise<AdminSalesAnalytics> {
+  return apiRequest<AdminSalesAnalytics>(`/admin/reports/sales/trends?days=${days}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export function getStoreAnalyticsOverview(
+  token: string,
+  storeId: string,
+  days = 30,
+): Promise<AdminScopedAnalyticsSummary> {
+  return apiRequest<AdminScopedAnalyticsSummary>(
+    `/reports/stores/${storeId}/overview?days=${days}`,
+    {
+      headers: authHeaders(token),
+    },
+  );
+}
+
+export function getVendorAnalyticsOverview(
+  token: string,
+  vendorId: string,
+  days = 30,
+): Promise<AdminScopedAnalyticsSummary> {
+  return apiRequest<AdminScopedAnalyticsSummary>(
+    `/reports/vendors/${vendorId}/overview?days=${days}`,
+    {
+      headers: authHeaders(token),
+    },
+  );
+}

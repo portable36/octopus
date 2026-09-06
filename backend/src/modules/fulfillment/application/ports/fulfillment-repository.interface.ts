@@ -1,3 +1,4 @@
+import type { CourierProvider } from '../../domain/fulfillment.types';
 import type { Shipment } from '../../domain/aggregates/shipment.aggregate';
 
 export const FULFILLMENT_REPOSITORY = Symbol('FULFILLMENT_REPOSITORY');
@@ -5,6 +6,9 @@ export const FULFILLMENT_REPOSITORY = Symbol('FULFILLMENT_REPOSITORY');
 export interface FulfillmentRepository {
   findById(id: string): Promise<Shipment | null>;
   findByIdempotencyKey(idempotencyKey: string): Promise<Shipment | null>;
+  findByOrderId(orderId: string): Promise<Shipment[]>;
+  findActiveCourierShipments(limit: number): Promise<Shipment[]>;
+  findByProviderReference(provider: CourierProvider, referenceId: string): Promise<Shipment | null>;
   save(shipment: Shipment, idempotencyKey: string): Promise<void>;
   findOperation(
     idempotencyKey: string,

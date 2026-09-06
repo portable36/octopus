@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import type {
   NotificationPort,
@@ -11,6 +11,7 @@ import {
   type NotificationLocale,
 } from '../../domain/notification.types';
 import { EMAIL_PROVIDER, type EmailProviderPort } from '../ports/email-provider.port';
+import { SMS_PROVIDER, type SmsProviderPort } from '../ports/sms-provider.port';
 import {
   NOTIFICATION_DELIVERY_ENQUEUER,
   type NotificationDeliveryEnqueuerPort,
@@ -19,6 +20,37 @@ import {
   NOTIFICATION_REPOSITORY,
   type NotificationRepository,
 } from '../ports/notification-repository.interface';
+
+const BUILT_IN_FALLBACK_TEMPLATES: Record<string, { subject?: string; bodyText: string }> = {
+  'fulfillment.shipment_shipped:EMAIL:en': {
+    subject: 'Shipped — {{orderNumber}}',
+    bodyText:
+      'Your order {{orderNumber}} has shipped with {{courier}}. Tracking: {{trackingCode}}.',
+  },
+  'fulfillment.shipment_shipped:IN_APP:en': {
+    bodyText: 'Order {{orderNumber}} shipped with {{courier}} (Tracking: {{trackingCode}}).',
+  },
+  'fulfillment.shipment_shipped:SMS:en': {
+    bodyText:
+      'Octopus: Order {{orderNumber}} shipped with {{courier}}. Tracking: {{trackingCode}}.',
+  },
+  'fulfillment.shipment_out_for_delivery:EMAIL:en': {
+    subject: 'Out for delivery — {{orderNumber}}',
+    bodyText: 'Your order {{orderNumber}} is out for delivery with {{courier}} today.',
+  },
+  'fulfillment.shipment_out_for_delivery:IN_APP:en': {
+    bodyText: 'Order {{orderNumber}} is out for delivery today.',
+  },
+  'fulfillment.shipment_out_for_delivery:SMS:en': {
+    bodyText: 'Octopus: Order {{orderNumber}} is out for delivery today.',
+  },
+  'fulfillment.shipment_delivered:SMS:en': {
+    bodyText: 'Octopus: Order {{orderNumber}} has been delivered. Thank you!',
+  },
+  'payment.cod_collected:SMS:en': {
+    bodyText: 'Octopus: Cash on delivery {{amountLabel}} collected for order {{orderNumber}}.',
+  },
+};
 
 @Injectable()
 export class NotificationHandlers implements NotificationPort {
@@ -29,6 +61,7 @@ export class NotificationHandlers implements NotificationPort {
     @Inject(EMAIL_PROVIDER) private readonly email: EmailProviderPort,
     @Inject(NOTIFICATION_DELIVERY_ENQUEUER)
     private readonly enqueuer: NotificationDeliveryEnqueuerPort,
+    @Optional() @Inject(SMS_PROVIDER) private readonly sms?: SmsProviderPort,
   ) {}
 
   public async notify(command: NotifyCommand): Promise<NotifyResult> {
@@ -54,12 +87,25 @@ export class NotificationHandlers implements NotificationPort {
         continue;
       }
 
-      const template = await this.repo.findLatestTemplate(command.templateKey, channel, locale);
+      let template = await this.repo.findLatestTemplate(command.templateKey, channel, locale);
       if (!template) {
-        this.logger.warn(
-          `Missing template ${command.templateKey}/${channel}/${locale}; skipping channel.`,
-        );
-        continue;
+        const fallback = BUILT_IN_FALLBACK_TEMPLATES[`${command.templateKey}:${channel}:${locale}`];
+        if (fallback) {
+          template = {
+            id: `builtin:${command.templateKey}:${channel}:${locale}`,
+            templateKey: command.templateKey,
+            channel,
+            locale,
+            version: 1,
+            subject: fallback.subject ?? null,
+            bodyText: fallback.bodyText,
+          };
+        } else {
+          this.logger.warn(
+            `Missing template ${command.templateKey}/${channel}/${locale}; skipping channel.`,
+          );
+          continue;
+        }
       }
 
       const body = renderTemplate(template.bodyText, data);
@@ -102,6 +148,34 @@ export class NotificationHandlers implements NotificationPort {
         }
         if (channel === 'EMAIL') {
           await this.enqueuer.enqueueEmailDelivery(record.id);
+        }
+        if (channel === 'SMS') {
+          const phone = command.recipientPhone;
+          if (phone && this.sms) {
+            try {
+              const res = await this.sms.send({
+                to: phone,
+                message: body,
+                notificationId: record.id,
+              });
+              await this.repo.appendDeliveryAttempt({
+                id: UniqueID.create().value,
+                notificationId: record.id,
+                channel: 'SMS',
+                attemptNumber: 1,
+                status: 'SENT',
+                providerMessageId: res.providerMessageId,
+                errorCode: null,
+                createdAt: new Date(),
+              });
+              await this.repo.updateDeliveryStatus(record.id, 'SENT');
+            } catch (err) {
+              const code = err instanceof Error ? err.name : 'SMS_SEND_FAILED';
+              await this.failDelivery(record.id, 'SMS', code.slice(0, 64));
+            }
+          } else {
+            await this.failDelivery(record.id, 'SMS', 'MISSING_RECIPIENT_PHONE');
+          }
         }
       }
     }

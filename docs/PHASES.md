@@ -904,7 +904,7 @@ Consumer (idempotent Redis NX by outbox id)
 - [x] Dead-letter handling (dispatch exhausted + failed jobs retained)
 - [x] Idempotent consumers (Redis `outbox:processed:{id}` NX)
 - [ ] Queue metrics (Prometheus/OpenTelemetry later)
-- [ ] Fulfillment status poller worker (Phase 13 sync API exists; poller still deferred)
+- [x] Fulfillment status poller worker (Phase 13 status poller & webhook ingestion shipped)
 
 Config: `OUTBOX_DISPATCH_ENABLED`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_DISPATCH_RETRIES`.
 
@@ -946,7 +946,8 @@ RETURNED
 - [x] Per-vendor encrypted credentials + Pathao OAuth token store
 - [x] COD: `amount_to_collect` / `cod_amount` from PaymentIntent; on DELIVERED → `confirmCodCollectionFromFulfillment`
 - [ ] Bulk create / returns / price-plan UI (deferred)
-- [ ] Phase 12 status poller worker (sync endpoint shipped; worker deferred)
+- [x] Phase 12 status poller worker (Steadfast & Pathao periodic status sync)
+- [x] Inbound courier webhooks (`POST /api/v1/fulfillment/webhooks/steadfast`, `POST /api/v1/fulfillment/webhooks/pathao`)
 
 ### Features
 
@@ -1471,8 +1472,9 @@ Ship admin UIs **only after** owning domain modules exist:
 
 ## Phase 20.5 — POS admin
 
-- [ ] Registers / printers / barcode after POS domain expands beyond receipts
-- [ ] Receipt template management remains store-scoped (already started)
+- [x] Registers management (Register aggregate, domain invariants, RLS migration, POS register API endpoints, and admin store POS register UI)
+- [x] Receipt template management remains store-scoped (already started)
+- [ ] Printers / barcode scanner device integrations after hardware client protocol lands
 
 ---
 
@@ -1838,7 +1840,7 @@ Reach production-grade test coverage.
 - [x] Cart (page smoke)
 - [ ] Multi-vendor checkout
 - [ ] Payment
-- [ ] Order tracking
+- [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
 - [ ] Vendor fulfillment
 - [ ] Refund
 - [ ] Payout

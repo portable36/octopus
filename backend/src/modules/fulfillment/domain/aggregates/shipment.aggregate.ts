@@ -201,8 +201,12 @@ export class Shipment extends AggregateRoot<UniqueID> {
     };
     this.addEvent('ShipmentShipped', {
       shipmentId: this.id.value,
+      orderId: this.props.orderId,
+      orderNumber: this.props.orderNumber,
+      provider: this.props.provider,
       providerConsignmentId: input.providerConsignmentId,
       trackingCode: input.trackingCode,
+      recipientPhone: this.props.recipient.phone,
     });
   }
 
@@ -223,11 +227,23 @@ export class Shipment extends AggregateRoot<UniqueID> {
       version: this.props.version + 1,
       updatedAt: new Date(),
     };
-    if (normalized === 'DELIVERED') {
+    if (normalized === 'OUT_FOR_DELIVERY') {
+      this.addEvent('ShipmentOutForDelivery', {
+        shipmentId: this.id.value,
+        orderId: this.props.orderId,
+        orderNumber: this.props.orderNumber,
+        provider: this.props.provider,
+        trackingCode: this.props.trackingCode,
+        recipientPhone: this.props.recipient.phone,
+      });
+    } else if (normalized === 'DELIVERED') {
       this.addEvent('ShipmentDelivered', {
         shipmentId: this.id.value,
         orderId: this.props.orderId,
         orderNumber: this.props.orderNumber,
+        provider: this.props.provider,
+        trackingCode: this.props.trackingCode,
+        recipientPhone: this.props.recipient.phone,
       });
     } else if (normalized === 'FAILED') {
       this.addEvent('ShipmentFailed', { shipmentId: this.id.value });
@@ -241,10 +257,11 @@ export class Shipment extends AggregateRoot<UniqueID> {
       );
     }
     this.assertCanTransition('DELIVERED');
+    const resolvedTracking = trackingCode?.trim() || this.props.trackingCode;
     this.props = {
       ...this.props,
       status: 'DELIVERED',
-      trackingCode: trackingCode?.trim() || this.props.trackingCode,
+      trackingCode: resolvedTracking,
       providerStatus: 'delivered',
       providerConsignmentId: this.props.providerConsignmentId ?? this.id.value,
       version: this.props.version + 1,
@@ -254,6 +271,9 @@ export class Shipment extends AggregateRoot<UniqueID> {
       shipmentId: this.id.value,
       orderId: this.props.orderId,
       orderNumber: this.props.orderNumber,
+      provider: this.props.provider,
+      trackingCode: resolvedTracking,
+      recipientPhone: this.props.recipient.phone,
     });
   }
 

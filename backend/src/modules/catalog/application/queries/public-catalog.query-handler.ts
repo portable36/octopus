@@ -121,6 +121,28 @@ export class PublicCatalogQueryHandler {
     };
   }
 
+  public async listActiveStores(limit = 60) {
+    const stores = await this.stores.listActiveStores(limit);
+    const vendorIds = Array.from(new Set(stores.map((s) => s.vendorId)));
+    const vendors = await Promise.all(
+      vendorIds.map((vId) => this.vendors.findActivePublicById(vId)),
+    );
+    const vendorMap = new Map(vendors.filter(Boolean).map((v) => [v!.vendorId, v!.slug]));
+
+    return stores.map((store) => ({
+      id: store.storeId,
+      vendorId: store.vendorId,
+      vendorSlug: vendorMap.get(store.vendorId) ?? null,
+      slug: store.slug,
+      displayName: store.displayName,
+      description: store.description,
+      currencyCode: store.currencyCode,
+      acceptsOnlineOrders: store.acceptsOnlineOrders,
+      city: store.city,
+      region: store.region,
+    }));
+  }
+
   public async getActiveVendorShopBySlug(slug: string) {
     const vendor = await this.vendors.findActivePublicBySlug(slug);
     if (!vendor) {

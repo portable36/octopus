@@ -4,6 +4,7 @@ import { AdminWidget } from '@/components/layout/admin-widget';
 import { DashboardHealthWidget } from '@/features/dashboard/dashboard-health-widget';
 import { DashboardOpsCountsWidget } from '@/features/dashboard/dashboard-ops-counts-widget';
 import { DashboardOrderReportWidget } from '@/features/dashboard/dashboard-order-report-widget';
+import { DashboardSalesTrendsWidget } from '@/features/dashboard/dashboard-sales-trends-widget';
 
 export default function AdminDashboardPage() {
   return (
@@ -24,6 +25,11 @@ export default function AdminDashboardPage() {
         <AdminWidget title="Order report (read model)">
           <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
             <DashboardOrderReportWidget />
+          </Suspense>
+        </AdminWidget>
+        <AdminWidget title="Sales & Revenue Trends (Real-time Rollups)">
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+            <DashboardSalesTrendsWidget />
           </Suspense>
         </AdminWidget>
       </div>

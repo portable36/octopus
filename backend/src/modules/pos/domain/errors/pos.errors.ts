@@ -18,3 +18,10 @@ export class InvalidReceiptSnapshotError extends PosDomainError {
     this.name = 'InvalidReceiptSnapshotError';
   }
 }
+
+export class InvalidRegisterError extends PosDomainError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidRegisterError';
+  }
+}

@@ -213,8 +213,28 @@ export class SyncShipmentStatusHandler {
     }
     await this.authz.requireFulfiller(shipment, input.actorUserId, input.actorRoles);
 
+    await this.syncShipment(shipment, input.idempotencyKey, input.actorUserId);
+    return toResponse(shipment);
+  }
+
+  public async syncShipment(
+    shipment: Shipment,
+    idempotencyKey?: string,
+    actorUserId = 'system:courier-sync',
+  ): Promise<{
+    readonly statusChanged: boolean;
+    readonly becameDelivered: boolean;
+    readonly previousStatus: ShipmentStatus;
+    readonly currentStatus: ShipmentStatus;
+  }> {
+    const previousStatus = shipment.status;
     if (shipment.provider === 'MANUAL') {
-      return toResponse(shipment);
+      return {
+        statusChanged: false,
+        becameDelivered: false,
+        previousStatus,
+        currentStatus: shipment.status,
+      };
     }
 
     const status = await this.courier.getConsignmentStatus({
@@ -229,9 +249,13 @@ export class SyncShipmentStatusHandler {
 
     const becameDelivered =
       status.normalizedStatus === 'DELIVERED' && shipment.status !== 'DELIVERED';
+    const statusChanged = shipment.status !== status.normalizedStatus;
 
     shipment.applyProviderStatus(status.normalizedStatus, status.providerStatus);
-    await this.shipments.save(shipment, `sync:${shipment.id.value}`);
+    await this.shipments.save(
+      shipment,
+      idempotencyKey || `sync:${shipment.id.value}:${Date.now()}`,
+    );
 
     if (becameDelivered && shipment.amountToCollectMinor > 0) {
       const intent = await this.payments.findCodIntentByOrderId(shipment.orderId);
@@ -240,14 +264,19 @@ export class SyncShipmentStatusHandler {
           paymentIntentId: intent.paymentIntentId,
           amountMinor: intent.amountMinor,
           currencyCode: intent.currencyCode,
-          idempotencyKey: input.idempotencyKey || `cod-deliver:${shipment.id.value}`,
-          actorUserId: input.actorUserId,
+          idempotencyKey: idempotencyKey || `cod-deliver:${shipment.id.value}`,
+          actorUserId,
           note: `Auto-collected on courier delivery (${shipment.provider})`,
         });
       }
     }
 
-    return toResponse(shipment);
+    return {
+      statusChanged,
+      becameDelivered,
+      previousStatus,
+      currentStatus: shipment.status,
+    };
   }
 }
 

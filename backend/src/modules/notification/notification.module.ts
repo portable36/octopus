@@ -7,10 +7,12 @@ import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/d
 import { NotificationEventConsumer } from './application/commands/notification-event.consumer';
 import { NotificationHandlers } from './application/commands/notification.handlers';
 import { EMAIL_PROVIDER } from './application/ports/email-provider.port';
+import { SMS_PROVIDER } from './application/ports/sms-provider.port';
 import { NOTIFICATION_DELIVERY_ENQUEUER } from './application/ports/notification-delivery-enqueuer.port';
 import { NOTIFICATION_REPOSITORY } from './application/ports/notification-repository.interface';
 import { NotificationDeliveryEnqueuerAdapter } from './infrastructure/bullmq/notification-delivery-enqueuer.adapter';
 import { LogEmailProviderAdapter } from './infrastructure/email/log-email.provider.adapter';
+import { LogSmsProviderAdapter } from './infrastructure/sms/log-sms.provider.adapter';
 import { NotificationConfigProvisionerAdapter } from './infrastructure/access/notification-config-provisioner.adapter';
 import { NotificationDeliveryAttemptOrmEntity } from './infrastructure/persistence/notification-delivery-attempt.orm-entity';
 import { NotificationOrmEntity } from './infrastructure/persistence/notification.orm-entity';
@@ -36,10 +38,12 @@ import { NotificationController } from './presentation/http/notification.control
     NotificationEventConsumer,
     NotificationRepositoryAdapter,
     LogEmailProviderAdapter,
+    LogSmsProviderAdapter,
     NotificationDeliveryEnqueuerAdapter,
     NotificationConfigProvisionerAdapter,
     { provide: NOTIFICATION_REPOSITORY, useExisting: NotificationRepositoryAdapter },
     { provide: EMAIL_PROVIDER, useExisting: LogEmailProviderAdapter },
+    { provide: SMS_PROVIDER, useExisting: LogSmsProviderAdapter },
     { provide: NOTIFICATION_DELIVERY_ENQUEUER, useExisting: NotificationDeliveryEnqueuerAdapter },
     { provide: NOTIFICATION_PORT, useExisting: NotificationHandlers },
     { provide: NOTIFICATION_OUTBOX_HANDLER, useExisting: NotificationEventConsumer },
@@ -49,6 +53,7 @@ import { NotificationController } from './presentation/http/notification.control
     NOTIFICATION_PORT,
     NOTIFICATION_OUTBOX_HANDLER,
     NOTIFICATION_CONFIG_PROVISIONER,
+    SMS_PROVIDER,
     NotificationHandlers,
   ],
 })

@@ -241,6 +241,22 @@ export class AppConfigService {
     return this.configService.get('AI_PERSONALIZATION_WORKER_ENABLED', { infer: true });
   }
 
+  get fulfillmentStatusPollEnabled(): boolean {
+    return this.configService.get('FULFILLMENT_STATUS_POLL_ENABLED', { infer: true });
+  }
+
+  get fulfillmentStatusPollIntervalMs(): number {
+    return this.configService.get('FULFILLMENT_STATUS_POLL_INTERVAL_MS', { infer: true });
+  }
+
+  get steadfastWebhookSecret(): string | undefined {
+    return this.configService.get('STEADFAST_WEBHOOK_SECRET', { infer: true });
+  }
+
+  get pathaoWebhookSecret(): string | undefined {
+    return this.configService.get('PATHAO_WEBHOOK_SECRET', { infer: true });
+  }
+
   get outboxPollIntervalMs(): number {
     return this.configService.get('OUTBOX_POLL_INTERVAL_MS', { infer: true });
   }

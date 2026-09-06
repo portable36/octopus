@@ -37,6 +37,16 @@ export class OrderController {
     return list.map((order) => this.orderResponse(order));
   }
 
+  @Get(':orderId/tracking')
+  @ApiOperation({ summary: 'Get tracking timeline and courier shipment milestones for an order' })
+  async getTracking(@CurrentUser() user: RequestPrincipal, @Param('orderId') orderId: string) {
+    return this.lifecycle.getTrackingTimeline({
+      orderId,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+    });
+  }
+
   @Get(':orderId')
   @ApiOperation({ summary: 'Get an order by id' })
   async get(@CurrentUser() user: RequestPrincipal, @Param('orderId') orderId: string) {

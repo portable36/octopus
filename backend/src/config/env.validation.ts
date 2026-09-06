@@ -155,6 +155,19 @@ const baseEnvSchema = z.object({
   PATHAO_PASSWORD: z.string().optional(),
   PATHAO_STORE_ID: z.coerce.number().int().positive().optional(),
   COURIER_HTTP_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(15_000),
+  /** When true, status poller checks courier statuses for active shipments. */
+  FULFILLMENT_STATUS_POLL_ENABLED: booleanFromEnv,
+  /** Interval in ms between status poller runs (default 60s). */
+  FULFILLMENT_STATUS_POLL_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(5000)
+    .max(3_600_000)
+    .default(60_000),
+  /** Optional webhook signature/token secret for Steadfast courier callbacks. */
+  STEADFAST_WEBHOOK_SECRET: z.string().optional(),
+  /** Optional webhook signature/token secret for Pathao courier callbacks. */
+  PATHAO_WEBHOOK_SECRET: z.string().optional(),
   /** Extra outbound hosts (comma-separated) for SSRF allowlist; courier env base URLs are always included. */
   OUTBOUND_URL_ALLOWLIST: z.string().optional(),
   OUTBOX_DISPATCH_ENABLED: z

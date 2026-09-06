@@ -13,6 +13,7 @@ export type CreateNotificationInput = {
   readonly eventId: string;
   readonly recipientUserId: string;
   readonly recipientEmail: string | null;
+  readonly recipientPhone?: string | null;
   readonly notificationType: string;
   readonly channel: NotificationChannel;
   readonly locale: NotificationLocale;

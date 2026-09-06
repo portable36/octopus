@@ -61,4 +61,22 @@ export class PosAuthorizationService {
     }
     throw new PosAccessDeniedError();
   }
+
+  /** Managers, vendor owners, platform admins — configure registers. */
+  public async requireRegisterManager(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<StoreAccessSnapshot> {
+    return this.requireTemplateManager(storeId, actorUserId, actorRoles);
+  }
+
+  /** Any store staff, vendor staff/owner, or platform admin — view registers. */
+  public async requireRegisterViewer(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<StoreAccessSnapshot> {
+    return this.requireReceiptViewer(storeId, actorUserId, actorRoles);
+  }
 }

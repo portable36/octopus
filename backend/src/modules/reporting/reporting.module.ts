@@ -8,11 +8,12 @@ import { ReportingProjectionService } from './application/services/reporting-pro
 import { ReportingOrderFactOrmEntity } from './infrastructure/persistence/reporting-order-fact.orm-entity';
 import { ReportingOrderFactRepositoryAdapter } from './infrastructure/persistence/reporting-order-fact.repository.adapter';
 import { AdminReportsController } from './presentation/http/admin-reports.controller';
+import { ScopedReportsController } from './presentation/http/scoped-reports.controller';
 
 @Global()
 @Module({
   imports: [DatabaseModule, MikroOrmModule.forFeature([ReportingOrderFactOrmEntity])],
-  controllers: [AdminReportsController],
+  controllers: [AdminReportsController, ScopedReportsController],
   providers: [
     ReportingProjectionService,
     ReportingQueryHandler,

@@ -2,6 +2,7 @@ import { EntityManager, UniqueConstraintViolationException } from '@mikro-orm/co
 import { Injectable } from '@nestjs/common';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
+import type { CourierProvider } from '../../domain/fulfillment.types';
 import type { Shipment } from '../../domain/aggregates/shipment.aggregate';
 import type { FulfillmentRepository } from '../../application/ports/fulfillment-repository.interface';
 import { applyShipmentToOrm, shipmentLinesToOrm, shipmentToDomain } from './fulfillment.mapper';
@@ -30,6 +31,85 @@ export class FulfillmentRepositoryAdapter implements FulfillmentRepository {
   public async findByIdempotencyKey(idempotencyKey: string): Promise<Shipment | null> {
     return withRlsContext(this.em, async (tx) => {
       const entity = await tx.findOne(ShipmentOrmEntity, { idempotencyKey });
+      if (!entity) {
+        return null;
+      }
+      const lines = await tx.find(ShipmentLineOrmEntity, { shipmentId: entity.id });
+      return shipmentToDomain(entity, lines);
+    });
+  }
+
+  public async findByOrderId(orderId: string): Promise<Shipment[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        ShipmentOrmEntity,
+        { orderId },
+        { orderBy: { createdAt: 'ASC' } },
+      );
+      if (entities.length === 0) {
+        return [];
+      }
+      const shipmentIds = entities.map((e) => e.id);
+      const allLines = await tx.find(ShipmentLineOrmEntity, { shipmentId: { $in: shipmentIds } });
+      const linesByShipment = new Map<string, ShipmentLineOrmEntity[]>();
+      for (const line of allLines) {
+        const list = linesByShipment.get(line.shipmentId) ?? [];
+        list.push(line);
+        linesByShipment.set(line.shipmentId, list);
+      }
+      return entities.map((entity) =>
+        shipmentToDomain(entity, linesByShipment.get(entity.id) ?? []),
+      );
+    });
+  }
+
+  public async findActiveCourierShipments(limit: number): Promise<Shipment[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        ShipmentOrmEntity,
+        {
+          provider: { $in: ['STEADFAST', 'PATHAO'] },
+          status: { $nin: ['DELIVERED', 'FAILED', 'RETURNED'] },
+        },
+        {
+          orderBy: { updatedAt: 'ASC' },
+          limit,
+        },
+      );
+      if (entities.length === 0) {
+        return [];
+      }
+      const shipmentIds = entities.map((e) => e.id);
+      const allLines = await tx.find(ShipmentLineOrmEntity, { shipmentId: { $in: shipmentIds } });
+      const linesByShipment = new Map<string, ShipmentLineOrmEntity[]>();
+      for (const line of allLines) {
+        const list = linesByShipment.get(line.shipmentId) ?? [];
+        list.push(line);
+        linesByShipment.set(line.shipmentId, list);
+      }
+      return entities.map((entity) =>
+        shipmentToDomain(entity, linesByShipment.get(entity.id) ?? []),
+      );
+    });
+  }
+
+  public async findByProviderReference(
+    provider: CourierProvider,
+    referenceId: string,
+  ): Promise<Shipment | null> {
+    const trimmed = referenceId.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(ShipmentOrmEntity, {
+        provider,
+        $or: [
+          { providerConsignmentId: trimmed },
+          { trackingCode: trimmed },
+          { merchantOrderRef: trimmed },
+        ],
+      });
       if (!entity) {
         return null;
       }

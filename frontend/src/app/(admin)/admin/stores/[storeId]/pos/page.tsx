@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ReceiptTemplateSettings } from '@/components/pos/receipt-template-settings';
+import { RegisterManagement } from '@/components/pos/register-management';
 import { useAccessToken } from '@/lib/use-access-token';
 
 export default function AdminStorePosPage() {
@@ -15,8 +16,7 @@ export default function AdminStorePosPage() {
       <div>
         <h2 className="text-sm font-medium">POS</h2>
         <p className="text-xs text-muted-foreground">
-          Registers and shifts land when the POS register domain is ready. Receipt templates are
-          available now.
+          Manage checkout registers, physical counters, and thermal receipt templates.
         </p>
         <p className="mt-2 text-sm">
           <Link
@@ -29,10 +29,11 @@ export default function AdminStorePosPage() {
       </div>
 
       <section className="border border-border bg-background p-4 text-sm">
-        <h3 className="font-medium">Registers</h3>
-        <p className="mt-2 text-muted-foreground">
-          No register aggregate yet — placeholder until POS register APIs ship.
-        </p>
+        {token ? (
+          <RegisterManagement storeId={storeId} accessToken={token} />
+        ) : (
+          <p className="text-xs text-muted-foreground">Sign in required to manage registers.</p>
+        )}
       </section>
 
       <section className="space-y-3">

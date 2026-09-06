@@ -15,6 +15,8 @@ import {
   PosStoreNotFoundError,
   ReceiptAlreadyExistsError,
   ReceiptNotFoundError,
+  RegisterCodeAlreadyExistsError,
+  RegisterNotFoundError,
 } from '../../../application/errors/pos.errors';
 
 @Catch(PosApplicationError, PosDomainError)
@@ -28,10 +30,17 @@ export class PosExceptionFilter implements ExceptionFilter {
   }
 
   private mapException(exception: unknown): HttpException {
-    if (exception instanceof PosStoreNotFoundError || exception instanceof ReceiptNotFoundError) {
+    if (
+      exception instanceof PosStoreNotFoundError ||
+      exception instanceof ReceiptNotFoundError ||
+      exception instanceof RegisterNotFoundError
+    ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof ReceiptAlreadyExistsError) {
+    if (
+      exception instanceof ReceiptAlreadyExistsError ||
+      exception instanceof RegisterCodeAlreadyExistsError
+    ) {
       return new ConflictException({ message: exception.message, code: exception.code });
     }
     if (exception instanceof PosAccessDeniedError) {

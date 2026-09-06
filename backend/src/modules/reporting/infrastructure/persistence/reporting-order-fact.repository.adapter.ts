@@ -2,11 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
 import type {
+  DetailedSalesAnalytics,
   OrderReportCurrencyBucket,
   OrderReportSummary,
+  PaymentMethodSummary,
   ReportingOrderFact,
   ReportingOrderFactRepository,
+  ScopedAnalyticsSummary,
   StorePerformanceRow,
+  TrendDataPoint,
   VendorPerformanceRow,
 } from '../../application/ports/reporting-order-fact-repository.interface';
 import { ReportingOrderFactOrmEntity } from './reporting-order-fact.orm-entity';
@@ -42,6 +46,97 @@ function sortedCurrencies(
   map: Map<string, OrderReportCurrencyBucket>,
 ): OrderReportCurrencyBucket[] {
   return [...map.values()].sort((a, b) => a.currencyCode.localeCompare(b.currencyCode));
+}
+
+function computeTrendsAndPaymentMethods(rows: ReportingOrderFactOrmEntity[]): {
+  readonly trends: TrendDataPoint[];
+  readonly paymentMethods: PaymentMethodSummary[];
+  readonly aovMinor: number;
+} {
+  const trendMap = new Map<
+    string,
+    {
+      orderCount: number;
+      paidOrderCount: number;
+      revenueMinor: number;
+      commissionMinor: number;
+    }
+  >();
+
+  const pmMap = new Map<
+    string,
+    {
+      orderCount: number;
+      paidOrderCount: number;
+      revenueMinor: number;
+    }
+  >();
+
+  let totalRevenueMinor = 0;
+  let totalPaidOrders = 0;
+
+  for (const row of rows) {
+    const paid = row.paymentStatus === 'PAID';
+    if (paid) {
+      totalRevenueMinor += row.totalMinor;
+      totalPaidOrders += 1;
+    }
+
+    const dateStr = (row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt))
+      .toISOString()
+      .slice(0, 10);
+
+    const trendAcc = trendMap.get(dateStr) ?? {
+      orderCount: 0,
+      paidOrderCount: 0,
+      revenueMinor: 0,
+      commissionMinor: 0,
+    };
+    trendAcc.orderCount += 1;
+    if (paid) {
+      trendAcc.paidOrderCount += 1;
+      trendAcc.revenueMinor += row.totalMinor;
+      trendAcc.commissionMinor += row.commissionMinor;
+    }
+    trendMap.set(dateStr, trendAcc);
+
+    const pm = row.paymentMethod || 'UNKNOWN';
+    const pmAcc = pmMap.get(pm) ?? {
+      orderCount: 0,
+      paidOrderCount: 0,
+      revenueMinor: 0,
+    };
+    pmAcc.orderCount += 1;
+    if (paid) {
+      pmAcc.paidOrderCount += 1;
+      pmAcc.revenueMinor += row.totalMinor;
+    }
+    pmMap.set(pm, pmAcc);
+  }
+
+  const trends: TrendDataPoint[] = [...trendMap.entries()]
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([date, acc]) => ({
+      date,
+      orderCount: acc.orderCount,
+      paidOrderCount: acc.paidOrderCount,
+      revenueMinor: acc.revenueMinor,
+      commissionMinor: acc.commissionMinor,
+      aovMinor: acc.paidOrderCount > 0 ? Math.round(acc.revenueMinor / acc.paidOrderCount) : 0,
+    }));
+
+  const paymentMethods: PaymentMethodSummary[] = [...pmMap.entries()]
+    .sort((a, b) => b[1].revenueMinor - a[1].revenueMinor)
+    .map(([paymentMethod, acc]) => ({
+      paymentMethod,
+      orderCount: acc.orderCount,
+      paidOrderCount: acc.paidOrderCount,
+      revenueMinor: acc.revenueMinor,
+    }));
+
+  const aovMinor = totalPaidOrders > 0 ? Math.round(totalRevenueMinor / totalPaidOrders) : 0;
+
+  return { trends, paymentMethods, aovMinor };
 }
 
 @Injectable()
@@ -188,6 +283,129 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
           commissionMinor: acc.commissionMinor,
         }))
         .sort((a, b) => b.revenueMinor - a.revenueMinor || a.storeId.localeCompare(b.storeId));
+    });
+  }
+
+  public async getSalesAnalytics(days = 30): Promise<DetailedSalesAnalytics> {
+    return withRlsContext(this.em, async (tx) => {
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const rows = await tx.find(
+        ReportingOrderFactOrmEntity,
+        { createdAt: { $gte: cutoff } },
+        { orderBy: { createdAt: 'ASC' } },
+      );
+
+      const byCurrency = new Map<string, OrderReportCurrencyBucket>();
+      let orderCount = 0;
+      let paidOrderCount = 0;
+
+      for (const row of rows) {
+        orderCount += 1;
+        const paid = row.paymentStatus === 'PAID';
+        if (paid) {
+          paidOrderCount += 1;
+        }
+        addCurrency(byCurrency, row.currencyCode, paid, row.totalMinor, row.commissionMinor);
+      }
+
+      const { trends, paymentMethods, aovMinor } = computeTrendsAndPaymentMethods(rows);
+
+      return {
+        summary: {
+          currencies: sortedCurrencies(byCurrency),
+          orderCount,
+          paidOrderCount,
+        },
+        aovMinor,
+        trends,
+        paymentMethods,
+      };
+    });
+  }
+
+  public async getVendorAnalytics(vendorId: string, days = 30): Promise<ScopedAnalyticsSummary> {
+    return withRlsContext(this.em, async (tx) => {
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const rows = await tx.find(
+        ReportingOrderFactOrmEntity,
+        { vendorId, createdAt: { $gte: cutoff } },
+        { orderBy: { createdAt: 'ASC' } },
+      );
+
+      const byCurrency = new Map<string, OrderReportCurrencyBucket>();
+      let orderCount = 0;
+      let paidOrderCount = 0;
+      let revenueMinor = 0;
+      let commissionMinor = 0;
+
+      for (const row of rows) {
+        orderCount += 1;
+        const paid = row.paymentStatus === 'PAID';
+        if (paid) {
+          paidOrderCount += 1;
+          revenueMinor += row.totalMinor;
+          commissionMinor += row.commissionMinor;
+        }
+        addCurrency(byCurrency, row.currencyCode, paid, row.totalMinor, row.commissionMinor);
+      }
+
+      const { trends, paymentMethods, aovMinor } = computeTrendsAndPaymentMethods(rows);
+
+      return {
+        scopeId: vendorId,
+        scopeType: 'VENDOR',
+        currencies: sortedCurrencies(byCurrency),
+        orderCount,
+        paidOrderCount,
+        revenueMinor,
+        commissionMinor,
+        aovMinor,
+        trends,
+        paymentMethods,
+      };
+    });
+  }
+
+  public async getStoreAnalytics(storeId: string, days = 30): Promise<ScopedAnalyticsSummary> {
+    return withRlsContext(this.em, async (tx) => {
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const rows = await tx.find(
+        ReportingOrderFactOrmEntity,
+        { storeId, createdAt: { $gte: cutoff } },
+        { orderBy: { createdAt: 'ASC' } },
+      );
+
+      const byCurrency = new Map<string, OrderReportCurrencyBucket>();
+      let orderCount = 0;
+      let paidOrderCount = 0;
+      let revenueMinor = 0;
+      let commissionMinor = 0;
+
+      for (const row of rows) {
+        orderCount += 1;
+        const paid = row.paymentStatus === 'PAID';
+        if (paid) {
+          paidOrderCount += 1;
+          revenueMinor += row.totalMinor;
+          commissionMinor += row.commissionMinor;
+        }
+        addCurrency(byCurrency, row.currencyCode, paid, row.totalMinor, row.commissionMinor);
+      }
+
+      const { trends, paymentMethods, aovMinor } = computeTrendsAndPaymentMethods(rows);
+
+      return {
+        scopeId: storeId,
+        scopeType: 'STORE',
+        currencies: sortedCurrencies(byCurrency),
+        orderCount,
+        paidOrderCount,
+        revenueMinor,
+        commissionMinor,
+        aovMinor,
+        trends,
+        paymentMethods,
+      };
     });
   }
 }

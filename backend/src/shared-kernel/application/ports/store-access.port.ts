@@ -25,4 +25,5 @@ export interface StoreAccessPort {
   findById(storeId: string): Promise<StoreAccessSnapshot | null>;
   findActiveBySlug(slug: string, vendorId?: string): Promise<StoreAccessSnapshot | null>;
   listActiveByVendorId(vendorId: string): Promise<readonly StoreAccessSnapshot[]>;
+  listActiveStores(limit?: number): Promise<readonly StoreAccessSnapshot[]>;
 }

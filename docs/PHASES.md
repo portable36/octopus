@@ -1448,15 +1448,16 @@ Build the platform admin **presentation layer** over existing bounded contexts
 Settings-backed branding/general is ready; **CMS page builder** stays deferred
 (no CMS module). Do not start page-builder / draft→publish work until Media + CMS exist.
 
-### 20.3.1 — Storefront config + branding (skeleton)
+### 20.3.1 — Storefront config + branding (skeleton) & Theme Customizer
 
-- [x] Public `GET /api/v1/storefront/config` (effective general + branding + public marketing)
+- [x] Public `GET /api/v1/storefront/config` (effective general + branding + public marketing + theme)
 - [x] Admin Website UI for platform general + branding (`/admin/system/website`)
-- [x] Platform→Vendor→Store resolution reused from Settings `resolveEffective`
-- [ ] CMS pages / nav / footer management
-- [ ] Draft → publish + versioning
+- [x] Platform→Vendor→Store resolution reused from Settings `resolveEffective` (with sub-object deep inheritance)
+- [x] Full Website Control Center (`/admin/system/website`): Theme & Colors, Banner Slots (hero & promo), Header nav & Search placeholder, Footer columns & copyright
+- [x] Real-time Interactive Storefront Live Theme Preview (desktop & mobile viewports)
+- [x] StorefrontShell & Storefront HomePage dynamic consumption (theme styling, custom announcement bar, hero & promo banner slots, header nav, and footer columns)
 - [x] Redis cache for effective config only; DB remains truth
-- [ ] Full Website Control Center (theme/nav/footer SEO beyond Settings fields)
+- [ ] CMS page builder / full draft→publish versioning (deferred until dedicated Media/CMS module)
 
 ---
 

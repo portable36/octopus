@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_THEME_SETTINGS } from '../../domain/settings.types';
 import { StorefrontConfigCache } from './storefront-config-cache';
 
 describe('StorefrontConfigCache', () => {
@@ -43,6 +44,7 @@ describe('StorefrontConfigCache', () => {
         metaPixelId: null,
         enabled: false,
       },
+      theme: DEFAULT_THEME_SETTINGS,
     };
 
     await cache.set(scope, payload);

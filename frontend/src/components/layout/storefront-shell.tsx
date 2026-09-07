@@ -9,9 +9,13 @@ import { TrackingService } from '@/components/marketing/tracking-service';
 import { AccountNavLink } from '@/components/storefront/account-nav-link';
 import { CartNavLink } from '@/components/storefront/cart-nav-link';
 import { getPublicAppName } from '@/lib/env';
-import { fetchStorefrontConfig } from '@/lib/storefront-config-api';
+import {
+  DEFAULT_THEME_SETTINGS,
+  fetchStorefrontConfig,
+  type ThemeSettings,
+} from '@/lib/storefront-config-api';
 
-const NAV = [
+const DEFAULT_NAV = [
   { href: '/', label: 'Home' },
   { href: '/categories', label: 'Categories' },
   { href: '/stores', label: 'Stores' },
@@ -23,6 +27,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
   const router = useRouter();
   const [siteName, setSiteName] = useState(getPublicAppName());
   const [brandStyle, setBrandStyle] = useState<CSSProperties | undefined>(undefined);
+  const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME_SETTINGS);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -34,16 +39,27 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
         if (cancelled) {
           return;
         }
+        if (config.theme) {
+          setTheme(config.theme);
+        }
         const name = config.branding.siteName?.trim();
         if (name) {
           setSiteName(name);
         }
-        const color = config.branding.primaryColor?.trim();
-        if (color) {
-          setBrandStyle({ '--cf-accent': color } as CSSProperties);
+        const styleObj: Record<string, string> = {};
+        const accent = config.theme?.colors?.accent?.trim() || config.branding.primaryColor?.trim();
+        if (accent) {
+          styleObj['--cf-accent'] = accent;
+        }
+        const primary = config.theme?.colors?.primary?.trim();
+        if (primary) {
+          styleObj['--cf-primary'] = primary;
+        }
+        if (Object.keys(styleObj).length > 0) {
+          setBrandStyle(styleObj as CSSProperties);
         }
       } catch {
-        // Fall back to env app name / no brand color.
+        // Fall back to env app name / default theme.
       }
     })();
     return () => {
@@ -51,21 +67,42 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
     };
   }, []);
 
+  const navLinks =
+    theme.header.navLinks && theme.header.navLinks.length > 0 ? theme.header.navLinks : DEFAULT_NAV;
+
   return (
     <div
       className="sf-theme flex min-h-screen flex-col bg-background text-foreground"
       style={brandStyle}
     >
       <header className="sf-header border-b border-border">
-        <div className="sf-announcement">
-          <div className="sf-utility-inner">
-            <span>Delivery across Bangladesh</span>
-            <span className="sf-utility-links">
-              <Link href="/account/orders">Track order</Link>
-              <Link href="/vendor">Sell on Octopus</Link>
-            </span>
+        {theme.announcementBar.enabled ? (
+          <div
+            className="sf-announcement"
+            style={{
+              backgroundColor: theme.colors.announcementBg || undefined,
+              color: theme.colors.announcementText || undefined,
+            }}
+          >
+            <div className="sf-utility-inner">
+              <span>{theme.announcementBar.text}</span>
+              <span className="sf-utility-links">
+                {theme.announcementBar.linkText && theme.announcementBar.linkUrl ? (
+                  <Link href={theme.announcementBar.linkUrl} style={{ color: 'inherit' }}>
+                    {theme.announcementBar.linkText}
+                  </Link>
+                ) : (
+                  <Link href="/account/orders" style={{ color: 'inherit' }}>
+                    Track order
+                  </Link>
+                )}
+                <Link href="/vendor" style={{ color: 'inherit' }}>
+                  Sell on Octopus
+                </Link>
+              </span>
+            </div>
           </div>
-        </div>
+        ) : null}
         <div className="sf-header-main">
           <button
             type="button"
@@ -96,7 +133,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             }}
           >
             <label className="sr-only" htmlFor="storefront-search">
-              Search products
+              {theme.header.searchPlaceholder || 'Search products'}
             </label>
             <input
               id="storefront-search"
@@ -104,14 +141,14 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search products"
+              placeholder={theme.header.searchPlaceholder || 'Search products'}
             />
             <button className="sf-search-submit" type="submit">
               Search
             </button>
           </form>
           <nav className="sf-nav" aria-label="Primary">
-            {NAV.map((item) => (
+            {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -144,7 +181,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
               }}
             >
               <label className="sr-only" htmlFor="storefront-mobile-search">
-                Search products
+                {theme.header.searchPlaceholder || 'Search products'}
               </label>
               <input
                 id="storefront-mobile-search"
@@ -152,13 +189,13 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search products"
+                placeholder={theme.header.searchPlaceholder || 'Search products'}
               />
               <button className="sf-search-submit" type="submit">
                 Search
               </button>
             </form>
-            {NAV.map((item) => (
+            {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -175,31 +212,46 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
       <footer className="sf-footer">
         <div className="sf-footer-inner">
           <div className="sf-footer-brand">
-            <p className="sf-eyebrow">Octopus marketplace</p>
+            <p className="sf-eyebrow">{siteName} marketplace</p>
             <p className="mt-3 text-sm">
-              A multi-vendor marketplace built for confident browsing, clear delivery, and
-              server-confirmed checkout.
+              {theme.footer.aboutText ||
+                'A multi-vendor marketplace built for confident browsing, clear delivery, and server-confirmed checkout.'}
             </p>
           </div>
           <div className="sf-footer-links">
-            <div>
-              <p className="sf-footer-heading">Shop</p>
-              <Link href="/categories">Categories</Link>
-              <Link href="/search">All offers</Link>
-            </div>
-            <div>
-              <p className="sf-footer-heading">Help</p>
-              <Link href="/account/orders">Track order</Link>
-              <Link href="/account">Account</Link>
-            </div>
-            <div>
-              <p className="sf-footer-heading">Sell</p>
-              <Link href="/vendor">Open vendor portal</Link>
-            </div>
+            {theme.footer.columns && theme.footer.columns.length > 0 ? (
+              theme.footer.columns.map((col, idx) => (
+                <div key={idx}>
+                  <p className="sf-footer-heading">{col.title}</p>
+                  {col.links.map((link, lIdx) => (
+                    <Link key={lIdx} href={link.href}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              ))
+            ) : (
+              <>
+                <div>
+                  <p className="sf-footer-heading">Shop</p>
+                  <Link href="/categories">Categories</Link>
+                  <Link href="/search">All offers</Link>
+                </div>
+                <div>
+                  <p className="sf-footer-heading">Help</p>
+                  <Link href="/account/orders">Track order</Link>
+                  <Link href="/account">Account</Link>
+                </div>
+                <div>
+                  <p className="sf-footer-heading">Sell</p>
+                  <Link href="/vendor">Open vendor portal</Link>
+                </div>
+              </>
+            )}
           </div>
           <div className="sf-footer-meta">
             <span>
-              © {new Date().getFullYear()} {siteName}
+              © {new Date().getFullYear()} {theme.footer.copyrightText || siteName}
             </span>
             <span>
               Prices and availability are confirmed by the server.{' '}

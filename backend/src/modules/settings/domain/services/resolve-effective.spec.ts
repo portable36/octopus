@@ -3,8 +3,9 @@ import {
   resolveEffectiveBranding,
   resolveEffectiveGeneral,
   resolveEffectiveMarketing,
+  resolveEffectiveTheme,
 } from './resolve-effective';
-import type { ConfigurationDocumentRecord } from '../settings.types';
+import { DEFAULT_THEME_SETTINGS, type ConfigurationDocumentRecord } from '../settings.types';
 
 function doc(
   partial: Omit<ConfigurationDocumentRecord, 'id' | 'updatedAt' | 'updatedBy' | 'schemaVersion'> & {
@@ -142,5 +143,109 @@ describe('resolveEffective', () => {
     expect(effective.enabled).toBe(true);
     expect(effective.gtmContainerId).toBe('GTM-1');
     expect(effective.ga4MpApiSecret).toBe('secret');
+  });
+
+  describe('resolveEffectiveTheme', () => {
+    it('returns platform theme defaults when no documents exist', () => {
+      const effective = resolveEffectiveTheme([], { kind: 'platform' });
+      expect(effective).toEqual(DEFAULT_THEME_SETTINGS);
+    });
+
+    it('resolves platform theme overrides', () => {
+      const documents = [
+        doc({
+          key: 'theme',
+          scopeKind: 'platform',
+          vendorId: null,
+          storeId: null,
+          payload: {
+            colors: { accent: '#10b981', primary: '#111827' },
+            announcementBar: {
+              enabled: true,
+              text: 'Weekend flash sale!',
+              linkText: 'Check deals',
+              linkUrl: '/search?sale=true',
+            },
+            heroBanner: {
+              enabled: true,
+              title: 'Super Weekend Sale',
+              subtitle: 'Up to 50% off on all local store offers',
+              badgeText: 'Flash Sale',
+              ctaText: 'Shop Deals',
+              ctaUrl: '/search',
+              imageUrl: null,
+            },
+          },
+        }),
+      ];
+
+      const effective = resolveEffectiveTheme(documents, { kind: 'platform' });
+      expect(effective.colors.accent).toBe('#10b981');
+      expect(effective.colors.primary).toBe('#111827');
+      expect(effective.announcementBar.text).toBe('Weekend flash sale!');
+      expect(effective.heroBanner.title).toBe('Super Weekend Sale');
+      // Sub-object default preservation
+      expect(effective.header.searchPlaceholder).toBe(
+        DEFAULT_THEME_SETTINGS.header.searchPlaceholder,
+      );
+      expect(effective.footer.columns).toEqual(DEFAULT_THEME_SETTINGS.footer.columns);
+    });
+
+    it('merges vendor and store theme overrides with inheritance', () => {
+      const vendorId = '11111111-1111-7111-8111-111111111111';
+      const storeId = '22222222-2222-7222-8222-222222222222';
+      const documents = [
+        doc({
+          key: 'theme',
+          scopeKind: 'platform',
+          vendorId: null,
+          storeId: null,
+          payload: {
+            colors: { accent: '#2563eb' },
+            announcementBar: { enabled: true, text: 'Platform wide announcement' },
+          },
+        }),
+        doc({
+          key: 'theme',
+          scopeKind: 'vendor',
+          vendorId,
+          storeId: null,
+          payload: {
+            colors: { accent: '#9333ea' },
+            heroBanner: {
+              enabled: true,
+              title: 'Welcome to Vendor Hub',
+              subtitle: 'Exclusive store collection',
+              badgeText: 'Vendor Choice',
+              ctaText: 'Explore',
+              ctaUrl: '/stores',
+              imageUrl: null,
+            },
+          },
+        }),
+        doc({
+          key: 'theme',
+          scopeKind: 'store',
+          vendorId,
+          storeId,
+          payload: {
+            colors: { accent: '#f59e0b' },
+            announcementBar: { enabled: true, text: 'Store 1 grand opening!' },
+          },
+        }),
+      ];
+
+      // Target = store: should have store accent #f59e0b, store announcement, vendor hero title, platform/default fallbacks
+      const storeEffective = resolveEffectiveTheme(documents, { kind: 'store', vendorId, storeId });
+      expect(storeEffective.colors.accent).toBe('#f59e0b');
+      expect(storeEffective.announcementBar.text).toBe('Store 1 grand opening!');
+      expect(storeEffective.heroBanner.title).toBe('Welcome to Vendor Hub');
+
+      // Target = vendor: should have vendor accent #9333ea, platform announcement
+      const vendorEffective = resolveEffectiveTheme(documents, { kind: 'vendor', vendorId });
+      expect(vendorEffective.colors.accent).toBe('#9333ea');
+      expect(vendorEffective.announcementBar.text).toBe('Platform wide announcement');
+      expect(vendorEffective.heroBanner.title).toBe('Welcome to Vendor Hub');
+    });
   });
 });

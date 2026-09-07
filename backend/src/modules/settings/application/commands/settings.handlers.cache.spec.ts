@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_BRANDING_SETTINGS, DEFAULT_GENERAL_SETTINGS } from '../../domain/settings.types';
+import {
+  DEFAULT_BRANDING_SETTINGS,
+  DEFAULT_GENERAL_SETTINGS,
+  DEFAULT_THEME_SETTINGS,
+} from '../../domain/settings.types';
 import { SettingsHandlers } from './settings.handlers';
 
 describe('SettingsHandlers storefront cache', () => {
@@ -23,6 +27,7 @@ describe('SettingsHandlers storefront cache', () => {
             metaPixelId: null,
             enabled: false,
           },
+          theme: DEFAULT_THEME_SETTINGS,
         }),
       set: vi.fn(async () => undefined),
       invalidateAll: vi.fn(async () => undefined),
@@ -36,12 +41,12 @@ describe('SettingsHandlers storefront cache', () => {
 
     const miss = await handlers.getStorefrontPublicConfig({ kind: 'platform' });
     expect(miss.branding.siteName).toBeNull();
-    expect(configs.findForResolution).toHaveBeenCalledTimes(3);
+    expect(configs.findForResolution).toHaveBeenCalledTimes(4);
     expect(cache.set).toHaveBeenCalledTimes(1);
 
     const hit = await handlers.getStorefrontPublicConfig({ kind: 'platform' });
     expect(hit.branding.siteName).toBe('Cached');
-    expect(configs.findForResolution).toHaveBeenCalledTimes(3);
+    expect(configs.findForResolution).toHaveBeenCalledTimes(4);
   });
 
   it('invalidates storefront cache after upsert', async () => {

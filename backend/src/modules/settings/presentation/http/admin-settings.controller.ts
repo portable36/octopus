@@ -23,7 +23,7 @@ const SETTINGS_READ_ROLES = new Set([
 const SETTINGS_WRITE_ROLES = new Set(['PLATFORM_ADMIN', 'VENDOR_OWNER', 'STORE_MANAGER']);
 
 class UpsertSettingsDto {
-  @IsIn(['general', 'branding', 'marketing'])
+  @IsIn(['general', 'branding', 'marketing', 'theme'])
   key!: ConfigurationKey;
 
   @IsIn(['platform', 'vendor', 'store'])
@@ -87,7 +87,7 @@ export class AdminSettingsController {
   @Get('effective')
   @RequirePermissions('settings.read')
   @ApiOperation({ summary: 'Resolve effective settings with Platform→Vendor→Store inheritance' })
-  @ApiQuery({ name: 'key', required: true, enum: ['general', 'branding', 'marketing'] })
+  @ApiQuery({ name: 'key', required: true, enum: ['general', 'branding', 'marketing', 'theme'] })
   @ApiQuery({ name: 'scopeKind', required: true, enum: ['platform', 'vendor', 'store'] })
   @ApiQuery({ name: 'vendorId', required: false })
   @ApiQuery({ name: 'storeId', required: false })

@@ -5,6 +5,7 @@ import { OfferCard } from '@/components/storefront/offer-card';
 import { getPublicAppName } from '@/lib/env';
 import { absoluteUrl } from '@/lib/seo';
 import { fetchPublicCategories, searchProducts } from '@/lib/storefront-api';
+import { DEFAULT_THEME_SETTINGS, fetchStorefrontConfig } from '@/lib/storefront-config-api';
 
 /** Catalog browse data — soft cache; mutations go through admin/vendor APIs. */
 export const revalidate = 60;
@@ -19,12 +20,16 @@ export default async function StorefrontHomePage() {
   const appName = getPublicAppName();
   let categories: Awaited<ReturnType<typeof fetchPublicCategories>> = [];
   let offers: Awaited<ReturnType<typeof searchProducts>>['hits'] = [];
+  let theme = DEFAULT_THEME_SETTINGS;
   let categoryError: string | null = null;
   let offerError: string | null = null;
-  const [categoriesResult, offersResult] = await Promise.allSettled([
+
+  const [categoriesResult, offersResult, configResult] = await Promise.allSettled([
     fetchPublicCategories(),
     searchProducts({ sort: 'newest', limit: 8 }),
+    fetchStorefrontConfig(),
   ]);
+
   if (categoriesResult.status === 'fulfilled') {
     categories = categoriesResult.value;
   } else {
@@ -33,6 +38,7 @@ export default async function StorefrontHomePage() {
         ? categoriesResult.reason.message
         : 'Categories are temporarily unavailable.';
   }
+
   if (offersResult.status === 'fulfilled') {
     offers = offersResult.value.hits;
   } else {
@@ -42,31 +48,56 @@ export default async function StorefrontHomePage() {
         : 'Latest offers are temporarily unavailable.';
   }
 
+  if (configResult.status === 'fulfilled' && configResult.value.theme) {
+    theme = configResult.value.theme;
+  }
+
   const roots = categories.filter((c) => c.parentId === null).slice(0, 12);
 
   return (
     <div className="space-y-12">
-      <section className="sf-hero" aria-labelledby="home-title">
-        <div className="sf-hero-copy">
-          <p className="sf-eyebrow text-white/70">A marketplace for everyday finds</p>
-          <h1 id="home-title" className="sf-display">
-            Good finds. Close to home.
-          </h1>
-          <p>
-            Browse independent stores and published offers. Your final price and availability are
-            confirmed at checkout.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/search" className="sf-button-accent">
-              Explore offers
-            </Link>
-            <Link href="/categories" className="sf-button-secondary">
-              Browse categories
-            </Link>
+      {theme.heroBanner.enabled ? (
+        <section className="sf-hero" aria-labelledby="home-title">
+          <div className="sf-hero-copy">
+            <p className="sf-eyebrow text-white/70">
+              {theme.heroBanner.badgeText || 'A marketplace for everyday finds'}
+            </p>
+            <h1 id="home-title" className="sf-display">
+              {theme.heroBanner.title || 'Good finds. Close to home.'}
+            </h1>
+            <p>
+              {theme.heroBanner.subtitle ||
+                'Browse independent stores and published offers. Your final price and availability are confirmed at checkout.'}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {theme.heroBanner.ctaText && theme.heroBanner.ctaUrl ? (
+                <Link href={theme.heroBanner.ctaUrl} className="sf-button-accent">
+                  {theme.heroBanner.ctaText}
+                </Link>
+              ) : (
+                <Link href="/search" className="sf-button-accent">
+                  Explore offers
+                </Link>
+              )}
+              <Link href="/categories" className="sf-button-secondary">
+                Browse categories
+              </Link>
+            </div>
           </div>
-        </div>
-        <div className="sf-hero-art" aria-label={`${appName} marketplace artwork`} />
-      </section>
+          {theme.heroBanner.imageUrl ? (
+            <div
+              className="sf-hero-art"
+              style={{
+                backgroundImage: `url(${theme.heroBanner.imageUrl})`,
+                backgroundSize: 'cover',
+              }}
+              aria-label={`${appName} marketplace hero artwork`}
+            />
+          ) : (
+            <div className="sf-hero-art" aria-label={`${appName} marketplace artwork`} />
+          )}
+        </section>
+      ) : null}
 
       <section className="sf-trust-grid" aria-label="Shopping benefits">
         <div>
@@ -98,6 +129,32 @@ export default async function StorefrontHomePage() {
           <p>Discover products from sellers in one marketplace.</p>
         </div>
       </section>
+
+      {theme.promoBanner?.enabled ? (
+        <section
+          className="rounded-2xl border border-border bg-gradient-to-r from-muted/80 via-muted/40 to-background p-8 md:p-10 shadow-sm"
+          aria-label="Promotional banner slot"
+        >
+          <div className="max-w-2xl space-y-3">
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+              Featured Notice
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              {theme.promoBanner.title}
+            </h2>
+            <p className="text-sm text-muted-foreground md:text-base leading-relaxed">
+              {theme.promoBanner.text}
+            </p>
+            {theme.promoBanner.ctaText && theme.promoBanner.ctaUrl ? (
+              <div className="pt-2">
+                <Link href={theme.promoBanner.ctaUrl} className="sf-button-accent">
+                  {theme.promoBanner.ctaText}
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-5" aria-labelledby="home-categories">
         <div className="sf-section-heading">

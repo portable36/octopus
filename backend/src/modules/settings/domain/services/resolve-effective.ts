@@ -2,12 +2,14 @@ import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GENERAL_SETTINGS,
   DEFAULT_MARKETING_SETTINGS,
+  DEFAULT_THEME_SETTINGS,
   type BrandingSettings,
   type ConfigurationDocumentRecord,
   type ConfigurationKey,
   type ConfigurationScope,
   type GeneralSettings,
   type MarketingSettings,
+  type ThemeSettings,
 } from '../settings.types';
 
 function matchesScope(doc: ConfigurationDocumentRecord, scope: ConfigurationScope): boolean {
@@ -110,5 +112,69 @@ export function resolveEffectiveMarketing(
     ...(vendor as Partial<MarketingSettings> | null),
     ...(store as Partial<MarketingSettings> | null),
     schemaVersion: 1,
+  };
+}
+
+export function resolveEffectiveTheme(
+  documents: readonly ConfigurationDocumentRecord[],
+  target: ConfigurationScope,
+): ThemeSettings {
+  const platform = findPayload(documents, 'theme', {
+    kind: 'platform',
+  }) as Partial<ThemeSettings> | null;
+  const vendor =
+    target.kind === 'vendor' || target.kind === 'store'
+      ? (findPayload(documents, 'theme', {
+          kind: 'vendor',
+          vendorId: target.vendorId,
+        }) as Partial<ThemeSettings> | null)
+      : null;
+  const store =
+    target.kind === 'store'
+      ? (findPayload(documents, 'theme', {
+          kind: 'store',
+          vendorId: target.vendorId,
+          storeId: target.storeId,
+        }) as Partial<ThemeSettings> | null)
+      : null;
+
+  return {
+    schemaVersion: 1,
+    announcementBar: {
+      ...DEFAULT_THEME_SETTINGS.announcementBar,
+      ...(platform?.announcementBar ?? {}),
+      ...(vendor?.announcementBar ?? {}),
+      ...(store?.announcementBar ?? {}),
+    },
+    colors: {
+      ...DEFAULT_THEME_SETTINGS.colors,
+      ...(platform?.colors ?? {}),
+      ...(vendor?.colors ?? {}),
+      ...(store?.colors ?? {}),
+    },
+    heroBanner: {
+      ...DEFAULT_THEME_SETTINGS.heroBanner,
+      ...(platform?.heroBanner ?? {}),
+      ...(vendor?.heroBanner ?? {}),
+      ...(store?.heroBanner ?? {}),
+    },
+    promoBanner: {
+      ...DEFAULT_THEME_SETTINGS.promoBanner,
+      ...(platform?.promoBanner ?? {}),
+      ...(vendor?.promoBanner ?? {}),
+      ...(store?.promoBanner ?? {}),
+    },
+    header: {
+      ...DEFAULT_THEME_SETTINGS.header,
+      ...(platform?.header ?? {}),
+      ...(vendor?.header ?? {}),
+      ...(store?.header ?? {}),
+    },
+    footer: {
+      ...DEFAULT_THEME_SETTINGS.footer,
+      ...(platform?.footer ?? {}),
+      ...(vendor?.footer ?? {}),
+      ...(store?.footer ?? {}),
+    },
   };
 }

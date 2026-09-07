@@ -5,6 +5,7 @@ import {
   resolveEffectiveBranding,
   resolveEffectiveGeneral,
   resolveEffectiveMarketing,
+  resolveEffectiveTheme,
 } from '../../domain/services/resolve-effective';
 import type {
   BrandingSettings,
@@ -12,6 +13,7 @@ import type {
   ConfigurationScope,
   GeneralSettings,
   MarketingSettings,
+  ThemeSettings,
 } from '../../domain/settings.types';
 import {
   toStorefrontPublicConfig,
@@ -42,7 +44,7 @@ export class SettingsHandlers {
     readonly actorRoles: readonly string[];
     readonly actorVendorId: string | null;
     readonly actorStoreIds: readonly string[];
-  }): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
+  }): Promise<GeneralSettings | BrandingSettings | MarketingSettings | ThemeSettings> {
     this.authz.assertCanRead(
       input.actorRoles,
       input.scope,
@@ -54,13 +56,13 @@ export class SettingsHandlers {
   }
 
   /**
-   * Public read of non-secret configuration keys (general / branding / marketing).
+   * Public read of non-secret configuration keys (general / branding / marketing / theme).
    * Callers must strip marketing secrets before any public response (see toStorefrontPublicConfig).
    */
   public async getEffectivePublic(
     key: ConfigurationKey,
     scope: ConfigurationScope,
-  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
+  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings | ThemeSettings> {
     return this.resolveEffective(key, scope);
   }
 
@@ -72,12 +74,13 @@ export class SettingsHandlers {
       return cached;
     }
 
-    const [general, branding, marketing] = await Promise.all([
+    const [general, branding, marketing, theme] = await Promise.all([
       this.resolveEffective('general', scope) as Promise<GeneralSettings>,
       this.resolveEffective('branding', scope) as Promise<BrandingSettings>,
       this.resolveEffective('marketing', scope) as Promise<MarketingSettings>,
+      this.resolveEffective('theme', scope) as Promise<ThemeSettings>,
     ]);
-    const body = toStorefrontPublicConfig({ scope, general, branding, marketing });
+    const body = toStorefrontPublicConfig({ scope, general, branding, marketing, theme });
     await this.storefrontCache.set(scope, body);
     return body;
   }
@@ -85,13 +88,16 @@ export class SettingsHandlers {
   private async resolveEffective(
     key: ConfigurationKey,
     scope: ConfigurationScope,
-  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings> {
+  ): Promise<GeneralSettings | BrandingSettings | MarketingSettings | ThemeSettings> {
     const documents = await this.configs.findForResolution(key, scope);
     if (key === 'general') {
       return resolveEffectiveGeneral(documents, scope);
     }
     if (key === 'marketing') {
       return resolveEffectiveMarketing(documents, scope);
+    }
+    if (key === 'theme') {
+      return resolveEffectiveTheme(documents, scope);
     }
     return resolveEffectiveBranding(documents, scope);
   }

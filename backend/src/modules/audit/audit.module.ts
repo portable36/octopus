@@ -8,11 +8,12 @@ import { AuditPortAdapter } from './infrastructure/access/audit-port.adapter';
 import { AuditEventOrmEntity } from './infrastructure/persistence/audit-event.orm-entity';
 import { AuditRepositoryAdapter } from './infrastructure/persistence/audit.repository.adapter';
 import { AdminAuditController } from './presentation/http/admin-audit.controller';
+import { ScopedAuditController } from './presentation/http/scoped-audit.controller';
 
 @Global()
 @Module({
   imports: [DatabaseModule, MikroOrmModule.forFeature([AuditEventOrmEntity])],
-  controllers: [AdminAuditController],
+  controllers: [AdminAuditController, ScopedAuditController],
   providers: [
     AuditHandlers,
     {

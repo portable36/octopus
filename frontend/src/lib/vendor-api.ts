@@ -829,3 +829,71 @@ export function getStoreRefundSummary(storeId: string, days = 30): Promise<Refun
     `/reports/stores/${encodeURIComponent(storeId)}/refunds/summary?days=${days}`,
   );
 }
+
+export type StoreActivityRecord = {
+  id: string;
+  actorUserId: string | null;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  vendorId: string | null;
+  storeId: string | null;
+  requestId: string | null;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type StoreActivityQueryResult = {
+  items: StoreActivityRecord[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export function getStoreActivity(
+  storeId: string,
+  options?: {
+    limit?: number;
+    offset?: number;
+    actionPrefix?: string;
+    action?: string;
+    resourceType?: string;
+    actorUserId?: string;
+  },
+): Promise<StoreActivityQueryResult> {
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined) params.set('offset', String(options.offset));
+  if (options?.actionPrefix) params.set('actionPrefix', options.actionPrefix);
+  if (options?.action) params.set('action', options.action);
+  if (options?.resourceType) params.set('resourceType', options.resourceType);
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId);
+  return authedRequest<StoreActivityQueryResult>(
+    `/audit/stores/${encodeURIComponent(storeId)}?${params.toString()}`,
+  );
+}
+
+export function getVendorActivity(
+  vendorId: string,
+  options?: {
+    limit?: number;
+    offset?: number;
+    actionPrefix?: string;
+    action?: string;
+    resourceType?: string;
+    actorUserId?: string;
+  },
+): Promise<StoreActivityQueryResult> {
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined) params.set('offset', String(options.offset));
+  if (options?.actionPrefix) params.set('actionPrefix', options.actionPrefix);
+  if (options?.action) params.set('action', options.action);
+  if (options?.resourceType) params.set('resourceType', options.resourceType);
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId);
+  return authedRequest<StoreActivityQueryResult>(
+    `/audit/vendors/${encodeURIComponent(vendorId)}?${params.toString()}`,
+  );
+}

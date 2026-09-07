@@ -1439,7 +1439,7 @@ Build the platform admin **presentation layer** over existing bounded contexts
 - [x] Admin Store Management Phase A — paginated list/stats, overview+health, admin lifecycle/provisioning routes, create via reused wizard, details shell (Overview / Provisioning / Settings / Staff / Activity placeholder)
 - [ ] Optional verification document fields (when domain supports them)
 - [x] Vendor/store staff management from admin shell
-- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓; payments/shipping/tax/branding/SEO/notifications/analytics/GEM/activity full still open)
+- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓, activity ✓; payments/shipping/tax/branding/SEO/notifications/analytics/GEM still open)
 
 ---
 
@@ -1575,12 +1575,13 @@ Make sensitive business operations traceable.
 - [x] Password change (`auth.password.changed` / `auth.password.reset`)
 - [x] Vendor approval (`vendor.approved` / `vendor.rejected` / `vendor.activated`)
 - [x] Vendor suspension (`vendor.suspended`)
+- [x] Store lifecycle (`store.activated` / `store.suspended` / `store.maintenance` / `store.closed` / `store.archived`)
 - [x] Product changes (`catalog.product.updated`)
 - [x] Inventory adjustments (`inventory.adjusted`)
 - [x] Order cancellation (`order.cancelled`)
 - [x] Refund (`payment.refund.succeeded`)
 - [x] Payout (`payout.approved` / `payout.rejected` / `payout.completed` / `payout.failed`)
-- [x] Permission changes (`permission.vendor_staff_added` / `permission.vendor_staff_removed`)
+- [x] Permission changes (`permission.vendor_staff_added` / `permission.vendor_staff_removed`, `permission.store_staff_added` / `permission.store_staff_removed`)
 - [x] Admin actions (`settings.upserted` / `media.registered`; secrets redacted in audit sink)
 - [x] Token reuse (`auth.token.reuse_detected`)
 
@@ -1602,6 +1603,15 @@ metadata
 ```
 
 Never store secrets in audit records.
+
+- [x] Append-only `audit_events` with secret redaction (`***REDACTED***`)
+- [x] Query performance indexes on `store_id`, `vendor_id`, `actor_user_id`, `resource`, `action` (`Migration20260907120000.ts`)
+- [x] Filtered and paginated audit query read model in `AuditRepository` (`queryAdmin`, `queryStoreActivity`, `queryVendorActivity`)
+- [x] HTTP endpoints: `GET /admin/audit/events`, `GET /admin/audit/query`, `GET /admin/audit/stores/:storeId`, `GET /admin/audit/vendors/:vendorId`
+- [x] Scoped endpoints with role authorization: `GET /audit/stores/:storeId` and `GET /audit/vendors/:vendorId` in `ScopedAuditController`
+- [x] Admin UI: Audit Trail Explorer (`/admin/system/audit`) with category, action, resource, store, vendor, actor filters and payload inspection
+- [x] Store Activity UI: Active audit timeline and payload inspection on Store Details (`/admin/stores/[storeId]/activity`)
+- [x] commit push
 
 ---
 

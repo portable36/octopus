@@ -1,6 +1,11 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Index, PrimaryKey, Property } from '@mikro-orm/core';
 
 @Entity({ tableName: 'audit_events' })
+@Index({ properties: ['storeId', 'createdAt'] })
+@Index({ properties: ['vendorId', 'createdAt'] })
+@Index({ properties: ['actorUserId', 'createdAt'] })
+@Index({ properties: ['resourceType', 'resourceId'] })
+@Index({ properties: ['action', 'createdAt'] })
 export class AuditEventOrmEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;

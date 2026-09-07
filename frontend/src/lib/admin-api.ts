@@ -533,18 +533,83 @@ export type AdminAuditEvent = {
   createdAt: string;
 };
 
+export type AdminAuditFilterOptions = {
+  limit?: number;
+  offset?: number;
+  actionPrefix?: string;
+  action?: string;
+  resourceType?: string;
+  resourceId?: string;
+  vendorId?: string;
+  storeId?: string;
+  actorUserId?: string;
+  fromDate?: string;
+  toDate?: string;
+};
+
+export type AdminAuditQueryResult = {
+  items: AdminAuditEvent[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 export function listAdminAuditEvents(
   token: string,
-  options?: { limit?: number; actionPrefix?: string },
+  options?: AdminAuditFilterOptions,
 ): Promise<AdminAuditEvent[]> {
   const params = new URLSearchParams();
   params.set('limit', String(options?.limit ?? 50));
-  if (options?.actionPrefix) {
-    params.set('actionPrefix', options.actionPrefix);
-  }
+  if (options?.offset !== undefined) params.set('offset', String(options.offset));
+  if (options?.actionPrefix) params.set('actionPrefix', options.actionPrefix);
+  if (options?.action) params.set('action', options.action);
+  if (options?.resourceType) params.set('resourceType', options.resourceType);
+  if (options?.resourceId) params.set('resourceId', options.resourceId);
+  if (options?.vendorId) params.set('vendorId', options.vendorId);
+  if (options?.storeId) params.set('storeId', options.storeId);
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId);
+  if (options?.fromDate) params.set('fromDate', options.fromDate);
+  if (options?.toDate) params.set('toDate', options.toDate);
   return apiRequest<AdminAuditEvent[]>(`/admin/audit/events?${params.toString()}`, {
     headers: authHeaders(token),
   });
+}
+
+export function queryAdminAuditEvents(
+  token: string,
+  options?: AdminAuditFilterOptions,
+): Promise<AdminAuditQueryResult> {
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined) params.set('offset', String(options.offset));
+  if (options?.actionPrefix) params.set('actionPrefix', options.actionPrefix);
+  if (options?.action) params.set('action', options.action);
+  if (options?.resourceType) params.set('resourceType', options.resourceType);
+  if (options?.resourceId) params.set('resourceId', options.resourceId);
+  if (options?.vendorId) params.set('vendorId', options.vendorId);
+  if (options?.storeId) params.set('storeId', options.storeId);
+  if (options?.actorUserId) params.set('actorUserId', options.actorUserId);
+  if (options?.fromDate) params.set('fromDate', options.fromDate);
+  if (options?.toDate) params.set('toDate', options.toDate);
+  return apiRequest<AdminAuditQueryResult>(`/admin/audit/query?${params.toString()}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminStoreActivity(
+  token: string,
+  storeId: string,
+  options?: { limit?: number; offset?: number },
+): Promise<AdminAuditQueryResult> {
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
+  if (options?.offset !== undefined) params.set('offset', String(options.offset));
+  return apiRequest<AdminAuditQueryResult>(
+    `/admin/audit/stores/${encodeURIComponent(storeId)}?${params.toString()}`,
+    {
+      headers: authHeaders(token),
+    },
+  );
 }
 
 export type AdminOrderReportCurrency = {

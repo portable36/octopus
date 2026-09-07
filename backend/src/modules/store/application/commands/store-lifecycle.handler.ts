@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
   MEMBERSHIP_DIRECTORY,
   type MembershipDirectory,
@@ -39,6 +40,7 @@ export class StoreLifecycleHandler {
     @Inject(VENDOR_ACCESS) private readonly vendors: VendorAccessPort,
     @Inject(MEMBERSHIP_DIRECTORY) private readonly memberships: MembershipDirectory,
     @Inject(USER_ROLE_ASSIGNER) private readonly roleAssigner: UserRoleAssigner,
+    @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
   public async activate(
@@ -67,6 +69,15 @@ export class StoreLifecycleHandler {
     }
 
     await this.stores.save(store);
+    await this.audit?.append({
+      actorUserId,
+      action: 'store.activated',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      after: { status: store.status },
+    });
     return store;
   }
 
@@ -80,6 +91,16 @@ export class StoreLifecycleHandler {
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
     store.suspend(actorUserId, reason);
     await this.stores.save(store);
+    await this.audit?.append({
+      actorUserId,
+      action: 'store.suspended',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      metadata: reason ? { reason } : null,
+      after: { status: store.status },
+    });
     return store;
   }
 
@@ -92,6 +113,15 @@ export class StoreLifecycleHandler {
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
     store.close(actorUserId);
     await this.stores.save(store);
+    await this.audit?.append({
+      actorUserId,
+      action: 'store.closed',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      after: { status: store.status },
+    });
     return store;
   }
 
@@ -105,6 +135,16 @@ export class StoreLifecycleHandler {
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
     store.enableMaintenance(actorUserId, reason);
     await this.stores.save(store);
+    await this.audit?.append({
+      actorUserId,
+      action: 'store.maintenance',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      metadata: reason ? { reason } : null,
+      after: { status: store.status },
+    });
     return store;
   }
 
@@ -117,6 +157,15 @@ export class StoreLifecycleHandler {
     await this.assertManagerOrVendorOwnerOrAdmin(store, actorUserId, actorRoles);
     store.archive(actorUserId);
     await this.stores.save(store);
+    await this.audit?.append({
+      actorUserId,
+      action: 'store.archived',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      after: { status: store.status },
+    });
     return store;
   }
 
@@ -133,6 +182,15 @@ export class StoreLifecycleHandler {
     await this.stores.save(store);
     await this.memberships.assignStoreMembership(staffUserId, store.vendorId, storeId);
     await this.roleAssigner.ensureRoles(staffUserId, [role]);
+    await this.audit?.append({
+      actorUserId,
+      action: 'permission.store_staff_added',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      after: { staffUserId, role },
+    });
     return store;
   }
 
@@ -147,6 +205,15 @@ export class StoreLifecycleHandler {
     store.removeStaff(staffUserId);
     await this.stores.save(store);
     await this.memberships.revokeStoreMembership(staffUserId, store.vendorId, storeId);
+    await this.audit?.append({
+      actorUserId,
+      action: 'permission.store_staff_removed',
+      resourceType: 'store',
+      resourceId: storeId,
+      vendorId: store.vendorId,
+      storeId,
+      after: { staffUserId },
+    });
     return store;
   }
 

@@ -1475,7 +1475,9 @@ Ship admin UIs **only after** owning domain modules exist:
 
 - [x] Registers management (Register aggregate, domain invariants, RLS migration, POS register API endpoints, and admin store POS register UI)
 - [x] Receipt template management remains store-scoped (already started)
-- [ ] Printers / barcode scanner device integrations after hardware client protocol lands
+- [x] Printers / hardware integration (ESC/POS thermal printer engine, Web Serial API client, raw bin download, and receipt preview)
+- [x] POS Offline receipt sync (local queue caching, clientTransactionId idempotency, server batch sync, and auto-pruning)
+- [x] Multi-register cashier balancing (Shift aggregate, pos_shifts table with RLS, cash drawer movements, variance tracking, and store balancing summary UI)
 
 ---
 

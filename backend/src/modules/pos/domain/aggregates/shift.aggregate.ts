@@ -12,20 +12,26 @@ export interface OpeningBalanceAdjustment {
   actorId: string;
 }
 
-interface ShiftProps {
+export interface ShiftProps {
+  storeId?: string | undefined;
+  vendorId?: string | undefined;
   registerId: string;
   cashierId: string;
   openingCash: Money;
   openingCashBeforeAdjustment: Money;
-  openingBalanceAdjustment?: OpeningBalanceAdjustment;
+  openingBalanceAdjustment?: OpeningBalanceAdjustment | undefined;
   totalSales: Money;
   nonCashSales: Money;
   cashSales: Money;
   cashIn: Money;
   cashRefunds: Money;
   cashOut: Money;
-  actualCash?: Money;
+  actualCash?: Money | undefined;
   status: ShiftStatus;
+  openedAt?: Date | undefined;
+  closedAt?: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export class Shift extends AggregateRoot<UniqueID> {
@@ -41,6 +47,7 @@ export class Shift extends AggregateRoot<UniqueID> {
     cashierId: string,
     openingCash: Money,
     adjustment?: OpeningBalanceAdjustment,
+    context?: { storeId?: string; vendorId?: string; openedAt?: Date },
   ): Shift {
     if (!registerId.trim() || !cashierId.trim()) {
       throw new Error('Register and cashier are required to open a shift.');
@@ -56,7 +63,10 @@ export class Shift extends AggregateRoot<UniqueID> {
     }
 
     const effectiveOpeningCash = adjustment ? openingCash.subtract(adjustment.amount) : openingCash;
+    const now = context?.openedAt ?? new Date();
     const shift = new Shift(UniqueID.create(), {
+      storeId: context?.storeId,
+      vendorId: context?.vendorId,
       registerId: registerId.trim(),
       cashierId: cashierId.trim(),
       openingCash: effectiveOpeningCash,
@@ -69,6 +79,9 @@ export class Shift extends AggregateRoot<UniqueID> {
       cashRefunds: Shift.zero(openingCash),
       cashOut: Shift.zero(openingCash),
       status: 'OPEN',
+      openedAt: now,
+      createdAt: now,
+      updatedAt: now,
     });
     shift.addEvent('ShiftOpened', {
       shiftId: shift.id.value,
@@ -77,6 +90,18 @@ export class Shift extends AggregateRoot<UniqueID> {
       openingBalanceAdjustment: adjustment?.amount.amountMinorUnits ?? 0,
     });
     return shift;
+  }
+
+  public static rehydrate(id: UniqueID, props: ShiftProps): Shift {
+    return new Shift(id, props);
+  }
+
+  get storeId(): string | undefined {
+    return this.props.storeId;
+  }
+
+  get vendorId(): string | undefined {
+    return this.props.vendorId;
   }
 
   get registerId(): string {
@@ -127,6 +152,22 @@ export class Shift extends AggregateRoot<UniqueID> {
     return this.props.cashOut;
   }
 
+  get openedAt(): Date {
+    return this.props.openedAt ?? this.props.createdAt ?? new Date();
+  }
+
+  get closedAt(): Date | undefined {
+    return this.props.closedAt;
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt ?? new Date();
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt ?? new Date();
+  }
+
   get expectedCash(): Money {
     return this.props.openingCash
       .add(this.props.cashSales)
@@ -175,6 +216,7 @@ export class Shift extends AggregateRoot<UniqueID> {
       ...this.props,
       totalSales: this.props.totalSales.add(amount),
       nonCashSales: this.props.nonCashSales.add(amount),
+      updatedAt: new Date(),
     };
     this.addEvent('SaleRecorded', {
       shiftId: this.id.value,
@@ -204,6 +246,7 @@ export class Shift extends AggregateRoot<UniqueID> {
       cashIn: kind === 'CASH_IN' ? nextTotal : this.props.cashIn,
       cashRefunds: kind === 'CASH_REFUND' ? nextTotal : this.props.cashRefunds,
       cashOut: kind === 'CASH_OUT' ? nextTotal : this.props.cashOut,
+      updatedAt: new Date(),
     };
     this.addEvent('CashMovementRecorded', {
       shiftId: this.id.value,
@@ -215,7 +258,8 @@ export class Shift extends AggregateRoot<UniqueID> {
   public close(actualCash: Money): void {
     this.assertOpen();
     Shift.assertMoneyCurrency(this.props.openingCash, actualCash);
-    this.props = { ...this.props, actualCash, status: 'CLOSED' };
+    const now = new Date();
+    this.props = { ...this.props, actualCash, status: 'CLOSED', closedAt: now, updatedAt: now };
     this.addEvent('ShiftClosed', {
       shiftId: this.id.value,
       expectedCash: this.expectedCash.amountMinorUnits,

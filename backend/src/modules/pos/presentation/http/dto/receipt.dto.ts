@@ -168,3 +168,88 @@ export class CreateReceiptRequestDto {
   @MaxLength(3)
   currencyCode?: string;
 }
+
+export class SyncOfflineReceiptItemDto {
+  @IsString()
+  @MaxLength(64)
+  clientTransactionId!: string;
+
+  @IsISO8601()
+  soldAt!: string;
+
+  @IsString()
+  @MaxLength(120)
+  cashierName!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  registerCode?: string | null;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReceiptSaleLineDto)
+  lines!: ReceiptSaleLineDto[];
+
+  @IsInt()
+  @Min(0)
+  subtotalMinor!: number;
+
+  @IsInt()
+  @Min(0)
+  discountMinor!: number;
+
+  @IsInt()
+  @Min(0)
+  taxMinor!: number;
+
+  @IsInt()
+  @Min(0)
+  totalMinor!: number;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReceiptPaymentLineDto)
+  payments!: ReceiptPaymentLineDto[];
+
+  @IsInt()
+  @Min(0)
+  changeMinor!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(3)
+  currencyCode?: string;
+}
+
+export class SyncOfflineReceiptsRequestDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SyncOfflineReceiptItemDto)
+  items!: SyncOfflineReceiptItemDto[];
+}
+
+export interface SyncReceiptResultDto {
+  readonly clientTransactionId: string;
+  readonly status: 'SYNCED' | 'ALREADY_SYNCED' | 'REJECTED';
+  readonly receiptId?: string;
+  readonly receiptNumber?: string;
+  readonly error?: string;
+}
+
+export interface SyncOfflineReceiptsResponseDto {
+  readonly totalProcessed: number;
+  readonly syncedCount: number;
+  readonly alreadySyncedCount: number;
+  readonly rejectedCount: number;
+  readonly results: readonly SyncReceiptResultDto[];
+}
+
+export interface EscPosResponseDto {
+  readonly receiptId: string;
+  readonly receiptNumber: string;
+  readonly base64: string;
+  readonly hex: string;
+}

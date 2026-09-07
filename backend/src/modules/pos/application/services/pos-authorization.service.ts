@@ -79,4 +79,33 @@ export class PosAuthorizationService {
   ): Promise<StoreAccessSnapshot> {
     return this.requireReceiptViewer(storeId, actorUserId, actorRoles);
   }
+
+  /** Store staff or admins who can operate shifts and registers. */
+  public async requireShiftOperator(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<StoreAccessSnapshot> {
+    return this.requireReceiptViewer(storeId, actorUserId, actorRoles);
+  }
+
+  /** Checks if actor has elevated manager, owner, or platform admin permissions. */
+  public async isStoreManagerOrPlatformAdmin(
+    storeId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<boolean> {
+    if (actorRoles.includes('PLATFORM_ADMIN')) {
+      return true;
+    }
+    const store = await this.stores.findById(storeId);
+    if (!store) {
+      return false;
+    }
+    if (store.managerUserIds.includes(actorUserId)) {
+      return true;
+    }
+    const vendor = await this.vendors.findById(store.vendorId);
+    return vendor?.ownerUserId === actorUserId;
+  }
 }

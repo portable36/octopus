@@ -59,3 +59,34 @@ export class RegisterInactiveError extends PosApplicationError {
     this.name = 'RegisterInactiveError';
   }
 }
+
+export class ShiftNotFoundError extends PosApplicationError {
+  constructor() {
+    super('Shift not found.', 'SHIFT_NOT_FOUND');
+    this.name = 'ShiftNotFoundError';
+  }
+}
+
+export class RegisterShiftAlreadyOpenError extends PosApplicationError {
+  constructor() {
+    super('Register already has an active open shift.', 'REGISTER_SHIFT_ALREADY_OPEN');
+    this.name = 'RegisterShiftAlreadyOpenError';
+  }
+}
+
+export class ShiftAlreadyClosedError extends PosApplicationError {
+  constructor() {
+    super('Shift is already closed.', 'SHIFT_ALREADY_CLOSED');
+    this.name = 'ShiftAlreadyClosedError';
+  }
+}
+
+export class ShiftCashierMismatchError extends PosApplicationError {
+  constructor() {
+    super(
+      'Only the operating cashier or a store manager can close this shift.',
+      'SHIFT_CASHIER_MISMATCH',
+    );
+    this.name = 'ShiftCashierMismatchError';
+  }
+}

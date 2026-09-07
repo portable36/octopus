@@ -16,7 +16,12 @@ import {
   ReceiptAlreadyExistsError,
   ReceiptNotFoundError,
   RegisterCodeAlreadyExistsError,
+  RegisterInactiveError,
   RegisterNotFoundError,
+  RegisterShiftAlreadyOpenError,
+  ShiftAlreadyClosedError,
+  ShiftCashierMismatchError,
+  ShiftNotFoundError,
 } from '../../../application/errors/pos.errors';
 
 @Catch(PosApplicationError, PosDomainError)
@@ -33,18 +38,32 @@ export class PosExceptionFilter implements ExceptionFilter {
     if (
       exception instanceof PosStoreNotFoundError ||
       exception instanceof ReceiptNotFoundError ||
-      exception instanceof RegisterNotFoundError
+      exception instanceof RegisterNotFoundError ||
+      exception instanceof ShiftNotFoundError
     ) {
       return new NotFoundException({ message: exception.message, code: exception.code });
     }
     if (
       exception instanceof ReceiptAlreadyExistsError ||
-      exception instanceof RegisterCodeAlreadyExistsError
+      exception instanceof RegisterCodeAlreadyExistsError ||
+      exception instanceof RegisterShiftAlreadyOpenError
     ) {
       return new ConflictException({ message: exception.message, code: exception.code });
     }
-    if (exception instanceof PosAccessDeniedError) {
+    if (
+      exception instanceof PosAccessDeniedError ||
+      exception instanceof ShiftCashierMismatchError
+    ) {
       return new ForbiddenException({ message: exception.message, code: exception.code });
+    }
+    if (
+      exception instanceof RegisterInactiveError ||
+      exception instanceof ShiftAlreadyClosedError
+    ) {
+      return new HttpException(
+        { message: exception.message, code: exception.code },
+        HttpStatus.BAD_REQUEST,
+      );
     }
     if (exception instanceof PosApplicationError) {
       return new HttpException(

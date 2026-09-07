@@ -5,10 +5,7 @@ import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
-import {
-  DEFAULT_THEME_SETTINGS,
-  type ThemeSettings,
-} from '@/lib/storefront-config-api';
+import { DEFAULT_THEME_SETTINGS, type ThemeSettings } from '@/lib/storefront-config-api';
 
 type GeneralSettings = {
   schemaVersion: 1;

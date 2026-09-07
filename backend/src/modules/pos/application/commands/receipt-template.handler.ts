@@ -7,6 +7,17 @@ import {
 } from '../ports/receipt-template-repository.interface';
 import { PosAuthorizationService } from '../services/pos-authorization.service';
 import { buildSampleSaleSnapshot, renderReceiptText } from '../../domain/services/receipt-renderer';
+import {
+  renderReceiptEscPosBase64,
+  renderReceiptEscPosHex,
+} from '../../domain/services/escpos-renderer';
+
+export interface ReceiptPreviewResult {
+  readonly renderedText: string;
+  readonly escposBase64: string;
+  readonly escposHex: string;
+  readonly templateVersion: number;
+}
 
 @Injectable()
 export class ReceiptTemplateHandler {
@@ -60,11 +71,13 @@ export class ReceiptTemplateHandler {
     storeId: string,
     actorUserId: string,
     actorRoles: readonly string[],
-  ): Promise<{ renderedText: string; templateVersion: number }> {
+  ): Promise<ReceiptPreviewResult> {
     const template = await this.getOrCreate(storeId, actorUserId, actorRoles);
     const sample = buildSampleSaleSnapshot(template.currencyCode);
     return {
       renderedText: renderReceiptText(template.toProps(), sample),
+      escposBase64: renderReceiptEscPosBase64(template.toProps(), sample),
+      escposHex: renderReceiptEscPosHex(template.toProps(), sample),
       templateVersion: template.version,
     };
   }

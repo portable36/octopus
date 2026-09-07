@@ -5,9 +5,11 @@ import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/d
 import { CreateReceiptHandler } from './application/commands/create-receipt.handler';
 import { ReceiptTemplateHandler } from './application/commands/receipt-template.handler';
 import { RegisterHandler } from './application/commands/register.handler';
+import { ShiftHandler } from './application/commands/shift.handler';
 import { RECEIPT_REPOSITORY } from './application/ports/receipt-repository.interface';
 import { RECEIPT_TEMPLATE_REPOSITORY } from './application/ports/receipt-template-repository.interface';
 import { REGISTER_REPOSITORY } from './application/ports/register-repository.interface';
+import { SHIFT_REPOSITORY } from './application/ports/shift-repository.interface';
 import { PosAuthorizationService } from './application/services/pos-authorization.service';
 import { PosProvisionerAdapter } from './infrastructure/access/pos-provisioner.adapter';
 import { ReceiptOrmEntity } from './infrastructure/persistence/receipt.orm-entity';
@@ -17,8 +19,11 @@ import { ReceiptTemplateOrmEntity } from './infrastructure/persistence/receipt-t
 import { ReceiptTemplateRepositoryAdapter } from './infrastructure/persistence/receipt-template.repository.adapter';
 import { RegisterOrmEntity } from './infrastructure/persistence/register.orm-entity';
 import { RegisterRepositoryAdapter } from './infrastructure/persistence/register.repository.adapter';
+import { ShiftOrmEntity } from './infrastructure/persistence/shift.orm-entity';
+import { ShiftRepositoryAdapter } from './infrastructure/persistence/shift.repository.adapter';
 import { PosReceiptController } from './presentation/http/pos-receipt.controller';
 import { PosRegisterController } from './presentation/http/pos-register.controller';
+import { PosShiftController } from './presentation/http/pos-shift.controller';
 
 @Global()
 @Module({
@@ -29,14 +34,16 @@ import { PosRegisterController } from './presentation/http/pos-register.controll
       ReceiptOrmEntity,
       ReceiptSequenceOrmEntity,
       RegisterOrmEntity,
+      ShiftOrmEntity,
     ]),
   ],
-  controllers: [PosReceiptController, PosRegisterController],
+  controllers: [PosReceiptController, PosRegisterController, PosShiftController],
   providers: [
     PosAuthorizationService,
     ReceiptTemplateHandler,
     CreateReceiptHandler,
     RegisterHandler,
+    ShiftHandler,
     {
       provide: RECEIPT_TEMPLATE_REPOSITORY,
       useClass: ReceiptTemplateRepositoryAdapter,
@@ -49,8 +56,18 @@ import { PosRegisterController } from './presentation/http/pos-register.controll
       provide: REGISTER_REPOSITORY,
       useClass: RegisterRepositoryAdapter,
     },
+    {
+      provide: SHIFT_REPOSITORY,
+      useClass: ShiftRepositoryAdapter,
+    },
     { provide: POS_PROVISIONER, useClass: PosProvisionerAdapter },
   ],
-  exports: [ReceiptTemplateHandler, CreateReceiptHandler, RegisterHandler, POS_PROVISIONER],
+  exports: [
+    ReceiptTemplateHandler,
+    CreateReceiptHandler,
+    RegisterHandler,
+    ShiftHandler,
+    POS_PROVISIONER,
+  ],
 })
 export class PosModule {}

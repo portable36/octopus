@@ -47,6 +47,8 @@ function textToLines(text: string): string[] {
 export function ReceiptTemplateSettings({ storeId, accessToken }: Props) {
   const [template, setTemplate] = useState<ReceiptTemplateDto | null>(null);
   const [preview, setPreview] = useState<string>('');
+  const [escposBase64, setEscposBase64] = useState<string>('');
+  const [escposHex, setEscposHex] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -67,13 +69,15 @@ export function ReceiptTemplateSettings({ storeId, accessToken }: Props) {
         apiRequest<ReceiptTemplateDto>(`/api/v1/pos/stores/${storeId}/receipt-template`, {
           headers: authHeaders,
         }),
-        apiRequest<{ renderedText: string }>(
+        apiRequest<{ renderedText: string; escposBase64?: string; escposHex?: string }>(
           `/api/v1/pos/stores/${storeId}/receipt-template/preview`,
           { method: 'POST', headers: authHeaders },
         ),
       ]);
       setTemplate(tpl);
       setPreview(previewResult.renderedText);
+      setEscposBase64(previewResult.escposBase64 ?? '');
+      setEscposHex(previewResult.escposHex ?? '');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to load receipt template.');
     } finally {
@@ -278,7 +282,12 @@ export function ReceiptTemplateSettings({ storeId, accessToken }: Props) {
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Live preview</h2>
         <p className="text-sm text-neutral-600">Uses sample sale data (not live inventory).</p>
-        <ReceiptView text={preview} paperWidth={template.paperWidth} />
+        <ReceiptView
+          text={preview}
+          escposBase64={escposBase64}
+          escposHex={escposHex}
+          paperWidth={template.paperWidth}
+        />
       </div>
     </div>
   );

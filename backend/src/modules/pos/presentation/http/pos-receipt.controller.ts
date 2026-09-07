@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put, UseFilters } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseFilters,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,7 +18,13 @@ import { CreateReceiptHandler } from '../../application/commands/create-receipt.
 import { ReceiptTemplateHandler } from '../../application/commands/receipt-template.handler';
 import type { ReceiptTemplate } from '../../domain/aggregates/receipt-template.aggregate';
 import type { Receipt } from '../../domain/aggregates/receipt.aggregate';
-import { CreateReceiptRequestDto, UpdateReceiptTemplateRequestDto } from './dto/receipt.dto';
+import {
+  CreateReceiptRequestDto,
+  type EscPosResponseDto,
+  SyncOfflineReceiptsRequestDto,
+  type SyncOfflineReceiptsResponseDto,
+  UpdateReceiptTemplateRequestDto,
+} from './dto/receipt.dto';
 import { PosExceptionFilter } from './filters/pos-exception.filter';
 
 @ApiTags('pos-receipts')
@@ -41,7 +57,7 @@ export class PosReceiptController {
 
   @Post('stores/:storeId/receipt-template/preview')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Preview receipt text with sample sale data' })
+  @ApiOperation({ summary: 'Preview receipt text and ESC/POS payload with sample sale data' })
   async preview(@CurrentUser() user: RequestPrincipal, @Param('storeId') storeId: string) {
     return this.templates.preview(storeId, user.userId, user.roles);
   }
@@ -73,11 +89,52 @@ export class PosReceiptController {
     return this.receiptResponse(receipt);
   }
 
+  @Post('stores/:storeId/receipts/sync')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Batch sync offline cached receipts with idempotency and register revalidation',
+  })
+  async syncOfflineReceipts(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('storeId') storeId: string,
+    @Body() body: SyncOfflineReceiptsRequestDto,
+  ): Promise<SyncOfflineReceiptsResponseDto> {
+    return this.receipts.syncOfflineReceipts({
+      storeId,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+      items: body.items.map((item) => ({
+        ...item,
+        soldAt: new Date(item.soldAt),
+      })),
+    });
+  }
+
   @Get('receipts/:receiptId')
   @ApiOperation({ summary: 'Get a receipt by id (frozen text + snapshot)' })
   async getReceipt(@CurrentUser() user: RequestPrincipal, @Param('receiptId') receiptId: string) {
     const receipt = await this.receipts.getById(receiptId, user.userId, user.roles);
     return this.receiptResponse(receipt);
+  }
+
+  @Get('receipts/:receiptId/escpos')
+  @ApiOperation({ summary: 'Get ESC/POS thermal command payload (base64 and hex)' })
+  async getReceiptEscPos(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('receiptId') receiptId: string,
+    @Query('drawer') drawer?: string,
+  ): Promise<EscPosResponseDto> {
+    const kickCashDrawer = drawer === 'true' || drawer === '1';
+    const escpos = await this.receipts.getEscPos(receiptId, user.userId, user.roles, {
+      kickCashDrawer,
+    });
+    const receipt = await this.receipts.getById(receiptId, user.userId, user.roles);
+    return {
+      receiptId: receipt.id.value,
+      receiptNumber: receipt.receiptNumber,
+      base64: escpos.base64,
+      hex: escpos.hex,
+    };
   }
 
   @Post('receipts/:receiptId/printed')
@@ -122,12 +179,9 @@ export class PosReceiptController {
       receiptNumber: receipt.receiptNumber,
       templateId: receipt.templateId,
       templateVersionUsed: receipt.templateVersionUsed,
+      snapshot: receipt.snapshot,
       renderedText: receipt.renderedText,
       status: receipt.status,
-      snapshot: {
-        ...receipt.snapshot,
-        soldAt: receipt.snapshot.soldAt.toISOString(),
-      },
       createdAt: receipt.createdAt.toISOString(),
       createdBy: receipt.createdBy,
     };

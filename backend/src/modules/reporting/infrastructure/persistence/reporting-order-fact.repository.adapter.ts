@@ -6,14 +6,20 @@ import type {
   OrderReportCurrencyBucket,
   OrderReportSummary,
   PaymentMethodSummary,
+  ProductPerformanceRow,
+  RefundReportSummary,
   ReportingOrderFact,
   ReportingOrderFactRepository,
+  ReportingOrderItemFact,
+  ReportingRefundFact,
   ScopedAnalyticsSummary,
   StorePerformanceRow,
   TrendDataPoint,
   VendorPerformanceRow,
 } from '../../application/ports/reporting-order-fact-repository.interface';
 import { ReportingOrderFactOrmEntity } from './reporting-order-fact.orm-entity';
+import { ReportingOrderItemFactOrmEntity } from './reporting-order-item-fact.orm-entity';
+import { ReportingRefundFactOrmEntity } from './reporting-refund-fact.orm-entity';
 
 function emptyCurrency(currencyCode: string): OrderReportCurrencyBucket {
   return {
@@ -163,6 +169,58 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
       entity.paidAt =
         fact.paymentStatus === 'PAID' ? (entity.paidAt ?? fact.paidAt ?? fact.updatedAt) : null;
       entity.updatedAt = fact.updatedAt;
+      await tx.persist(entity).flush();
+    });
+  }
+
+  public async upsertItemFacts(items: readonly ReportingOrderItemFact[]): Promise<void> {
+    if (items.length === 0) {
+      return;
+    }
+    await withRlsContext(this.em, async (tx) => {
+      for (const item of items) {
+        let entity = await tx.findOne(ReportingOrderItemFactOrmEntity, {
+          orderId: item.orderId,
+          lineId: item.lineId,
+        });
+        if (!entity) {
+          entity = new ReportingOrderItemFactOrmEntity();
+          entity.id = item.id;
+          entity.orderId = item.orderId;
+          entity.lineId = item.lineId;
+          entity.createdAt = item.createdAt;
+        }
+        entity.vendorId = item.vendorId;
+        entity.storeId = item.storeId;
+        entity.productId = item.productId;
+        entity.variantId = item.variantId;
+        entity.quantity = item.quantity;
+        entity.unitPriceMinor = item.unitPriceMinor;
+        entity.totalMinor = item.totalMinor;
+        entity.currencyCode = item.currencyCode;
+        entity.paymentStatus = item.paymentStatus;
+        entity.paidAt =
+          item.paymentStatus === 'PAID' ? (entity.paidAt ?? item.paidAt ?? new Date()) : null;
+        await tx.persist(entity).flush();
+      }
+    });
+  }
+
+  public async recordRefundFact(refund: ReportingRefundFact): Promise<void> {
+    await withRlsContext(this.em, async (tx) => {
+      let entity = await tx.findOne(ReportingRefundFactOrmEntity, { refundId: refund.refundId });
+      if (!entity) {
+        entity = new ReportingRefundFactOrmEntity();
+        entity.refundId = refund.refundId;
+        entity.createdAt = refund.createdAt;
+      }
+      entity.orderId = refund.orderId;
+      entity.vendorId = refund.vendorId;
+      entity.storeId = refund.storeId;
+      entity.returnId = refund.returnId;
+      entity.amountMinor = refund.amountMinor;
+      entity.currencyCode = refund.currencyCode;
+      entity.paymentMethod = refund.paymentMethod;
       await tx.persist(entity).flush();
     });
   }
@@ -405,6 +463,167 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
         aovMinor,
         trends,
         paymentMethods,
+      };
+    });
+  }
+
+  public async getTopProducts(query: {
+    vendorId?: string;
+    storeId?: string;
+    days?: number;
+    limit?: number;
+  }): Promise<readonly ProductPerformanceRow[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const days = query.days ?? 30;
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const where: Record<string, unknown> = {
+        createdAt: { $gte: cutoff },
+        paymentStatus: 'PAID',
+      };
+      if (query.vendorId) {
+        where.vendorId = query.vendorId;
+      }
+      if (query.storeId) {
+        where.storeId = query.storeId;
+      }
+
+      const rows = await tx.find(ReportingOrderItemFactOrmEntity, where, {
+        orderBy: { createdAt: 'DESC' },
+      });
+
+      type ProductAcc = {
+        productId: string;
+        variantId: string;
+        unitsSold: number;
+        orderIds: Set<string>;
+        revenueMinor: number;
+        currencyCode: string;
+      };
+
+      const map = new Map<string, ProductAcc>();
+      for (const row of rows) {
+        const key = `${row.productId}::${row.variantId}`;
+        const existing = map.get(key) ?? {
+          productId: row.productId,
+          variantId: row.variantId,
+          unitsSold: 0,
+          orderIds: new Set<string>(),
+          revenueMinor: 0,
+          currencyCode: row.currencyCode || 'BDT',
+        };
+        existing.unitsSold += row.quantity;
+        existing.orderIds.add(row.orderId);
+        existing.revenueMinor += row.totalMinor;
+        map.set(key, existing);
+      }
+
+      const capped = Math.min(Math.max(query.limit ?? 10, 1), 100);
+      return [...map.values()]
+        .map((acc) => ({
+          productId: acc.productId,
+          variantId: acc.variantId,
+          unitsSold: acc.unitsSold,
+          orderCount: acc.orderIds.size,
+          revenueMinor: acc.revenueMinor,
+          currencyCode: acc.currencyCode,
+        }))
+        .sort((a, b) => b.revenueMinor - a.revenueMinor || b.unitsSold - a.unitsSold)
+        .slice(0, capped);
+    });
+  }
+
+  public async getRefundAnalytics(query: {
+    vendorId?: string;
+    storeId?: string;
+    days?: number;
+  }): Promise<RefundReportSummary> {
+    return withRlsContext(this.em, async (tx) => {
+      const days = query.days ?? 30;
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const whereRefund: Record<string, unknown> = {
+        createdAt: { $gte: cutoff },
+      };
+      const whereOrder: Record<string, unknown> = {
+        createdAt: { $gte: cutoff },
+      };
+      if (query.vendorId) {
+        whereRefund.vendorId = query.vendorId;
+        whereOrder.vendorId = query.vendorId;
+      }
+      if (query.storeId) {
+        whereRefund.storeId = query.storeId;
+        whereOrder.storeId = query.storeId;
+      }
+
+      const [refunds, orders] = await Promise.all([
+        tx.find(ReportingRefundFactOrmEntity, whereRefund, {
+          orderBy: { createdAt: 'DESC' },
+        }),
+        tx.find(ReportingOrderFactOrmEntity, whereOrder),
+      ]);
+
+      let totalRefundedMinor = 0;
+      let primaryCurrency = 'BDT';
+      const byMethod = new Map<string, { refundCount: number; amountMinor: number }>();
+
+      for (const ref of refunds) {
+        totalRefundedMinor += ref.amountMinor;
+        if (ref.currencyCode) {
+          primaryCurrency = ref.currencyCode;
+        }
+        const method = ref.paymentMethod || 'UNKNOWN';
+        const acc = byMethod.get(method) ?? { refundCount: 0, amountMinor: 0 };
+        acc.refundCount += 1;
+        acc.amountMinor += ref.amountMinor;
+        byMethod.set(method, acc);
+      }
+
+      let totalPaidRevenueMinor = 0;
+      let totalPaidOrders = 0;
+      for (const ord of orders) {
+        if (ord.paymentStatus === 'PAID') {
+          totalPaidOrders += 1;
+          totalPaidRevenueMinor += ord.totalMinor;
+          primaryCurrency = ord.currencyCode || primaryCurrency;
+        }
+      }
+
+      const refundRatePercent =
+        totalPaidRevenueMinor > 0
+          ? Number(((totalRefundedMinor / totalPaidRevenueMinor) * 100).toFixed(2))
+          : totalPaidOrders > 0
+            ? Number(((refunds.length / totalPaidOrders) * 100).toFixed(2))
+            : 0;
+
+      const refundsByMethod = [...byMethod.entries()]
+        .map(([paymentMethod, acc]) => ({
+          paymentMethod,
+          refundCount: acc.refundCount,
+          amountMinor: acc.amountMinor,
+        }))
+        .sort((a, b) => b.amountMinor - a.amountMinor);
+
+      const recentRefunds = refunds.slice(0, 10).map((r) => ({
+        refundId: r.refundId,
+        orderId: r.orderId,
+        vendorId: r.vendorId,
+        storeId: r.storeId,
+        amountMinor: r.amountMinor,
+        currencyCode: r.currencyCode,
+        paymentMethod: r.paymentMethod,
+        createdAt: (r.createdAt instanceof Date
+          ? r.createdAt
+          : new Date(r.createdAt)
+        ).toISOString(),
+      }));
+
+      return {
+        totalRefundCount: refunds.length,
+        totalRefundedMinor,
+        primaryCurrency,
+        refundRatePercent,
+        refundsByMethod,
+        recentRefunds,
       };
     });
   }

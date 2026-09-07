@@ -65,4 +65,26 @@ export class AdminReportsController {
     const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
     return this.queries.storeAnalytics(storeId, user.userId, user.roles, numDays);
   }
+
+  @Get('products/top')
+  @ApiOperation({ summary: 'Platform admin: top products by sales volume & revenue' })
+  @ApiQuery({ name: 'days', required: false, description: 'Time horizon in days (default 30)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Number of items (default 10)' })
+  async topProducts(
+    @CurrentUser() user: RequestPrincipal,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
+    const numLimit = limit ? Math.max(1, Math.min(100, parseInt(limit, 10) || 10)) : 10;
+    return this.queries.topProducts(user.roles, numDays, numLimit);
+  }
+
+  @Get('refunds/summary')
+  @ApiOperation({ summary: 'Platform admin: refund analytics & return rate summary' })
+  @ApiQuery({ name: 'days', required: false, description: 'Time horizon in days (default 30)' })
+  async refundSummary(@CurrentUser() user: RequestPrincipal, @Query('days') days?: string) {
+    const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
+    return this.queries.refundAnalytics(user.roles, numDays);
+  }
 }

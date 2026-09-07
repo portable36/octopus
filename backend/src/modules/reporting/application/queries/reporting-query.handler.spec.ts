@@ -181,4 +181,89 @@ describe('ReportingQueryHandler', () => {
       handler.storeAnalytics('s-1', 'stranger-user', ['STORE_MANAGER']),
     ).rejects.toBeInstanceOf(ReportingAccessDeniedError);
   });
+
+  it('handles topProducts authorization and retrieval', async () => {
+    const products = [
+      {
+        productId: 'prod-1',
+        variantId: 'var-1',
+        unitsSold: 10,
+        orderCount: 5,
+        revenueMinor: 20000,
+        currencyCode: 'BDT',
+      },
+    ];
+    const facts = {
+      getTopProducts: vi.fn().mockResolvedValue(products),
+    };
+    const vendors = {
+      findById: vi.fn().mockResolvedValue({
+        vendorId: 'v-1',
+        ownerUserId: 'owner-1',
+        staffUserIds: [],
+      }),
+    };
+    const stores = {
+      findById: vi.fn().mockResolvedValue({
+        storeId: 's-1',
+        vendorId: 'v-1',
+        managerUserIds: ['mgr-1'],
+        staffUserIds: [],
+      }),
+    };
+
+    const handler = new ReportingQueryHandler(facts as never, vendors as never, stores as never);
+
+    await expect(handler.topProducts(['PLATFORM_ADMIN'], 30, 5)).resolves.toBe(products);
+    expect(facts.getTopProducts).toHaveBeenCalledWith({ days: 30, limit: 5 });
+
+    await expect(
+      handler.vendorTopProducts('v-1', 'owner-1', ['VENDOR_OWNER'], 30, 5),
+    ).resolves.toBe(products);
+    expect(facts.getTopProducts).toHaveBeenCalledWith({ vendorId: 'v-1', days: 30, limit: 5 });
+
+    await expect(handler.storeTopProducts('s-1', 'mgr-1', ['STORE_MANAGER'], 30, 5)).resolves.toBe(
+      products,
+    );
+    expect(facts.getTopProducts).toHaveBeenCalledWith({ storeId: 's-1', days: 30, limit: 5 });
+
+    await expect(handler.topProducts(['VENDOR_OWNER'])).rejects.toBeInstanceOf(
+      ReportingAccessDeniedError,
+    );
+  });
+
+  it('handles refundAnalytics authorization and retrieval', async () => {
+    const refundSummary = {
+      totalRefundCount: 2,
+      totalRefundedMinor: 3000,
+      primaryCurrency: 'BDT',
+      refundRatePercent: 4.5,
+      refundsByMethod: [{ paymentMethod: 'BKASH', refundCount: 2, amountMinor: 3000 }],
+      recentRefunds: [],
+    };
+    const facts = {
+      getRefundAnalytics: vi.fn().mockResolvedValue(refundSummary),
+    };
+    const vendors = {
+      findById: vi.fn().mockResolvedValue({
+        vendorId: 'v-1',
+        ownerUserId: 'owner-1',
+        staffUserIds: [],
+      }),
+    };
+
+    const handler = new ReportingQueryHandler(facts as never, vendors as never);
+
+    await expect(handler.refundAnalytics(['PLATFORM_ADMIN'], 30)).resolves.toBe(refundSummary);
+    expect(facts.getRefundAnalytics).toHaveBeenCalledWith({ days: 30 });
+
+    await expect(
+      handler.vendorRefundAnalytics('v-1', 'owner-1', ['VENDOR_OWNER'], 30),
+    ).resolves.toBe(refundSummary);
+    expect(facts.getRefundAnalytics).toHaveBeenCalledWith({ vendorId: 'v-1', days: 30 });
+
+    await expect(handler.refundAnalytics(['VENDOR_OWNER'])).rejects.toBeInstanceOf(
+      ReportingAccessDeniedError,
+    );
+  });
 });

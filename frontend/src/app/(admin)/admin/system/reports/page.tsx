@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
+import { ProductPerformanceWidget } from '@/features/dashboard/product-performance-widget';
+import { RefundAnalyticsWidget } from '@/features/dashboard/refund-analytics-widget';
 import { ApiClientError } from '@/lib/api-client';
 import {
   getAdminOrderReportSummary,
@@ -167,6 +169,12 @@ export default function AdminReportsPage() {
             </table>
           </div>
         </section>
+      ) : null}
+      {!loading && !error && token ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ProductPerformanceWidget token={token} title="Platform Top Products" />
+          <RefundAnalyticsWidget token={token} title="Platform Refund Analytics" />
+        </div>
       ) : null}
     </div>
   );

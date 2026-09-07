@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import type Redis from 'ioredis';
 import {
   ABANDONED_CART_OUTBOX_HANDLER,
@@ -18,6 +18,10 @@ import {
   type NotificationOutboxHandler,
 } from '../../../../shared-kernel/application/ports/notification-outbox-handler.port';
 import {
+  REPORTING_OUTBOX_HANDLER,
+  type ReportingOutboxHandler,
+} from '../../../../shared-kernel/application/ports/reporting-outbox-handler.port';
+import {
   SEO_META_CAPI_OUTBOX_HANDLER,
   type SeoMetaCapiOutboxHandler,
 } from '../../../../shared-kernel/application/ports/seo-meta-capi-outbox-handler.port';
@@ -30,6 +34,7 @@ import { runOutboxDelivery } from '../outbox-delivery';
  * Phase 15: CodCollected / RefundCompleted → ledger.
  * Phase 17.2: outbox events → NotificationOutboxHandler.
  * Phase 18.6: outbox events → MarketingOutboxHandler (CodCollected / RefundCompleted).
+ * Phase 21.3: outbox events → ReportingOutboxHandler (RefundCompleted).
  */
 @Injectable()
 export class DomainEventsProcessor {
@@ -46,6 +51,9 @@ export class DomainEventsProcessor {
     private readonly metaCapiEvents: SeoMetaCapiOutboxHandler,
     @Inject(ABANDONED_CART_OUTBOX_HANDLER)
     private readonly abandonedCartEvents: AbandonedCartOutboxHandler,
+    @Optional()
+    @Inject(REPORTING_OUTBOX_HANDLER)
+    private readonly reportingEvents?: ReportingOutboxHandler,
   ) {}
 
   public async handle(job: OutboxJobPayload): Promise<void> {
@@ -61,6 +69,7 @@ export class DomainEventsProcessor {
       await this.metaCapiEvents.handle(job.eventType, job.payload);
       await this.abandonedCartEvents.handle(job.eventType, job.payload);
       await this.marketingEvents.handle(job.eventType, job.payload);
+      await this.reportingEvents?.handle(job.eventType, job.payload);
     });
     if (!processed) {
       this.logger.debug(`Skipping duplicate outbox delivery ${job.outboxId} (${job.eventType})`);

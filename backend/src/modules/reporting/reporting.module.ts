@@ -6,13 +6,22 @@ import { ReportingQueryHandler } from './application/queries/reporting-query.han
 import { REPORTING_ORDER_FACT_REPOSITORY } from './application/ports/reporting-order-fact-repository.interface';
 import { ReportingProjectionService } from './application/services/reporting-projection.service';
 import { ReportingOrderFactOrmEntity } from './infrastructure/persistence/reporting-order-fact.orm-entity';
+import { ReportingOrderItemFactOrmEntity } from './infrastructure/persistence/reporting-order-item-fact.orm-entity';
+import { ReportingRefundFactOrmEntity } from './infrastructure/persistence/reporting-refund-fact.orm-entity';
 import { ReportingOrderFactRepositoryAdapter } from './infrastructure/persistence/reporting-order-fact.repository.adapter';
 import { AdminReportsController } from './presentation/http/admin-reports.controller';
 import { ScopedReportsController } from './presentation/http/scoped-reports.controller';
 
 @Global()
 @Module({
-  imports: [DatabaseModule, MikroOrmModule.forFeature([ReportingOrderFactOrmEntity])],
+  imports: [
+    DatabaseModule,
+    MikroOrmModule.forFeature([
+      ReportingOrderFactOrmEntity,
+      ReportingOrderItemFactOrmEntity,
+      ReportingRefundFactOrmEntity,
+    ]),
+  ],
   controllers: [AdminReportsController, ScopedReportsController],
   providers: [
     ReportingProjectionService,

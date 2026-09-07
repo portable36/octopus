@@ -766,3 +766,66 @@ export function listStoreLowStockItems(
     `/inventory/stores/${encodeURIComponent(storeId)}/low-stock?limit=${limit}`,
   );
 }
+
+export type ProductPerformanceRow = {
+  readonly productId: string;
+  readonly variantId: string;
+  readonly unitsSold: number;
+  readonly orderCount: number;
+  readonly revenueMinor: number;
+  readonly currencyCode: string;
+};
+
+export type RefundReportSummary = {
+  readonly totalRefundCount: number;
+  readonly totalRefundedMinor: number;
+  readonly primaryCurrency: string;
+  readonly refundRatePercent: number;
+  readonly refundsByMethod: readonly {
+    readonly paymentMethod: string;
+    readonly refundCount: number;
+    readonly amountMinor: number;
+  }[];
+  readonly recentRefunds: readonly {
+    readonly refundId: string;
+    readonly orderId: string;
+    readonly vendorId: string;
+    readonly storeId: string;
+    readonly amountMinor: number;
+    readonly currencyCode: string;
+    readonly paymentMethod: string | null;
+    readonly createdAt: string;
+  }[];
+};
+
+export function getVendorTopProducts(
+  vendorId: string,
+  days = 30,
+  limit = 10,
+): Promise<ProductPerformanceRow[]> {
+  return authedRequest<ProductPerformanceRow[]>(
+    `/reports/vendors/${encodeURIComponent(vendorId)}/products/top?days=${days}&limit=${limit}`,
+  );
+}
+
+export function getStoreTopProducts(
+  storeId: string,
+  days = 30,
+  limit = 10,
+): Promise<ProductPerformanceRow[]> {
+  return authedRequest<ProductPerformanceRow[]>(
+    `/reports/stores/${encodeURIComponent(storeId)}/products/top?days=${days}&limit=${limit}`,
+  );
+}
+
+export function getVendorRefundSummary(vendorId: string, days = 30): Promise<RefundReportSummary> {
+  return authedRequest<RefundReportSummary>(
+    `/reports/vendors/${encodeURIComponent(vendorId)}/refunds/summary?days=${days}`,
+  );
+}
+
+export function getStoreRefundSummary(storeId: string, days = 30): Promise<RefundReportSummary> {
+  return authedRequest<RefundReportSummary>(
+    `/reports/stores/${encodeURIComponent(storeId)}/refunds/summary?days=${days}`,
+  );
+}

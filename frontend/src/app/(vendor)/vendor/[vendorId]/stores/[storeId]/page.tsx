@@ -8,6 +8,8 @@ import { ApiClientError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getVendorStore, type StoreSummary } from '@/lib/vendor-api';
 import { setSelectedStoreId } from '@/lib/vendor-session';
+import { ProductPerformanceWidget } from '@/features/dashboard/product-performance-widget';
+import { RefundAnalyticsWidget } from '@/features/dashboard/refund-analytics-widget';
 import { VendorSalesTrendsWidget } from '@/features/dashboard/vendor-sales-trends-widget';
 
 const TABS = [
@@ -122,6 +124,10 @@ export default function VendorStoreDetailPage() {
             storeId={storeId}
             title={`${store.profile.displayName} Sales & Revenue`}
           />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ProductPerformanceWidget storeId={storeId} />
+            <RefundAnalyticsWidget storeId={storeId} />
+          </div>
         </div>
       ) : null}
 

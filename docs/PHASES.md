@@ -1522,6 +1522,13 @@ Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as t
 - [x] `GET /admin/reports/vendors/summary` and `/admin/reports/stores/summary` from facts
 - [x] Admin `/admin/system/reports` (vendor + store tables; IDs only — no cross-module name join)
 
+### 21.3 — Product performance & refund analytics read models
+
+- [x] `reporting_order_item_facts` and `reporting_refund_facts` projection tables + migration
+- [x] Line-item projection on `OrderCreated` / `OrderPaid` and refund fact projection on `RefundCompleted`
+- [x] Platform admin, vendor, and store scoped endpoints: `products/top` and `refunds/summary`
+- [x] Frontend `ProductPerformanceWidget` and `RefundAnalyticsWidget` integrated into vendor dashboard, store detail, and platform admin reports
+
 ### Reports
 
 - [x] Orders (summary counts + paid revenue from facts; detail reports later)
@@ -1530,10 +1537,10 @@ Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as t
 - [x] Commission (paid totals + per vendor/store in 21.2; product-level later)
 - [x] Vendor performance
 - [x] Store performance
-- [ ] Product performance
+- [x] Product performance
 - [ ] Inventory
 - [ ] Customer
-- [ ] Refund
+- [x] Refund
 - [ ] Payout
 
 ### Architecture

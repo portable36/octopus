@@ -13,6 +13,8 @@ import {
   type VendorFinanceSummary,
   type VendorSummary,
 } from '@/lib/vendor-api';
+import { ProductPerformanceWidget } from '@/features/dashboard/product-performance-widget';
+import { RefundAnalyticsWidget } from '@/features/dashboard/refund-analytics-widget';
 import { VendorSalesTrendsWidget } from '@/features/dashboard/vendor-sales-trends-widget';
 
 export default function VendorDashboardPage() {
@@ -174,6 +176,10 @@ export default function VendorDashboardPage() {
       {vendor?.status === 'active' ? (
         <>
           <VendorSalesTrendsWidget vendorId={vendorId} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ProductPerformanceWidget vendorId={vendorId} />
+            <RefundAnalyticsWidget vendorId={vendorId} />
+          </div>
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Vendor actions">
             <DashboardLink href={`/vendor/${vendorId}/orders`} label="Review orders" />
             <DashboardLink href={`/vendor/${vendorId}/catalog`} label="Manage catalog" />

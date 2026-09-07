@@ -665,3 +665,53 @@ export function getVendorAnalyticsOverview(
     },
   );
 }
+
+export type AdminProductPerformanceRow = {
+  productId: string;
+  variantId: string;
+  unitsSold: number;
+  orderCount: number;
+  revenueMinor: number;
+  currencyCode: string;
+};
+
+export type AdminRefundReportSummary = {
+  totalRefundCount: number;
+  totalRefundedMinor: number;
+  primaryCurrency: string;
+  refundRatePercent: number;
+  refundsByMethod: {
+    paymentMethod: string;
+    refundCount: number;
+    amountMinor: number;
+  }[];
+  recentRefunds: {
+    refundId: string;
+    orderId: string;
+    vendorId: string;
+    storeId: string;
+    amountMinor: number;
+    currencyCode: string;
+    paymentMethod: string | null;
+    createdAt: string;
+  }[];
+};
+
+export function getAdminTopProducts(
+  token: string,
+  days = 30,
+  limit = 10,
+): Promise<AdminProductPerformanceRow[]> {
+  return apiRequest<AdminProductPerformanceRow[]>(
+    `/admin/reports/products/top?days=${days}&limit=${limit}`,
+    {
+      headers: authHeaders(token),
+    },
+  );
+}
+
+export function getAdminRefundSummary(token: string, days = 30): Promise<AdminRefundReportSummary> {
+  return apiRequest<AdminRefundReportSummary>(`/admin/reports/refunds/summary?days=${days}`, {
+    headers: authHeaders(token),
+  });
+}

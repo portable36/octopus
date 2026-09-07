@@ -29,6 +29,7 @@ describe('PricingQuoteHandler', () => {
       findById: vi.fn(),
       findByCouponCode: vi.fn(async (_vendorId, code) => (code === 'SAVE10' ? promo : null)),
       listByStore: vi.fn(),
+      findActiveAutomatic: vi.fn(async () => []),
       countCustomerUsage: vi.fn(async () => 0),
       recordUsage: vi.fn(),
     };
@@ -72,5 +73,53 @@ describe('PricingQuoteHandler', () => {
         ],
       }),
     ).rejects.toBeInstanceOf(CouponNotFoundError);
+  });
+
+  it('automatically applies active automatic promotion without coupon code', async () => {
+    const autoPromo = Promotion.create({
+      vendorId: 'vendor-1',
+      storeId: 'store-1',
+      name: 'Auto 15% Storewide',
+      discountType: 'PERCENTAGE',
+      discountValue: 15,
+      currencyCode: 'BDT',
+      scope: 'STORE',
+      startsAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    autoPromo.activate();
+
+    const repo: PromotionRepository = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      findByCouponCode: vi.fn(async () => null),
+      listByStore: vi.fn(),
+      findActiveAutomatic: vi.fn(async () => [autoPromo]),
+      countCustomerUsage: vi.fn(async () => 0),
+      recordUsage: vi.fn(),
+    };
+    const handler = new PricingQuoteHandler(repo);
+
+    const quote = await handler.quote({
+      vendorId: 'vendor-1',
+      storeId: 'store-1',
+      currencyCode: 'BDT',
+      lines: [
+        {
+          lineId: '1',
+          variantId: 'v1',
+          productId: 'p1',
+          categoryIds: [],
+          quantity: 2,
+          unitBasePriceMinor: 10_000, // 20,000 subtotal
+        },
+      ],
+      at: new Date('2026-03-01T00:00:00.000Z'),
+    });
+
+    // 15% of 20,000 = 3,000
+    expect(quote.subtotalMinor).toBe(20_000);
+    expect(quote.discountMinor).toBe(3_000);
+    expect(quote.appliedPromotionId).toBe(autoPromo.id.value);
+    expect(quote.appliedCouponCode).toBeNull();
   });
 });

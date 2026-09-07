@@ -2,10 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Register } from '../../domain/aggregates/register.aggregate';
 import { Shift } from '../../domain/aggregates/shift.aggregate';
 import { ShiftHandler } from './shift.handler';
-import {
-  RegisterShiftAlreadyOpenError,
-  ShiftCashierMismatchError,
-} from '../errors/pos.errors';
+import { RegisterShiftAlreadyOpenError, ShiftCashierMismatchError } from '../errors/pos.errors';
 import { ShiftRepository } from '../ports/shift-repository.interface';
 import { RegisterRepository } from '../ports/register-repository.interface';
 import { PosAuthorizationService } from '../services/pos-authorization.service';
@@ -75,7 +72,7 @@ describe('ShiftHandler & Multi-Register Cashier Balancing', () => {
     } as unknown as RegisterRepository;
 
     authService = {
-      requireShiftOperator: vi.fn(async () => ({ storeId, vendorId } as any)),
+      requireShiftOperator: vi.fn(async () => ({ storeId, vendorId })),
       isStoreManagerOrPlatformAdmin: vi.fn(async (_sId: string, actorId: string) => {
         return actorId === managerId;
       }),

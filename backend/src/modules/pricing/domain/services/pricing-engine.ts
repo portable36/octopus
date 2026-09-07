@@ -1,6 +1,7 @@
 import { CurrencyMismatchError, InvalidMoneyInputError } from '../errors/pricing.errors';
 import type { Promotion } from '../aggregates/promotion.aggregate';
 import type { PriceQuote, QuoteLineInput, QuoteLineResult } from '../pricing.types';
+import { DiscountMatrix } from './discount-matrix';
 
 export interface PricingEngineInput {
   readonly vendorId: string;
@@ -13,7 +14,10 @@ export interface PricingEngineInput {
   /** Commission rate in basis points on (subtotal - discount). */
   readonly commissionRateBps?: number;
   readonly promotion?: Promotion | null;
+  readonly automaticPromotions?: readonly Promotion[];
+  readonly customerUsageCounts?: Readonly<Record<string, number>>;
   readonly customerUsageCount?: number;
+  readonly discountMatrixStrategy?: 'COUPON_PRIORITY' | 'BEST_DISCOUNT';
   readonly at?: Date;
 }
 
@@ -68,11 +72,6 @@ export function calculatePriceQuote(input: PricingEngineInput): PriceQuote {
 
   const subtotalMinor = lineBases.reduce((sum, row) => sum + row.lineSubtotal, 0);
 
-  let discountMinor = 0;
-  let appliedPromotionId: string | null = null;
-  let appliedCouponCode: string | null = null;
-  const eligibleFlags = lineBases.map(() => false);
-
   if (input.promotion) {
     if (input.promotion.currencyCode !== currencyCode) {
       throw new CurrencyMismatchError();
@@ -87,20 +86,29 @@ export function calculatePriceQuote(input: PricingEngineInput): PriceQuote {
         ? { customerUsageCount: input.customerUsageCount }
         : {}),
     });
-
-    let eligibleSubtotal = 0;
-    for (let i = 0; i < lineBases.length; i += 1) {
-      const row = lineBases[i]!;
-      const eligible = input.promotion.isLineEligible(row.line);
-      eligibleFlags[i] = eligible;
-      if (eligible) {
-        eligibleSubtotal += row.lineSubtotal;
-      }
-    }
-    discountMinor = input.promotion.computeDiscountMinor(eligibleSubtotal);
-    appliedPromotionId = input.promotion.id.value;
-    appliedCouponCode = input.promotion.couponCode;
   }
+
+  const matrixResult = DiscountMatrix.evaluate({
+    vendorId: input.vendorId,
+    storeId: input.storeId,
+    currencyCode,
+    lines: lineBases.map((r) => ({ line: r.line, lineSubtotal: r.lineSubtotal })),
+    subtotalMinor,
+    couponPromotion: input.promotion,
+    automaticPromotions: input.automaticPromotions,
+    customerUsageCounts:
+      input.customerUsageCounts ??
+      (input.promotion && input.customerUsageCount !== undefined
+        ? { [input.promotion.id.value]: input.customerUsageCount }
+        : undefined),
+    at,
+    strategy: input.discountMatrixStrategy,
+  });
+
+  const discountMinor = matrixResult.discountMinor;
+  const appliedPromotionId = matrixResult.appliedPromotionId;
+  const appliedCouponCode = matrixResult.appliedCouponCode;
+  const eligibleFlags = [...matrixResult.eligibleFlags];
 
   const lineDiscounts = allocateDiscount(
     lineBases.map((r) => r.lineSubtotal),

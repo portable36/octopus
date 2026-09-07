@@ -87,7 +87,7 @@ describe('CreateReceiptHandler & Offline Sync', () => {
     } as unknown as RegisterRepository;
 
     authService = {
-      requireReceiptViewer: vi.fn(async () => ({ storeId, vendorId } as any)),
+      requireReceiptViewer: vi.fn(async () => ({ storeId, vendorId })),
     } as unknown as PosAuthorizationService;
 
     handler = new CreateReceiptHandler(

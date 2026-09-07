@@ -140,6 +140,49 @@ export async function removeCartLine(input: {
   );
 }
 
+export type RecalculateCartResponse = {
+  cart: CartResponse;
+  quotesByStore: Record<
+    string,
+    {
+      currencyCode: string;
+      vendorId: string;
+      storeId: string;
+      subtotalMinor: number;
+      discountMinor: number;
+      shippingMinor: number;
+      taxMinor: number;
+      commissionMinor: number;
+      totalMinor: number;
+      appliedPromotionId: string | null;
+      appliedCouponCode: string | null;
+    }
+  >;
+  displaySubtotalMinor: number;
+  displayDiscountMinor: number;
+  displayTotalMinor: number;
+};
+
+export async function recalculateCart(input: {
+  cartId: string;
+  couponCode?: string;
+  refreshSnapshots?: boolean;
+}): Promise<RecalculateCartResponse> {
+  return apiRequest<RecalculateCartResponse>(
+    `/cart/${encodeURIComponent(input.cartId)}/recalculate`,
+    {
+      method: 'POST',
+      headers: cartHeaders(),
+      body: {
+        ...(input.couponCode !== undefined ? { couponCode: input.couponCode } : {}),
+        ...(input.refreshSnapshots !== undefined
+          ? { refreshSnapshots: input.refreshSnapshots }
+          : {}),
+      },
+    },
+  );
+}
+
 export async function submitCheckout(input: {
   cartId: string;
   expectedCartVersion: number;
@@ -147,6 +190,7 @@ export async function submitCheckout(input: {
   paymentMethod: CheckoutPaymentMethod;
   shippingAddress: ShippingAddressInput;
   shippingMethod: string;
+  couponCode?: string;
   attribution?: {
     landingPath?: string;
     referrer?: string;
@@ -173,6 +217,7 @@ export async function submitCheckout(input: {
       paymentMethod: input.paymentMethod,
       shippingAddress: input.shippingAddress,
       shippingMethod: input.shippingMethod,
+      ...(input.couponCode !== undefined ? { couponCode: input.couponCode } : {}),
       ...(input.attribution ? { attribution: input.attribution } : {}),
     },
   });

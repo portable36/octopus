@@ -161,4 +161,33 @@ describe('calculatePriceQuote', () => {
     expect(quote.discountMinor).toBe(1);
     expect(quote.lines.reduce((s, l) => s + l.lineDiscountMinor, 0)).toBe(1);
   });
+
+  it('evaluates automatic promotions through discount matrix when no coupon is provided', () => {
+    const autoPromo = Promotion.create({
+      vendorId: 'vendor-1',
+      storeId: 'store-1',
+      name: 'Automatic 10% Off',
+      discountType: 'PERCENTAGE',
+      discountValue: 10,
+      currencyCode: 'BDT',
+      scope: 'STORE',
+      startsAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    autoPromo.activate();
+
+    const quote = calculatePriceQuote({
+      vendorId: 'vendor-1',
+      storeId: 'store-1',
+      currencyCode: 'BDT',
+      lines: [{ ...line, quantity: 2, unitBasePriceMinor: 1000 }],
+      automaticPromotions: [autoPromo],
+      at: new Date('2026-03-01T00:00:00.000Z'),
+    });
+
+    // Subtotal = 2000, 10% = 200
+    expect(quote.subtotalMinor).toBe(2000);
+    expect(quote.discountMinor).toBe(200);
+    expect(quote.appliedPromotionId).toBe(autoPromo.id.value);
+    expect(quote.appliedCouponCode).toBeNull();
+  });
 });

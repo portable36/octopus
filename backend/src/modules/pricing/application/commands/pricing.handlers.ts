@@ -125,6 +125,7 @@ export class PricingQuoteHandler {
     readonly customerId?: string;
     readonly at?: Date;
   }): Promise<PriceQuote> {
+    const at = input.at ?? new Date();
     let promotion: Promotion | null = null;
     let customerUsageCount: number | undefined;
 
@@ -144,19 +145,44 @@ export class PricingQuoteHandler {
       }
     }
 
+    const automaticPromotions = await this.promotions.findActiveAutomatic(
+      input.storeId,
+      input.vendorId,
+      at,
+    );
+
+    const customerUsageCounts: Record<string, number> = {};
+    if (promotion && customerUsageCount !== undefined) {
+      customerUsageCounts[promotion.id.value] = customerUsageCount;
+    }
+    if (input.customerId && automaticPromotions.length > 0) {
+      await Promise.all(
+        automaticPromotions
+          .filter((p) => p.perCustomerLimit !== null)
+          .map(async (p) => {
+            customerUsageCounts[p.id.value] = await this.promotions.countCustomerUsage(
+              p.id.value,
+              input.customerId!,
+            );
+          }),
+      );
+    }
+
     return calculatePriceQuote({
       vendorId: input.vendorId,
       storeId: input.storeId,
       currencyCode: input.currencyCode,
       lines: input.lines,
       promotion,
+      automaticPromotions,
+      customerUsageCounts,
       ...(input.shippingMinor !== undefined ? { shippingMinor: input.shippingMinor } : {}),
       ...(input.taxRateBps !== undefined ? { taxRateBps: input.taxRateBps } : {}),
       ...(input.commissionRateBps !== undefined
         ? { commissionRateBps: input.commissionRateBps }
         : {}),
       ...(customerUsageCount !== undefined ? { customerUsageCount } : {}),
-      ...(input.at !== undefined ? { at: input.at } : {}),
+      at,
     });
   }
 

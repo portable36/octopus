@@ -21,6 +21,7 @@ const TABS = [
   { href: 'catalog', label: 'Catalog' },
   { href: 'inventory', label: 'Inventory' },
   { href: 'orders', label: 'Orders' },
+  { href: 'promotions', label: 'Promotions' },
   { href: 'pos', label: 'POS' },
   { href: 'provisioning', label: 'Provisioning' },
   { href: 'settings', label: 'Settings' },

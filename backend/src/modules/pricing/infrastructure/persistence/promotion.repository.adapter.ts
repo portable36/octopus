@@ -49,6 +49,33 @@ export class PromotionRepositoryAdapter implements PromotionRepository {
     });
   }
 
+  public async findActiveAutomatic(
+    storeId: string,
+    vendorId: string,
+    at: Date = new Date(),
+  ): Promise<Promotion[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        PromotionOrmEntity,
+        {
+          $or: [{ storeId }, { vendorId }],
+          status: 'ACTIVE',
+          couponCode: null,
+          startsAt: { $lte: at },
+          $and: [
+            {
+              $or: [{ endsAt: null }, { endsAt: { $gte: at } }],
+            },
+          ],
+        },
+        { orderBy: { createdAt: 'DESC' } },
+      );
+      return entities
+        .map(promotionToDomain)
+        .filter((p) => p.usageLimit === null || p.usageCount < p.usageLimit);
+    });
+  }
+
   public async countCustomerUsage(promotionId: string, customerId: string): Promise<number> {
     return withRlsContext(this.em, async (tx) => {
       return tx.count(PromotionUsageOrmEntity, { promotionId, customerId });

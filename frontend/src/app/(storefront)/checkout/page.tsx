@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { pushToDataLayer, minorToMajor } from '@/infrastructure/analytics/dataLayer';
 import {
@@ -12,11 +12,14 @@ import {
 import { ApiClientError } from '@/lib/api-client';
 import {
   getOrCreateCart,
+  recalculateCart,
   stashCheckoutOutcome,
   submitCheckout,
   type CartResponse,
   type CheckoutPaymentMethod,
+  type RecalculateCartResponse,
 } from '@/lib/cart-api';
+import { formatMoney } from '@/lib/storefront-api';
 import { readAttributionForCheckout } from '@/lib/attribution';
 
 function newIdempotencyKey(): string {
@@ -27,24 +30,56 @@ function newIdempotencyKey(): string {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialCoupon = searchParams.get('coupon')?.trim() || '';
+
   const [cart, setCart] = useState<CartResponse | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('BKASH');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [couponCode, setCouponCode] = useState(initialCoupon);
+  const [recalc, setRecalc] = useState<RecalculateCartResponse | null>(null);
+  const [recalculating, setRecalculating] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const idempotencyKeyRef = useRef<string>(newIdempotencyKey());
   const checkoutTrackedRef = useRef(false);
+
+  const fetchPricingQuote = async (cartId: string, coupon?: string) => {
+    setRecalculating(true);
+    setCouponError(null);
+    try {
+      const result = await recalculateCart({
+        cartId,
+        ...(coupon && coupon.trim() ? { couponCode: coupon.trim() } : {}),
+      });
+      setRecalc(result);
+      if (coupon && coupon.trim()) {
+        setCouponMessage(`Coupon "${coupon.trim().toUpperCase()}" applied!`);
+      }
+    } catch (error) {
+      if (coupon && coupon.trim()) {
+        setCouponError(error instanceof ApiClientError ? error.message : 'Invalid coupon code.');
+      }
+    } finally {
+      setRecalculating(false);
+    }
+  };
 
   useEffect(() => {
     void (async () => {
       try {
         const next = await getOrCreateCart();
         setCart(next);
+        if (next.lines.length > 0) {
+          void fetchPricingQuote(next.id, initialCoupon || undefined);
+        }
       } catch (error) {
         setLoadError(error instanceof ApiClientError ? error.message : 'Failed to load cart.');
       }
     })();
-  }, []);
+  }, [initialCoupon]);
 
   useEffect(() => {
     if (!cart || cart.lines.length === 0 || checkoutTrackedRef.current) {
@@ -86,6 +121,7 @@ export default function CheckoutPage() {
             .trim()
             .toUpperCase(),
         },
+        couponCode: couponCode.trim() ? couponCode.trim().toUpperCase() : undefined,
         attribution: readAttributionForCheckout(),
       });
       stashCheckoutOutcome(outcome);
@@ -300,6 +336,91 @@ export default function CheckoutPage() {
             </label>
           </div>
         </fieldset>
+
+        {/* Order Totals & Discount Breakdown */}
+        {cart && (
+          <fieldset className="space-y-3">
+            <legend className="text-lg font-semibold">Order Summary</legend>
+            <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Items ({cart.lines.length})</span>
+                <span className="tabular-nums">
+                  {formatMoney(
+                    recalc
+                      ? recalc.displaySubtotalMinor
+                      : cart.lines.reduce(
+                          (sum, line) => sum + line.unitPriceSnapshotMinor * line.quantity,
+                          0,
+                        ),
+                    cart.currencyCode,
+                  )}
+                </span>
+              </div>
+
+              {recalc && recalc.displayDiscountMinor > 0 ? (
+                <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span>
+                    Promotion Discount
+                    {couponCode ? ` (${couponCode.trim().toUpperCase()})` : ''}
+                  </span>
+                  <span className="tabular-nums">
+                    −{formatMoney(recalc.displayDiscountMinor, cart.currencyCode)}
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Coupon input on checkout */}
+              <div className="pt-2 border-t border-border/50">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Coupon code"
+                    value={couponCode}
+                    disabled={pending || recalculating}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm uppercase"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={pending || recalculating}
+                    onClick={() => {
+                      if (cart) {
+                        void fetchPricingQuote(cart.id, couponCode.trim());
+                      }
+                    }}
+                  >
+                    {recalculating ? 'Checking…' : 'Apply'}
+                  </Button>
+                </div>
+                {couponMessage ? (
+                  <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+                    {couponMessage}
+                  </p>
+                ) : null}
+                {couponError ? (
+                  <p className="mt-1 text-xs text-destructive">{couponError}</p>
+                ) : null}
+              </div>
+
+              <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
+                <span>Total Due</span>
+                <span className="tabular-nums">
+                  {formatMoney(
+                    recalc
+                      ? recalc.displayTotalMinor
+                      : cart.lines.reduce(
+                          (sum, line) => sum + line.unitPriceSnapshotMinor * line.quantity,
+                          0,
+                        ),
+                    cart.currencyCode,
+                  )}
+                </span>
+              </div>
+            </div>
+          </fieldset>
+        )}
 
         {submitError ? (
           <p className="sf-panel text-sm text-destructive" role="alert">

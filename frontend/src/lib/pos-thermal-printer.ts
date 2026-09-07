@@ -56,7 +56,9 @@ export async function printEscPosViaWebSerial(
   }
 
   try {
-    const nav = navigator as unknown as { serial: { requestPort: () => Promise<SerialPortHandle> } };
+    const nav = navigator as unknown as {
+      serial: { requestPort: () => Promise<SerialPortHandle> };
+    };
     const port = await nav.serial.requestPort();
     await port.open({ baudRate });
 

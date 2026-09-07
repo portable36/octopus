@@ -578,6 +578,7 @@ Backend price  = authoritative
 ### Exit Criteria
 
 - [x] `PricingModule` with promotions, authoritative `POST /api/v1/pricing/quote`, usage recording, RLS migration, and `PRICING_PORT`.
+- [x] Promotion Engine & Discount Matrix: coupon codes, automatic cart promotions, vendor/store discount matrix evaluation with tie-breaking specificity, cart recalculation with live discount display, checkout discount validation, and Admin store promotions management UI.
 
 ---
 

@@ -7,6 +7,7 @@ export interface PromotionRepository {
   findById(id: string): Promise<Promotion | null>;
   findByCouponCode(vendorId: string, couponCode: string): Promise<Promotion | null>;
   listByStore(storeId: string): Promise<Promotion[]>;
+  findActiveAutomatic(storeId: string, vendorId: string, at?: Date): Promise<Promotion[]>;
   countCustomerUsage(promotionId: string, customerId: string): Promise<number>;
   recordUsage(input: {
     readonly promotion: Promotion;

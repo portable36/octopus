@@ -549,9 +549,7 @@ export function CashierBalancing({ storeId, accessToken }: Props) {
                 <select
                   value={formMovementKind}
                   onChange={(e) =>
-                    setFormMovementKind(
-                      e.target.value as 'CASH_IN' | 'CASH_OUT' | 'CASH_REFUND',
-                    )
+                    setFormMovementKind(e.target.value as 'CASH_IN' | 'CASH_OUT' | 'CASH_REFUND')
                   }
                   className="mt-1 w-full rounded border border-input bg-background px-3 py-1.5 text-xs"
                 >

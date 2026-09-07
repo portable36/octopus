@@ -76,3 +76,73 @@ function ensureGauges(): void {
       }
     });
 }
+
+export interface QueueMetricsSnapshot {
+  readonly name: string;
+  readonly waiting: number;
+  readonly active: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly delayed: number;
+  readonly paused: boolean;
+  readonly lagMs: number;
+  readonly status: 'healthy' | 'degraded' | 'critical';
+}
+
+/**
+ * Returns a real-time point-in-time snapshot of all registered BullMQ queues.
+ */
+export async function getQueueMetricsSnapshot(): Promise<QueueMetricsSnapshot[]> {
+  const snapshots: QueueMetricsSnapshot[] = [];
+  for (const [name, queue] of queueRefs) {
+    try {
+      const counts = await queue.getJobCounts(
+        'waiting',
+        'delayed',
+        'active',
+        'failed',
+        'completed',
+      );
+      const isPaused = typeof queue.isPaused === 'function' ? await queue.isPaused() : false;
+      const jobs = await queue.getJobs(['waiting'], 0, 0, true);
+      const oldest = jobs[0];
+      const lagMs =
+        oldest && typeof oldest.timestamp === 'number'
+          ? Math.max(0, Date.now() - oldest.timestamp)
+          : 0;
+
+      const failedCount = counts.failed ?? 0;
+      let status: 'healthy' | 'degraded' | 'critical' = 'healthy';
+      if (failedCount > 50 || lagMs > 60_000) {
+        status = 'critical';
+      } else if (failedCount > 0 || lagMs > 10_000) {
+        status = 'degraded';
+      }
+
+      snapshots.push({
+        name,
+        waiting: counts.waiting ?? 0,
+        active: counts.active ?? 0,
+        completed: counts.completed ?? 0,
+        failed: failedCount,
+        delayed: counts.delayed ?? 0,
+        paused: isPaused,
+        lagMs,
+        status,
+      });
+    } catch {
+      snapshots.push({
+        name,
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+        delayed: 0,
+        paused: false,
+        lagMs: 0,
+        status: 'critical',
+      });
+    }
+  }
+  return snapshots;
+}

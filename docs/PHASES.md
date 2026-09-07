@@ -1740,7 +1740,18 @@ Optimize based on real measurements.
 - Slice **24.4** — N+1: order `hydrateMany` `$in` lines; cart `findManyByStoreAndVariant`; search `loadOfferSources` for reindex batches. Inventory/checkout per-line lookups remain for a later pass.
 - Slice **24.5** — Redis storefront config cache (`settings:storefront-config:*`, 60s TTL + gen invalidation on upsert); `identity:user-families:*` TTL aligned to refresh family.
 - Slice **24.6** — BullMQ shared job options (age/count retention), DLQ cap, worker lockDuration + `BULLMQ_CONCURRENCY_*` / `BULLMQ_JOB_TIMEOUT_MS` envs.
+- Slice **24.7** — Production Operations & Health Diagnostics: process liveness vs readiness probes (`/health/live`, `/health/ready`), dependency ping dashboard (Postgres, Redis, Meilisearch latency), background BullMQ worker queue metrics (`getQueueMetricsSnapshot`), and Admin System Health UI (`/admin/system/health`).
 - Do not add speculative indexes or caches without a measured bottleneck.
+
+### Production Operations & Health Diagnostics
+
+- [x] Process liveness probe (`GET /health/live`) distinguishing liveness from dependency readiness
+- [x] Core dependency readiness probe (`GET /health/ready` checking PostgreSQL, Redis, Disk, and V8 Heap)
+- [x] Meilisearch health indicator (`MeilisearchHealthIndicator` with status, latencyMs, and host)
+- [x] Real-time dependency ping & diagnostics API (`GET /health/diagnostics` with Postgres, Redis, Meilisearch ms latency)
+- [x] BullMQ background worker queue metrics snapshot (`GET /health/workers` and `getQueueMetricsSnapshot()`)
+- [x] Admin System Health Dashboard (`/admin/system/health`) with live ping latencies, auto-refresh, memory meter, and queue metrics table
+- [x] Unit test coverage for HealthController, MeilisearchHealthIndicator, and QueueMetricsSnapshot
 
 ### Rule
 

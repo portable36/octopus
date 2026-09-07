@@ -780,3 +780,107 @@ export function getAdminRefundSummary(token: string, days = 30): Promise<AdminRe
     headers: authHeaders(token),
   });
 }
+
+export type SystemDependencyPing = {
+  name: string;
+  status: 'up' | 'down' | 'disabled';
+  latencyMs: number;
+  host?: string | null;
+  error?: string | null;
+};
+
+export type SystemQueueSnapshot = {
+  name: string;
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed: number;
+  paused: boolean;
+  lagMs: number;
+  status: 'healthy' | 'degraded' | 'critical';
+};
+
+export type SystemHealthDiagnostics = {
+  status: 'healthy' | 'degraded';
+  timestamp: string;
+  process: {
+    uptimeSec: number;
+    pid: number;
+    nodeVersion: string;
+    platform: string;
+    memory: {
+      heapUsedBytes: number;
+      heapTotalBytes: number;
+      rssBytes: number;
+      heapUsedMb: number;
+      heapTotalMb: number;
+      rssMb: number;
+    };
+  };
+  dependencies: {
+    database: SystemDependencyPing;
+    redis: SystemDependencyPing;
+    meilisearch: SystemDependencyPing;
+  };
+  workers: {
+    summary: {
+      totalQueues: number;
+      totalWaiting: number;
+      totalActive: number;
+      totalFailed: number;
+      totalDelayed: number;
+    };
+    queues: SystemQueueSnapshot[];
+  };
+};
+
+export type SystemHealthProbe = {
+  status: string;
+  uptimeSec?: number;
+  timestamp?: string;
+  pid?: number;
+  info?: Record<string, unknown>;
+  error?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+};
+
+export function getSystemHealthDiagnostics(token?: string): Promise<SystemHealthDiagnostics> {
+  return apiRequest<SystemHealthDiagnostics>('/health/diagnostics', {
+    headers: token ? authHeaders(token) : {},
+  });
+}
+
+export function getSystemHealthLive(): Promise<{ status: string; uptimeSec: number }> {
+  return apiRequest<{ status: string; uptimeSec: number }>('/health/live');
+}
+
+export function getSystemHealthReady(): Promise<SystemHealthProbe> {
+  return apiRequest<SystemHealthProbe>('/health/ready');
+}
+
+export function getSystemWorkerMetrics(token?: string): Promise<{
+  timestamp: string;
+  summary: {
+    totalQueues: number;
+    totalWaiting: number;
+    totalActive: number;
+    totalFailed: number;
+    totalDelayed: number;
+  };
+  queues: SystemQueueSnapshot[];
+}> {
+  return apiRequest<{
+    timestamp: string;
+    summary: {
+      totalQueues: number;
+      totalWaiting: number;
+      totalActive: number;
+      totalFailed: number;
+      totalDelayed: number;
+    };
+    queues: SystemQueueSnapshot[];
+  }>('/health/workers', {
+    headers: token ? authHeaders(token) : {},
+  });
+}

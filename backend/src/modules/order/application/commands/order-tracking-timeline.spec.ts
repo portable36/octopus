@@ -65,6 +65,7 @@ describe('Order Tracking Timeline', () => {
 
     const mockRepo: OrderRepository = {
       findById: vi.fn(async () => order),
+      findByOrderNumber: vi.fn(async () => order),
       findByIdempotencyKey: vi.fn(),
       listByCustomerId: vi.fn(),
       listByStoreId: vi.fn(),
@@ -112,6 +113,7 @@ describe('Order Tracking Timeline', () => {
 
     const mockRepo: OrderRepository = {
       findById: vi.fn(async () => order),
+      findByOrderNumber: vi.fn(async () => order),
       findByIdempotencyKey: vi.fn(),
       listByCustomerId: vi.fn(),
       listByStoreId: vi.fn(),

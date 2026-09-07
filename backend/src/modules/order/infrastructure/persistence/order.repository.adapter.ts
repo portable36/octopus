@@ -51,6 +51,17 @@ export class OrderRepositoryAdapter implements OrderRepository {
     });
   }
 
+  public async findByOrderNumber(orderNumber: string): Promise<Order | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(OrderOrmEntity, { orderNumber: orderNumber.trim() });
+      if (!entity) {
+        return null;
+      }
+      const lines = await tx.find(OrderLineOrmEntity, { orderId: entity.id });
+      return orderToDomain(entity, lines);
+    });
+  }
+
   public async findByIdempotencyKey(idempotencyKey: string): Promise<Order | null> {
     return withRlsContext(this.em, async (tx) => {
       const entity = await tx.findOne(OrderOrmEntity, { idempotencyKey });

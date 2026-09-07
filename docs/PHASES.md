@@ -1003,11 +1003,19 @@ Coordinate via ports/outbox. Do not mutate Payment/Inventory tables from Return 
 - [x] Outbox `RefundCompleted` allocation payload
 - [x] LedgerPort stub until Phase 15 (no duplicate ledger)
 
+### 14.5 — Customer Returns Self-Service Portal
+
+- [x] Public order return lookup by order number and customer email (`POST /api/v1/returns/public/lookup`)
+- [x] Multi-item return request submission with line validation, returnable quantity calculation, and idempotency protection (`POST /api/v1/returns/public/request`)
+- [x] Return tracking timeline with milestones, inspection results, and cancel action (`GET /api/v1/returns/public/:returnId`, `POST /api/v1/returns/public/:returnId/cancel`)
+- [x] Storefront customer returns portal (`/returns`) and return tracking page (`/returns/[returnId]`)
+- [x] Order history integration and storefront header/footer navigation links
+
 ### Deferred
 
 - Category/product return policy (platform/vendor/store settings later)
 - Live SSLCommerz/bKash/Nagad refund webhooks
-- Customer/vendor return UIs (Phase 18 / 20)
+- Vendor return management UI (Phase 20)
 - Return courier shipment
 
 Product baselines: [docs/product/current-baseline.md](./product/current-baseline.md).

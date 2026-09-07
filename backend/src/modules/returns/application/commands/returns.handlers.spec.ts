@@ -19,37 +19,39 @@ describe('ReturnsHandlers', () => {
       findOperation: vi.fn().mockResolvedValue(null),
       saveOperation: vi.fn().mockResolvedValue(undefined),
     };
+    const orderSnapshot = {
+      orderId,
+      orderNumber: 'ORD-1',
+      customerId,
+      vendorId: 'dddddddd-dddd-7ddd-8ddd-dddddddddddd',
+      storeId: 'eeeeeeee-eeee-7eee-8eee-eeeeeeeeeeee',
+      status: 'FULFILLED',
+      paymentStatus: 'PAID',
+      paymentMethod: 'COD',
+      currencyCode: 'BDT',
+      totalMinor: 5000,
+      returnWindowAnchorAt: new Date(),
+      lines: [
+        {
+          lineId,
+          productId: 'p1',
+          variantId: 'v1',
+          offerId: 'o1',
+          quantity: 5,
+          fulfilledQuantity: 5,
+          unitPriceMinor: 1000,
+          lineSubtotalMinor: 5000,
+          lineDiscountMinor: 0,
+          lineTaxMinor: 0,
+          lineTotalMinor: 5000,
+          currencyCode: 'BDT',
+          warehouseId: 'w1',
+        },
+      ],
+    };
     const orders = {
-      getReturnSnapshot: vi.fn().mockResolvedValue({
-        orderId,
-        orderNumber: 'ORD-1',
-        customerId,
-        vendorId: 'dddddddd-dddd-7ddd-8ddd-dddddddddddd',
-        storeId: 'eeeeeeee-eeee-7eee-8eee-eeeeeeeeeeee',
-        status: 'FULFILLED',
-        paymentStatus: 'PAID',
-        paymentMethod: 'COD',
-        currencyCode: 'BDT',
-        totalMinor: 5000,
-        returnWindowAnchorAt: new Date(),
-        lines: [
-          {
-            lineId,
-            productId: 'p1',
-            variantId: 'v1',
-            offerId: 'o1',
-            quantity: 5,
-            fulfilledQuantity: 5,
-            unitPriceMinor: 1000,
-            lineSubtotalMinor: 5000,
-            lineDiscountMinor: 0,
-            lineTaxMinor: 0,
-            lineTotalMinor: 5000,
-            currencyCode: 'BDT',
-            warehouseId: 'w1',
-          },
-        ],
-      }),
+      getReturnSnapshot: vi.fn().mockResolvedValue(orderSnapshot),
+      getReturnSnapshotByOrderNumber: vi.fn().mockResolvedValue(orderSnapshot),
     };
     const authz = {
       requirePermission: vi.fn(),
@@ -64,13 +66,18 @@ describe('ReturnsHandlers', () => {
         lineResults: [],
       }),
     };
+    const userContact = {
+      findEmailByUserId: vi.fn().mockResolvedValue('customer@example.com'),
+      findUserIdByEmail: vi.fn().mockResolvedValue(customerId),
+    };
     const handlers = new ReturnsHandlers(
       returns as never,
       orders as never,
       inventory as never,
       authz as never,
+      userContact as never,
     );
-    return { handlers, returns, orders, authz, inventory };
+    return { handlers, returns, orders, authz, inventory, userContact, orderSnapshot };
   }
 
   it('creates a valid partial return request', async () => {
@@ -123,5 +130,81 @@ describe('ReturnsHandlers', () => {
         actorRoles: ['VENDOR_OWNER'],
       }),
     ).rejects.toBeInstanceOf(ReturnsAccessDeniedError);
+  });
+
+  it('performs public lookup for an order and returns eligibility & lines', async () => {
+    const { handlers } = build();
+    const result = await handlers.publicLookup({
+      orderNumber: 'ORD-1',
+      email: 'customer@example.com',
+    });
+
+    expect(result.orderNumber).toBe('ORD-1');
+    expect(result.returnEligible).toBe(true);
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0]?.returnableQuantity).toBe(5);
+    expect(result.returnWindowDays).toBe(7);
+  });
+
+  it('submits a public self-service return request and supports idempotency', async () => {
+    const { handlers, returns } = build();
+    const ret = await handlers.publicRequestReturn({
+      orderNumber: 'ORD-1',
+      email: 'customer@example.com',
+      idempotencyKey: 'public-return-001',
+      items: [{ orderItemId: lineId, quantity: 2, reasonCode: 'DEFECTIVE' }],
+    });
+
+    expect(ret.status).toBe('REQUESTED');
+    expect(returns.save).toHaveBeenCalled();
+    expect(returns.saveOperation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        idempotencyKey: 'public-return-001',
+        operationType: 'public_request_return',
+      }),
+    );
+  });
+
+  it('retrieves public return tracking timeline with milestones', async () => {
+    const { handlers, returns } = build();
+    const ret = await handlers.publicRequestReturn({
+      orderNumber: 'ORD-1',
+      email: 'customer@example.com',
+      idempotencyKey: 'public-return-002',
+      items: [{ orderItemId: lineId, quantity: 1, reasonCode: 'SIZE_ISSUE' }],
+    });
+    returns.findById.mockResolvedValue(ret);
+
+    const timeline = await handlers.publicGetReturnTimeline({
+      returnId: ret.id.value,
+      email: 'customer@example.com',
+    });
+
+    expect(timeline.id).toBe(ret.id.value);
+    expect(timeline.orderNumber).toBe('ORD-1');
+    expect(timeline.status).toBe('REQUESTED');
+    expect(timeline.milestones).toHaveLength(6);
+    expect(timeline.milestones[0]?.key).toBe('REQUESTED');
+    expect(timeline.milestones[0]?.state).toBe('COMPLETED');
+    expect(timeline.canCancel).toBe(true);
+  });
+
+  it('cancels customer return request before warehouse intake', async () => {
+    const { handlers, returns } = build();
+    const ret = await handlers.publicRequestReturn({
+      orderNumber: 'ORD-1',
+      email: 'customer@example.com',
+      idempotencyKey: 'public-return-003',
+      items: [{ orderItemId: lineId, quantity: 1, reasonCode: 'CUSTOMER_CHANGED_MIND' }],
+    });
+    returns.findById.mockResolvedValue(ret);
+
+    const cancelled = await handlers.publicCancelReturn({
+      returnId: ret.id.value,
+      email: 'customer@example.com',
+    });
+
+    expect(cancelled.status).toBe('CANCELLED');
+    expect(cancelled.statusLabel).toBe('Return Cancelled');
   });
 });

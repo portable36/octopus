@@ -240,6 +240,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
                 <div>
                   <p className="sf-footer-heading">Help</p>
                   <Link href="/account/orders">Track order</Link>
+                  <Link href="/returns">Returns & Refunds</Link>
                   <Link href="/account">Account</Link>
                 </div>
                 <div>

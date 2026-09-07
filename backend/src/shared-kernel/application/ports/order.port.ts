@@ -179,6 +179,7 @@ export interface OrderPort {
   markPaidFromPayment(input: MarkOrderPaidFromPaymentInput): Promise<void>;
   getFulfillmentSnapshot(orderId: string): Promise<OrderFulfillmentSnapshot | null>;
   getReturnSnapshot(orderId: string): Promise<OrderReturnSnapshot | null>;
+  getReturnSnapshotByOrderNumber(orderNumber: string): Promise<OrderReturnSnapshot | null>;
   getFinanceSnapshot(orderId: string): Promise<OrderFinanceSnapshot | null>;
   /** Minimal fields for Notification recipients (no PII beyond customer id). */
   getNotificationSnapshot(orderId: string): Promise<OrderNotificationSnapshot | null>;

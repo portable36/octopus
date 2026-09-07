@@ -556,6 +556,10 @@ export class OrderLifecycleHandler {
     return this.orders.findById(orderId);
   }
 
+  public async getFulfillmentSnapshotByOrderNumber(orderNumber: string): Promise<Order | null> {
+    return this.orders.findByOrderNumber(orderNumber);
+  }
+
   public async prepareShipment(input: {
     readonly orderId: string;
     readonly actorUserId: string;

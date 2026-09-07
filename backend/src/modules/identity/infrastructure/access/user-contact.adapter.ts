@@ -13,4 +13,9 @@ export class UserContactAdapter implements UserContactPort {
     const user = await this.users.findById(userId);
     return user?.email.value ?? null;
   }
+
+  public async findUserIdByEmail(email: string): Promise<string | null> {
+    const user = await this.users.findByEmail(email);
+    return user?.id.value ?? null;
+  }
 }

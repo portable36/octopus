@@ -180,10 +180,20 @@ export default function AccountOrderDetailPage() {
         ) : (
           <ul className="divide-y divide-border border border-border">
             {returns.map((ret) => (
-              <li key={ret.id} className="px-4 py-3 text-sm">
-                <p className="font-medium">{ret.status}</p>
-                <p className="text-muted-foreground">{ret.requestedAt}</p>
-                {ret.customerNote ? <p>{ret.customerNote}</p> : null}
+              <li key={ret.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <div>
+                  <p className="font-medium">{ret.status}</p>
+                  <p className="text-muted-foreground">{ret.requestedAt}</p>
+                  {ret.customerNote ? <p>{ret.customerNote}</p> : null}
+                </div>
+                <Link
+                  href={`/returns/${encodeURIComponent(ret.id)}?orderNumber=${encodeURIComponent(
+                    order.orderNumber,
+                  )}`}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  View Tracking Timeline →
+                </Link>
               </li>
             ))}
           </ul>

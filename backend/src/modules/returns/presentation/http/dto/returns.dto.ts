@@ -2,8 +2,10 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsEmail,
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -74,4 +76,64 @@ export class InspectReturnDto {
   @IsString()
   @MaxLength(2000)
   note?: string;
+}
+
+export class LookupOrderReturnDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  orderNumber!: string;
+
+  @IsEmail()
+  @MaxLength(200)
+  email!: string;
+}
+
+export class PublicRequestReturnItemDto {
+  @IsString()
+  @IsNotEmpty()
+  orderItemId!: string;
+
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  reasonCode!: string;
+}
+
+export class PublicRequestReturnDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  orderNumber!: string;
+
+  @IsEmail()
+  @MaxLength(200)
+  email!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  note?: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => PublicRequestReturnItemDto)
+  items!: PublicRequestReturnItemDto[];
+}
+
+export class PublicCancelReturnDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  orderNumber?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(200)
+  email?: string;
 }

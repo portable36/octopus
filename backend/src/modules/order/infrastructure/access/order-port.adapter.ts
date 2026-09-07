@@ -48,6 +48,13 @@ export class OrderPortAdapter implements OrderPort {
     return order ? toReturnSnapshot(order) : null;
   }
 
+  public async getReturnSnapshotByOrderNumber(
+    orderNumber: string,
+  ): Promise<OrderReturnSnapshot | null> {
+    const order = await this.lifecycle.getFulfillmentSnapshotByOrderNumber(orderNumber);
+    return order ? toReturnSnapshot(order) : null;
+  }
+
   public async getFinanceSnapshot(orderId: string): Promise<OrderFinanceSnapshot | null> {
     const order = await this.lifecycle.getFulfillmentSnapshot(orderId);
     if (!order) {

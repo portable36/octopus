@@ -7,6 +7,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   UseFilters,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -14,10 +15,18 @@ import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
+import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
 import type { ReturnRequest } from '../../domain/aggregates/return-request.aggregate';
 import { RETURN_REASONS } from '../../domain/returns.types';
 import { ReturnsHandlers } from '../../application/commands/returns.handlers';
-import { InspectReturnDto, RejectReturnDto, RequestReturnDto } from './dto/returns.dto';
+import {
+  InspectReturnDto,
+  LookupOrderReturnDto,
+  PublicCancelReturnDto,
+  PublicRequestReturnDto,
+  RejectReturnDto,
+  RequestReturnDto,
+} from './dto/returns.dto';
 import { ReturnsExceptionFilter } from './filters/returns-exception.filter';
 
 function requireIdempotencyKey(header?: string): string {
@@ -70,10 +79,61 @@ function toResponse(ret: ReturnRequest) {
 export class ReturnsController {
   constructor(private readonly handlers: ReturnsHandlers) {}
 
+  @Public()
   @Get('returns/reasons')
   @ApiOperation({ summary: 'List active customer-selectable return reasons' })
   listReasons() {
     return RETURN_REASONS.filter((r) => r.active && r.customerSelectable);
+  }
+
+  @Public()
+  @Post('returns/public/lookup')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Lookup order details and return eligibility by order number & email' })
+  async publicLookup(@Body() body: LookupOrderReturnDto) {
+    return this.handlers.publicLookup(body);
+  }
+
+  @Public()
+  @Post('returns/public/request')
+  @HttpCode(201)
+  @ApiOperation({ summary: 'Submit self-service customer return request' })
+  @ApiHeader({ name: 'Idempotency-Key', required: true })
+  async publicRequest(
+    @Body() body: PublicRequestReturnDto,
+    @Headers('idempotency-key') idempotencyHeader?: string,
+  ) {
+    const ret = await this.handlers.publicRequestReturn({
+      orderNumber: body.orderNumber,
+      email: body.email,
+      idempotencyKey: requireIdempotencyKey(idempotencyHeader),
+      ...(body.note !== undefined ? { note: body.note } : {}),
+      items: body.items,
+    });
+    return this.handlers.buildReturnTimeline(ret, body.orderNumber);
+  }
+
+  @Public()
+  @Get('returns/public/:returnId')
+  @ApiOperation({ summary: 'Get customer return tracking timeline' })
+  async publicGetTimeline(
+    @Param('returnId') returnId: string,
+    @Query('orderNumber') orderNumber?: string,
+    @Query('email') email?: string,
+  ) {
+    return this.handlers.publicGetReturnTimeline({ returnId, orderNumber, email });
+  }
+
+  @Public()
+  @Post('returns/public/:returnId/cancel')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Cancel customer self-service return request' })
+  async publicCancel(@Param('returnId') returnId: string, @Body() body: PublicCancelReturnDto) {
+    return this.handlers.publicCancelReturn({
+      returnId,
+      orderNumber: body.orderNumber,
+      email: body.email,
+    });
   }
 
   @Post('orders/:orderId/returns')

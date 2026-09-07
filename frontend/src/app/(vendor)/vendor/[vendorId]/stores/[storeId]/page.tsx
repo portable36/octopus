@@ -8,6 +8,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { getVendorStore, type StoreSummary } from '@/lib/vendor-api';
 import { setSelectedStoreId } from '@/lib/vendor-session';
+import { VendorSalesTrendsWidget } from '@/features/dashboard/vendor-sales-trends-widget';
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -89,32 +90,39 @@ export default function VendorStoreDetailPage() {
       </nav>
 
       {tab === 'overview' ? (
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-muted-foreground">Store code</dt>
-            <dd>{store.storeCode ?? '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Type</dt>
-            <dd className="capitalize">{store.storeType ?? 'online'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Currency</dt>
-            <dd>{store.settings.currencyCode}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Timezone</dt>
-            <dd>{store.settings.timezone ?? 'Asia/Dhaka'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">City</dt>
-            <dd>{store.address?.city ?? '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Online orders</dt>
-            <dd>{store.settings.acceptsOnlineOrders ? 'Yes' : 'No'}</dd>
-          </div>
-        </dl>
+        <div className="space-y-6">
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">Store code</dt>
+              <dd>{store.storeCode ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Type</dt>
+              <dd className="capitalize">{store.storeType ?? 'online'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Currency</dt>
+              <dd>{store.settings.currencyCode}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Timezone</dt>
+              <dd>{store.settings.timezone ?? 'Asia/Dhaka'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">City</dt>
+              <dd>{store.address?.city ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Online orders</dt>
+              <dd>{store.settings.acceptsOnlineOrders ? 'Yes' : 'No'}</dd>
+            </div>
+          </dl>
+
+          <VendorSalesTrendsWidget
+            storeId={storeId}
+            title={`${store.profile.displayName} Sales & Revenue`}
+          />
+        </div>
       ) : null}
 
       {tab === 'settings' ? (

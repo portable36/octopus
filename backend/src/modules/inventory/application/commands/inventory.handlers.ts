@@ -336,6 +336,48 @@ export class StockCommandHandler {
     return this.inventory.findItemsByStoreId(input.storeId, input.limit ?? 50);
   }
 
+  public async listLowStock(input: {
+    readonly storeId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+    readonly limit?: number;
+  }): Promise<
+    Array<{
+      readonly id: string;
+      readonly storeId: string;
+      readonly warehouseId: string;
+      readonly warehouseName: string;
+      readonly variantId: string;
+      readonly onHand: number;
+      readonly reserved: number;
+      readonly available: number;
+      readonly lowStockThreshold: number;
+      readonly stockStatus: ReturnType<typeof stockStatus>;
+      readonly updatedAt: Date;
+    }>
+  > {
+    await this.auth.requireReader(input.storeId, input.actorUserId, input.actorRoles);
+    const items = await this.inventory.findLowStockItemsByStoreId(input.storeId, input.limit ?? 50);
+    const warehouses = await this.warehouses.findByStoreId(input.storeId);
+    const byId = new Map(warehouses.map((w) => [w.id.value, w]));
+    return items.map((item) => {
+      const wh = byId.get(item.warehouseId);
+      return {
+        id: item.id.value,
+        storeId: item.storeId,
+        warehouseId: item.warehouseId,
+        warehouseName: wh?.name ?? item.warehouseId,
+        variantId: item.variantId,
+        onHand: item.onHand,
+        reserved: item.reserved,
+        available: item.available,
+        lowStockThreshold: item.lowStockThreshold,
+        stockStatus: stockStatus(item.available, item.lowStockThreshold),
+        updatedAt: item.updatedAt,
+      };
+    });
+  }
+
   public async getAvailability(input: {
     readonly storeId: string;
     readonly variantId: string;

@@ -694,3 +694,75 @@ export function transferStock(
     { method: 'POST', body: input },
   );
 }
+
+export type SalesAnalyticsTrendPoint = {
+  readonly date: string;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+  readonly commissionMinor: number;
+};
+
+export type SalesAnalyticsPaymentMethod = {
+  readonly paymentMethod: string;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+};
+
+export type ScopedSalesAnalytics = {
+  readonly scope: 'VENDOR' | 'STORE';
+  readonly scopeId: string;
+  readonly days: number;
+  readonly aovMinor: number;
+  readonly summary: {
+    readonly orderCount: number;
+    readonly paidOrderCount: number;
+    readonly revenueMinor: number;
+    readonly commissionMinor: number;
+    readonly currencies: readonly {
+      readonly currencyCode: string;
+      readonly paidOrderCount: number;
+      readonly revenueMinor: number;
+      readonly commissionMinor: number;
+    }[];
+  };
+  readonly trends: readonly SalesAnalyticsTrendPoint[];
+  readonly paymentMethods: readonly SalesAnalyticsPaymentMethod[];
+};
+
+export function getVendorSalesAnalytics(
+  vendorId: string,
+  days = 30,
+): Promise<ScopedSalesAnalytics> {
+  return authedRequest<ScopedSalesAnalytics>(
+    `/reports/vendors/${encodeURIComponent(vendorId)}/overview?days=${days}`,
+  );
+}
+
+export function getStoreSalesAnalytics(storeId: string, days = 30): Promise<ScopedSalesAnalytics> {
+  return authedRequest<ScopedSalesAnalytics>(
+    `/reports/stores/${encodeURIComponent(storeId)}/overview?days=${days}`,
+  );
+}
+
+export type LowStockInventoryItem = {
+  readonly id: string;
+  readonly storeId: string;
+  readonly warehouseId: string;
+  readonly warehouseName: string;
+  readonly variantId: string;
+  readonly onHand: number;
+  readonly reserved: number;
+  readonly available: number;
+  readonly lowStockThreshold: number;
+  readonly stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+  readonly updatedAt: string;
+};
+
+export function listStoreLowStockItems(
+  storeId: string,
+  limit = 50,
+): Promise<LowStockInventoryItem[]> {
+  return authedRequest<LowStockInventoryItem[]>(
+    `/inventory/stores/${encodeURIComponent(storeId)}/low-stock?limit=${limit}`,
+  );
+}

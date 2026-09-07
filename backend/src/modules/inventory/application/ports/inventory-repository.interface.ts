@@ -34,6 +34,7 @@ export interface InventoryRepository {
   ): Promise<InventoryItem | null>;
   findItemsByStoreAndVariant(storeId: string, variantId: string): Promise<InventoryItem[]>;
   findItemsByStoreId(storeId: string, limit: number): Promise<InventoryItem[]>;
+  findLowStockItemsByStoreId(storeId: string, limit: number): Promise<InventoryItem[]>;
   findReservationById(id: string): Promise<InventoryReservation | null>;
   /**
    * Runs work inside one DB transaction with RLS + row locks available via the UoW.

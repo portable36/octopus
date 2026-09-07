@@ -249,6 +249,28 @@ export class InventoryController {
     return list.map((item) => this.itemResponse(item));
   }
 
+  @Get('stores/:storeId/low-stock')
+  @ApiOperation({ summary: 'List low stock and depleted inventory items for a store' })
+  @ApiQuery({ name: 'limit', required: false })
+  async listLowStock(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('storeId') storeId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsed = Number.parseInt(limit ?? '', 10);
+    const capped = Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 200) : 50;
+    const items = await this.stock.listLowStock({
+      storeId,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+      limit: capped,
+    });
+    return items.map((item) => ({
+      ...item,
+      updatedAt: item.updatedAt.toISOString(),
+    }));
+  }
+
   private warehouseResponse(warehouse: Warehouse) {
     return {
       id: warehouse.id.value,

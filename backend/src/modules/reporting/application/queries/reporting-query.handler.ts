@@ -97,11 +97,19 @@ export class ReportingQueryHandler {
   ): Promise<ScopedAnalyticsSummary> {
     if (!actorRoles.includes('PLATFORM_ADMIN')) {
       const store = await this.stores?.findById(storeId);
-      if (
-        !store ||
-        (!store.managerUserIds.includes(actorUserId) && !store.staffUserIds.includes(actorUserId))
-      ) {
+      if (!store) {
         throw new ReportingAccessDeniedError('Not authorized for this store analytics.');
+      }
+      const isStoreStaff =
+        store.managerUserIds.includes(actorUserId) || store.staffUserIds.includes(actorUserId);
+      if (!isStoreStaff) {
+        const vendor = await this.vendors?.findById(store.vendorId);
+        const isVendorStaff =
+          vendor &&
+          (vendor.ownerUserId === actorUserId || vendor.staffUserIds.includes(actorUserId));
+        if (!isVendorStaff) {
+          throw new ReportingAccessDeniedError('Not authorized for this store analytics.');
+        }
       }
     }
     return this.facts.getStoreAnalytics(storeId, days);

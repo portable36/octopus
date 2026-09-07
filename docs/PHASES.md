@@ -1341,9 +1341,9 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 ### Dashboard
 
 - [x] Finance summary cards (19.1)
-- [ ] Sales
-- [ ] Orders rollup
-- [ ] Revenue charts
+- [x] Sales
+- [x] Orders rollup
+- [x] Revenue charts
 - [ ] Customers
 - [ ] Inventory
 - [x] Payouts (request UI) — manage stays platform
@@ -1361,7 +1361,7 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 - [x] Stock
 - [x] Adjustments
 - [x] Transfers
-- [ ] Low-stock alerts
+- [x] Low-stock alerts
 
 ### Orders
 
@@ -1386,7 +1386,7 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 - [ ] Store permissions UX
 - [ ] Store-specific catalog
 - [x] Store inventory
-- [ ] Store reports
+- [x] Store reports
 
 ---
 
@@ -1525,8 +1525,8 @@ Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as t
 ### Reports
 
 - [x] Orders (summary counts + paid revenue from facts; detail reports later)
-- [ ] Sales
-- [ ] Revenue (beyond paid-order totals in 21.1)
+- [x] Sales
+- [x] Revenue (daily trends, gross, net commission, AOV)
 - [x] Commission (paid totals + per vendor/store in 21.2; product-level later)
 - [x] Vendor performance
 - [x] Store performance

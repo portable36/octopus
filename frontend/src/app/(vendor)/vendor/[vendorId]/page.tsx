@@ -13,6 +13,7 @@ import {
   type VendorFinanceSummary,
   type VendorSummary,
 } from '@/lib/vendor-api';
+import { VendorSalesTrendsWidget } from '@/features/dashboard/vendor-sales-trends-widget';
 
 export default function VendorDashboardPage() {
   const params = useParams<{ vendorId: string }>();
@@ -171,12 +172,15 @@ export default function VendorDashboardPage() {
         ) : null}
       </div>
       {vendor?.status === 'active' ? (
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Vendor actions">
-          <DashboardLink href={`/vendor/${vendorId}/orders`} label="Review orders" />
-          <DashboardLink href={`/vendor/${vendorId}/catalog`} label="Manage catalog" />
-          <DashboardLink href={`/vendor/${vendorId}/inventory`} label="Check inventory" />
-          <DashboardLink href={`/vendor/${vendorId}/finance`} label="View finance" />
-        </section>
+        <>
+          <VendorSalesTrendsWidget vendorId={vendorId} />
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Vendor actions">
+            <DashboardLink href={`/vendor/${vendorId}/orders`} label="Review orders" />
+            <DashboardLink href={`/vendor/${vendorId}/catalog`} label="Manage catalog" />
+            <DashboardLink href={`/vendor/${vendorId}/inventory`} label="Check inventory" />
+            <DashboardLink href={`/vendor/${vendorId}/finance`} label="View finance" />
+          </section>
+        </>
       ) : null}
     </div>
   );

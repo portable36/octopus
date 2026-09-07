@@ -15,6 +15,7 @@ import {
   type WarehouseSummary,
 } from '@/lib/vendor-api';
 import { getSelectedStoreId, subscribeSelectedStoreId } from '@/lib/vendor-session';
+import { LowStockAlertsWidget } from '@/features/inventory/low-stock-alerts-widget';
 
 const fieldClass = 'h-10 rounded-md border border-border bg-background px-3';
 const labelClass = 'flex flex-col gap-1 text-sm';
@@ -35,6 +36,8 @@ export default function VendorInventoryPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [receiveWarehouseId, setReceiveWarehouseId] = useState('');
+  const [receiveVariantId, setReceiveVariantId] = useState('');
 
   useEffect(() => {
     const sync = () => setStoreId(getSelectedStoreId());
@@ -156,6 +159,7 @@ export default function VendorInventoryPage() {
         ...(reason ? { reason } : {}),
       });
       setMessage(`Received. On-hand ${item.onHand}, available ${item.available}.`);
+      setReceiveVariantId('');
     });
   }
 
@@ -193,6 +197,13 @@ export default function VendorInventoryPage() {
 
   const warehouseOptions = warehouses ?? [];
 
+  function handleQuickRestock(variantId: string, warehouseId: string) {
+    setReceiveVariantId(variantId);
+    setReceiveWarehouseId(warehouseId);
+    setMessage(null);
+    document.getElementById('receive-section')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
   return (
     <div className="space-y-8">
       <header>
@@ -209,6 +220,10 @@ export default function VendorInventoryPage() {
         </p>
       ) : null}
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+
+      {activeStoreId ? (
+        <LowStockAlertsWidget storeId={activeStoreId} onQuickRestock={handleQuickRestock} />
+      ) : null}
 
       <section className="space-y-3">
         <h3 className="text-sm font-medium">Warehouses</h3>
@@ -332,13 +347,24 @@ export default function VendorInventoryPage() {
         </form>
       </section>
 
-      <section className="space-y-3">
+      <section id="receive-section" className="space-y-3">
         <h3 className="text-sm font-medium">Receive</h3>
         <form onSubmit={(e) => void onReceive(e)} className={formClass}>
-          <WarehouseSelect warehouses={warehouseOptions} name="warehouseId" />
+          <WarehouseSelect
+            warehouses={warehouseOptions}
+            name="warehouseId"
+            value={receiveWarehouseId}
+            onChange={setReceiveWarehouseId}
+          />
           <label className={labelClass}>
             <span className="text-muted-foreground">Variant ID</span>
-            <input name="variantId" required className={fieldClass} />
+            <input
+              name="variantId"
+              required
+              value={receiveVariantId}
+              onChange={(e) => setReceiveVariantId(e.target.value)}
+              className={fieldClass}
+            />
           </label>
           <label className={labelClass}>
             <span className="text-muted-foreground">Quantity</span>
@@ -412,15 +438,26 @@ function WarehouseSelect({
   warehouses,
   name,
   label = 'Warehouse',
+  value,
+  onChange,
 }: {
   readonly warehouses: readonly WarehouseSummary[];
   readonly name: string;
   readonly label?: string;
+  readonly value?: string;
+  readonly onChange?: (val: string) => void;
 }) {
   return (
     <label className={labelClass}>
       <span className="text-muted-foreground">{label}</span>
-      <select name={name} required className={fieldClass} disabled={warehouses.length === 0}>
+      <select
+        name={name}
+        required
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        className={fieldClass}
+        disabled={warehouses.length === 0}
+      >
         <option value="">Select…</option>
         {warehouses.map((wh) => (
           <option key={wh.id} value={wh.id}>

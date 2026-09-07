@@ -133,6 +133,7 @@ describe('ReportingQueryHandler', () => {
         if (id === 's-1') {
           return {
             storeId: 's-1',
+            vendorId: 'v-1',
             managerUserIds: ['mgr-user-1'],
             staffUserIds: ['staff-user-1'],
           };
@@ -140,8 +141,20 @@ describe('ReportingQueryHandler', () => {
         return null;
       }),
     };
+    const vendors = {
+      findById: vi.fn(async (id: string) => {
+        if (id === 'v-1') {
+          return {
+            vendorId: 'v-1',
+            ownerUserId: 'vendor-owner-1',
+            staffUserIds: [],
+          };
+        }
+        return null;
+      }),
+    };
 
-    const handler = new ReportingQueryHandler(facts as never, undefined, stores as never);
+    const handler = new ReportingQueryHandler(facts as never, vendors as never, stores as never);
 
     // Platform admin allowed
     await expect(handler.storeAnalytics('s-1', 'any-user', ['PLATFORM_ADMIN'])).resolves.toBe(
@@ -155,6 +168,11 @@ describe('ReportingQueryHandler', () => {
 
     // Store staff allowed
     await expect(handler.storeAnalytics('s-1', 'staff-user-1', ['STORE_STAFF'])).resolves.toBe(
+      storeData,
+    );
+
+    // Vendor owner of store allowed
+    await expect(handler.storeAnalytics('s-1', 'vendor-owner-1', ['VENDOR_OWNER'])).resolves.toBe(
       storeData,
     );
 

@@ -222,4 +222,53 @@ describe('ReservationCommandHandler.reserve', () => {
     expect(uow.recordCompletedOperation).toHaveBeenCalledTimes(4);
     expect(uow.appendMovement).toHaveBeenCalledTimes(4);
   });
+
+  it('lists low stock items with enriched warehouse names', async () => {
+    const storeId = '00000000-0000-7000-8000-000000000002';
+    const warehouseId = '00000000-0000-7000-8000-000000000003';
+    const variantId = '00000000-0000-7000-8000-000000000004';
+    const item = InventoryItem.create({
+      vendorId: '00000000-0000-7000-8000-000000000001',
+      storeId,
+      warehouseId,
+      variantId,
+      lowStockThreshold: 10,
+    });
+
+    const inventory = {
+      findLowStockItemsByStoreId: vi.fn(async () => [item]),
+    };
+    const warehouses = {
+      findByStoreId: vi.fn(async () => [
+        {
+          id: { value: warehouseId },
+          name: 'Main Warehouse',
+        },
+      ]),
+    };
+    const auth = {
+      requireReader: vi.fn(async () => undefined),
+    };
+
+    const handler = new StockCommandHandler(
+      inventory as never,
+      warehouses as never,
+      {} as never,
+      auth as never,
+      null,
+      {} as never,
+    );
+
+    const result = await handler.listLowStock({
+      storeId,
+      actorUserId: 'staff-1',
+      actorRoles: ['STORE_STAFF'],
+    });
+
+    expect(auth.requireReader).toHaveBeenCalledWith(storeId, 'staff-1', ['STORE_STAFF']);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.warehouseName).toBe('Main Warehouse');
+    expect(result[0]?.variantId).toBe(variantId);
+    expect(result[0]?.stockStatus).toBe('OUT_OF_STOCK');
+  });
 });

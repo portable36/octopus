@@ -22,3 +22,33 @@ export type CustomerProfileRecord = {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };
+
+export type WishlistItemRecord = {
+  readonly id: string;
+  readonly userId: string;
+  readonly productId: string;
+  readonly variantId: string | null;
+  readonly storeId: string | null;
+  readonly createdAt: Date;
+};
+
+export type ProductReviewStatus = 'PENDING' | 'PUBLISHED' | 'REJECTED';
+
+export type ProductReviewRecord = {
+  readonly id: string;
+  readonly productId: string;
+  readonly userId: string;
+  readonly orderId: string | null;
+  readonly rating: number;
+  readonly title: string;
+  readonly body: string;
+  readonly status: ProductReviewStatus;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
+
+export type ProductReviewSummary = {
+  readonly productId: string;
+  readonly averageRating: number;
+  readonly reviewCount: number;
+};

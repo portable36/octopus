@@ -11,7 +11,7 @@ Outbox (payment/fulfillment/…)
 → DomainEventsProcessor
 → NotificationEventConsumer (TRANSACTIONAL)
 → templates + preference gate
-→ IN_APP / EMAIL (octopus.notification)
+→ IN_APP / EMAIL (`octopus.email` for `NotificationDeliver`; log stub provider)
 
 Identity register / password change
 → NOTIFICATION_PORT.notify (SECURITY / TRANSACTIONAL; inline until identity_outbox)

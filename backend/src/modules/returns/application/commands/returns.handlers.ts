@@ -10,6 +10,10 @@ import {
   type OrderReturnSnapshot,
 } from '../../../../shared-kernel/application/ports/order.port';
 import {
+  RETURN_PICKUP_PORT,
+  type ReturnPickupPort,
+} from '../../../../shared-kernel/application/ports/return-pickup.port';
+import {
   USER_CONTACT_PORT,
   type UserContactPort,
 } from '../../../../shared-kernel/application/ports/user-contact.port';
@@ -57,6 +61,7 @@ export class ReturnsHandlers {
     @Inject(INVENTORY_PORT) private readonly inventory: InventoryPort,
     @Inject(ReturnsAuthorizationService) private readonly authz: ReturnsAuthorizationService,
     @Optional() @Inject(USER_CONTACT_PORT) private readonly userContact?: UserContactPort,
+    @Optional() @Inject(RETURN_PICKUP_PORT) private readonly returnPickup?: ReturnPickupPort,
   ) {}
 
   public async requestReturn(input: {
@@ -196,6 +201,23 @@ export class ReturnsHandlers {
     return this.returns.listByOrderId(input.orderId);
   }
 
+  public async listByStore(input: {
+    readonly storeId: string;
+    readonly vendorId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }): Promise<ReturnRequest[]> {
+    this.authz.requirePermission(input.actorRoles, 'return.read');
+    if (!input.actorRoles.includes('PLATFORM_ADMIN')) {
+      await this.authz.requireStaffScope(
+        { vendorId: input.vendorId, storeId: input.storeId },
+        input.actorUserId,
+        input.actorRoles,
+      );
+    }
+    return this.returns.listByStoreId(input.storeId);
+  }
+
   public async approve(input: {
     readonly returnId: string;
     readonly actorUserId: string;
@@ -205,8 +227,51 @@ export class ReturnsHandlers {
     const returnRequest = await this.requireReturn(input.returnId);
     await this.authz.requireStaffScope(returnRequest, input.actorUserId, input.actorRoles);
     returnRequest.approve();
+    await this.scheduleReturnPickupIfPossible(returnRequest);
     await this.returns.save(returnRequest);
     return returnRequest;
+  }
+
+  private async scheduleReturnPickupIfPossible(returnRequest: ReturnRequest): Promise<void> {
+    if (!this.returnPickup || returnRequest.returnShipmentId) {
+      return;
+    }
+    const order = await this.orders.getReturnSnapshot(returnRequest.orderId);
+    if (!order) {
+      return;
+    }
+    const address = [
+      order.shippingAddress.line1,
+      order.shippingAddress.line2,
+      order.shippingAddress.city,
+      order.shippingAddress.region,
+      order.shippingAddress.postalCode,
+      order.shippingAddress.countryCode,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    const email = returnRequest.customerId
+      ? await this.userContact?.findEmailByUserId(returnRequest.customerId)
+      : null;
+    const pickup = await this.returnPickup.schedulePickup({
+      returnId: returnRequest.id.value,
+      orderId: returnRequest.orderId,
+      vendorId: returnRequest.vendorId,
+      storeId: returnRequest.storeId,
+      currencyCode: order.currencyCode,
+      lines: returnRequest.items.map((item) => ({
+        orderLineId: item.orderItemId,
+        quantity: item.quantity,
+      })),
+      recipientName: email?.split('@')[0] || 'Customer',
+      recipientPhone: '01700000000',
+      recipientAddress: address || 'Address on file',
+      idempotencyKey: `return-pickup:${returnRequest.id.value}`,
+    });
+    returnRequest.attachReturnShipment({
+      shipmentId: pickup.shipmentId,
+      trackingCode: pickup.trackingCode,
+    });
   }
 
   public async reject(input: {
@@ -646,8 +711,9 @@ export class ReturnsHandlers {
       case 'APPROVED':
       case 'AWAITING_RETURN':
         statusLabel = 'Approved — Awaiting Shipment';
-        statusDescription =
-          'Return approved. Please pack your items and hand them over to courier or drop-off.';
+        statusDescription = ret.returnTrackingCode
+          ? `Return approved. Courier pickup scheduled (tracking ${ret.returnTrackingCode}). Pack items for handover.`
+          : 'Return approved. Please pack your items and hand them over to courier or drop-off.';
         break;
       case 'RECEIVED':
         statusLabel = 'Items Received';
@@ -814,6 +880,8 @@ export class ReturnsHandlers {
       receivedAt: ret.receivedAt ? ret.receivedAt.toISOString() : null,
       inspectedAt: ret.inspectedAt ? ret.inspectedAt.toISOString() : null,
       completedAt: ret.completedAt ? ret.completedAt.toISOString() : null,
+      returnShipmentId: ret.returnShipmentId,
+      returnTrackingCode: ret.returnTrackingCode,
       items: ret.items.map((item) => {
         const reason = getReturnReason(item.reasonCode);
         return {

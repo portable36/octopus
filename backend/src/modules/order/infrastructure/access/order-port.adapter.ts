@@ -136,6 +136,7 @@ function toReturnSnapshot(order: Order): OrderReturnSnapshot {
     currencyCode: order.currencyCode,
     totalMinor: order.totalMinor,
     returnWindowAnchorAt: order.updatedAt,
+    shippingAddress: { ...order.shippingAddress },
     lines: order.lines.map((line) => ({
       lineId: line.lineId,
       productId: line.productId,

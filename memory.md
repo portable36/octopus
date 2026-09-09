@@ -45,8 +45,28 @@ generated output, or a transcript of previous chats.
 - Async UI needs explicit loading, empty, error, unauthorized, stale, and retry
   states. Controls need labels, keyboard access, visible focus, and useful
   announcements.
-- Do not add wishlist, ratings, invented promotions, client-side totals, or
+- Do not invent promotions, client-side totals, or
   external image URLs without an API contract.
+- Media: presigned PUT upload + magic-byte register; HeadObject size check;
+  public/admin download via signed GET (or `MEDIA_PUBLIC_BASE_URL` CDN).
+- Admin Store Phase B (partial): store detail tabs Branding (scoped Settings), Shipping
+  (vendor courier readiness), Analytics (store report row); COD remains on Settings.
+- Wishlist and product reviews are supported via Customer engagement APIs
+  (`/customer/wishlist`, `/customer/reviews`, public `/products/:id/reviews`).
+- Auth polish: email verify (`/auth/email/verify*`), Google/Facebook OAuth
+  (dual-mode mock), carrier OTP login (`/auth/otp/*`); storefront login +
+  `/verify-email`.
+- Vendor return approve schedules MANUAL reverse pickup via `RETURN_PICKUP_PORT`
+  (tracking on return). Courier credentials: `/fulfillment/vendors/:id/courier-accounts`.
+- Finance statement CSV: `GET /finance/vendors/:id/statement.csv`. Payment gateway
+  readiness: `GET /admin/payments/gateways` (booleans only).
+- Playwright authenticated revenue path: `e2e/revenue-path.spec.ts` (skips without API).
+- Payment IPN integrity: optional `PAYMENT_IPN_HMAC_SECRET` + timestamp guards on
+  SSLCommerz IPN and bKash SNS Notification.
+- Tax/commission: checkout global config keys `tax_rate_bps` + `commission_rate_bps`;
+  admin surfaces at `/admin/system/commerce` and Global config Operations.
+- Email queue: `octopus.email` worker handles `NotificationDeliver` + `CartAbandonedEvent`;
+  notification delivery enqueuer targets that queue (log email provider still default).
 
 ## Agent workflow
 

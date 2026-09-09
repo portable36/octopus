@@ -17,7 +17,8 @@ describe('routeQueueForEvent', () => {
     expect(routeQueueForEvent('ProductStatusChanged')).toBe(QUEUE_NAMES.searchIndexing);
     expect(routeQueueForEvent('InventoryAdjusted')).toBe(QUEUE_NAMES.searchIndexing);
     expect(routeQueueForEvent('SearchReindexBatch')).toBe(QUEUE_NAMES.searchIndexing);
-    expect(routeQueueForEvent('NotificationDeliver')).toBe(QUEUE_NAMES.notification);
+    expect(routeQueueForEvent('NotificationDeliver')).toBe(QUEUE_NAMES.email);
+    expect(routeQueueForEvent('CartAbandonedEvent')).toBe(QUEUE_NAMES.email);
   });
 
   it('routes shipment events to domain-events queue', () => {

@@ -10,6 +10,7 @@ import { USER_REPOSITORY, type UserRepository } from '../ports/user-repository.i
 import { AuthSessionService } from '../services/auth-session.service';
 import { User } from '../../domain/aggregates/user.aggregate';
 import type { AuthSession } from '../dto/auth-session.dto';
+import { EmailVerificationIssuer } from './email-verification.handlers';
 
 export interface RegisterUserCommand {
   readonly email: string;
@@ -24,6 +25,7 @@ export class RegisterUserHandler {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(AuthSessionService) private readonly authSession: AuthSessionService,
     @Inject(NOTIFICATION_PORT) private readonly notifications: NotificationPort,
+    @Inject(EmailVerificationIssuer) private readonly emailVerification: EmailVerificationIssuer,
   ) {}
 
   public async execute(command: RegisterUserCommand): Promise<AuthSession> {
@@ -38,6 +40,7 @@ export class RegisterUserHandler {
     user.activate();
 
     await this.users.save(user);
+    await this.emailVerification.issueForUser(user.id.value);
 
     // ponytail: identity has no outbox yet — notify inline after user persist.
     await this.notifications.notify({

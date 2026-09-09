@@ -16,12 +16,23 @@ import {
   RequestPasswordResetHandler,
   ResetPasswordHandler,
 } from './application/commands/change-password.handler';
+import {
+  EmailVerificationIssuer,
+  RequestEmailVerificationHandler,
+  VerifyEmailHandler,
+} from './application/commands/email-verification.handlers';
+import { CompleteOAuthHandler, StartOAuthHandler } from './application/commands/oauth.handlers';
+import { RequestOtpHandler, VerifyOtpHandler } from './application/commands/otp.handlers';
 import { PASSWORD_HASHER } from './application/ports/password-hasher.interface';
 import { TOKEN_SIGNER } from './application/ports/token-signer.interface';
 import { USER_REPOSITORY } from './application/ports/user-repository.interface';
 import { REFRESH_TOKEN_STORE } from './application/ports/refresh-token-store.interface';
 import { LOGIN_RATE_LIMITER } from './application/ports/login-rate-limiter.interface';
 import { PASSWORD_RESET_STORE } from './application/ports/password-reset-store.interface';
+import { EMAIL_VERIFICATION_STORE } from './application/ports/email-verification-store.interface';
+import { OAUTH_STATE_STORE } from './application/ports/oauth-state-store.interface';
+import { OAUTH_PROVIDER_CLIENT } from './application/ports/oauth-provider.interface';
+import { OTP_STORE } from './application/ports/otp-store.interface';
 import { MFA_CHALLENGE_STORE, MFA_SETUP_STORE } from './application/ports/mfa-store.interface';
 import { MFA_SECRET_BOX } from './application/ports/mfa-secret-box.interface';
 import { AuthorizationService } from './application/services/authorization.service';
@@ -34,10 +45,14 @@ import { UserOrmEntity } from './infrastructure/persistence/user.orm-entity';
 import { RedisRefreshTokenStoreAdapter } from './infrastructure/redis/redis-refresh-token-store.adapter';
 import { RedisLoginRateLimiterAdapter } from './infrastructure/redis/redis-login-rate-limiter.adapter';
 import { RedisPasswordResetStoreAdapter } from './infrastructure/redis/redis-password-reset-store.adapter';
+import { RedisEmailVerificationStoreAdapter } from './infrastructure/redis/redis-email-verification-store.adapter';
+import { RedisOAuthStateStoreAdapter } from './infrastructure/redis/redis-oauth-state-store.adapter';
+import { RedisOtpStoreAdapter } from './infrastructure/redis/redis-otp-store.adapter';
 import {
   RedisMfaChallengeStoreAdapter,
   RedisMfaSetupStoreAdapter,
 } from './infrastructure/redis/redis-mfa-store.adapter';
+import { DualModeOAuthProviderAdapter } from './infrastructure/oauth/dual-mode-oauth-provider.adapter';
 import { JwtTokenSignerAdapter } from './infrastructure/tokens/jwt-token-signer.adapter';
 import { UserRoleAssignerAdapter } from './infrastructure/persistence/user-role-assigner.adapter';
 import { UserDirectoryAdapter } from './infrastructure/persistence/user-directory.adapter';
@@ -72,6 +87,13 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
     ChangePasswordHandler,
     RequestPasswordResetHandler,
     ResetPasswordHandler,
+    EmailVerificationIssuer,
+    RequestEmailVerificationHandler,
+    VerifyEmailHandler,
+    StartOAuthHandler,
+    CompleteOAuthHandler,
+    RequestOtpHandler,
+    VerifyOtpHandler,
     ListUsersHandler,
     AuthorizationService,
     AuthSessionService,
@@ -108,6 +130,22 @@ import { PermissionsGuard } from './presentation/http/guards/permissions.guard';
     {
       provide: PASSWORD_RESET_STORE,
       useClass: RedisPasswordResetStoreAdapter,
+    },
+    {
+      provide: EMAIL_VERIFICATION_STORE,
+      useClass: RedisEmailVerificationStoreAdapter,
+    },
+    {
+      provide: OAUTH_STATE_STORE,
+      useClass: RedisOAuthStateStoreAdapter,
+    },
+    {
+      provide: OAUTH_PROVIDER_CLIENT,
+      useClass: DualModeOAuthProviderAdapter,
+    },
+    {
+      provide: OTP_STORE,
+      useClass: RedisOtpStoreAdapter,
     },
     {
       provide: MFA_CHALLENGE_STORE,

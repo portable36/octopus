@@ -63,6 +63,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     this.ensureQueue(QUEUE_NAMES.payout);
     this.ensureQueue(QUEUE_NAMES.searchIndexing);
     this.ensureQueue(QUEUE_NAMES.notification);
+    this.ensureQueue(QUEUE_NAMES.email);
     this.ensureQueue(QUEUE_NAMES.marketing);
     this.ensureQueue(QUEUE_NAMES.deadLetter);
 
@@ -102,6 +103,17 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.notification,
         async (job) => this.notifications.handle(job.data),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.email,
+        async (job) => {
+          if (job.data.eventType === 'NotificationDeliver') {
+            await this.notifications.handle(job.data);
+            return;
+          }
+          await this.domainEvents.handle(job.data);
+        },
         bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
       new Worker<OutboxJobPayload>(

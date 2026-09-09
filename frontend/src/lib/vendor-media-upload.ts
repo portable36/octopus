@@ -26,6 +26,7 @@ export type PublicMediaUrl = {
   id: string;
   contentType: string;
   url: string;
+  expiresAt?: string | null;
 };
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);

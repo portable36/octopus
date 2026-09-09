@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -116,6 +117,7 @@ export default function AdminStoreSettingsPage() {
         <h2 className="text-sm font-medium">COD settings</h2>
         <p className="text-xs text-muted-foreground">
           Amounts are integer minor units. Checkout requires vendor and store COD both enabled.
+          Tax/commission are platform-wide — see Commerce hub.
         </p>
         <form onSubmit={(e) => void onSaveCod(e)} className="space-y-3">
           <label className="flex items-center gap-2 text-sm">
@@ -167,6 +169,45 @@ export default function AdminStoreSettingsPage() {
             Save COD settings
           </Button>
         </form>
+      </section>
+
+      <section className="space-y-2 border border-border bg-background p-4">
+        <h2 className="text-sm font-medium">Related store tabs</h2>
+        <ul className="list-inside list-disc text-xs text-muted-foreground">
+          <li>
+            <Link
+              href={`/admin/stores/${storeId}/branding`}
+              className="underline underline-offset-2"
+            >
+              Branding
+            </Link>{' '}
+            — store-scoped name, color, logo media IDs
+          </li>
+          <li>
+            <Link
+              href={`/admin/stores/${storeId}/shipping`}
+              className="underline underline-offset-2"
+            >
+              Shipping
+            </Link>{' '}
+            — vendor courier readiness
+          </li>
+          <li>
+            <Link
+              href={`/admin/stores/${storeId}/analytics`}
+              className="underline underline-offset-2"
+            >
+              Analytics
+            </Link>{' '}
+            — store performance summary
+          </li>
+          <li>
+            <Link href="/admin/system/commerce" className="underline underline-offset-2">
+              Commerce hub
+            </Link>{' '}
+            — tax / commission (platform)
+          </li>
+        </ul>
       </section>
     </div>
   );

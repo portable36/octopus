@@ -1,10 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
-import type { CustomerAddressRecord, CustomerProfileRecord } from '../../domain/customer.types';
+import type {
+  CustomerAddressRecord,
+  CustomerProfileRecord,
+  ProductReviewRecord,
+  ProductReviewSummary,
+  WishlistItemRecord,
+} from '../../domain/customer.types';
 import type { CustomerRepository } from '../../application/ports/customer-repository.interface';
 import { CustomerAddressOrmEntity } from './customer-address.orm-entity';
 import { CustomerProfileOrmEntity } from './customer-profile.orm-entity';
+import {
+  CustomerWishlistItemOrmEntity,
+  ProductReviewOrmEntity,
+} from './engagement.orm-entity';
 
 @Injectable()
 export class CustomerRepositoryAdapter implements CustomerRepository {
@@ -112,6 +122,130 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
       await tx.flush();
     });
   }
+
+  public async listWishlist(userId: string): Promise<readonly WishlistItemRecord[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        CustomerWishlistItemOrmEntity,
+        { userId },
+        { orderBy: { createdAt: 'DESC' } },
+      );
+      return entities.map(wishlistToRecord);
+    });
+  }
+
+  public async findWishlistItem(
+    userId: string,
+    productId: string,
+  ): Promise<WishlistItemRecord | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(CustomerWishlistItemOrmEntity, { userId, productId });
+      return entity ? wishlistToRecord(entity) : null;
+    });
+  }
+
+  public async addWishlistItem(item: WishlistItemRecord): Promise<WishlistItemRecord> {
+    return withRlsContext(this.em, async (tx) => {
+      const existing = await tx.findOne(CustomerWishlistItemOrmEntity, {
+        userId: item.userId,
+        productId: item.productId,
+      });
+      if (existing) {
+        return wishlistToRecord(existing);
+      }
+      const entity = new CustomerWishlistItemOrmEntity();
+      entity.id = item.id;
+      entity.userId = item.userId;
+      entity.productId = item.productId;
+      entity.variantId = item.variantId;
+      entity.storeId = item.storeId;
+      entity.createdAt = item.createdAt;
+      await tx.persist(entity).flush();
+      return wishlistToRecord(entity);
+    });
+  }
+
+  public async removeWishlistItem(userId: string, productId: string): Promise<boolean> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(CustomerWishlistItemOrmEntity, { userId, productId });
+      if (!entity) {
+        return false;
+      }
+      await tx.remove(entity).flush();
+      return true;
+    });
+  }
+
+  public async listPublishedReviews(productId: string): Promise<readonly ProductReviewRecord[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(
+        ProductReviewOrmEntity,
+        { productId, status: 'PUBLISHED' },
+        { orderBy: { createdAt: 'DESC' }, limit: 100 },
+      );
+      return entities.map(reviewToRecord);
+    });
+  }
+
+  public async getReviewSummary(productId: string): Promise<ProductReviewSummary> {
+    return withRlsContext(this.em, async (tx) => {
+      const entities = await tx.find(ProductReviewOrmEntity, {
+        productId,
+        status: 'PUBLISHED',
+      });
+      if (entities.length === 0) {
+        return { productId, averageRating: 0, reviewCount: 0 };
+      }
+      const sum = entities.reduce((acc, e) => acc + e.rating, 0);
+      return {
+        productId,
+        averageRating: Math.round((sum / entities.length) * 10) / 10,
+        reviewCount: entities.length,
+      };
+    });
+  }
+
+  public async findReviewByUser(
+    userId: string,
+    productId: string,
+  ): Promise<ProductReviewRecord | null> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(ProductReviewOrmEntity, { userId, productId });
+      return entity ? reviewToRecord(entity) : null;
+    });
+  }
+
+  public async saveReview(review: ProductReviewRecord): Promise<ProductReviewRecord> {
+    return withRlsContext(this.em, async (tx) => {
+      let entity = await tx.findOne(ProductReviewOrmEntity, { id: review.id });
+      if (!entity) {
+        entity = new ProductReviewOrmEntity();
+        entity.id = review.id;
+        entity.createdAt = review.createdAt;
+      }
+      entity.productId = review.productId;
+      entity.userId = review.userId;
+      entity.orderId = review.orderId;
+      entity.rating = review.rating;
+      entity.title = review.title;
+      entity.body = review.body;
+      entity.status = review.status;
+      entity.updatedAt = review.updatedAt;
+      await tx.persist(entity).flush();
+      return reviewToRecord(entity);
+    });
+  }
+
+  public async deleteReview(userId: string, reviewId: string): Promise<boolean> {
+    return withRlsContext(this.em, async (tx) => {
+      const entity = await tx.findOne(ProductReviewOrmEntity, { id: reviewId, userId });
+      if (!entity) {
+        return false;
+      }
+      await tx.remove(entity).flush();
+      return true;
+    });
+  }
 }
 
 function profileToRecord(entity: CustomerProfileOrmEntity): CustomerProfileRecord {
@@ -138,6 +272,32 @@ function addressToRecord(entity: CustomerAddressOrmEntity): CustomerAddressRecor
     postalCode: entity.postalCode,
     countryCode: entity.countryCode,
     isDefault: entity.isDefault,
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt,
+  };
+}
+
+function wishlistToRecord(entity: CustomerWishlistItemOrmEntity): WishlistItemRecord {
+  return {
+    id: entity.id,
+    userId: entity.userId,
+    productId: entity.productId,
+    variantId: entity.variantId,
+    storeId: entity.storeId,
+    createdAt: entity.createdAt,
+  };
+}
+
+function reviewToRecord(entity: ProductReviewOrmEntity): ProductReviewRecord {
+  return {
+    id: entity.id,
+    productId: entity.productId,
+    userId: entity.userId,
+    orderId: entity.orderId,
+    rating: entity.rating,
+    title: entity.title,
+    body: entity.body,
+    status: entity.status,
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
   };

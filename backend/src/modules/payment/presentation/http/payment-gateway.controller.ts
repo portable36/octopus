@@ -20,6 +20,10 @@ import {
 } from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
 import { ProcessGatewayCallbackHandler } from '../../application/commands/payment-gateway.handlers';
 import { PaymentExceptionFilter } from './filters/payment-exception.filter';
+import {
+  assertPaymentWebhookIntegrity,
+  parseWebhookTimestampSec,
+} from './payment-webhook-integrity';
 
 @ApiTags('payments-gateways')
 @Controller('payments/gateways')
@@ -35,6 +39,27 @@ export class PaymentGatewayController {
     @Inject(AppConfigService)
     private readonly appConfig?: AppConfigService,
   ) {}
+
+  private assertIpnIntegrity(req: Request, rawPayload: Record<string, unknown>): void {
+    const headers = req.headers ?? {};
+    const signatureHeader =
+      (typeof headers['x-signature'] === 'string' && headers['x-signature']) ||
+      (typeof headers['x-hub-signature-256'] === 'string' && headers['x-hub-signature-256']) ||
+      (typeof headers['x-ssl-signature'] === 'string' && headers['x-ssl-signature']) ||
+      undefined;
+    const timestampRaw =
+      headers['x-webhook-timestamp'] ??
+      headers['x-bkash-timestamp'] ??
+      rawPayload.Timestamp ??
+      rawPayload.timestamp;
+    assertPaymentWebhookIntegrity({
+      rawBody: JSON.stringify(rawPayload),
+      signatureHex: signatureHeader,
+      hmacSecret: this.appConfig?.paymentIpnHmacSecret,
+      timestampSec: parseWebhookTimestampSec(timestampRaw),
+      enforceWhenSecretConfigured: true,
+    });
+  }
 
   private isBrowserNavigation(req: Request): boolean {
     const accept = String(req.headers?.accept || '');
@@ -99,6 +124,7 @@ export class PaymentGatewayController {
       await this.rateLimiter.consume(`payment:gw:sslcommerz:ipn:${req.ip ?? 'unknown'}`, 200, 60);
     }
     const payload = { ...(query || {}), ...(body || {}) };
+    this.assertIpnIntegrity(req, payload);
     const res = await this.callbackHandler.execute({
       provider: 'SSLCOMMERZ',
       payload,
@@ -133,6 +159,7 @@ export class PaymentGatewayController {
 
     // Support AWS SNS webhook notification from bKash
     if (payload.Type === 'Notification' && typeof payload.Message === 'string') {
+      this.assertIpnIntegrity(req, payload);
       try {
         const parsedMessage = JSON.parse(payload.Message as string) as Record<string, unknown>;
         payload = { ...payload, ...parsedMessage };

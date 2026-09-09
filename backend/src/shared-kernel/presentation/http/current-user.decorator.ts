@@ -6,6 +6,7 @@ export interface RequestPrincipal {
   readonly email: string;
   readonly roles: readonly string[];
   readonly mfaEnabled?: boolean;
+  readonly emailVerified?: boolean;
 }
 
 export const CurrentUser = createParamDecorator(

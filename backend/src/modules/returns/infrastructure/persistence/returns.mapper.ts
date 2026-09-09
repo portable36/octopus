@@ -34,6 +34,8 @@ export function returnRequestToDomain(entity: ReturnRequestOrmEntity): ReturnReq
     receivedAt: entity.receivedAt,
     inspectedAt: entity.inspectedAt,
     completedAt: entity.completedAt,
+    returnShipmentId: entity.returnShipmentId ?? null,
+    returnTrackingCode: entity.returnTrackingCode ?? null,
     version: entity.version,
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
@@ -66,6 +68,8 @@ export function applyReturnRequestToOrm(
   entity.receivedAt = aggregate.receivedAt;
   entity.inspectedAt = aggregate.inspectedAt;
   entity.completedAt = aggregate.completedAt;
+  entity.returnShipmentId = aggregate.returnShipmentId;
+  entity.returnTrackingCode = aggregate.returnTrackingCode;
   entity.version = aggregate.version;
   entity.createdAt = aggregate.createdAt;
   entity.updatedAt = aggregate.updatedAt;

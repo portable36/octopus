@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
 import {
+  downloadVendorStatementCsv,
   formatVendorMoney,
   getVendorFinanceSummary,
   getVendorStatement,
@@ -43,6 +44,7 @@ export default function VendorFinancePage() {
   const [loading, setLoading] = useState(true);
   const [payoutPending, setPayoutPending] = useState(false);
   const [statementPending, setStatementPending] = useState(false);
+  const [csvPending, setCsvPending] = useState(false);
 
   useEffect(() => {
     const sync = () => setStoreId(getSelectedStoreId());
@@ -317,6 +319,31 @@ export default function VendorFinancePage() {
           </label>
           <Button type="button" disabled={statementPending} onClick={() => void loadStatement(0)}>
             {statementPending ? 'Loading…' : 'Load statement'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={csvPending}
+            onClick={() => {
+              void (async () => {
+                setCsvPending(true);
+                setStatementError(null);
+                try {
+                  await downloadVendorStatementCsv(vendorId, {
+                    ...(statementFrom ? { from: statementFrom } : {}),
+                    ...(statementTo ? { to: statementTo } : {}),
+                  });
+                } catch (err) {
+                  setStatementError(
+                    err instanceof Error ? err.message : 'Failed to download CSV.',
+                  );
+                } finally {
+                  setCsvPending(false);
+                }
+              })();
+            }}
+          >
+            {csvPending ? 'Exporting…' : 'Download CSV'}
           </Button>
         </div>
         {statementError ? (

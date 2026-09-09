@@ -1,6 +1,17 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import {
   CurrentUser,
   type RequestPrincipal,
@@ -116,6 +127,43 @@ class PatchAddressDto {
   isDefault?: boolean;
 }
 
+class AddWishlistDto {
+  @IsUUID()
+  productId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  variantId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  storeId?: string | null;
+}
+
+class CreateReviewDto {
+  @IsUUID()
+  productId!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  rating!: number;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(200)
+  title!: string;
+
+  @IsString()
+  @MinLength(10)
+  @MaxLength(4000)
+  body!: string;
+
+  @IsOptional()
+  @IsUUID()
+  orderId?: string | null;
+}
+
 @ApiTags('customer')
 @Controller('customer')
 @ApiBearerAuth()
@@ -186,6 +234,56 @@ export class CustomerController {
   ) {
     await this.customers.deleteAddress(user.userId, addressId);
   }
+
+  @Get('wishlist')
+  @ApiOperation({ summary: 'List wishlist items for the current customer' })
+  async listWishlist(@CurrentUser() user: RequestPrincipal) {
+    const items = await this.customers.listWishlist(user.userId);
+    return items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      variantId: item.variantId,
+      storeId: item.storeId,
+      createdAt: item.createdAt.toISOString(),
+    }));
+  }
+
+  @Post('wishlist')
+  @ApiOperation({ summary: 'Add a product to the wishlist' })
+  async addWishlist(@CurrentUser() user: RequestPrincipal, @Body() body: AddWishlistDto) {
+    const item = await this.customers.addWishlistItem(user.userId, body);
+    return {
+      id: item.id,
+      productId: item.productId,
+      variantId: item.variantId,
+      storeId: item.storeId,
+      createdAt: item.createdAt.toISOString(),
+    };
+  }
+
+  @Delete('wishlist/:productId')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Remove a product from the wishlist' })
+  async removeWishlist(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('productId') productId: string,
+  ) {
+    await this.customers.removeWishlistItem(user.userId, productId);
+  }
+
+  @Post('reviews')
+  @ApiOperation({ summary: 'Create or update a product review' })
+  async createReview(@CurrentUser() user: RequestPrincipal, @Body() body: CreateReviewDto) {
+    const review = await this.customers.createReview(user.userId, body);
+    return reviewResponse(review);
+  }
+
+  @Delete('reviews/:reviewId')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete own product review' })
+  async deleteReview(@CurrentUser() user: RequestPrincipal, @Param('reviewId') reviewId: string) {
+    await this.customers.deleteReview(user.userId, reviewId);
+  }
 }
 
 function addressResponse(address: {
@@ -215,5 +313,31 @@ function addressResponse(address: {
     countryCode: address.countryCode,
     isDefault: address.isDefault,
     updatedAt: address.updatedAt.toISOString(),
+  };
+}
+
+function reviewResponse(review: {
+  id: string;
+  productId: string;
+  userId: string;
+  orderId: string | null;
+  rating: number;
+  title: string;
+  body: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: review.id,
+    productId: review.productId,
+    userId: review.userId,
+    orderId: review.orderId,
+    rating: review.rating,
+    title: review.title,
+    body: review.body,
+    status: review.status,
+    createdAt: review.createdAt.toISOString(),
+    updatedAt: review.updatedAt.toISOString(),
   };
 }

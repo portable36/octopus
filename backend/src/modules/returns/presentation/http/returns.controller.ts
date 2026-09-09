@@ -67,6 +67,8 @@ function toResponse(ret: ReturnRequest) {
     receivedAt: ret.receivedAt?.toISOString() ?? null,
     inspectedAt: ret.inspectedAt?.toISOString() ?? null,
     completedAt: ret.completedAt?.toISOString() ?? null,
+    returnShipmentId: ret.returnShipmentId,
+    returnTrackingCode: ret.returnTrackingCode,
     createdAt: ret.createdAt.toISOString(),
     updatedAt: ret.updatedAt.toISOString(),
   };
@@ -162,6 +164,31 @@ export class ReturnsController {
   async listByOrder(@CurrentUser() user: RequestPrincipal, @Param('orderId') orderId: string) {
     const list = await this.handlers.listByOrder({
       orderId,
+      actorUserId: user.userId,
+      actorRoles: user.roles,
+    });
+    return list.map(toResponse);
+  }
+
+  @Get('stores/:storeId/returns')
+  @ApiOperation({ summary: 'List returns for a store (vendor/staff scoped)' })
+  async listByStore(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('storeId') storeId: string,
+    @Query('vendorId') vendorId: string,
+  ) {
+    if (!vendorId?.trim()) {
+      throw new BadRequestException({
+        type: 'about:blank',
+        title: 'Bad Request',
+        status: 400,
+        detail: 'vendorId query parameter is required.',
+        code: 'VENDOR_ID_REQUIRED',
+      });
+    }
+    const list = await this.handlers.listByStore({
+      storeId,
+      vendorId: vendorId.trim(),
       actorUserId: user.userId,
       actorRoles: user.roles,
     });

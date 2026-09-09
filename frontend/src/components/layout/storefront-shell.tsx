@@ -14,6 +14,7 @@ import {
   fetchStorefrontConfig,
   type ThemeSettings,
 } from '@/lib/storefront-config-api';
+import { normalizeCssHexColor } from '@/lib/css-hex-color';
 
 const DEFAULT_NAV = [
   { href: '/', label: 'Home' },
@@ -39,24 +40,37 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
         if (cancelled) {
           return;
         }
+        const styleObj: Record<string, string> = {};
+        const accent = normalizeCssHexColor(
+          config.theme?.colors?.accent ?? config.branding.primaryColor,
+        );
+        if (accent) {
+          styleObj['--cf-accent'] = accent;
+        }
+        const primary = normalizeCssHexColor(config.theme?.colors?.primary);
+        if (primary) {
+          styleObj['--cf-primary'] = primary;
+        }
+        const announcementBg = normalizeCssHexColor(config.theme?.colors?.announcementBg);
+        const announcementText = normalizeCssHexColor(config.theme?.colors?.announcementText);
+        if (Object.keys(styleObj).length > 0) {
+          setBrandStyle(styleObj as CSSProperties);
+        }
         if (config.theme) {
-          setTheme(config.theme);
+          setTheme({
+            ...config.theme,
+            colors: {
+              ...config.theme.colors,
+              accent: accent ?? config.theme.colors.accent,
+              primary: primary ?? config.theme.colors.primary,
+              announcementBg: announcementBg ?? config.theme.colors.announcementBg,
+              announcementText: announcementText ?? config.theme.colors.announcementText,
+            },
+          });
         }
         const name = config.branding.siteName?.trim();
         if (name) {
           setSiteName(name);
-        }
-        const styleObj: Record<string, string> = {};
-        const accent = config.theme?.colors?.accent?.trim() || config.branding.primaryColor?.trim();
-        if (accent) {
-          styleObj['--cf-accent'] = accent;
-        }
-        const primary = config.theme?.colors?.primary?.trim();
-        if (primary) {
-          styleObj['--cf-primary'] = primary;
-        }
-        if (Object.keys(styleObj).length > 0) {
-          setBrandStyle(styleObj as CSSProperties);
         }
       } catch {
         // Fall back to env app name / default theme.
@@ -80,8 +94,8 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
           <div
             className="sf-announcement"
             style={{
-              backgroundColor: theme.colors.announcementBg || undefined,
-              color: theme.colors.announcementText || undefined,
+              backgroundColor: normalizeCssHexColor(theme.colors.announcementBg) || undefined,
+              color: normalizeCssHexColor(theme.colors.announcementText) || undefined,
             }}
           >
             <div className="sf-utility-inner">

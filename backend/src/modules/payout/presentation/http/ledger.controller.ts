@@ -4,6 +4,7 @@ import {
   Controller,
   DefaultValuePipe,
   Get,
+  Header,
   Headers,
   HttpCode,
   Inject,
@@ -11,6 +12,7 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  StreamableFile,
   UseFilters,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -123,6 +125,50 @@ export class LedgerController {
       offset: clampOffset(offset),
       ...(from ? { from } : {}),
       ...(to ? { to } : {}),
+    });
+  }
+
+  @Get('vendors/:vendorId/statement.csv')
+  @ApiOperation({ summary: 'Download vendor ledger statement as CSV (up to 5000 rows)' })
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  async statementCsv(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('vendorId') vendorId: string,
+    @Query('from') fromRaw?: string,
+    @Query('to') toRaw?: string,
+  ): Promise<StreamableFile> {
+    await this.authz.requireLedgerReader(vendorId, user.userId, user.roles);
+    const from = parseOptionalDate(fromRaw, 'from');
+    const to = parseOptionalDate(toRaw, 'to');
+    const statement = await this.ledger.getVendorStatement({
+      vendorId,
+      limit: 5000,
+      offset: 0,
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+    });
+    const escape = (value: string): string => `"${value.replace(/"/g, '""')}"`;
+    const lines = [
+      'id,entryType,direction,amountMinor,currencyCode,occurredAt,referenceType,referenceId',
+      ...statement.items.map((row) =>
+        [
+          row.id,
+          row.entryType,
+          row.direction,
+          String(row.amountMinor),
+          row.currencyCode,
+          row.occurredAt,
+          row.referenceType ?? '',
+          row.referenceId ?? '',
+        ]
+          .map((cell) => escape(cell))
+          .join(','),
+      ),
+    ];
+    const body = Buffer.from(`${lines.join('\n')}\n`, 'utf8');
+    return new StreamableFile(body, {
+      type: 'text/csv; charset=utf-8',
+      disposition: `attachment; filename="vendor-${vendorId}-statement.csv"`,
     });
   }
 

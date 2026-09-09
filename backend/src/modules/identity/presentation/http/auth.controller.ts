@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Inject,
+  Param,
   Post,
   Req,
   Res,
@@ -19,8 +20,14 @@ import {
   RequestPasswordResetHandler,
   ResetPasswordHandler,
 } from '../../application/commands/change-password.handler';
+import {
+  RequestEmailVerificationHandler,
+  VerifyEmailHandler,
+} from '../../application/commands/email-verification.handlers';
 import { LoginUserHandler } from '../../application/commands/login-user.handler';
 import { MfaHandlers } from '../../application/commands/mfa.handlers';
+import { CompleteOAuthHandler, StartOAuthHandler } from '../../application/commands/oauth.handlers';
+import { RequestOtpHandler, VerifyOtpHandler } from '../../application/commands/otp.handlers';
 import { RegisterUserHandler } from '../../application/commands/register-user.handler';
 import {
   LogoutUserHandler,
@@ -46,8 +53,13 @@ import {
   MfaRequiredResponseDto,
   MfaSetupResponseDto,
   MfaVerifyLoginRequestDto,
+  OAuthCallbackRequestDto,
+  OtpRequestDto,
+  OtpVerifyRequestDto,
   RegisterRequestDto,
+  RequestEmailVerificationDto,
   ResetPasswordRequestDto,
+  VerifyEmailRequestDto,
 } from './dto/auth.dto';
 import { IdentityExceptionFilter } from './filters/identity-exception.filter';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -64,6 +76,12 @@ export class AuthController {
     private readonly changePassword: ChangePasswordHandler,
     private readonly requestPasswordReset: RequestPasswordResetHandler,
     private readonly resetPassword: ResetPasswordHandler,
+    private readonly requestEmailVerification: RequestEmailVerificationHandler,
+    private readonly verifyEmail: VerifyEmailHandler,
+    private readonly startOAuth: StartOAuthHandler,
+    private readonly completeOAuth: CompleteOAuthHandler,
+    private readonly requestOtp: RequestOtpHandler,
+    private readonly verifyOtp: VerifyOtpHandler,
     private readonly mfa: MfaHandlers,
     private readonly authorization: AuthorizationService,
     @Inject(AppConfigService) private readonly config: AppConfigService,
@@ -233,6 +251,93 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password using a reset token' })
   async resetPasswordRoute(@Body() body: ResetPasswordRequestDto): Promise<void> {
     await this.resetPassword.execute(body);
+  }
+
+  @Public()
+  @Post('email/verify/request')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Request an email verification token (auth optional or email body)' })
+  async requestEmailVerificationRoute(
+    @Body() body: RequestEmailVerificationDto,
+    @CurrentUser() user: AuthPrincipal | undefined,
+  ): Promise<{ issued: boolean; devToken?: string }> {
+    const result = await this.requestEmailVerification.execute({
+      ...(user?.userId !== undefined ? { userId: user.userId } : {}),
+      ...(body.email !== undefined ? { email: body.email } : {}),
+    });
+    if (result.devToken !== undefined) {
+      return { issued: result.issued, devToken: result.devToken };
+    }
+    return { issued: result.issued };
+  }
+
+  @Public()
+  @Post('email/verify')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Verify email with a token' })
+  async verifyEmailRoute(@Body() body: VerifyEmailRequestDto): Promise<void> {
+    await this.verifyEmail.execute(body);
+  }
+
+  @Public()
+  @Post('oauth/:provider/start')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Start OAuth (google|facebook); returns authorizationUrl' })
+  async oauthStart(@Param('provider') provider: string): Promise<{ authorizationUrl: string }> {
+    return this.startOAuth.execute(provider);
+  }
+
+  @Public()
+  @Post('oauth/:provider/callback')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Complete OAuth with code + state; returns login session' })
+  async oauthCallback(
+    @Param('provider') provider: string,
+    @Body() body: OAuthCallbackRequestDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthSessionResponseDto> {
+    const session = await this.completeOAuth.execute({
+      provider,
+      code: body.code,
+      state: body.state,
+    });
+    this.setRefreshCookie(res, session.refreshToken);
+    return this.toSessionResponse(session);
+  }
+
+  @Public()
+  @Post('otp/request')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Request carrier OTP (mock returns devCode outside production)' })
+  async otpRequest(
+    @Body() body: OtpRequestDto,
+    @Req() req: Request,
+  ): Promise<{ sent: true; devCode?: string }> {
+    const rateLimitKey = `otp:${req.ip ?? 'unknown'}:${body.phone}`;
+    const result = await this.requestOtp.execute({ phone: body.phone, rateLimitKey });
+    if (result.devCode !== undefined) {
+      return { sent: true, devCode: result.devCode };
+    }
+    return { sent: true };
+  }
+
+  @Public()
+  @Post('otp/verify')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Verify OTP and issue login session' })
+  async otpVerify(
+    @Body() body: OtpVerifyRequestDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthSessionResponseDto> {
+    const rateLimitKey = `otp-verify:${req.ip ?? 'unknown'}:${body.phone}`;
+    const session = await this.verifyOtp.execute({
+      phone: body.phone,
+      code: body.code,
+      rateLimitKey,
+    });
+    this.setRefreshCookie(res, session.refreshToken);
+    return this.toSessionResponse(session);
   }
 
   @Get('admin-check')

@@ -34,6 +34,9 @@ export class UserOrmEntity {
   @Property({ fieldName: 'mfa_secret_cipher', nullable: true, type: 'text' })
   mfaSecretCipher: string | null = null;
 
+  @Property({ fieldName: 'email_verified_at', type: 'Date', nullable: true })
+  emailVerifiedAt: Date | null = null;
+
   @Property({ fieldName: 'created_at', type: 'Date' })
   createdAt!: Date;
 

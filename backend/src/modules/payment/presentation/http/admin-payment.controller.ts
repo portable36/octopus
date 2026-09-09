@@ -1,5 +1,6 @@
-import { Controller, Get, Query, UseFilters } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseFilters } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { AppConfigService } from '../../../../config/app-config.service';
 import {
   CurrentUser,
   type RequestPrincipal,
@@ -16,7 +17,10 @@ import { PaymentExceptionFilter } from './filters/payment-exception.filter';
 @RequirePermissions('platform.payments.read')
 @UseFilters(PaymentExceptionFilter)
 export class AdminPaymentController {
-  constructor(private readonly listIntents: ListPaymentIntentsHandler) {}
+  constructor(
+    private readonly listIntents: ListPaymentIntentsHandler,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Platform admin: recent payment intents (read; no secrets)' })
@@ -27,6 +31,37 @@ export class AdminPaymentController {
       limit: clampLimit(limit),
     });
     return list.map((intent) => this.toResponse(intent));
+  }
+
+  @Get('gateways')
+  @ApiOperation({
+    summary: 'Platform admin: payment gateway env readiness (booleans only; no secrets)',
+  })
+  gateways() {
+    return {
+      mode: this.config.paymentGatewayMode,
+      sslcommerz: {
+        configured: Boolean(this.config.sslCommerzStoreId && this.config.sslCommerzStorePasswd),
+        sandbox: this.config.sslCommerzIsSandbox,
+      },
+      bkash: {
+        configured: Boolean(
+          this.config.bkashAppKey &&
+            this.config.bkashAppSecret &&
+            this.config.bkashUsername &&
+            this.config.bkashPassword,
+        ),
+        sandbox: this.config.bkashIsSandbox,
+      },
+      nagad: {
+        configured: Boolean(
+          this.config.nagadMerchantId &&
+            this.config.nagadMerchantPrivateKey &&
+            this.config.nagadPgPublicKey,
+        ),
+        sandbox: this.config.nagadIsSandbox,
+      },
+    };
   }
 
   private toResponse(intent: PaymentIntent) {

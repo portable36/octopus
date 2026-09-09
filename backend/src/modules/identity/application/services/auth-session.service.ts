@@ -36,6 +36,7 @@ export class AuthSessionService {
       email: user.email.value,
       roles: user.roles,
       mfaEnabled: user.mfaEnabled,
+      emailVerified: user.emailVerified,
     });
 
     return {
@@ -47,6 +48,7 @@ export class AuthSessionService {
         email: user.email.value,
         roles: user.roles,
         mfaEnabled: user.mfaEnabled,
+        emailVerified: user.emailVerified,
       },
     };
   }

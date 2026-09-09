@@ -31,6 +31,7 @@ describe('ReturnsHandlers', () => {
       currencyCode: 'BDT',
       totalMinor: 5000,
       returnWindowAnchorAt: new Date(),
+      shippingAddress: { line1: '12 Road', city: 'Dhaka', countryCode: 'BD' },
       lines: [
         {
           lineId,
@@ -206,5 +207,27 @@ describe('ReturnsHandlers', () => {
 
     expect(cancelled.status).toBe('CANCELLED');
     expect(cancelled.statusLabel).toBe('Return Cancelled');
+  });
+
+  it('lists store returns for staff-scoped actors', async () => {
+    const { handlers, returns, authz } = build();
+    const existing = await handlers.requestReturn({
+      orderId,
+      actorUserId: customerId,
+      actorRoles: ['CUSTOMER'],
+      idempotencyKey: 'idem-return-store-list',
+      items: [{ orderItemId: lineId, quantity: 1, reasonCode: 'DAMAGED' }],
+    });
+    returns.listByStoreId.mockResolvedValue([existing]);
+
+    const list = await handlers.listByStore({
+      storeId: 'eeeeeeee-eeee-7eee-8eee-eeeeeeeeeeee',
+      vendorId: 'dddddddd-dddd-7ddd-8ddd-dddddddddddd',
+      actorUserId: 'vendor-owner-1',
+      actorRoles: ['VENDOR_OWNER'],
+    });
+
+    expect(list).toHaveLength(1);
+    expect(authz.requireStaffScope).toHaveBeenCalled();
   });
 });

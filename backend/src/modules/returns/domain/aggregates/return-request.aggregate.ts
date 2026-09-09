@@ -32,6 +32,8 @@ interface ReturnRequestProps {
   readonly receivedAt: Date | null;
   readonly inspectedAt: Date | null;
   readonly completedAt: Date | null;
+  readonly returnShipmentId: string | null;
+  readonly returnTrackingCode: string | null;
   readonly version: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -123,6 +125,8 @@ export class ReturnRequest extends AggregateRoot<UniqueID> {
       receivedAt: null,
       inspectedAt: null,
       completedAt: null,
+      returnShipmentId: null,
+      returnTrackingCode: null,
       version: 1,
       createdAt: now,
       updatedAt: now,
@@ -193,6 +197,12 @@ export class ReturnRequest extends AggregateRoot<UniqueID> {
   get completedAt(): Date | null {
     return this.props.completedAt;
   }
+  get returnShipmentId(): string | null {
+    return this.props.returnShipmentId;
+  }
+  get returnTrackingCode(): string | null {
+    return this.props.returnTrackingCode;
+  }
   get version(): number {
     return this.props.version;
   }
@@ -201,6 +211,19 @@ export class ReturnRequest extends AggregateRoot<UniqueID> {
   }
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  public attachReturnShipment(input: {
+    readonly shipmentId: string;
+    readonly trackingCode: string | null;
+  }): void {
+    this.props = {
+      ...this.props,
+      returnShipmentId: input.shipmentId,
+      returnTrackingCode: input.trackingCode,
+      updatedAt: new Date(),
+      version: this.props.version + 1,
+    };
   }
 
   public startReview(): void {

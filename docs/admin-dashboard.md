@@ -10,7 +10,9 @@ Delivery is sliced in [`docs/PHASES.md`](PHASES.md) Phase 20.1–20.8. **Phase 2
 ships the admin shell, granular permissions, Settings/Media/Audit foundations,
 and Vendor/Store admin list/detail read APIs. **Phase 20.2** adds admin detail
 UIs for vendor/store lifecycle and staff over existing `/vendors/:id/*` and
-`/stores/:id/*` mutation routes (no parallel admin mutation controllers).
+`/stores/:id/*` mutation routes (no parallel admin mutation controllers). Store
+Phase B tabs include branding (store Settings scope), shipping (vendor courier
+read-only), and analytics (store report summary); COD stays on Settings.
 **Phase 20.4 (partial)** adds COD settings forms on vendor/store detail (same
 `PATCH …/settings` routes) plus a thin `/admin/system/commerce` hub; shipping
 courier and tax/commission admin remain open (no public courier API / engines later).

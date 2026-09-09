@@ -1,9 +1,11 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type {
+  ObjectHeadResult,
   ObjectStoragePort,
+  PresignedGetDownload,
   PresignedPutUpload,
 } from '../../application/ports/object-storage.port';
 
@@ -48,5 +50,52 @@ export class S3ObjectStorageAdapter implements ObjectStoragePort {
         'Content-Length': String(input.byteSize),
       },
     };
+  }
+
+  public async createPresignedGet(input: {
+    readonly storageKey: string;
+    readonly expiresInSeconds: number;
+  }): Promise<PresignedGetDownload> {
+    const command = new GetObjectCommand({
+      Bucket: this.config.s3Bucket,
+      Key: input.storageKey,
+    });
+    const downloadUrl = await getSignedUrl(this.client, command, {
+      expiresIn: input.expiresInSeconds,
+    });
+    return {
+      storageKey: input.storageKey,
+      downloadUrl,
+      expiresAt: new Date(Date.now() + input.expiresInSeconds * 1000),
+    };
+  }
+
+  public async headObject(storageKey: string): Promise<ObjectHeadResult | null> {
+    try {
+      const result = await this.client.send(
+        new HeadObjectCommand({
+          Bucket: this.config.s3Bucket,
+          Key: storageKey,
+        }),
+      );
+      return {
+        storageKey,
+        contentLength: result.ContentLength ?? 0,
+        contentType: result.ContentType ?? null,
+      };
+    } catch (error: unknown) {
+      const status =
+        typeof error === 'object' && error !== null && '$metadata' in error
+          ? (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode
+          : undefined;
+      const name =
+        typeof error === 'object' && error !== null && 'name' in error
+          ? String((error as { name?: string }).name)
+          : '';
+      if (status === 404 || name === 'NotFound' || name === 'NoSuchKey') {
+        return null;
+      }
+      throw error;
+    }
   }
 }

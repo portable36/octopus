@@ -1,4 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
+import { AppConfigService } from '../../../../config/app-config.service';
 import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import {
@@ -32,6 +33,9 @@ export const MEDIA_ALLOWED_CONTENT_TYPES = new Set([
 export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 
 export const MEDIA_UPLOAD_SESSION_TTL_SECONDS = 15 * 60;
+
+/** Short-lived signed GET for private buckets when no CDN base is configured. */
+export const MEDIA_SIGNED_DOWNLOAD_TTL_SECONDS = 60 * 60;
 
 const CONTENT_TYPE_EXTENSION: Readonly<Record<string, string>> = {
   'image/jpeg': 'jpg',
@@ -116,6 +120,7 @@ export class MediaHandlers {
   constructor(
     @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
     @Inject(OBJECT_STORAGE) private readonly objectStorage: ObjectStoragePort,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
@@ -176,6 +181,20 @@ export class MediaHandlers {
     }
     assertMagicMatchesDeclared(input.contentType, input.contentPrefixBase64);
 
+    const head = await this.objectStorage.headObject(input.storageKey.trim());
+    if (!head) {
+      throw new MediaDomainError(
+        'Uploaded object was not found in storage. Complete the PUT before registering.',
+        'MEDIA_OBJECT_MISSING',
+      );
+    }
+    if (head.contentLength !== input.byteSize) {
+      throw new MediaDomainError(
+        `Uploaded object size (${head.contentLength}) does not match declared byteSize (${input.byteSize}).`,
+        'MEDIA_SIZE_MISMATCH',
+      );
+    }
+
     const asset = {
       id: UniqueID.create().value,
       originalFilename: input.originalFilename.trim(),
@@ -214,5 +233,64 @@ export class MediaHandlers {
       throw new MediaNotFoundError();
     }
     return asset;
+  }
+
+  public async resolveImageDownloadUrl(mediaId: string): Promise<{
+    readonly id: string;
+    readonly contentType: string;
+    readonly url: string;
+    readonly expiresAt: string | null;
+  } | null> {
+    const asset = await this.media.findById(mediaId);
+    if (!asset || !asset.contentType.startsWith('image/')) {
+      return null;
+    }
+    return this.toDownloadResponse(asset);
+  }
+
+  public async resolveAuthorizedDownloadUrl(
+    mediaId: string,
+    actorRoles: readonly string[],
+  ): Promise<{
+    readonly id: string;
+    readonly contentType: string;
+    readonly url: string;
+    readonly expiresAt: string | null;
+  }> {
+    const asset = await this.getById(mediaId, actorRoles);
+    return this.toDownloadResponse(asset);
+  }
+
+  private async toDownloadResponse(asset: {
+    readonly id: string;
+    readonly contentType: string;
+    readonly storageKey: string;
+  }): Promise<{
+    readonly id: string;
+    readonly contentType: string;
+    readonly url: string;
+    readonly expiresAt: string | null;
+  }> {
+    if (this.config.hasExplicitMediaPublicBaseUrl) {
+      const base = this.config.mediaPublicBaseUrl.replace(/\/$/, '');
+      const key = asset.storageKey.replace(/^\//, '');
+      return {
+        id: asset.id,
+        contentType: asset.contentType,
+        url: `${base}/${key}`,
+        expiresAt: null,
+      };
+    }
+
+    const signed = await this.objectStorage.createPresignedGet({
+      storageKey: asset.storageKey,
+      expiresInSeconds: MEDIA_SIGNED_DOWNLOAD_TTL_SECONDS,
+    });
+    return {
+      id: asset.id,
+      contentType: asset.contentType,
+      url: signed.downloadUrl,
+      expiresAt: signed.expiresAt.toISOString(),
+    };
   }
 }

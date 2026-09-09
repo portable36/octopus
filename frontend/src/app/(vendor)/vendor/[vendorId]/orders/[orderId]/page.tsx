@@ -421,21 +421,29 @@ export default function VendorOrderDetailPage() {
                       <span className="font-mono text-xs">{ret.id.slice(0, 8)}…</span> ·{' '}
                       {ret.status} · {ret.items.length} item(s)
                     </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={pending}
-                      onClick={() =>
-                        void run(async () => {
-                          await cancelReturn(ret.id);
-                          await reloadReturns(orderId);
-                          setMessage('Return cancelled.');
-                        })
-                      }
-                    >
-                      Cancel return
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/vendor/${vendorId}/returns`}
+                        className="inline-flex h-9 items-center rounded-md border border-border px-3 text-xs font-medium hover:bg-muted"
+                      >
+                        Manage
+                      </Link>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={pending}
+                        onClick={() =>
+                          void run(async () => {
+                            await cancelReturn(ret.id);
+                            await reloadReturns(orderId);
+                            setMessage('Return cancelled.');
+                          })
+                        }
+                      >
+                        Cancel return
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

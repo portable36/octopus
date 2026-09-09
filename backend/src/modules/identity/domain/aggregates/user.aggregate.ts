@@ -21,6 +21,7 @@ interface UserProps {
   lockedUntil: Date | null;
   mfaEnabled: boolean;
   mfaSecretCipher: string | null;
+  emailVerifiedAt: Date | null;
 }
 
 const ALLOWED_TRANSITIONS: Record<UserStatus, UserStatus[]> = {
@@ -54,6 +55,7 @@ export class User extends AggregateRoot<UniqueID> {
       lockedUntil: null,
       mfaEnabled: false,
       mfaSecretCipher: null,
+      emailVerifiedAt: null,
     });
     user.addEvent('UserRegistered', {
       userId: user.id.value,
@@ -73,6 +75,7 @@ export class User extends AggregateRoot<UniqueID> {
     lockedUntil: Date | null,
     mfaEnabled = false,
     mfaSecretCipher: string | null = null,
+    emailVerifiedAt: Date | null = null,
   ): User {
     return new User(UniqueID.from(id), {
       email: EmailAddress.create(email),
@@ -84,6 +87,7 @@ export class User extends AggregateRoot<UniqueID> {
       lockedUntil,
       mfaEnabled,
       mfaSecretCipher,
+      emailVerifiedAt,
     });
   }
 
@@ -121,6 +125,22 @@ export class User extends AggregateRoot<UniqueID> {
 
   get mfaSecretCipher(): string | null {
     return this.props.mfaSecretCipher;
+  }
+
+  get emailVerifiedAt(): Date | null {
+    return this.props.emailVerifiedAt;
+  }
+
+  get emailVerified(): boolean {
+    return this.props.emailVerifiedAt !== null;
+  }
+
+  public markEmailVerified(at = new Date()): void {
+    if (this.props.emailVerifiedAt !== null) {
+      return;
+    }
+    this.props = { ...this.props, emailVerifiedAt: at };
+    this.addEvent('UserEmailVerified', { userId: this.id.value });
   }
 
   public enableMfa(secretCipher: string): void {

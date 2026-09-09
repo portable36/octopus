@@ -158,9 +158,11 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
       { href: base, label: 'Dashboard', permission: 'vendor.manage' },
       { href: `${base}/stores`, label: 'Stores', permission: 'store.manage' },
       { href: `${base}/orders`, label: 'Orders', permission: 'order.read' },
+      { href: `${base}/returns`, label: 'Returns', permission: 'return.read' },
       { href: `${base}/catalog`, label: 'Catalog', permission: 'catalog.product.read' },
       { href: `${base}/inventory`, label: 'Inventory', permission: 'inventory.read' },
       { href: `${base}/finance`, label: 'Finance', permission: 'finance.ledger.read' },
+      { href: `${base}/courier`, label: 'Courier', permission: 'order.fulfill' },
     ];
   }, [vendorId, vendorStatus]);
 
@@ -250,9 +252,11 @@ export function VendorShell({ children }: { readonly children: ReactNode }) {
               </h1>
             </div>
             {vendorId && stores.length > 0 ? (
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm" htmlFor="vendor-selected-store">
                 <span className="text-muted-foreground">Store</span>
                 <select
+                  id="vendor-selected-store"
+                  name="selected_store_id"
                   className="h-9 rounded-md border border-border bg-background px-2"
                   value={selectedStoreId ?? ''}
                   onChange={(e) => onStoreChange(e.target.value)}

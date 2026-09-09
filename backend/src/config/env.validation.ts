@@ -104,6 +104,20 @@ const baseEnvSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   REFRESH_COOKIE_NAME: z.string().default('refresh_token'),
+  /** Force OAuth mock even when provider credentials exist. */
+  OAUTH_MOCK: booleanFromEnv,
+  /** Google OAuth web client id (optional; missing → mock mode). */
+  GOOGLE_OAUTH_CLIENT_ID: z.string().min(1).optional(),
+  /** Google OAuth web client secret (optional; missing → mock mode). */
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
+  /** Facebook OAuth app id (optional; missing → mock mode). */
+  FACEBOOK_OAUTH_CLIENT_ID: z.string().min(1).optional(),
+  /** Facebook OAuth app secret (optional; missing → mock mode). */
+  FACEBOOK_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
+  /** Browser redirect base for OAuth callbacks (defaults to first CORS origin). */
+  OAUTH_REDIRECT_BASE_URL: z.string().url().optional(),
+  /** Force OTP mock / allow OTP without SMS provider (dev + CI). */
+  OTP_MOCK: booleanFromEnv,
   MEILISEARCH_HOST: z.string().url(),
   MEILISEARCH_API_KEY: z.string().min(1),
   SEARCH_PRODUCTS_INDEX: z.string().min(1).max(128).default('products'),
@@ -228,6 +242,8 @@ const baseEnvSchema = z.object({
   GOOGLE_SERVICES_PRIVATE_KEY: z.string().min(1).optional(),
   /** Payment Gateway Mode: live, sandbox, or sandbox-mock (default). */
   PAYMENT_GATEWAY_MODE: z.enum(['live', 'sandbox', 'sandbox-mock']).default('sandbox-mock'),
+  /** Optional HMAC secret for payment IPN/webhook routes (not browser return URLs). */
+  PAYMENT_IPN_HMAC_SECRET: z.string().min(16).optional(),
   /** SSLCommerz store ID (server-only). */
   SSLCOMMERZ_STORE_ID: z.string().optional(),
   /** SSLCommerz store password/secret (server-only). */

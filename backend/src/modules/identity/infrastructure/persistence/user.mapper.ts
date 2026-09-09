@@ -13,6 +13,7 @@ export function toOrmEntity(user: User, existing?: UserOrmEntity): UserOrmEntity
   entity.lockedUntil = user.lockedUntil;
   entity.mfaEnabled = user.mfaEnabled;
   entity.mfaSecretCipher = user.mfaSecretCipher;
+  entity.emailVerifiedAt = user.emailVerifiedAt;
   if (!existing) {
     entity.createdAt = new Date();
   }
@@ -32,5 +33,6 @@ export function toDomain(entity: UserOrmEntity): User {
     entity.lockedUntil,
     entity.mfaEnabled,
     entity.mfaSecretCipher,
+    entity.emailVerifiedAt,
   );
 }

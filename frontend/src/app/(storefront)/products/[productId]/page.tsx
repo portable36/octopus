@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProductMediaGallery } from '@/components/storefront/product-media-gallery';
 import { ProductOfferPicker } from '@/components/storefront/product-offer-picker';
+import { ProductEngagementPanel } from '@/components/storefront/product-engagement-panel';
 import { TaxonomyKeywordAttributes } from '@/components/seo/TaxonomyKeywordAttributes';
 import { ProductViewAnalytics } from '@/components/storefront/product-view-analytics';
 import { StructuredData } from '@/components/seo/StructuredData';
@@ -106,6 +107,8 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      <ProductEngagementPanel productId={product.id} />
     </div>
   );
 }

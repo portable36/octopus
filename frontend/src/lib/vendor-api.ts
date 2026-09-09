@@ -181,14 +181,41 @@ export type VendorReturnReason = {
 export type VendorReturn = {
   id: string;
   orderId: string;
+  customerId: string;
+  vendorId: string;
+  storeId: string;
   status: string;
   customerNote: string | null;
+  rejectionReasonCode: string | null;
+  rejectionNote: string | null;
   items: readonly {
     orderItemId: string;
+    productId: string;
+    variantId: string;
+    sku: string;
+    productName: string;
+    unitPriceMinor: number;
+    lineTotalMinor: number;
     quantity: number;
     reasonCode: string;
+    condition: string;
   }[];
+  inspection: {
+    quantityReceived: number;
+    quantityAccepted: number;
+    quantityRejected: number;
+    condition: string;
+    reason: string | null;
+    note: string | null;
+    inspectedBy: string;
+    inspectedAt: string;
+  } | null;
   requestedAt: string;
+  reviewedAt: string | null;
+  approvedAt: string | null;
+  receivedAt: string | null;
+  inspectedAt: string | null;
+  completedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -288,6 +315,65 @@ export function getVendorStatement(
   return authedRequest<VendorStatement>(
     `/finance/vendors/${vendorId}/statement${qs ? `?${qs}` : ''}`,
   );
+}
+
+export async function downloadVendorStatementCsv(
+  vendorId: string,
+  query: { from?: string; to?: string } = {},
+): Promise<void> {
+  const { getAccessToken } = await import('@/lib/auth-session');
+  const { getPublicApiBaseUrl } = await import('@/lib/env');
+  const params = new URLSearchParams();
+  if (query.from) params.set('from', query.from);
+  if (query.to) params.set('to', query.to);
+  const qs = params.toString();
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('Authentication required.');
+  }
+  const url = `${getPublicApiBaseUrl()}/finance/vendors/${vendorId}/statement.csv${qs ? `?${qs}` : ''}`;
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    throw new Error(`CSV download failed (${response.status})`);
+  }
+  const blob = await response.blob();
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.download = `vendor-${vendorId}-statement.csv`;
+  anchor.click();
+  URL.revokeObjectURL(href);
+}
+
+export type CourierAccountStatus = {
+  provider: 'STEADFAST' | 'PATHAO' | 'MANUAL';
+  configured: boolean;
+  isActive: boolean;
+  pathaoStoreId: number | null;
+  updatedAt: string | null;
+};
+
+export function listVendorCourierAccounts(vendorId: string): Promise<CourierAccountStatus[]> {
+  return authedRequest<CourierAccountStatus[]>(
+    `/fulfillment/vendors/${vendorId}/courier-accounts`,
+  );
+}
+
+export function upsertVendorCourierAccount(
+  vendorId: string,
+  input: {
+    provider: 'STEADFAST' | 'PATHAO';
+    credentials: Record<string, unknown>;
+    pathaoStoreId?: number;
+  },
+): Promise<{ ok: true; provider: string }> {
+  return authedRequest(`/fulfillment/vendors/${vendorId}/courier-accounts`, {
+    method: 'PUT',
+    body: input,
+  });
 }
 
 export function listVendorLedger(vendorId: string, limit = 20): Promise<VendorLedgerEntry[]> {
@@ -540,6 +626,62 @@ export function cancelReturn(returnId: string): Promise<VendorReturn> {
   return authedRequest<VendorReturn>(`/returns/${returnId}/cancel`, { method: 'POST' });
 }
 
+export function listStoreReturns(storeId: string, vendorId: string): Promise<VendorReturn[]> {
+  const params = new URLSearchParams({ vendorId });
+  return authedRequest<VendorReturn[]>(
+    `/stores/${encodeURIComponent(storeId)}/returns?${params.toString()}`,
+  );
+}
+
+export function approveReturn(returnId: string): Promise<VendorReturn> {
+  return authedRequest<VendorReturn>(`/admin/returns/${encodeURIComponent(returnId)}/approve`, {
+    method: 'POST',
+  });
+}
+
+export function rejectReturn(
+  returnId: string,
+  input: { reasonCode: string; note?: string },
+): Promise<VendorReturn> {
+  return authedRequest<VendorReturn>(`/admin/returns/${encodeURIComponent(returnId)}/reject`, {
+    method: 'POST',
+    body: {
+      reasonCode: input.reasonCode,
+      ...(input.note ? { note: input.note } : {}),
+    },
+  });
+}
+
+export function receiveReturn(returnId: string): Promise<VendorReturn> {
+  return authedRequest<VendorReturn>(`/admin/returns/${encodeURIComponent(returnId)}/receive`, {
+    method: 'POST',
+  });
+}
+
+export function inspectReturn(
+  returnId: string,
+  input: {
+    quantityReceived: number;
+    quantityAccepted: number;
+    quantityRejected: number;
+    condition: string;
+    reason?: string;
+    note?: string;
+  },
+): Promise<VendorReturn> {
+  return authedRequest<VendorReturn>(`/admin/returns/${encodeURIComponent(returnId)}/inspect`, {
+    method: 'POST',
+    body: {
+      quantityReceived: input.quantityReceived,
+      quantityAccepted: input.quantityAccepted,
+      quantityRejected: input.quantityRejected,
+      condition: input.condition,
+      ...(input.reason ? { reason: input.reason } : {}),
+      ...(input.note ? { note: input.note } : {}),
+    },
+  });
+}
+
 export function createShipment(input: {
   orderId: string;
   provider: 'STEADFAST' | 'PATHAO' | 'MANUAL';
@@ -709,22 +851,20 @@ export type SalesAnalyticsPaymentMethod = {
 };
 
 export type ScopedSalesAnalytics = {
-  readonly scope: 'VENDOR' | 'STORE';
   readonly scopeId: string;
-  readonly days: number;
+  readonly scopeType: 'VENDOR' | 'STORE';
+  readonly days?: number;
   readonly aovMinor: number;
-  readonly summary: {
-    readonly orderCount: number;
+  readonly orderCount: number;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+  readonly commissionMinor: number;
+  readonly currencies: readonly {
+    readonly currencyCode: string;
     readonly paidOrderCount: number;
     readonly revenueMinor: number;
     readonly commissionMinor: number;
-    readonly currencies: readonly {
-      readonly currencyCode: string;
-      readonly paidOrderCount: number;
-      readonly revenueMinor: number;
-      readonly commissionMinor: number;
-    }[];
-  };
+  }[];
   readonly trends: readonly SalesAnalyticsTrendPoint[];
   readonly paymentMethods: readonly SalesAnalyticsPaymentMethod[];
 };

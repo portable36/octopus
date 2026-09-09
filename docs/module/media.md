@@ -32,13 +32,22 @@ Authoritative rule: `.cursor/rules/38-media-uploads.mdc`.
 ## Public contracts (expected)
 
 ```text
-createUploadSession(contentHints, size, checksum?) → { uploadId, parts?, expiresAt }
-completeUpload(uploadId, partEtags?) → mediaId | quarantine
-getMedia(mediaId) → metadata + signed download URL when authorized
-abortUpload(uploadId)
+createUploadSession(contentHints, size) → { storageKey, uploadUrl, expiresAt, requiredHeaders }
+registerMetadata(storageKey, contentPrefixBase64, …) → mediaId
+  (requires object present in storage; magic-byte + size match)
+getPublicMedia(mediaId) → { url, expiresAt? }  // CDN base or signed GET
+getMedia(mediaId) → metadata + downloadUrl when authorized
 ```
 
 Provider SDKs (S3/MinIO/R2) stay in infrastructure adapters.
+
+## Shipped vs later
+
+| Shipped | Later |
+| --- | --- |
+| Presigned single-object PUT | Multipart + resumable parts |
+| Magic-byte + HeadObject checks | Async virus/scan quarantine queue |
+| Signed GET or `MEDIA_PUBLIC_BASE_URL` CDN | Image variants / derivatives |
 
 ## Testing requirements
 

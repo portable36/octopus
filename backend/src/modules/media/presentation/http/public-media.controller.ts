@@ -1,26 +1,22 @@
-import { Controller, Get, Inject, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AppConfigService } from '../../../../config/app-config.service';
 import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
-import {
-  MEDIA_REPOSITORY,
-  type MediaRepository,
-} from '../../application/ports/media-repository.interface';
+import { MediaHandlers } from '../../application/commands/media.handlers';
 
 @ApiTags('public-media')
 @Controller('public/media')
 export class PublicMediaController {
-  constructor(
-    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
-    @Inject(AppConfigService) private readonly config: AppConfigService,
-  ) {}
+  constructor(private readonly media: MediaHandlers) {}
 
   @Public()
   @Get(':mediaId')
-  @ApiOperation({ summary: 'Public thumbnail URL for an image media asset' })
+  @ApiOperation({
+    summary:
+      'Public image URL for a media asset (CDN base when configured; otherwise short-lived signed GET)',
+  })
   async getPublicUrl(@Param('mediaId') mediaId: string) {
-    const asset = await this.media.findById(mediaId);
-    if (!asset || !asset.contentType.startsWith('image/')) {
+    const resolved = await this.media.resolveImageDownloadUrl(mediaId);
+    if (!resolved) {
       throw new NotFoundException({
         type: 'about:blank',
         title: 'Not Found',
@@ -29,12 +25,6 @@ export class PublicMediaController {
         code: 'MEDIA_NOT_FOUND',
       });
     }
-    const base = this.config.mediaPublicBaseUrl.replace(/\/$/, '');
-    const key = asset.storageKey.replace(/^\//, '');
-    return {
-      id: asset.id,
-      contentType: asset.contentType,
-      url: `${base}/${key}`,
-    };
+    return resolved;
   }
 }

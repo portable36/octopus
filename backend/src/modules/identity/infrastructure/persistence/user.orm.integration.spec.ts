@@ -34,6 +34,7 @@ describe.runIf(Boolean(databaseUrl))('UserOrmEntity MikroORM integration', () =>
           lockedUntil: null,
           mfaEnabled: false,
           mfaSecretCipher: null,
+          emailVerifiedAt: null,
           createdAt: now,
           updatedAt: now,
         });

@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AppConfigService } from '../../../../config/app-config.service';
 import type {
   MediaAssetAccessPort,
   MediaAssetSnapshot,
   MediaPublicUrlSnapshot,
 } from '../../../../shared-kernel/application/ports/media-asset-access.port';
+import { MediaHandlers } from '../../application/commands/media.handlers';
 import {
   MEDIA_REPOSITORY,
   type MediaRepository,
@@ -14,7 +14,7 @@ import {
 export class MediaAssetAccessAdapter implements MediaAssetAccessPort {
   constructor(
     @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
-    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(MediaHandlers) private readonly handlers: MediaHandlers,
   ) {}
 
   public async findById(mediaId: string): Promise<MediaAssetSnapshot | null> {
@@ -31,16 +31,6 @@ export class MediaAssetAccessAdapter implements MediaAssetAccessPort {
   }
 
   public async resolvePublicImageUrl(mediaId: string): Promise<MediaPublicUrlSnapshot | null> {
-    const asset = await this.media.findById(mediaId);
-    if (!asset || !asset.contentType.startsWith('image/')) {
-      return null;
-    }
-    const base = this.config.mediaPublicBaseUrl.replace(/\/$/, '');
-    const key = asset.storageKey.replace(/^\//, '');
-    return {
-      id: asset.id,
-      contentType: asset.contentType,
-      url: `${base}/${key}`,
-    };
+    return this.handlers.resolveImageDownloadUrl(mediaId);
   }
 }

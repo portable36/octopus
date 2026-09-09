@@ -497,6 +497,21 @@ export function GlobalConfigDashboard() {
                 />
               </label>
               <label className={labelClassName()}>
+                <span className="text-muted-foreground">
+                  Platform commission rate (basis points)
+                </span>
+                <input
+                  className={fieldClassName()}
+                  inputMode="numeric"
+                  value={operationsForm.commission_rate_bps}
+                  onChange={(e) =>
+                    setOperationsForm((prev) =>
+                      updateOperationsField(prev, 'commission_rate_bps', e.target.value),
+                    )
+                  }
+                />
+              </label>
+              <label className={labelClassName()}>
                 <span className="text-muted-foreground">Free shipping threshold (minor units)</span>
                 <input
                   className={fieldClassName()}
@@ -526,6 +541,42 @@ export function GlobalConfigDashboard() {
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
+                    checked={operationsForm.sslcommerz_enabled}
+                    onChange={(e) =>
+                      setOperationsForm((prev) =>
+                        updateOperationsField(prev, 'sslcommerz_enabled', e.target.checked),
+                      )
+                    }
+                  />
+                  <span>SSLCommerz enabled</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={operationsForm.bkash_enabled}
+                    onChange={(e) =>
+                      setOperationsForm((prev) =>
+                        updateOperationsField(prev, 'bkash_enabled', e.target.checked),
+                      )
+                    }
+                  />
+                  <span>bKash enabled</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={operationsForm.nagad_enabled}
+                    onChange={(e) =>
+                      setOperationsForm((prev) =>
+                        updateOperationsField(prev, 'nagad_enabled', e.target.checked),
+                      )
+                    }
+                  />
+                  <span>Nagad enabled</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
                     checked={operationsForm.stripe_enabled}
                     onChange={(e) =>
                       setOperationsForm((prev) =>
@@ -533,9 +584,9 @@ export function GlobalConfigDashboard() {
                       )
                     }
                   />
-                  <span>Stripe / SSLCOMMERZ gateway enabled</span>
+                  <span>Stripe (legacy placeholder)</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={operationsForm.adyen_enabled}
@@ -545,7 +596,7 @@ export function GlobalConfigDashboard() {
                       )
                     }
                   />
-                  <span>Adyen / wallet gateways enabled</span>
+                  <span>Adyen (legacy placeholder)</span>
                 </label>
               </fieldset>
             </>

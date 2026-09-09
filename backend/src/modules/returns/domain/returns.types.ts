@@ -222,6 +222,8 @@ export interface ReturnTimelineResult {
   readonly receivedAt: string | null;
   readonly inspectedAt: string | null;
   readonly completedAt: string | null;
+  readonly returnShipmentId: string | null;
+  readonly returnTrackingCode: string | null;
   readonly items: readonly ReturnTimelineItem[];
   readonly inspection: ReturnTimelineInspection | null;
   readonly milestones: readonly ReturnTimelineMilestone[];

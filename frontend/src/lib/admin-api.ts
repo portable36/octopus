@@ -453,6 +453,19 @@ export function listAdminPayments(token: string, limit = 50): Promise<AdminPayme
   });
 }
 
+export type AdminPaymentGatewayStatus = {
+  mode: string;
+  sslcommerz: { configured: boolean; sandbox: boolean };
+  bkash: { configured: boolean; sandbox: boolean };
+  nagad: { configured: boolean; sandbox: boolean };
+};
+
+export function getAdminPaymentGateways(token: string): Promise<AdminPaymentGatewayStatus> {
+  return apiRequest<AdminPaymentGatewayStatus>('/admin/payments/gateways', {
+    headers: authHeaders(token),
+  });
+}
+
 export function listAdminUsers(token: string, limit = 50): Promise<AdminUserRow[]> {
   return apiRequest<AdminUserRow[]>(`/admin/users?limit=${limit}`, {
     headers: authHeaders(token),

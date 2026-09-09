@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
-import { fetchMe, type MeResponse } from '@/lib/auth-api';
+import { fetchMe, requestEmailVerification, type MeResponse } from '@/lib/auth-api';
 import {
   fetchProfile,
   listAddresses,
@@ -104,6 +104,46 @@ export default function AccountProfilePage() {
         ) : null}
       </header>
 
+      {me && me.emailVerified === false ? (
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm"
+          role="status"
+        >
+          <p>Your email is not verified yet.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void (async () => {
+                  try {
+                    const result = await requestEmailVerification();
+                    if (result.devToken) {
+                      window.location.href = `/verify-email?token=${encodeURIComponent(result.devToken)}`;
+                      return;
+                    }
+                    setSaved(false);
+                    setError(null);
+                  } catch (err) {
+                    setError(
+                      err instanceof ApiClientError
+                        ? err.message
+                        : 'Could not request verification.',
+                    );
+                  }
+                })();
+              }}
+            >
+              Resend verification
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/verify-email">Enter token</Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {error ? (
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-sm text-destructive" role="alert">
@@ -134,6 +174,11 @@ export default function AccountProfilePage() {
           <p className="sf-eyebrow">Addresses</p>
           <p className="mt-2 text-3xl font-semibold tabular-nums">{addresses?.length ?? '—'}</p>
           <p className="mt-1 text-sm text-muted-foreground">Manage delivery details</p>
+        </Link>
+        <Link href="/account/wishlist" className="sf-panel block hover:border-foreground">
+          <p className="sf-eyebrow">Wishlist</p>
+          <p className="mt-2 text-lg font-semibold">Saved products</p>
+          <p className="mt-1 text-sm text-muted-foreground">Items you bookmarked</p>
         </Link>
         <Link href="/search" className="sf-panel block hover:border-foreground">
           <p className="sf-eyebrow">Next action</p>

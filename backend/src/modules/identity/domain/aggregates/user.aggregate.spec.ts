@@ -106,6 +106,18 @@ describe('User aggregate', () => {
     );
   });
 
+  it('marks email verified once', () => {
+    const user = User.register('u@e.co', 'U', PASSWORD_HASH);
+    expect(user.emailVerified).toBe(false);
+    user.markEmailVerified();
+    expect(user.emailVerified).toBe(true);
+    expect(user.getUncommittedEvents().map((e) => e.eventName)).toContain('UserEmailVerified');
+    user.markEmailVerified();
+    expect(user.getUncommittedEvents().filter((e) => e.eventName === 'UserEmailVerified')).toHaveLength(
+      1,
+    );
+  });
+
   it('clearEvents empties uncommitted events', () => {
     const user = User.register('u@e.co', 'U', PASSWORD_HASH);
     expect(user.getUncommittedEvents().length).toBeGreaterThan(0);

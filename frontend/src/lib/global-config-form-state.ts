@@ -29,10 +29,14 @@ export type OperationsSettingsForm = {
   readonly guest_checkout_enabled: boolean;
   readonly tax_computation_enabled: boolean;
   readonly tax_rate_bps: string;
+  readonly commission_rate_bps: string;
   readonly free_shipping_threshold_minor: string;
   readonly stripe_enabled: boolean;
   readonly adyen_enabled: boolean;
   readonly cod_enabled: boolean;
+  readonly sslcommerz_enabled: boolean;
+  readonly bkash_enabled: boolean;
+  readonly nagad_enabled: boolean;
 };
 
 export const DEFAULT_SEO_SYSTEM_SETTINGS: SeoSystemSettingsForm = {
@@ -64,10 +68,14 @@ export const DEFAULT_OPERATIONS_SETTINGS: OperationsSettingsForm = {
   guest_checkout_enabled: true,
   tax_computation_enabled: false,
   tax_rate_bps: '0',
+  commission_rate_bps: '0',
   free_shipping_threshold_minor: '0',
   stripe_enabled: false,
   adyen_enabled: false,
   cod_enabled: true,
+  sslcommerz_enabled: true,
+  bkash_enabled: true,
+  nagad_enabled: true,
 };
 
 function asString(value: unknown, fallback = ''): string {
@@ -167,6 +175,10 @@ export function mapGlobalConfigToOperationsForm(
       checkout.tax_computation_enabled ?? DEFAULT_OPERATIONS_SETTINGS.tax_computation_enabled,
     ),
     tax_rate_bps: asString(checkout.tax_rate_bps, DEFAULT_OPERATIONS_SETTINGS.tax_rate_bps),
+    commission_rate_bps: asString(
+      checkout.commission_rate_bps,
+      DEFAULT_OPERATIONS_SETTINGS.commission_rate_bps,
+    ),
     free_shipping_threshold_minor: asString(
       shipping.free_shipping_threshold_minor,
       DEFAULT_OPERATIONS_SETTINGS.free_shipping_threshold_minor,
@@ -174,6 +186,11 @@ export function mapGlobalConfigToOperationsForm(
     stripe_enabled: Boolean(payments.stripe_enabled ?? DEFAULT_OPERATIONS_SETTINGS.stripe_enabled),
     adyen_enabled: Boolean(payments.adyen_enabled ?? DEFAULT_OPERATIONS_SETTINGS.adyen_enabled),
     cod_enabled: Boolean(payments.cod_enabled ?? DEFAULT_OPERATIONS_SETTINGS.cod_enabled),
+    sslcommerz_enabled: Boolean(
+      payments.sslcommerz_enabled ?? DEFAULT_OPERATIONS_SETTINGS.sslcommerz_enabled,
+    ),
+    bkash_enabled: Boolean(payments.bkash_enabled ?? DEFAULT_OPERATIONS_SETTINGS.bkash_enabled),
+    nagad_enabled: Boolean(payments.nagad_enabled ?? DEFAULT_OPERATIONS_SETTINGS.nagad_enabled),
   };
 }
 
@@ -242,6 +259,7 @@ export function operationsFormToPatch(
       guest_checkout_enabled: form.guest_checkout_enabled,
       tax_computation_enabled: form.tax_computation_enabled,
       tax_rate_bps: Number(form.tax_rate_bps),
+      commission_rate_bps: Number(form.commission_rate_bps),
     },
     shipping: {
       free_shipping_threshold_minor: Number(form.free_shipping_threshold_minor),
@@ -250,6 +268,9 @@ export function operationsFormToPatch(
       stripe_enabled: form.stripe_enabled,
       adyen_enabled: form.adyen_enabled,
       cod_enabled: form.cod_enabled,
+      sslcommerz_enabled: form.sslcommerz_enabled,
+      bkash_enabled: form.bkash_enabled,
+      nagad_enabled: form.nagad_enabled,
     },
   };
 }

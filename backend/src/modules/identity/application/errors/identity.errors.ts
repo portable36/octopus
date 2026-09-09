@@ -115,3 +115,33 @@ export class MfaSetupRequiredError extends IdentityError {
     super('Start MFA setup before confirming.', 'MFA_SETUP_REQUIRED');
   }
 }
+
+export class InvalidEmailVerificationTokenError extends IdentityError {
+  constructor() {
+    super('Email verification token is invalid or expired.', 'INVALID_EMAIL_VERIFICATION_TOKEN');
+  }
+}
+
+export class InvalidOAuthProviderError extends IdentityError {
+  constructor() {
+    super('Unsupported OAuth provider.', 'INVALID_OAUTH_PROVIDER');
+  }
+}
+
+export class InvalidOAuthStateError extends IdentityError {
+  constructor() {
+    super('OAuth state is invalid or expired.', 'INVALID_OAUTH_STATE');
+  }
+}
+
+export class InvalidOAuthCodeError extends IdentityError {
+  constructor() {
+    super('OAuth authorization code is invalid.', 'INVALID_OAUTH_CODE');
+  }
+}
+
+export class InvalidOtpError extends IdentityError {
+  constructor(message = 'Invalid or expired OTP code.') {
+    super(message, 'INVALID_OTP');
+  }
+}

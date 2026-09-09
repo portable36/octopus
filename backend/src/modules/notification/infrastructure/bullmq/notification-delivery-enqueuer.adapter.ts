@@ -6,8 +6,8 @@ import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/obs
 import { BULLMQ_DEFAULT_JOB_OPTIONS } from '../../../../shared-kernel/infrastructure/queues/bullmq-default-job-options';
 import type { NotificationDeliveryEnqueuerPort } from '../../application/ports/notification-delivery-enqueuer.port';
 
-/** Match messaging QUEUE_NAMES.notification — literal avoids cross-module import. */
-export const NOTIFICATION_QUEUE = 'octopus.notification';
+/** Match messaging QUEUE_NAMES.email — literal avoids cross-module import. */
+export const EMAIL_DELIVERY_QUEUE = 'octopus.email';
 
 @Injectable()
 export class NotificationDeliveryEnqueuerAdapter
@@ -56,7 +56,7 @@ export class NotificationDeliveryEnqueuerAdapter
 
   private ensureQueue(): Queue {
     if (!this.queue) {
-      this.queue = new Queue(NOTIFICATION_QUEUE, bullmqQueueOptions(this.connection));
+      this.queue = new Queue(EMAIL_DELIVERY_QUEUE, bullmqQueueOptions(this.connection));
     }
     return this.queue;
   }

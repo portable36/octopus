@@ -29,7 +29,18 @@ export class FulfillmentAuthorizationService {
     if (store?.managerUserIds.includes(actorUserId) || store?.staffUserIds.includes(actorUserId)) {
       return;
     }
-    const vendor = await this.vendors.findById(shipment.vendorId);
+    await this.requireVendorMember(shipment.vendorId, actorUserId, actorRoles);
+  }
+
+  public async requireVendorMember(
+    vendorId: string,
+    actorUserId: string,
+    actorRoles: readonly string[],
+  ): Promise<void> {
+    if (actorRoles.includes('PLATFORM_ADMIN')) {
+      return;
+    }
+    const vendor = await this.vendors.findById(vendorId);
     if (
       vendor &&
       (vendor.ownerUserId === actorUserId || vendor.staffUserIds.includes(actorUserId))

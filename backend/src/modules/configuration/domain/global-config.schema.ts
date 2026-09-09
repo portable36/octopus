@@ -16,6 +16,7 @@ const checkoutSchemas: Record<string, z.ZodType<unknown>> = {
   [GLOBAL_CONFIG_KEYS.checkout.GUEST_CHECKOUT_ENABLED]: z.boolean(),
   [GLOBAL_CONFIG_KEYS.checkout.TAX_COMPUTATION_ENABLED]: z.boolean(),
   [GLOBAL_CONFIG_KEYS.checkout.TAX_RATE_BPS]: z.number().int().min(0).max(10_000),
+  [GLOBAL_CONFIG_KEYS.checkout.COMMISSION_RATE_BPS]: z.number().int().min(0).max(10_000),
 };
 
 const shippingSchemas: Record<string, z.ZodType<unknown>> = {

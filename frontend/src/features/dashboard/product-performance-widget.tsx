@@ -154,14 +154,17 @@ export function ProductPerformanceWidget({ vendorId, storeId, token, title }: Pr
             </thead>
             <tbody className="divide-y divide-border/50">
               {items.map((item, index) => (
-                <tr key={`${item.productId}-${item.variantId}`} className="hover:bg-muted/50">
+                <tr
+                  key={`${item.productId ?? 'product'}-${item.variantId ?? index}`}
+                  className="hover:bg-muted/50"
+                >
                   <td className="py-2.5 pr-2 font-medium text-muted-foreground">{index + 1}</td>
                   <td className="py-2.5 pr-4">
                     <p className="font-mono text-xs font-semibold text-foreground">
-                      {item.productId.slice(0, 8)}…
+                      {(item.productId ?? 'unknown').slice(0, 8)}…
                     </p>
                     <p className="font-mono text-[11px] text-muted-foreground">
-                      var: {item.variantId.slice(0, 8)}…
+                      var: {(item.variantId ?? 'unknown').slice(0, 8)}…
                     </p>
                   </td>
                   <td className="py-2.5 pr-4 text-right font-medium">{item.unitsSold}</td>

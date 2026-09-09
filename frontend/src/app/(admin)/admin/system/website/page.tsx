@@ -1,11 +1,26 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState, type CSSProperties } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
+import { colorInputValue, normalizeCssHexColor } from '@/lib/css-hex-color';
 import { DEFAULT_THEME_SETTINGS, type ThemeSettings } from '@/lib/storefront-config-api';
+
+type ThemeColorKey = keyof ThemeSettings['colors'];
+
+function withNormalizedThemeColors(theme: ThemeSettings): ThemeSettings {
+  return {
+    ...theme,
+    colors: {
+      primary: normalizeCssHexColor(theme.colors.primary),
+      accent: normalizeCssHexColor(theme.colors.accent),
+      announcementBg: normalizeCssHexColor(theme.colors.announcementBg),
+      announcementText: normalizeCssHexColor(theme.colors.announcementText),
+    },
+  };
+}
 
 type GeneralSettings = {
   schemaVersion: 1;
@@ -131,11 +146,17 @@ export default function AdminWebsiteSettingsPage() {
     setSaved(null);
     setError(null);
     try {
+      const rawPrimary = String(form.get('primaryColor') || '').trim();
+      const primaryColor = rawPrimary ? normalizeCssHexColor(rawPrimary) : null;
+      if (rawPrimary && !primaryColor) {
+        setError('Primary brand hex color must look like #fcca19.');
+        return;
+      }
       const payload: BrandingSettings = {
         schemaVersion: 1,
         siteName: String(form.get('siteName') || '').trim() || null,
         tagline: String(form.get('tagline') || '').trim() || null,
-        primaryColor: String(form.get('primaryColor') || '').trim() || null,
+        primaryColor,
         logoMediaId: String(form.get('logoMediaId') || '').trim() || null,
         faviconMediaId: String(form.get('faviconMediaId') || '').trim() || null,
       };
@@ -153,9 +174,35 @@ export default function AdminWebsiteSettingsPage() {
     }
   }
 
+  function setThemeColor(key: ThemeColorKey, raw: string) {
+    setTheme((prev) => ({
+      ...prev,
+      colors: { ...prev.colors, [key]: raw },
+    }));
+  }
+
+  function commitThemeColor(key: ThemeColorKey, raw: string) {
+    const normalized = normalizeCssHexColor(raw);
+    setTheme((prev) => ({
+      ...prev,
+      colors: { ...prev.colors, [key]: normalized ?? (raw.trim() || null) },
+    }));
+  }
+
   async function onSaveTheme(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token || pending) return;
+    const payload = withNormalizedThemeColors(theme);
+    if (
+      (theme.colors.accent && !payload.colors.accent) ||
+      (theme.colors.primary && !payload.colors.primary) ||
+      (theme.colors.announcementBg && !payload.colors.announcementBg) ||
+      (theme.colors.announcementText && !payload.colors.announcementText)
+    ) {
+      setError('Use a valid hex color like #fcca19 (3 or 6 digits).');
+      return;
+    }
+    setTheme(payload);
     setPending('theme');
     setSaved(null);
     setError(null);
@@ -163,7 +210,7 @@ export default function AdminWebsiteSettingsPage() {
       await apiRequest('/admin/settings', {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
-        body: { key: 'theme', scopeKind: 'platform', payload: theme },
+        body: { key: 'theme', scopeKind: 'platform', payload },
       });
       setSaved('Saved storefront theme customizer & banner slots.');
     } catch (err) {
@@ -290,24 +337,15 @@ export default function AdminWebsiteSettingsPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={theme.colors.accent || '#2563eb'}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, accent: e.target.value },
-                          }))
-                        }
+                        value={colorInputValue(theme.colors.accent, '#2563eb')}
+                        onChange={(e) => setThemeColor('accent', e.target.value)}
                         className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
                       />
                       <input
                         type="text"
                         value={theme.colors.accent || ''}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, accent: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setThemeColor('accent', e.target.value)}
+                        onBlur={(e) => commitThemeColor('accent', e.target.value)}
                         placeholder="#2563eb"
                         className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
                       />
@@ -319,24 +357,15 @@ export default function AdminWebsiteSettingsPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={theme.colors.primary || '#0f172a'}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, primary: e.target.value },
-                          }))
-                        }
+                        value={colorInputValue(theme.colors.primary, '#0f172a')}
+                        onChange={(e) => setThemeColor('primary', e.target.value)}
                         className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
                       />
                       <input
                         type="text"
                         value={theme.colors.primary || ''}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, primary: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setThemeColor('primary', e.target.value)}
+                        onBlur={(e) => commitThemeColor('primary', e.target.value)}
                         placeholder="#0f172a"
                         className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
                       />
@@ -373,24 +402,15 @@ export default function AdminWebsiteSettingsPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={theme.colors.announcementBg || '#1e293b'}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, announcementBg: e.target.value },
-                          }))
-                        }
+                        value={colorInputValue(theme.colors.announcementBg, '#1e293b')}
+                        onChange={(e) => setThemeColor('announcementBg', e.target.value)}
                         className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
                       />
                       <input
                         type="text"
                         value={theme.colors.announcementBg || ''}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, announcementBg: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setThemeColor('announcementBg', e.target.value)}
+                        onBlur={(e) => commitThemeColor('announcementBg', e.target.value)}
                         placeholder="#1e293b"
                         className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
                       />
@@ -402,24 +422,15 @@ export default function AdminWebsiteSettingsPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={theme.colors.announcementText || '#ffffff'}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, announcementText: e.target.value },
-                          }))
-                        }
+                        value={colorInputValue(theme.colors.announcementText, '#ffffff')}
+                        onChange={(e) => setThemeColor('announcementText', e.target.value)}
                         className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
                       />
                       <input
                         type="text"
                         value={theme.colors.announcementText || ''}
-                        onChange={(e) =>
-                          setTheme((prev) => ({
-                            ...prev,
-                            colors: { ...prev.colors, announcementText: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setThemeColor('announcementText', e.target.value)}
+                        onBlur={(e) => commitThemeColor('announcementText', e.target.value)}
                         placeholder="#ffffff"
                         className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
                       />
@@ -1209,9 +1220,12 @@ export default function AdminWebsiteSettingsPage() {
             }`}
             style={
               {
-                '--cf-accent': theme.colors.accent || branding?.primaryColor || '#2563eb',
-                '--cf-primary': theme.colors.primary || '#0f172a',
-              } as React.CSSProperties
+                '--cf-accent':
+                  normalizeCssHexColor(theme.colors.accent) ||
+                  normalizeCssHexColor(branding?.primaryColor) ||
+                  '#2563eb',
+                '--cf-primary': normalizeCssHexColor(theme.colors.primary) || '#0f172a',
+              } as CSSProperties
             }
           >
             {/* Miniature Browser Shell Chrome */}
@@ -1227,8 +1241,9 @@ export default function AdminWebsiteSettingsPage() {
               <div
                 className="px-3 py-1 text-center text-3xs font-medium"
                 style={{
-                  backgroundColor: theme.colors.announcementBg || '#1e293b',
-                  color: theme.colors.announcementText || '#ffffff',
+                  backgroundColor:
+                    normalizeCssHexColor(theme.colors.announcementBg) || '#1e293b',
+                  color: normalizeCssHexColor(theme.colors.announcementText) || '#ffffff',
                 }}
               >
                 <span>{theme.announcementBar.text}</span>
@@ -1269,7 +1284,7 @@ export default function AdminWebsiteSettingsPage() {
               <div
                 className="relative overflow-hidden p-4 text-white"
                 style={{
-                  backgroundColor: theme.colors.primary || '#0f172a',
+                  backgroundColor: normalizeCssHexColor(theme.colors.primary) || '#0f172a',
                   backgroundImage: theme.heroBanner.imageUrl
                     ? `linear-gradient(rgba(15,23,42,0.8), rgba(15,23,42,0.9)), url(${theme.heroBanner.imageUrl})`
                     : undefined,
@@ -1289,7 +1304,7 @@ export default function AdminWebsiteSettingsPage() {
                   <span
                     className="inline-block rounded px-2.5 py-1 text-3xs font-semibold shadow-xs"
                     style={{
-                      backgroundColor: theme.colors.accent || '#2563eb',
+                      backgroundColor: normalizeCssHexColor(theme.colors.accent) || '#2563eb',
                       color: '#ffffff',
                     }}
                   >
@@ -1330,7 +1345,9 @@ export default function AdminWebsiteSettingsPage() {
                   {theme.promoBanner.ctaText ? (
                     <span
                       className="mt-1.5 inline-block rounded px-2 py-0.5 text-4xs font-bold text-white shadow-2xs"
-                      style={{ backgroundColor: theme.colors.accent || '#2563eb' }}
+                      style={{
+                        backgroundColor: normalizeCssHexColor(theme.colors.accent) || '#2563eb',
+                      }}
                     >
                       {theme.promoBanner.ctaText}
                     </span>

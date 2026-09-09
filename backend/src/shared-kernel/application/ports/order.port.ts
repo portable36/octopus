@@ -141,6 +141,14 @@ export interface OrderReturnSnapshot {
   readonly totalMinor: number;
   /** ponytail: proxy until Order persists deliveredAt from Fulfillment. */
   readonly returnWindowAnchorAt: Date;
+  readonly shippingAddress: {
+    readonly line1: string;
+    readonly line2?: string;
+    readonly city: string;
+    readonly region?: string;
+    readonly postalCode?: string;
+    readonly countryCode: string;
+  };
   readonly lines: readonly OrderReturnLineSnapshot[];
 }
 

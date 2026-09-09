@@ -52,12 +52,12 @@ export class SeoAdminService {
   constructor(
     @Inject(SEO_OVERRIDE_REPOSITORY) private readonly overrides: SeoOverrideRepository,
     @Inject(REDIRECT_REPOSITORY) private readonly redirects: RedirectRepository,
-    private readonly config: AppConfigService,
-    private readonly enqueuer: SeoDiscoveryEnqueuerService,
+    @Inject(AppConfigService) private readonly config: AppConfigService,
+    @Inject(SeoDiscoveryEnqueuerService) private readonly enqueuer: SeoDiscoveryEnqueuerService,
     @Inject(CRAWL_ERROR_LOG_PORT) private readonly crawlErrors: CrawlErrorLogPort,
     @Inject(SEO_HEALTH_VERIFICATION_PORT) private readonly seoHealth: SeoHealthVerificationPort,
     @Inject(SYSTEM_SETTINGS_PORT) private readonly systemSettings: SystemSettingsPort,
-    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
+    @Inject(SystemSettingsRuntimeBridge) private readonly runtimeSettings: SystemSettingsRuntimeBridge,
   ) {}
 
   public async getHealth(): Promise<SeoAdminHealth> {

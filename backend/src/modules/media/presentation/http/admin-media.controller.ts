@@ -73,9 +73,10 @@ export class AdminMediaController {
 
   @Get(':mediaId')
   @RequirePermissions('media.read')
-  @ApiOperation({ summary: 'Get media asset metadata by MediaId' })
+  @ApiOperation({ summary: 'Get media asset metadata + download URL by MediaId' })
   async getOne(@CurrentUser() user: RequestPrincipal, @Param('mediaId') mediaId: string) {
     const asset = await this.media.getById(mediaId, user.roles);
+    const download = await this.media.resolveAuthorizedDownloadUrl(mediaId, user.roles);
     return {
       id: asset.id,
       originalFilename: asset.originalFilename,
@@ -86,6 +87,8 @@ export class AdminMediaController {
       vendorId: asset.vendorId,
       storeId: asset.storeId,
       createdAt: asset.createdAt.toISOString(),
+      downloadUrl: download.url,
+      downloadUrlExpiresAt: download.expiresAt,
     };
   }
 }

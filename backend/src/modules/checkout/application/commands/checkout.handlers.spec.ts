@@ -133,6 +133,7 @@ function buildHandler(deps: {
   orders?: unknown;
   payments?: unknown;
   codEnabled?: boolean;
+  globalConfig?: unknown;
 }) {
   const access = accessMocks(deps.codEnabled ?? true);
   return new CheckoutSubmitHandler(
@@ -164,7 +165,7 @@ function buildHandler(deps: {
     access.stores as never,
     access.vendors as never,
     access.config as never,
-    mockGlobalConfig() as never,
+    (deps.globalConfig ?? mockGlobalConfig()) as never,
   );
 }
 
@@ -582,6 +583,107 @@ describe('CheckoutSubmitHandler', () => {
       'https://tokenized.sandbox.bka.sh/checkout?paymentID=',
     );
     expect(result.payments[0]?.paymentMethod).toBe('BKASH');
+  });
+
+  it('passes platform commissionRateBps from global config into pricing quotes', async () => {
+    const cart = baseCart({
+      lines: [
+        {
+          lineId: 'line-a',
+          vendorId: 'vendor-a',
+          storeId: 'store-a',
+          productId: 'prod-a',
+          variantId: 'var-a',
+          offerId: 'offer-a',
+          quantity: 1,
+          unitPriceSnapshotMinor: 1000,
+          currencyCode: 'BDT',
+        },
+      ],
+    });
+    const pricing = {
+      quote: vi.fn(async () => quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }])),
+      recordUsage: vi.fn(),
+    };
+    const inventory = {
+      pickWarehouseForReservation: vi.fn(async () => ({ warehouseId: 'wh-1', available: 10 })),
+      reserve: vi.fn(async () => ({ reservationId: Uniqueish(), availableAfter: 9 })),
+      release: vi.fn(),
+    };
+    const orders = {
+      createFromCheckout: vi.fn(async () => ({
+        orderId: 'order-store-a',
+        orderNumber: 'ORD-store-a',
+        vendorId: 'vendor-a',
+        storeId: 'store-a',
+        totalMinor: 1000,
+        currencyCode: 'BDT',
+        status: 'PENDING_PAYMENT' as const,
+      })),
+    };
+    const payments = {
+      isPaymentMethodAvailable: vi.fn(async () => true),
+      createIntent: vi.fn(async (input: { orderId: string; amountMinor: number }) => ({
+        paymentIntentId: `pi-${input.orderId}`,
+        paymentMethod: 'COD' as const,
+        status: 'AWAITING_COLLECTION',
+        amountMinor: input.amountMinor,
+        currencyCode: 'BDT',
+      })),
+    };
+    const globalConfig = {
+      get: vi.fn(async (_group: string, key: string, defaultValue?: unknown) => {
+        if (key === 'commission_rate_bps') {
+          return 1000;
+        }
+        if (key === 'tax_computation_enabled') {
+          return true;
+        }
+        if (key === 'tax_rate_bps') {
+          return 500;
+        }
+        return defaultValue;
+      }),
+    };
+
+    const handler = buildHandler({
+      carts: {
+        validate: vi.fn(async () => ({ cart, issues: [], valid: true })),
+        markCheckedOut: vi.fn(async () => ({ ...cart, status: 'CHECKED_OUT', version: 4 })),
+        getOwnedCart: vi.fn(),
+      },
+      checkouts: {
+        findCompletedByIdempotencyKey: vi.fn(async () => null),
+        claim: vi.fn(async (input: { claimToken: string }) => ({
+          status: 'CLAIMED' as const,
+          claimToken: input.claimToken,
+        })),
+        complete: vi.fn(),
+        release: vi.fn(),
+      },
+      pricing,
+      inventory,
+      orders,
+      payments,
+      globalConfig,
+    });
+
+    await handler.submit({
+      owner: { customerId: 'customer-1' },
+      cartId: 'cart-1',
+      expectedCartVersion: 3,
+      idempotencyKey: 'idem-commission-xxxxxx',
+      paymentMethod: 'COD',
+      shippingAddress: address,
+      shippingMethod: 'STANDARD',
+    });
+
+    expect(pricing.quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taxRateBps: 500,
+        commissionRateBps: 1000,
+      }),
+    );
   });
 });
 

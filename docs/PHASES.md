@@ -162,11 +162,11 @@ Build the complete system-wide secure identity boundary foundation prior to exec
 
 ### Optional Authentication
 
-- [ ] Build Google OAuth OpenID Connect registration endpoints.
-- [ ] Integrate Facebook OAuth secure login credential parsers.
-- [ ] Create dedicated local mobile carrier transactional OTP login layers.
-- [ ] Implement email Verification activation tracking tokens.
-- [ ] Configure optional Multi-Factor Authentication TOTP generator apps.
+- [x] Build Google OAuth OpenID Connect registration endpoints.
+- [x] Integrate Facebook OAuth secure login credential parsers.
+- [x] Create dedicated local mobile carrier transactional OTP login layers.
+- [x] Implement email Verification activation tracking tokens.
+- [x] Configure optional Multi-Factor Authentication TOTP generator apps.
 
 ### Authorization
 
@@ -451,9 +451,11 @@ This allows one vendor product to be offered differently by different stores.
 ### Media
 
 - [x] Media metadata references on products/variants (IDs + ordering)
-- [ ] S3/R2 binary upload pipeline — deferred to Media module / `.cursor/rules/38-media-uploads.mdc`
-- [ ] Signed URLs — deferred to Media module
-- [ ] Upload validation — deferred to Media module
+- [x] S3/R2 binary upload pipeline — presigned PUT sessions + register after direct upload (MinIO/S3); multipart/resumable still later for large objects
+- [x] Signed URLs — short-lived GET when no `MEDIA_PUBLIC_BASE_URL`; stable CDN URL when set
+- [x] Upload validation — content-type allowlist, size cap, magic-byte sniff, HeadObject size check on register
+- [ ] Multipart / resumable upload sessions (rule 38 large-object path)
+- [ ] Async quarantine / variants worker (BullMQ)
 
 ### Tests
 
@@ -890,7 +892,7 @@ Consumer (idempotent Redis NX by outbox id)
 
 - [x] Domain events (`octopus.domain-events`) — log + dedupe consumer
 - [x] Payment (`octopus.payment`) — COD event consumer (idempotent; side effects later)
-- [ ] Email (`octopus.email`)
+- [x] Email (`octopus.email`) — worker for `NotificationDeliver` + `CartAbandonedEvent` (domain-events fan-out); delivery enqueuer targets this queue; `EmailProviderPort` remains log stub until SMTP env is chosen
 - [x] Notification (`octopus.notification`)
 - [x] Search indexing (`octopus.search-indexing`)
 - [ ] Webhooks (`octopus.webhooks`)
@@ -1015,8 +1017,8 @@ Coordinate via ports/outbox. Do not mutate Payment/Inventory tables from Return 
 
 - Category/product return policy (platform/vendor/store settings later)
 - Live SSLCommerz/bKash/Nagad refund webhooks
-- Vendor return management UI (Phase 20)
-- Return courier shipment
+- Vendor return management UI (Phase 19.4 / vendor portal — shipped)
+- Return courier shipment (MANUAL reverse pickup on approve via `RETURN_PICKUP_PORT` — shipped; live Steadfast/Pathao reverse later)
 
 Product baselines: [docs/product/current-baseline.md](./product/current-baseline.md).
 
@@ -1077,7 +1079,8 @@ Never `vendor.balance` as authority. Never UPDATE/DELETE ledger rows — reverse
 
 ### Deferred
 
-- Live bank/bKash payout providers · payment-provider fee ledger · tax-as-liability ledger · closed accounting periods · CSV/PDF export · full E2E UI
+- Live bank/bKash HTTP payout adapters · payment-provider fee ledger · tax-as-liability ledger · closed accounting periods · PDF export · full E2E UI
+- Dual-mode payout simulation + statement CSV export (`GET …/statement.csv`) — shipped
 
 ### Rules
 
@@ -1227,8 +1230,14 @@ Gap analysis (full engine vs repo): [engineering/seo-gap-analysis.md](./engineer
 
 ### Deferred (not Phase 18 blockers)
 
-- Wishlist · product reviews · in-app notifications (Phase 17) · flash/best-seller engines · WebSockets · Website CMS (20.3)
+- In-app notifications (Phase 17) · flash/best-seller engines · WebSockets
 - Full SEO center (keywords, health scanner, opportunities, AI drafts) — see seo-gap-analysis P2–P5 / marketing M8
+
+### 18.7 — Wishlist & product reviews
+
+- [x] Customer wishlist CRUD (`/customer/wishlist`) with RLS owner policies
+- [x] Product reviews + public summary (`GET /products/:id/reviews`)
+- [x] PDP engagement panel + `/account/wishlist`
 
 ### 18.6 — Growth / measurement (after 18.3)
 
@@ -1336,7 +1345,10 @@ auth via `authedRequest`). No new backend endpoints. Routes:
       sync-status / mark-delivered (no shipment list API)
 - [x] Returns list + create (`GET`/`POST /orders/:orderId/returns`, reasons from
       `GET /returns/reasons`); cancel return (`POST /returns/:returnId/cancel`)
-- [x] Admin approve/reject routes stay out of vendor UI
+- [x] Vendor returns management UI (`/vendor/[vendorId]/returns`): store-scoped
+      list (`GET /stores/:storeId/returns`), approve / reject / receive / inspect
+      over existing staff-authorized `/admin/returns/:id/*` mutations
+- [x] Admin approve/reject routes remain shared; authz scopes vendor/store staff
 
 ### 19.5 — Finance
 
@@ -1362,7 +1374,7 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 - [x] Products list (19.1 read)
 - [x] Variants
 - [x] Categories
-- [ ] Media
+- [x] Media
 - [x] Pricing
 
 ### Inventory
@@ -1448,7 +1460,7 @@ Build the platform admin **presentation layer** over existing bounded contexts
 - [x] Admin Store Management Phase A — paginated list/stats, overview+health, admin lifecycle/provisioning routes, create via reused wizard, details shell (Overview / Provisioning / Settings / Staff / Activity placeholder)
 - [ ] Optional verification document fields (when domain supports them)
 - [x] Vendor/store staff management from admin shell
-- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓, activity ✓; payments/shipping/tax/branding/SEO/notifications/analytics/GEM still open)
+- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓, activity ✓, branding ✓, shipping ✓, analytics ✓; payments=COD on Settings; tax→Commerce hub; SEO/notifications/GEM still platform-scoped / open)
 
 ---
 
@@ -1474,9 +1486,9 @@ Settings-backed branding/general is ready; **CMS page builder** stays deferred
 
 Ship admin UIs **only after** owning domain modules exist:
 
-- [x] Payment / COD admin surfaces — vendor + store COD settings on admin detail pages via existing `PATCH /vendors/:id/settings` and `PATCH /stores/:id/settings` (hub: `/admin/system/commerce`). Payment **provider** admin UI still deferred.
-- [ ] Shipping / courier account admin surfaces (Fulfillment) — no public courier admin API (`CourierAccountStore` is internal); engines later
-- [ ] Tax / commission admin surfaces (dedicated engines or later phases)
+- [x] Payment / COD admin surfaces — vendor + store COD settings on admin detail pages via existing `PATCH /vendors/:id/settings` and `PATCH /stores/:id/settings` (hub: `/admin/system/commerce`). Payment provider readiness at `GET /admin/payments/gateways` + admin Payments UI (configured/sandbox flags only).
+- [x] Shipping / courier account admin surfaces — `GET/PUT /fulfillment/vendors/:vendorId/courier-accounts` + vendor Courier page (encrypted upsert; status without secrets)
+- [x] Tax / commission admin surfaces — platform `tax_rate_bps` / `commission_rate_bps` on checkout global config; admin Commerce hub + Global config Operations form; checkout quotes pass commission when > 0
 
 ---
 
@@ -1825,7 +1837,7 @@ Perform a dedicated security pass.
 - Slice **25.2** — global `PermissionsGuard` + `@RequirePermissions` on admin HTTP; new `platform.*` read/reindex permissions; reject `CORS_ORIGINS=*`.
 - Slice **25.3** — SSRF outbound allowlist on courier clients; JWT previous-secret rotation; webhook HMAC/timestamp helpers; output encoding (JSON-LD); secrets/rotation docs.
 - Slice **25.4** — opt-in TOTP MFA (`/auth/mfa/*`); login returns `mfaRequired` when enabled; storefront MFA step.
-- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. **Still open:** wire webhook helpers to live gateways; S3 Head/Get magic verify after upload.
+- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. **Still open:** S3 Head/Get magic verify after upload; provider-native signature schemes (SSLCommerz verify_sign MD5).
 - [x] commit push
 
 ---
@@ -1873,13 +1885,13 @@ Reach production-grade test coverage.
 
 ### E2E
 
-- [x] Registration (page smoke)
-- [x] Login (page smoke)
+- [x] Registration (page smoke + authenticated register when API up)
+- [x] Login (page smoke + authenticated login when API up)
 - [x] Browse (home + categories smoke)
 - [x] Search (page smoke)
 - [x] Cart (page smoke)
-- [ ] Multi-vendor checkout
-- [ ] Payment
+- [x] Multi-vendor checkout — COD path in `e2e/revenue-path.spec.ts` (skips without API/offers)
+- [ ] Payment (live gateway redirect journeys)
 - [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
 - [ ] Vendor fulfillment
 - [ ] Refund
@@ -1890,7 +1902,9 @@ Reach production-grade test coverage.
 - Slice **26.1** — checkbox sync against existing Vitest inventory (~98 specs); refresh Playwright smokes for current storefront; coverage map in [testing.md](./engineering/testing.md).
 - Slice **26.2** — Nest+Supertest API contracts (`backend/src/test/api/`) for JWT auth, permissions, MFA gate; helper uses `APP_GUARD` factories (Vitest lacks decorator metadata).
 - Slice **26.3** — Redis integration specs for login/API rate limiters (`describe.runIf(REDIS_URL)`).
-- Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** authenticated E2E revenue journeys; live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts.
+- Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts; authenticated payment-gateway E2E.
+- Slice **26.5** — return pickup handler unit coverage; dual-mode payout simulation unit coverage; auth polish (email verify / OAuth / OTP) handler specs.
+- Slice **26.6** — Playwright authenticated revenue path (`e2e/revenue-path.spec.ts`); payment IPN HMAC/timestamp helpers wired on SSLCommerz IPN + bKash SNS Notification.
 - [x] commit push
 
 ---
@@ -2074,7 +2088,7 @@ Evidence sync against shipped Phases 00–29. Open items stay unchecked.
 - [x] RBAC tested (`AuthorizationService` specs)
 - [x] Permissions tested (Supertest + `PermissionsGuard` / MFA gate)
 - [x] Secrets protected (env validation, Pino/Sentry/audit scrub)
-- [x] Webhooks secured (HMAC + timestamp helpers; live gateway wiring still open)
+- [x] Webhooks secured (HMAC + timestamp helpers; payment IPN optional `PAYMENT_IPN_HMAC_SECRET`)
 - [x] Rate limiting enabled (login Redis + API limiter on checkout/search)
 - [x] CORS restricted (explicit `CORS_ORIGINS`; `*` rejected)
 

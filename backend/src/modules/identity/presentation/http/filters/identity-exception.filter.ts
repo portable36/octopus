@@ -9,8 +9,13 @@ import {
   ForbiddenRoleError,
   IdentityError,
   InvalidCredentialsError,
+  InvalidEmailVerificationTokenError,
   InvalidMfaChallengeError,
   InvalidMfaCodeError,
+  InvalidOAuthCodeError,
+  InvalidOAuthProviderError,
+  InvalidOAuthStateError,
+  InvalidOtpError,
   InvalidPasswordResetTokenError,
   InvalidRefreshTokenError,
   RateLimitExceededError,
@@ -72,6 +77,27 @@ export class IdentityExceptionFilter implements ExceptionFilter {
     if (exception instanceof InvalidMfaCodeError || exception instanceof InvalidMfaChallengeError) {
       return {
         status: HttpStatus.UNAUTHORIZED,
+        detail: exception.message,
+        code: exception.code,
+      };
+    }
+
+    if (
+      exception instanceof InvalidEmailVerificationTokenError ||
+      exception instanceof InvalidOAuthCodeError ||
+      exception instanceof InvalidOAuthStateError ||
+      exception instanceof InvalidOtpError
+    ) {
+      return {
+        status: HttpStatus.UNAUTHORIZED,
+        detail: exception.message,
+        code: exception.code,
+      };
+    }
+
+    if (exception instanceof InvalidOAuthProviderError) {
+      return {
+        status: HttpStatus.BAD_REQUEST,
         detail: exception.message,
         code: exception.code,
       };

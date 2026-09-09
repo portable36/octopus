@@ -174,6 +174,9 @@ export class CheckoutSubmitHandler {
             ...(checkoutConfig.taxComputationEnabled
               ? { taxRateBps: checkoutConfig.taxRateBps }
               : {}),
+            ...(checkoutConfig.commissionRateBps > 0
+              ? { commissionRateBps: checkoutConfig.commissionRateBps }
+              : {}),
             ...(input.couponCode !== undefined ? { couponCode: input.couponCode } : {}),
             ...(input.owner.customerId !== undefined ? { customerId: input.owner.customerId } : {}),
           });
@@ -539,36 +542,48 @@ export class CheckoutSubmitHandler {
     readonly minimumOrderMinor: number;
     readonly taxComputationEnabled: boolean;
     readonly taxRateBps: number;
+    readonly commissionRateBps: number;
     readonly freeShippingThresholdMinor: number;
   }> {
-    const [minimumOrderMinor, taxComputationEnabled, taxRateBps, freeShippingThresholdMinor] =
-      await Promise.all([
-        this.globalConfig.get<number>(
-          GLOBAL_CONFIG_GROUPS.CHECKOUT,
-          GLOBAL_CONFIG_KEYS.checkout.MINIMUM_ORDER_MINOR,
-          0,
-        ),
-        this.globalConfig.get<boolean>(
-          GLOBAL_CONFIG_GROUPS.CHECKOUT,
-          GLOBAL_CONFIG_KEYS.checkout.TAX_COMPUTATION_ENABLED,
-          false,
-        ),
-        this.globalConfig.get<number>(
-          GLOBAL_CONFIG_GROUPS.CHECKOUT,
-          GLOBAL_CONFIG_KEYS.checkout.TAX_RATE_BPS,
-          0,
-        ),
-        this.globalConfig.get<number>(
-          GLOBAL_CONFIG_GROUPS.SHIPPING,
-          GLOBAL_CONFIG_KEYS.shipping.FREE_SHIPPING_THRESHOLD_MINOR,
-          0,
-        ),
-      ]);
+    const [
+      minimumOrderMinor,
+      taxComputationEnabled,
+      taxRateBps,
+      commissionRateBps,
+      freeShippingThresholdMinor,
+    ] = await Promise.all([
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.MINIMUM_ORDER_MINOR,
+        0,
+      ),
+      this.globalConfig.get<boolean>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.TAX_COMPUTATION_ENABLED,
+        false,
+      ),
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.TAX_RATE_BPS,
+        0,
+      ),
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.CHECKOUT,
+        GLOBAL_CONFIG_KEYS.checkout.COMMISSION_RATE_BPS,
+        0,
+      ),
+      this.globalConfig.get<number>(
+        GLOBAL_CONFIG_GROUPS.SHIPPING,
+        GLOBAL_CONFIG_KEYS.shipping.FREE_SHIPPING_THRESHOLD_MINOR,
+        0,
+      ),
+    ]);
 
     return {
       minimumOrderMinor,
       taxComputationEnabled,
       taxRateBps,
+      commissionRateBps,
       freeShippingThresholdMinor,
     };
   }

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_MARKETING_SYSTEM_SETTINGS,
+  DEFAULT_OPERATIONS_SETTINGS,
+  mapGlobalConfigToOperationsForm,
+  operationsFormToPatch,
   updateMarketingSystemField,
   updateSeoSystemField,
 } from '@/lib/global-config-form-state';
@@ -33,5 +36,34 @@ describe('global configuration form state', () => {
     expect(next.META_PIXEL_ID).toBe('pixel-12345');
     expect(next.MARKETING_GTM_CONTAINER_ID).toBe('');
     expect(next.GEM_SCHEMA_VERSION).toBe('2.4.0');
+  });
+
+  it('maps and patches platform commission_rate_bps with tax settings', () => {
+    const form = mapGlobalConfigToOperationsForm({
+      checkout: {
+        tax_computation_enabled: true,
+        tax_rate_bps: 750,
+        commission_rate_bps: 1200,
+      },
+    });
+
+    expect(form.tax_computation_enabled).toBe(true);
+    expect(form.tax_rate_bps).toBe('750');
+    expect(form.commission_rate_bps).toBe('1200');
+
+    const patch = operationsFormToPatch({
+      ...DEFAULT_OPERATIONS_SETTINGS,
+      tax_computation_enabled: true,
+      tax_rate_bps: '750',
+      commission_rate_bps: '1200',
+    });
+
+    expect(patch.checkout).toEqual(
+      expect.objectContaining({
+        tax_computation_enabled: true,
+        tax_rate_bps: 750,
+        commission_rate_bps: 1200,
+      }),
+    );
   });
 });

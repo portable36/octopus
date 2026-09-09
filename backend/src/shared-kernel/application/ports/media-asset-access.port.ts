@@ -11,6 +11,7 @@ export interface MediaPublicUrlSnapshot {
   readonly id: string;
   readonly contentType: string;
   readonly url: string;
+  readonly expiresAt: string | null;
 }
 
 export interface MediaAssetAccessPort {

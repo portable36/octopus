@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { ApiClientError } from '@/lib/api-client';
-import { listAdminPayments, type AdminPaymentRow } from '@/lib/admin-api';
+import {
+  getAdminPaymentGateways,
+  listAdminPayments,
+  type AdminPaymentGatewayStatus,
+  type AdminPaymentRow,
+} from '@/lib/admin-api';
 
 function money(minor: number, currency: string): string {
   return `${(minor / 100).toFixed(2)} ${currency}`;
@@ -13,6 +18,7 @@ function money(minor: number, currency: string): string {
 export default function AdminPaymentsPage() {
   const token = useAccessToken();
   const [rows, setRows] = useState<AdminPaymentRow[]>([]);
+  const [gateways, setGateways] = useState<AdminPaymentGatewayStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,9 +31,13 @@ export default function AdminPaymentsPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await listAdminPayments(token);
+        const [data, gatewayStatus] = await Promise.all([
+          listAdminPayments(token),
+          getAdminPaymentGateways(token),
+        ]);
         if (!cancelled) {
           setRows(data);
+          setGateways(gatewayStatus);
           setError(null);
         }
       } catch (err) {
@@ -49,10 +59,45 @@ export default function AdminPaymentsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Payments"
-        description="Recent payment intents via GET /admin/payments (no client secrets)."
+        description="Gateway readiness and recent payment intents (no client secrets)."
       />
       {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {gateways ? (
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium">Gateway credentials</h2>
+          <p className="text-xs text-muted-foreground">
+            Mode: <span className="font-mono">{gateways.mode}</span> — configured flags only (env
+            secrets never returned).
+          </p>
+          <div className="overflow-x-auto rounded-lg border border-border bg-background">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-border text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Gateway</th>
+                  <th className="px-3 py-2 font-medium">Configured</th>
+                  <th className="px-3 py-2 font-medium">Sandbox</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(
+                  [
+                    ['SSLCommerz', gateways.sslcommerz],
+                    ['bKash', gateways.bkash],
+                    ['Nagad', gateways.nagad],
+                  ] as const
+                ).map(([name, status]) => (
+                  <tr key={name} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2">{name}</td>
+                    <td className="px-3 py-2">{status.configured ? 'Yes' : 'No'}</td>
+                    <td className="px-3 py-2">{status.sandbox ? 'Yes' : 'No'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
       {!loading && !error ? (
         <div className="overflow-x-auto rounded-lg border border-border bg-background">
           <table className="min-w-full text-left text-sm">

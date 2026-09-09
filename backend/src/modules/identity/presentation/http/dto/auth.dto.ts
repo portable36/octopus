@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { ROLES, type Role } from '../../../domain/enums/role.enum';
 
 export class RegisterRequestDto {
@@ -60,6 +60,54 @@ export class ResetPasswordRequestDto {
   newPassword!: string;
 }
 
+export class RequestEmailVerificationDto {
+  @ApiPropertyOptional({ example: 'customer@example.com' })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+}
+
+export class VerifyEmailRequestDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  token!: string;
+}
+
+export class OAuthCallbackRequestDto {
+  @ApiProperty({ example: 'mock-oauth-code' })
+  @IsString()
+  @MinLength(1)
+  code!: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  state!: string;
+}
+
+export class OtpRequestDto {
+  @ApiProperty({ example: '+8801712345678' })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(20)
+  phone!: string;
+}
+
+export class OtpVerifyRequestDto {
+  @ApiProperty({ example: '+8801712345678' })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(20)
+  phone!: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @MinLength(4)
+  @MaxLength(8)
+  code!: string;
+}
+
 export class AuthSessionResponseDto {
   @ApiProperty()
   accessToken!: string;
@@ -73,6 +121,7 @@ export class AuthSessionResponseDto {
     email: string;
     roles: readonly Role[];
     mfaEnabled: boolean;
+    emailVerified: boolean;
   };
 }
 
@@ -141,6 +190,9 @@ export class MeResponseDto {
 
   @ApiProperty()
   mfaEnabled!: boolean;
+
+  @ApiProperty()
+  emailVerified!: boolean;
 
   @ApiProperty({ type: [String] })
   permissions!: readonly string[];

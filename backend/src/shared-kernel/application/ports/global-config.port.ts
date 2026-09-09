@@ -21,6 +21,7 @@ export const GLOBAL_CONFIG_KEYS = {
     GUEST_CHECKOUT_ENABLED: 'guest_checkout_enabled',
     TAX_COMPUTATION_ENABLED: 'tax_computation_enabled',
     TAX_RATE_BPS: 'tax_rate_bps',
+    COMMISSION_RATE_BPS: 'commission_rate_bps',
   },
   shipping: {
     FREE_SHIPPING_THRESHOLD_MINOR: 'free_shipping_threshold_minor',
@@ -46,6 +47,7 @@ export const GLOBAL_CONFIG_DEFAULTS: Record<string, Record<string, unknown>> = {
     [GLOBAL_CONFIG_KEYS.checkout.GUEST_CHECKOUT_ENABLED]: true,
     [GLOBAL_CONFIG_KEYS.checkout.TAX_COMPUTATION_ENABLED]: false,
     [GLOBAL_CONFIG_KEYS.checkout.TAX_RATE_BPS]: 0,
+    [GLOBAL_CONFIG_KEYS.checkout.COMMISSION_RATE_BPS]: 0,
   },
   [GLOBAL_CONFIG_GROUPS.SHIPPING]: {
     [GLOBAL_CONFIG_KEYS.shipping.FREE_SHIPPING_THRESHOLD_MINOR]: 0,

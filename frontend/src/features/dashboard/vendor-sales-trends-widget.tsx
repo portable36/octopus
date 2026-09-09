@@ -18,6 +18,14 @@ type Props = {
   readonly title?: string;
 };
 
+function isScopedSalesAnalytics(value: unknown): value is ScopedSalesAnalytics {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  return Array.isArray(record.currencies) && Array.isArray(record.trends);
+}
+
 export function VendorSalesTrendsWidget({ vendorId, storeId, title }: Props) {
   const [data, setData] = useState<ScopedSalesAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +50,11 @@ export function VendorSalesTrendsWidget({ vendorId, storeId, title }: Props) {
           : await getVendorSalesAnalytics(vendorId!, days);
 
         if (!cancelled) {
+          if (!isScopedSalesAnalytics(result)) {
+            setData(null);
+            setError('Sales analytics response was incomplete.');
+            return;
+          }
           setData(result);
           setError(null);
         }
@@ -86,14 +99,14 @@ export function VendorSalesTrendsWidget({ vendorId, storeId, title }: Props) {
     return <p className="text-sm text-muted-foreground">No sales data available.</p>;
   }
 
-  const primaryCurrency = data.summary.currencies[0]?.currencyCode || 'BDT';
-  const totalRevenueMinor = data.summary.currencies.reduce((sum, c) => sum + c.revenueMinor, 0);
-  const totalCommissionMinor = data.summary.currencies.reduce(
-    (sum, c) => sum + c.commissionMinor,
-    0,
-  );
+  const currencies = data.currencies ?? [];
+  const trends = data.trends ?? [];
+  const paymentMethods = data.paymentMethods ?? [];
+  const primaryCurrency = currencies[0]?.currencyCode || 'BDT';
+  const totalRevenueMinor = currencies.reduce((sum, c) => sum + c.revenueMinor, 0);
+  const totalCommissionMinor = currencies.reduce((sum, c) => sum + c.commissionMinor, 0);
   const netEarningsMinor = totalRevenueMinor - totalCommissionMinor;
-  const maxDayRevenue = Math.max(...data.trends.map((t) => t.revenueMinor), 1);
+  const maxDayRevenue = Math.max(...trends.map((t) => t.revenueMinor), 1);
 
   return (
     <div className="space-y-4 rounded-lg border border-border bg-card p-4 text-sm shadow-sm">
@@ -150,30 +163,29 @@ export function VendorSalesTrendsWidget({ vendorId, storeId, title }: Props) {
         <div className="rounded border border-border bg-muted/30 p-2.5">
           <dt className="text-xs text-muted-foreground">Avg. Order Value</dt>
           <dd className="text-base font-semibold">
-            {money(data.aovMinor)}{' '}
+            {money(data.aovMinor ?? 0)}{' '}
             <span className="text-xs font-normal text-muted-foreground">{primaryCurrency}</span>
           </dd>
         </div>
         <div className="rounded border border-border bg-muted/30 p-2.5">
           <dt className="text-xs text-muted-foreground">Paid Orders / Total</dt>
           <dd className="text-base font-semibold">
-            {data.summary.paidOrderCount}{' '}
+            {data.paidOrderCount ?? 0}{' '}
             <span className="text-xs font-normal text-muted-foreground">
-              / {data.summary.orderCount}
+              / {data.orderCount ?? 0}
             </span>
           </dd>
         </div>
       </dl>
 
-      {/* Mini daily trend bar visualization */}
-      {data.trends.length > 0 && (
+      {trends.length > 0 && (
         <div className="space-y-1.5 pt-1">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-muted-foreground">Daily Revenue</span>
             <span className="text-muted-foreground">Last {days} days</span>
           </div>
           <div className="flex h-16 items-end gap-1 overflow-x-auto rounded border border-border/60 bg-muted/10 p-2">
-            {data.trends.map((point) => {
+            {trends.map((point) => {
               const heightPercent = Math.max(
                 8,
                 Math.round((point.revenueMinor / maxDayRevenue) * 100),
@@ -198,12 +210,11 @@ export function VendorSalesTrendsWidget({ vendorId, storeId, title }: Props) {
         </div>
       )}
 
-      {/* Payment methods breakdown */}
-      {data.paymentMethods.length > 0 && (
+      {paymentMethods.length > 0 && (
         <div className="space-y-1.5 pt-1">
           <p className="text-xs font-medium text-muted-foreground">Payment Methods Breakdown</p>
           <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-            {data.paymentMethods.map((pm) => (
+            {paymentMethods.map((pm) => (
               <div
                 key={pm.paymentMethod}
                 className="flex items-center justify-between rounded border border-border/60 bg-background px-2.5 py-1.5 text-xs"

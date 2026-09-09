@@ -64,6 +64,34 @@ export class AppConfigService {
     return this.configService.get('REFRESH_COOKIE_NAME', { infer: true });
   }
 
+  get oauthMock(): boolean {
+    return this.configService.get('OAUTH_MOCK', { infer: true });
+  }
+
+  get googleOAuthClientId(): string | undefined {
+    return this.configService.get('GOOGLE_OAUTH_CLIENT_ID', { infer: true });
+  }
+
+  get googleOAuthClientSecret(): string | undefined {
+    return this.configService.get('GOOGLE_OAUTH_CLIENT_SECRET', { infer: true });
+  }
+
+  get facebookOAuthClientId(): string | undefined {
+    return this.configService.get('FACEBOOK_OAUTH_CLIENT_ID', { infer: true });
+  }
+
+  get facebookOAuthClientSecret(): string | undefined {
+    return this.configService.get('FACEBOOK_OAUTH_CLIENT_SECRET', { infer: true });
+  }
+
+  get oauthRedirectBaseUrl(): string | undefined {
+    return this.configService.get('OAUTH_REDIRECT_BASE_URL', { infer: true });
+  }
+
+  get otpMock(): boolean {
+    return this.configService.get('OTP_MOCK', { infer: true });
+  }
+
   get accessTokenExpiresInSeconds(): number {
     return parseDurationToSeconds(this.jwtExpiresIn);
   }
@@ -107,6 +135,11 @@ export class AppConfigService {
       return configured.replace(/\/$/, '');
     }
     return `${this.s3Endpoint.replace(/\/$/, '')}/${this.s3Bucket}`;
+  }
+
+  /** True when MEDIA_PUBLIC_BASE_URL is set (CDN / public bucket policy). */
+  get hasExplicitMediaPublicBaseUrl(): boolean {
+    return Boolean(this.configService.get('MEDIA_PUBLIC_BASE_URL', { infer: true }));
   }
 
   get logLevel(): Env['LOG_LEVEL'] {
@@ -363,6 +396,10 @@ export class AppConfigService {
 
   get paymentGatewayMode(): Env['PAYMENT_GATEWAY_MODE'] {
     return this.configService.get('PAYMENT_GATEWAY_MODE', { infer: true });
+  }
+
+  get paymentIpnHmacSecret(): string | undefined {
+    return this.configService.get('PAYMENT_IPN_HMAC_SECRET', { infer: true });
   }
 
   get sslCommerzStoreId(): string | undefined {

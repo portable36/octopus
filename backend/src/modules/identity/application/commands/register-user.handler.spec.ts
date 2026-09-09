@@ -23,6 +23,7 @@ describe('RegisterUserHandler', () => {
           email: 'customer@example.com',
           roles: ['CUSTOMER'],
           mfaEnabled: false,
+          emailVerified: false,
         },
       }),
     };
@@ -35,6 +36,7 @@ describe('RegisterUserHandler', () => {
       passwordHasher as never,
       authSession as never,
       notifications as never,
+      { issueForUser: vi.fn().mockResolvedValue('verify-token') } as never,
     );
 
     await handler.execute({

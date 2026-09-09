@@ -136,6 +136,41 @@ export class CourierAccountStore {
     });
   }
 
+  public async listAccountStatus(vendorId: string): Promise<
+    readonly {
+      provider: CourierProvider;
+      configured: boolean;
+      isActive: boolean;
+      pathaoStoreId: number | null;
+      updatedAt: string | null;
+    }[]
+  > {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(CourierAccountOrmEntity, { vendorId });
+      const byProvider = new Map(rows.map((row) => [row.provider, row]));
+      const providers: readonly CourierProvider[] = ['STEADFAST', 'PATHAO', 'MANUAL'];
+      return providers.map((provider) => {
+        if (provider === 'MANUAL') {
+          return {
+            provider,
+            configured: true,
+            isActive: true,
+            pathaoStoreId: null,
+            updatedAt: null,
+          };
+        }
+        const row = byProvider.get(provider);
+        return {
+          provider,
+          configured: Boolean(row),
+          isActive: row?.isActive ?? false,
+          pathaoStoreId: row?.pathaoStoreId ?? null,
+          updatedAt: row?.updatedAt?.toISOString() ?? null,
+        };
+      });
+    });
+  }
+
   private async findAccount(
     vendorId: string,
     provider: CourierProvider,

@@ -14,6 +14,7 @@ interface JwtPayload {
   email: string;
   roles: string[];
   mfaEnabled?: boolean;
+  emailVerified?: boolean;
   type: 'access';
 }
 
@@ -30,6 +31,7 @@ export class JwtTokenSignerAdapter implements TokenSigner {
       email: payload.email,
       roles: payload.roles,
       mfaEnabled: payload.mfaEnabled,
+      emailVerified: payload.emailVerified,
       type: 'access',
     });
   }
@@ -47,6 +49,7 @@ export class JwtTokenSignerAdapter implements TokenSigner {
         email: decoded.email,
         roles: roles as Role[],
         mfaEnabled: decoded.mfaEnabled === true,
+        emailVerified: decoded.emailVerified === true,
       };
     } catch (error) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {

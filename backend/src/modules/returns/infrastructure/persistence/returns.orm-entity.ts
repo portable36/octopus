@@ -56,6 +56,12 @@ export class ReturnRequestOrmEntity {
   @Property({ fieldName: 'completed_at', nullable: true })
   completedAt!: Date | null;
 
+  @Property({ fieldName: 'return_shipment_id', type: 'uuid', nullable: true })
+  returnShipmentId!: string | null;
+
+  @Property({ fieldName: 'return_tracking_code', type: 'string', length: 64, nullable: true })
+  returnTrackingCode!: string | null;
+
   @Property({ type: 'integer' })
   version!: number;
 

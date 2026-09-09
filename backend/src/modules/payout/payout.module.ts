@@ -18,7 +18,7 @@ import {
 import { LedgerRepositoryAdapter } from './infrastructure/persistence/ledger.repository.adapter';
 import { VendorPayoutOrmEntity } from './infrastructure/persistence/payout.orm-entity';
 import { PayoutRepositoryAdapter } from './infrastructure/persistence/payout.repository.adapter';
-import { StubPayoutProviderAdapter } from './infrastructure/providers/stub-payout.provider';
+import { DualModePayoutProviderAdapter } from './infrastructure/providers/dual-mode-payout.provider';
 import { LedgerController } from './presentation/http/ledger.controller';
 import { PayoutController } from './presentation/http/payout.controller';
 
@@ -41,7 +41,7 @@ import { PayoutController } from './presentation/http/payout.controller';
     PayoutCommandHandler,
     { provide: LEDGER_REPOSITORY, useClass: LedgerRepositoryAdapter },
     { provide: PAYOUT_REPOSITORY, useClass: PayoutRepositoryAdapter },
-    { provide: PAYOUT_PROVIDER, useClass: StubPayoutProviderAdapter },
+    { provide: PAYOUT_PROVIDER, useClass: DualModePayoutProviderAdapter },
     { provide: LEDGER_PORT, useClass: LedgerPortAdapter },
   ],
   exports: [LEDGER_PORT, LedgerCommandHandler, PayoutCommandHandler],

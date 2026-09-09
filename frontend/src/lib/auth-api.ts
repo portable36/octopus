@@ -7,6 +7,7 @@ export type AuthUser = {
   email: string;
   roles: readonly string[];
   mfaEnabled?: boolean;
+  emailVerified?: boolean;
 };
 
 export type AuthSession = {
@@ -143,6 +144,63 @@ export async function requestPasswordReset(email: string): Promise<void> {
     method: 'POST',
     body: { email },
   });
+}
+
+export async function requestEmailVerification(email?: string): Promise<{
+  issued: boolean;
+  devToken?: string;
+}> {
+  const body = email !== undefined ? { email } : {};
+  return apiRequest('/auth/email/verify/request', {
+    method: 'POST',
+    credentials: 'include',
+    headers: getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : undefined,
+    body,
+  });
+}
+
+export async function verifyEmailToken(token: string): Promise<void> {
+  await apiRequest('/auth/email/verify', {
+    method: 'POST',
+    body: { token },
+  });
+}
+
+export async function startOAuth(provider: 'google' | 'facebook'): Promise<{ authorizationUrl: string }> {
+  return apiRequest(`/auth/oauth/${provider}/start`, { method: 'POST' });
+}
+
+export async function completeOAuth(input: {
+  provider: 'google' | 'facebook';
+  code: string;
+  state: string;
+}): Promise<AuthSession> {
+  const session = await apiRequest<AuthSession>(`/auth/oauth/${input.provider}/callback`, {
+    method: 'POST',
+    credentials: 'include',
+    body: { code: input.code, state: input.state },
+  });
+  setAccessToken(session.accessToken);
+  await mergeGuestCart(session.accessToken);
+  return session;
+}
+
+export async function requestOtp(phone: string): Promise<{ sent: true; devCode?: string }> {
+  return apiRequest('/auth/otp/request', {
+    method: 'POST',
+    body: { phone },
+  });
+}
+
+export async function verifyOtp(input: { phone: string; code: string }): Promise<AuthSession> {
+  const session = await apiRequest<AuthSession>('/auth/otp/verify', {
+    method: 'POST',
+    credentials: 'include',
+    body: input,
+  });
+  setAccessToken(session.accessToken);
+  await mergeGuestCart(session.accessToken);
+  return session;
 }
 
 export async function logoutAccount(): Promise<void> {

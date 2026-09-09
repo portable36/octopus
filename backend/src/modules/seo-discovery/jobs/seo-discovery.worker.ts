@@ -24,13 +24,13 @@ export class SeoDiscoveryWorker implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject(AppConfigService) private readonly config: AppConfigService,
-    private readonly enqueuer: SeoDiscoveryEnqueuerService,
-    private readonly sitemapCache: SitemapCacheService,
-    private readonly productFeeds: ProductFeedService,
-    private readonly metaCapi: MetaCapiService,
+    @Inject(SeoDiscoveryEnqueuerService) private readonly enqueuer: SeoDiscoveryEnqueuerService,
+    @Inject(SitemapCacheService) private readonly sitemapCache: SitemapCacheService,
+    @Inject(ProductFeedService) private readonly productFeeds: ProductFeedService,
+    @Inject(MetaCapiService) private readonly metaCapi: MetaCapiService,
     @Inject(SEO_HEALTH_VERIFICATION_PORT) private readonly seoHealth: SeoHealthVerificationPort,
-    private readonly imageSitemapCache: ImageSitemapCacheService,
-    private readonly searchConsole: SearchConsoleApiService,
+    @Inject(ImageSitemapCacheService) private readonly imageSitemapCache: ImageSitemapCacheService,
+    @Inject(SearchConsoleApiService) private readonly searchConsole: SearchConsoleApiService,
   ) {
     this.connection = {
       url: this.config.redisUrl,

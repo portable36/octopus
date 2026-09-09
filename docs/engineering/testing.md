@@ -30,7 +30,7 @@ Backend Vitest lives next to code under `backend/src/**/*.spec.ts` (run via root
 | MikroORM        | `identity/.../user.orm.integration` (persist/load; `DATABASE_URL`)           |
 | HTTP contracts  | RFC7807 filter, pagination clamps, `test/api/http-auth.contract` (Supertest) |
 
-Playwright (`e2e/smoke.spec.ts`): storefront home/browse/search/cart/login/register page smokes + admin dashboard shell. Authenticated revenue paths still open.
+Playwright (`e2e/smoke.spec.ts`, `e2e/revenue-path.spec.ts`): storefront smokes + authenticated register/login/COD checkout when Nest API + indexed offers are available (skips otherwise; CI e2e job is frontend-only today).
 
 API contract harness: `backend/src/test/api/create-api-test-app.ts` boots a minimal Nest app with real `JwtAuthGuard` / `PermissionsGuard` (factory-wired for Vitest). Full `AppModule` + Redis/Postgres boot remains a follow-up.
 

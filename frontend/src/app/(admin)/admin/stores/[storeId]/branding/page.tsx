@@ -3,6 +3,9 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ApiClientError, apiRequest } from '@/lib/api-client';
 import { getAdminStore, type AdminStore } from '@/lib/admin-api';
 import { colorInputValue, normalizeCssHexColor } from '@/lib/css-hex-color';
@@ -114,48 +117,46 @@ export default function AdminStoreBrandingPage() {
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
 
-      <section className="space-y-3 border border-border bg-background p-4">
+      <Card className="max-w-xl space-y-3">
         <div>
-          <h2 className="text-sm font-medium">Store branding</h2>
-          <p className="text-xs text-muted-foreground">
+          <CardTitle>Store branding</CardTitle>
+          <CardDescription>
             Store-scoped Settings document. Empty fields fall back to vendor, then platform
             storefront config.
-          </p>
+          </CardDescription>
         </div>
-        <form onSubmit={(e) => void onSave(e)} className="space-y-3 max-w-xl">
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-foreground">Display / site name</span>
-            <input
+        <form onSubmit={(e) => void onSave(e)} className="space-y-3">
+          <Label htmlFor="store-branding-siteName">
+            Display / site name
+            <Input
               id="store-branding-siteName"
               name="siteName"
               value={branding.siteName ?? ''}
               onChange={(e) => setBranding((prev) => ({ ...prev, siteName: e.target.value }))}
-              className="h-9 rounded-md border border-border bg-background px-3 text-xs"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-foreground">Tagline</span>
-            <input
+          </Label>
+          <Label htmlFor="store-branding-tagline">
+            Tagline
+            <Input
               id="store-branding-tagline"
               name="tagline"
               value={branding.tagline ?? ''}
               onChange={(e) => setBranding((prev) => ({ ...prev, tagline: e.target.value }))}
-              className="h-9 rounded-md border border-border bg-background px-3 text-xs"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-foreground">Primary accent color</span>
+          </Label>
+          <Label>
+            Primary accent color
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="color"
                 aria-label="Primary accent color picker"
                 value={colorInputValue(branding.primaryColor, '#fcca19')}
                 onChange={(e) =>
                   setBranding((prev) => ({ ...prev, primaryColor: e.target.value }))
                 }
-                className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
+                className="h-10 w-12 cursor-pointer p-0.5"
               />
-              <input
+              <Input
                 id="store-branding-primaryColor"
                 name="primaryColor"
                 value={branding.primaryColor ?? ''}
@@ -169,38 +170,38 @@ export default function AdminStoreBrandingPage() {
                   }
                 }}
                 placeholder="#fcca19"
-                className="h-9 flex-1 rounded-md border border-border bg-background px-3 font-mono text-xs"
+                className="flex-1 font-mono text-xs"
               />
             </div>
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-foreground">Logo media ID</span>
-            <input
+          </Label>
+          <Label htmlFor="store-branding-logoMediaId">
+            Logo media ID
+            <Input
               id="store-branding-logoMediaId"
               name="logoMediaId"
               value={branding.logoMediaId ?? ''}
               onChange={(e) => setBranding((prev) => ({ ...prev, logoMediaId: e.target.value }))}
-              className="h-9 rounded-md border border-border bg-background px-3 font-mono text-xs"
+              className="font-mono text-xs"
               placeholder="UUID from Media upload"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-foreground">Favicon media ID</span>
-            <input
+          </Label>
+          <Label htmlFor="store-branding-faviconMediaId">
+            Favicon media ID
+            <Input
               id="store-branding-faviconMediaId"
               name="faviconMediaId"
               value={branding.faviconMediaId ?? ''}
               onChange={(e) =>
                 setBranding((prev) => ({ ...prev, faviconMediaId: e.target.value }))
               }
-              className="h-9 rounded-md border border-border bg-background px-3 font-mono text-xs"
+              className="font-mono text-xs"
             />
-          </label>
+          </Label>
           <Button type="submit" size="sm" disabled={pending || !store}>
             {pending ? 'Saving…' : 'Save branding'}
           </Button>
         </form>
-      </section>
+      </Card>
     </div>
   );
 }

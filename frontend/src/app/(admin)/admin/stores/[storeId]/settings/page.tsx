@@ -4,6 +4,10 @@ import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ApiClientError } from '@/lib/api-client';
 import {
   getAdminStore,
@@ -113,66 +117,59 @@ export default function AdminStoreSettingsPage() {
     <div className="space-y-4">
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-      <section className="space-y-3 border border-border bg-background p-4">
-        <h2 className="text-sm font-medium">COD settings</h2>
+      <Card className="space-y-3">
+        <CardTitle>COD settings</CardTitle>
         <p className="text-xs text-muted-foreground">
           Amounts are integer minor units. Checkout requires vendor and store COD both enabled.
           Tax/commission are platform-wide — see Commerce hub.
         </p>
         <form onSubmit={(e) => void onSaveCod(e)} className="space-y-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={codEnabled}
-              onChange={(e) => setCodEnabled(e.target.checked)}
-            />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Checkbox checked={codEnabled} onChange={(e) => setCodEnabled(e.target.checked)} />
             COD enabled
           </label>
           <div className="flex flex-wrap gap-3">
-            <label className="space-y-1 text-sm">
+            <Label className="w-40">
               <span className="text-muted-foreground">Min amount (minor)</span>
-              <input
+              <Input
                 type="number"
                 min={0}
                 step={1}
-                className="block w-40 border border-border bg-background px-3 py-2"
                 value={codMin}
                 onChange={(e) => setCodMin(e.target.value)}
               />
-            </label>
-            <label className="space-y-1 text-sm">
+            </Label>
+            <Label className="w-40">
               <span className="text-muted-foreground">Max amount (minor, empty = none)</span>
-              <input
+              <Input
                 type="number"
                 min={0}
                 step={1}
-                className="block w-40 border border-border bg-background px-3 py-2"
                 value={codMax}
                 onChange={(e) => setCodMax(e.target.value)}
                 placeholder="No max"
               />
-            </label>
-            <label className="space-y-1 text-sm">
+            </Label>
+            <Label className="w-40">
               <span className="text-muted-foreground">Reservation TTL (hours)</span>
-              <input
+              <Input
                 type="number"
                 min={1}
                 step={1}
-                className="block w-40 border border-border bg-background px-3 py-2"
                 value={codTtl}
                 onChange={(e) => setCodTtl(e.target.value)}
                 placeholder="Keep current"
               />
-            </label>
+            </Label>
           </div>
           <Button type="submit" size="sm" disabled={pending}>
             Save COD settings
           </Button>
         </form>
-      </section>
+      </Card>
 
-      <section className="space-y-2 border border-border bg-background p-4">
-        <h2 className="text-sm font-medium">Related store tabs</h2>
+      <Card className="space-y-2">
+        <CardTitle>Related store tabs</CardTitle>
         <ul className="list-inside list-disc text-xs text-muted-foreground">
           <li>
             <Link
@@ -202,13 +199,30 @@ export default function AdminStoreSettingsPage() {
             — store performance summary
           </li>
           <li>
+            <Link href={`/admin/stores/${storeId}/seo`} className="underline underline-offset-2">
+              SEO
+            </Link>
+            {' · '}
+            <Link
+              href={`/admin/stores/${storeId}/notifications`}
+              className="underline underline-offset-2"
+            >
+              Notifications
+            </Link>
+            {' · '}
+            <Link href={`/admin/stores/${storeId}/gem`} className="underline underline-offset-2">
+              GEM
+            </Link>{' '}
+            — platform-scoped hubs
+          </li>
+          <li>
             <Link href="/admin/system/commerce" className="underline underline-offset-2">
               Commerce hub
             </Link>{' '}
             — tax / commission (platform)
           </li>
         </ul>
-      </section>
+      </Card>
     </div>
   );
 }

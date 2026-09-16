@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ApiClientError } from '@/lib/api-client';
 import {
   getOrCreateCart,
@@ -213,7 +214,7 @@ export default function CartPage() {
               </div>
 
               {displayDiscount > 0 ? (
-                <div className="flex items-center justify-between gap-3 text-sm text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center justify-between gap-3 text-sm text-success">
                   <span>
                     Promotions & Discounts
                     {appliedCoupon ? ` (${appliedCoupon})` : ''}
@@ -241,11 +242,11 @@ export default function CartPage() {
                 Promo or Coupon Code
               </label>
               <div className="flex gap-2">
-                <input
+                <Input
                   id="cart-coupon-input"
                   type="text"
                   placeholder="e.g. SAVE10"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm uppercase"
+                  className="flex-1 uppercase"
                   value={couponInput}
                   disabled={recalculating || Boolean(appliedCoupon)}
                   onChange={(e) => setCouponInput(e.target.value)}
@@ -272,7 +273,7 @@ export default function CartPage() {
                 )}
               </div>
               {promoMessage ? (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400" role="status">
+                <p className="text-xs text-success" role="status">
                   {promoMessage}
                 </p>
               ) : null}

@@ -1,3 +1,5 @@
+export type MediaAssetStatus = 'quarantined' | 'ready' | 'rejected';
+
 export type MediaAssetRecord = {
   readonly id: string;
   readonly originalFilename: string;
@@ -7,5 +9,8 @@ export type MediaAssetRecord = {
   readonly uploadedBy: string;
   readonly vendorId: string | null;
   readonly storeId: string | null;
+  readonly status: MediaAssetStatus;
+  readonly rejectionReason: string | null;
+  readonly processedAt: Date | null;
   readonly createdAt: Date;
 };

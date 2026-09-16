@@ -35,6 +35,7 @@ export const QUEUE_NAMES = {
   email: 'octopus.email',
   notification: 'octopus.notification',
   searchIndexing: 'octopus.search-indexing',
+  mediaProcessing: 'octopus.media-processing',
   payment: 'octopus.payment',
   webhooks: 'octopus.webhooks',
   payout: 'octopus.payout',
@@ -48,6 +49,12 @@ export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 export function routeQueueForEvent(eventType: string): QueueName {
   if (eventType === 'CartAbandonedEvent' || eventType === 'NotificationDeliver') {
     return QUEUE_NAMES.email;
+  }
+  if (eventType === 'WebhookDeliver' || eventType.startsWith('WebhookOutbound')) {
+    return QUEUE_NAMES.webhooks;
+  }
+  if (eventType === 'AnalyticsTrack' || eventType.startsWith('Analytics')) {
+    return QUEUE_NAMES.analytics;
   }
   if (eventType === 'OrderPaid' || eventType === 'OrderCreated') {
     return QUEUE_NAMES.marketing;

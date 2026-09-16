@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState, type CSSProperties } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { checkboxClass, fieldClass } from '@/components/ui/field';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
 import { colorInputValue, normalizeCssHexColor } from '@/lib/css-hex-color';
 import { DEFAULT_THEME_SETTINGS, type ThemeSettings } from '@/lib/storefront-config-api';
@@ -235,7 +236,7 @@ export default function AdminWebsiteSettingsPage() {
         </div>
       ) : null}
       {saved ? (
-        <div className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="rounded-lg border border-success/50 bg-success/10 p-3 text-sm text-success">
           {saved}
         </div>
       ) : null}
@@ -339,7 +340,7 @@ export default function AdminWebsiteSettingsPage() {
                         type="color"
                         value={colorInputValue(theme.colors.accent, '#2563eb')}
                         onChange={(e) => setThemeColor('accent', e.target.value)}
-                        className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
+                        className="h-10 w-12 cursor-pointer rounded-md border border-input bg-background p-0.5"
                       />
                       <input
                         type="text"
@@ -347,7 +348,7 @@ export default function AdminWebsiteSettingsPage() {
                         onChange={(e) => setThemeColor('accent', e.target.value)}
                         onBlur={(e) => commitThemeColor('accent', e.target.value)}
                         placeholder="#2563eb"
-                        className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
+                        className={`${fieldClass} font-mono text-xs`}
                       />
                     </div>
                   </label>
@@ -359,7 +360,7 @@ export default function AdminWebsiteSettingsPage() {
                         type="color"
                         value={colorInputValue(theme.colors.primary, '#0f172a')}
                         onChange={(e) => setThemeColor('primary', e.target.value)}
-                        className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
+                        className="h-10 w-12 cursor-pointer rounded-md border border-input bg-background p-0.5"
                       />
                       <input
                         type="text"
@@ -367,7 +368,7 @@ export default function AdminWebsiteSettingsPage() {
                         onChange={(e) => setThemeColor('primary', e.target.value)}
                         onBlur={(e) => commitThemeColor('primary', e.target.value)}
                         placeholder="#0f172a"
-                        className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
+                        className={`${fieldClass} font-mono text-xs`}
                       />
                     </div>
                   </label>
@@ -390,7 +391,7 @@ export default function AdminWebsiteSettingsPage() {
                           announcementBar: { ...prev.announcementBar, enabled: e.target.checked },
                         }))
                       }
-                      className="h-4 w-4 rounded border-border"
+                      className={checkboxClass}
                     />
                     Enabled
                   </label>
@@ -404,7 +405,7 @@ export default function AdminWebsiteSettingsPage() {
                         type="color"
                         value={colorInputValue(theme.colors.announcementBg, '#1e293b')}
                         onChange={(e) => setThemeColor('announcementBg', e.target.value)}
-                        className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
+                        className="h-10 w-12 cursor-pointer rounded-md border border-input bg-background p-0.5"
                       />
                       <input
                         type="text"
@@ -412,7 +413,7 @@ export default function AdminWebsiteSettingsPage() {
                         onChange={(e) => setThemeColor('announcementBg', e.target.value)}
                         onBlur={(e) => commitThemeColor('announcementBg', e.target.value)}
                         placeholder="#1e293b"
-                        className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
+                        className={`${fieldClass} font-mono text-xs`}
                       />
                     </div>
                   </label>
@@ -424,7 +425,7 @@ export default function AdminWebsiteSettingsPage() {
                         type="color"
                         value={colorInputValue(theme.colors.announcementText, '#ffffff')}
                         onChange={(e) => setThemeColor('announcementText', e.target.value)}
-                        className="h-9 w-12 cursor-pointer rounded border border-border p-0.5 bg-background"
+                        className="h-10 w-12 cursor-pointer rounded-md border border-input bg-background p-0.5"
                       />
                       <input
                         type="text"
@@ -432,7 +433,7 @@ export default function AdminWebsiteSettingsPage() {
                         onChange={(e) => setThemeColor('announcementText', e.target.value)}
                         onBlur={(e) => commitThemeColor('announcementText', e.target.value)}
                         placeholder="#ffffff"
-                        className="h-9 flex-1 rounded border border-border bg-background px-2.5 font-mono text-xs"
+                        className={`${fieldClass} font-mono text-xs`}
                       />
                     </div>
                   </label>
@@ -449,7 +450,7 @@ export default function AdminWebsiteSettingsPage() {
                         announcementBar: { ...prev.announcementBar, text: e.target.value },
                       }))
                     }
-                    className="h-9 rounded border border-border bg-background px-3 text-xs"
+                    className={fieldClass}
                     placeholder="e.g. Free shipping on orders over 1000 BDT!"
                   />
                 </label>
@@ -469,7 +470,7 @@ export default function AdminWebsiteSettingsPage() {
                           },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. Track order"
                     />
                   </label>
@@ -487,7 +488,7 @@ export default function AdminWebsiteSettingsPage() {
                           },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. /account/orders"
                     />
                   </label>
@@ -535,7 +536,7 @@ export default function AdminWebsiteSettingsPage() {
                           heroBanner: { ...prev.heroBanner, enabled: e.target.checked },
                         }))
                       }
-                      className="h-4 w-4 rounded border-border"
+                      className={checkboxClass}
                     />
                     Enabled
                   </label>
@@ -553,7 +554,7 @@ export default function AdminWebsiteSettingsPage() {
                           heroBanner: { ...prev.heroBanner, badgeText: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. A marketplace for everyday finds"
                     />
                   </label>
@@ -568,7 +569,7 @@ export default function AdminWebsiteSettingsPage() {
                           heroBanner: { ...prev.heroBanner, imageUrl: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="https://..."
                     />
                   </label>
@@ -585,7 +586,7 @@ export default function AdminWebsiteSettingsPage() {
                         heroBanner: { ...prev.heroBanner, title: e.target.value },
                       }))
                     }
-                    className="h-9 rounded border border-border bg-background px-3 text-xs"
+                    className={fieldClass}
                     placeholder="e.g. Good finds. Close to home."
                   />
                 </label>
@@ -601,7 +602,7 @@ export default function AdminWebsiteSettingsPage() {
                         heroBanner: { ...prev.heroBanner, subtitle: e.target.value },
                       }))
                     }
-                    className="rounded border border-border bg-background p-2.5 text-xs"
+                    className={fieldClass}
                     placeholder="Describe your marketplace highlights..."
                   />
                 </label>
@@ -618,7 +619,7 @@ export default function AdminWebsiteSettingsPage() {
                           heroBanner: { ...prev.heroBanner, ctaText: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. Explore offers"
                     />
                   </label>
@@ -633,7 +634,7 @@ export default function AdminWebsiteSettingsPage() {
                           heroBanner: { ...prev.heroBanner, ctaUrl: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. /search"
                     />
                   </label>
@@ -656,7 +657,7 @@ export default function AdminWebsiteSettingsPage() {
                           promoBanner: { ...prev.promoBanner, enabled: e.target.checked },
                         }))
                       }
-                      className="h-4 w-4 rounded border-border"
+                      className={checkboxClass}
                     />
                     Enabled
                   </label>
@@ -673,7 +674,7 @@ export default function AdminWebsiteSettingsPage() {
                         promoBanner: { ...prev.promoBanner, title: e.target.value },
                       }))
                     }
-                    className="h-9 rounded border border-border bg-background px-3 text-xs"
+                    className={fieldClass}
                     placeholder="e.g. Sell on Octopus"
                   />
                 </label>
@@ -689,7 +690,7 @@ export default function AdminWebsiteSettingsPage() {
                         promoBanner: { ...prev.promoBanner, text: e.target.value },
                       }))
                     }
-                    className="rounded border border-border bg-background p-2.5 text-xs"
+                    className={fieldClass}
                     placeholder="Short promotional description..."
                   />
                 </label>
@@ -706,7 +707,7 @@ export default function AdminWebsiteSettingsPage() {
                           promoBanner: { ...prev.promoBanner, ctaText: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. Open vendor portal"
                     />
                   </label>
@@ -721,7 +722,7 @@ export default function AdminWebsiteSettingsPage() {
                           promoBanner: { ...prev.promoBanner, ctaUrl: e.target.value || null },
                         }))
                       }
-                      className="h-9 rounded border border-border bg-background px-3 text-xs"
+                      className={fieldClass}
                       placeholder="e.g. /vendor"
                     />
                   </label>
@@ -765,7 +766,7 @@ export default function AdminWebsiteSettingsPage() {
                         header: { ...prev.header, searchPlaceholder: e.target.value || null },
                       }))
                     }
-                    className="h-9 rounded border border-border bg-background px-3 text-xs"
+                    className={fieldClass}
                     placeholder="Search products"
                   />
                 </label>
@@ -809,7 +810,7 @@ export default function AdminWebsiteSettingsPage() {
                             }));
                           }}
                           placeholder="Label"
-                          className="h-8 flex-1 rounded border border-border bg-background px-2.5 text-xs"
+                          className={`${fieldClass} h-8 text-xs`}
                         />
                         <input
                           type="text"
@@ -823,7 +824,7 @@ export default function AdminWebsiteSettingsPage() {
                             }));
                           }}
                           placeholder="/path"
-                          className="h-8 flex-1 rounded border border-border bg-background px-2.5 text-xs font-mono"
+                          className={`${fieldClass} h-8 font-mono text-xs`}
                         />
                         <button
                           type="button"
@@ -860,7 +861,7 @@ export default function AdminWebsiteSettingsPage() {
                         footer: { ...prev.footer, aboutText: e.target.value || null },
                       }))
                     }
-                    className="rounded border border-border bg-background p-2.5 text-xs"
+                    className={fieldClass}
                     placeholder="Short marketplace description in footer..."
                   />
                 </label>
@@ -876,7 +877,7 @@ export default function AdminWebsiteSettingsPage() {
                         footer: { ...prev.footer, copyrightText: e.target.value || null },
                       }))
                     }
-                    className="h-9 rounded border border-border bg-background px-3 text-xs"
+                    className={fieldClass}
                     placeholder={`e.g. ${siteTitle} Inc. All rights reserved.`}
                   />
                 </label>
@@ -925,7 +926,7 @@ export default function AdminWebsiteSettingsPage() {
                                 footer: { ...prev.footer, columns: updated },
                               }));
                             }}
-                            className="h-7 font-semibold text-xs rounded border border-border bg-background px-2"
+                            className={`${fieldClass} h-7 text-xs font-semibold`}
                             placeholder="Column Title"
                           />
                           <button
@@ -966,7 +967,7 @@ export default function AdminWebsiteSettingsPage() {
                                   }));
                                 }}
                                 placeholder="Link Label"
-                                className="h-6 flex-1 rounded border border-border bg-background px-2 text-2xs"
+                                className={`${fieldClass} h-6 text-xs`}
                               />
                               <input
                                 type="text"
@@ -988,7 +989,7 @@ export default function AdminWebsiteSettingsPage() {
                                   }));
                                 }}
                                 placeholder="/path"
-                                className="h-6 flex-1 rounded border border-border bg-background px-2 text-2xs font-mono"
+                                className={`${fieldClass} h-6 font-mono text-xs`}
                               />
                               <button
                                 type="button"
@@ -1067,7 +1068,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setBranding((prev) => (prev ? { ...prev, siteName: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs"
+                  className={fieldClass}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1078,7 +1079,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setBranding((prev) => (prev ? { ...prev, tagline: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs"
+                  className={fieldClass}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1090,7 +1091,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setBranding((prev) => (prev ? { ...prev, primaryColor: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs font-mono"
+                  className={`${fieldClass} font-mono text-xs`}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1101,7 +1102,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setBranding((prev) => (prev ? { ...prev, logoMediaId: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs font-mono"
+                  className={`${fieldClass} font-mono text-xs`}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1114,7 +1115,7 @@ export default function AdminWebsiteSettingsPage() {
                       prev ? { ...prev, faviconMediaId: e.target.value } : null,
                     )
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs font-mono"
+                  className={`${fieldClass} font-mono text-xs`}
                 />
               </label>
             </form>
@@ -1148,7 +1149,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setGeneral((prev) => (prev ? { ...prev, supportEmail: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs"
+                  className={fieldClass}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1159,7 +1160,7 @@ export default function AdminWebsiteSettingsPage() {
                   onChange={(e) =>
                     setGeneral((prev) => (prev ? { ...prev, defaultLocale: e.target.value } : null))
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs"
+                  className={fieldClass}
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs">
@@ -1172,7 +1173,7 @@ export default function AdminWebsiteSettingsPage() {
                       prev ? { ...prev, defaultCurrencyCode: e.target.value } : null,
                     )
                   }
-                  className="h-9 rounded-md border border-border bg-background px-3 text-xs"
+                  className={fieldClass}
                 />
               </label>
             </form>
@@ -1183,7 +1184,7 @@ export default function AdminWebsiteSettingsPage() {
         <div className="lg:col-span-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-2 w-2 animate-pulse rounded-full bg-success" />
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Live Storefront Preview
               </h2>
@@ -1232,7 +1233,7 @@ export default function AdminWebsiteSettingsPage() {
             <div className="flex items-center gap-1.5 border-b border-border bg-muted/60 px-3 py-2 text-2xs text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-rose-400" />
               <span className="h-2 w-2 rounded-full bg-amber-400" />
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="h-2 w-2 rounded-full bg-success" />
               <span className="ml-2 font-mono text-3xs truncate">https://shop.octopus.local/</span>
             </div>
 

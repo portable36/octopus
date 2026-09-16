@@ -4,6 +4,11 @@ import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
 import { getAccessToken } from '@/lib/auth-session';
 
@@ -114,60 +119,43 @@ export default function AdminMarketingSettingsPage() {
       {!value ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <form
-          onSubmit={(e) => void onSubmit(e)}
-          className="max-w-xl space-y-4 border border-border p-4"
-        >
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="enabled" defaultChecked={value.enabled} />
-            Enabled
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">GTM container ID</span>
-            <input
-              name="gtmContainerId"
-              defaultValue={value.gtmContainerId ?? ''}
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">GA4 measurement ID</span>
-            <input
-              name="ga4MeasurementId"
-              defaultValue={value.ga4MeasurementId ?? ''}
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">GA4 MP API secret (server)</span>
-            <input
-              name="ga4MpApiSecret"
-              type="password"
-              placeholder={value.ga4MpApiSecret ? '••••••••' : ''}
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Meta Pixel ID</span>
-            <input
-              name="metaPixelId"
-              defaultValue={value.metaPixelId ?? ''}
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground">Meta CAPI token (server)</span>
-            <input
-              name="metaCapiToken"
-              type="password"
-              placeholder={value.metaCapiToken ? '••••••••' : ''}
-              className="h-10 rounded-md border border-border bg-background px-3"
-            />
-          </label>
-          <Button type="submit" disabled={pending}>
-            {pending ? 'Saving…' : 'Save'}
-          </Button>
-        </form>
+        <Card className="max-w-xl space-y-4">
+          <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <Checkbox name="enabled" defaultChecked={value.enabled} />
+              Enabled
+            </label>
+            <Label>
+              <span className="text-muted-foreground">GTM container ID</span>
+              <Input name="gtmContainerId" defaultValue={value.gtmContainerId ?? ''} />
+            </Label>
+            <Label>
+              <span className="text-muted-foreground">GA4 measurement ID</span>
+              <Input name="ga4MeasurementId" defaultValue={value.ga4MeasurementId ?? ''} />
+            </Label>
+            <Label>
+              <span className="text-muted-foreground">GA4 MP API secret (server)</span>
+              <PasswordInput
+                name="ga4MpApiSecret"
+                placeholder={value.ga4MpApiSecret ? '••••••••' : ''}
+              />
+            </Label>
+            <Label>
+              <span className="text-muted-foreground">Meta Pixel ID</span>
+              <Input name="metaPixelId" defaultValue={value.metaPixelId ?? ''} />
+            </Label>
+            <Label>
+              <span className="text-muted-foreground">Meta CAPI token (server)</span>
+              <PasswordInput
+                name="metaCapiToken"
+                placeholder={value.metaCapiToken ? '••••••••' : ''}
+              />
+            </Label>
+            <Button type="submit" disabled={pending}>
+              {pending ? 'Saving…' : 'Save'}
+            </Button>
+          </form>
+        </Card>
       )}
     </div>
   );

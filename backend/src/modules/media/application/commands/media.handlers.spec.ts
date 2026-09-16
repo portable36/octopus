@@ -30,6 +30,26 @@ function createHandlers(
       contentLength: 1024,
       contentType: 'image/png',
     })),
+    createMultipartUpload: vi.fn(async (input: { storageKey: string }) => ({
+      storageKey: input.storageKey,
+      uploadId: 'upload-abc',
+    })),
+    createPresignedUploadPart: vi.fn(
+      async (input: { storageKey: string; partNumber: number; uploadId: string }) => ({
+        uploadUrl: `https://storage.example/part/${input.partNumber}`,
+        expiresAt: new Date('2030-01-01T00:00:00.000Z'),
+        partNumber: input.partNumber,
+        requiredHeaders: {},
+      }),
+    ),
+    listUploadedParts: vi.fn(async () => [
+      { partNumber: 1, etag: '"etag-1"', size: 5 * 1024 * 1024 },
+    ]),
+    completeMultipartUpload: vi.fn(async () => undefined),
+    abortMultipartUpload: vi.fn(async () => undefined),
+    readObjectPrefix: vi.fn(async () =>
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]),
+    ),
     ...objectStorageOverrides,
   };
   const config = {
@@ -66,7 +86,7 @@ describe('MediaHandlers.registerMetadata', () => {
     ).rejects.toMatchObject({ code: 'MEDIA_INVALID_CONTENT_TYPE' });
 
     await expect(
-      handlers.registerMetadata({ ...base, byteSize: 11 * 1024 * 1024 }),
+      handlers.registerMetadata({ ...base, byteSize: 101 * 1024 * 1024 }),
     ).rejects.toMatchObject({ code: 'MEDIA_INVALID_SIZE' });
 
     expect(media.save).not.toHaveBeenCalled();
@@ -131,7 +151,37 @@ describe('MediaHandlers.registerMetadata', () => {
 
     const asset = await handlers.registerMetadata(base);
     expect(asset.contentType).toBe('image/png');
+    expect(asset.status).toBe('ready');
     expect(media.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('quarantines and enqueues when the processing queue is active', async () => {
+    const media = { save: vi.fn(async (asset: unknown) => asset), findById: vi.fn() };
+    const enqueuer = {
+      isQueueActive: () => true,
+      enqueueQuarantineValidate: vi.fn(async () => true),
+      enqueueGenerateVariants: vi.fn(async () => true),
+    };
+    const handlers = new MediaHandlers(
+      media as never,
+      {
+        headObject: vi.fn(async () => ({
+          storageKey: 'vendors/v1/logo.png',
+          contentLength: 1024,
+          contentType: 'image/png',
+        })),
+      } as never,
+      {
+        hasExplicitMediaPublicBaseUrl: false,
+        mediaPublicBaseUrl: 'https://cdn.example/media',
+      } as never,
+      null,
+      enqueuer as never,
+    );
+
+    const asset = await handlers.registerMetadata(base);
+    expect(asset.status).toBe('quarantined');
+    expect(enqueuer.enqueueQuarantineValidate).toHaveBeenCalledWith(asset.id);
   });
 
   it('rejects vendor register when storage key is outside vendor namespace', async () => {
@@ -171,6 +221,94 @@ describe('MediaHandlers.createUploadSession', () => {
       }),
     );
   });
+
+  it('rejects single-PUT sessions over 10MB', async () => {
+    const { handlers } = createHandlers();
+    await expect(
+      handlers.createUploadSession({
+        vendorId: 'vendor-1',
+        originalFilename: 'big.png',
+        contentType: 'image/png',
+        byteSize: 11 * 1024 * 1024,
+        actorUserId: 'user-1',
+        actorRoles: ['VENDOR_OWNER'],
+      }),
+    ).rejects.toMatchObject({ code: 'MEDIA_INVALID_SIZE' });
+  });
+});
+
+describe('MediaHandlers multipart sessions', () => {
+  it('creates a multipart session and part URL for large objects', async () => {
+    const { handlers, objectStorage } = createHandlers();
+
+    const session = await handlers.createMultipartSession({
+      vendorId: 'vendor-1',
+      originalFilename: 'big.png',
+      contentType: 'image/png',
+      byteSize: 12 * 1024 * 1024,
+      actorUserId: 'user-1',
+      actorRoles: ['VENDOR_OWNER'],
+    });
+
+    expect(session.uploadId).toBe('upload-abc');
+    expect(session.storageKey).toMatch(/^vendors\/vendor-1\/.+\.png$/);
+    expect(session.partSizeHintBytes).toBe(5 * 1024 * 1024);
+    expect(objectStorage.createMultipartUpload).toHaveBeenCalled();
+
+    const part = await handlers.createMultipartPartUrl({
+      vendorId: 'vendor-1',
+      storageKey: session.storageKey,
+      uploadId: session.uploadId,
+      partNumber: 1,
+      actorRoles: ['VENDOR_OWNER'],
+    });
+    expect(part.uploadUrl).toContain('/part/1');
+  });
+
+  it('lists completed parts for resume and completes the upload', async () => {
+    const { handlers, objectStorage } = createHandlers();
+    const storageKey = 'vendors/vendor-1/obj.png';
+
+    const listed = await handlers.listMultipartParts({
+      vendorId: 'vendor-1',
+      storageKey,
+      uploadId: 'upload-abc',
+      actorRoles: ['VENDOR_OWNER'],
+    });
+    expect(listed.parts).toHaveLength(1);
+
+    const completed = await handlers.completeMultipartSession({
+      vendorId: 'vendor-1',
+      storageKey,
+      uploadId: 'upload-abc',
+      parts: [{ partNumber: 1, etag: '"etag-1"' }],
+      actorRoles: ['VENDOR_OWNER'],
+    });
+    expect(completed.completed).toBe(true);
+    expect(objectStorage.completeMultipartUpload).toHaveBeenCalled();
+  });
+
+  it('aborts multipart and rejects foreign vendor keys', async () => {
+    const { handlers, objectStorage } = createHandlers();
+
+    await handlers.abortMultipartSession({
+      vendorId: 'vendor-1',
+      storageKey: 'vendors/vendor-1/obj.png',
+      uploadId: 'upload-abc',
+      actorRoles: ['VENDOR_OWNER'],
+    });
+    expect(objectStorage.abortMultipartUpload).toHaveBeenCalled();
+
+    await expect(
+      handlers.createMultipartPartUrl({
+        vendorId: 'vendor-1',
+        storageKey: 'vendors/other/obj.png',
+        uploadId: 'upload-abc',
+        partNumber: 1,
+        actorRoles: ['VENDOR_OWNER'],
+      }),
+    ).rejects.toMatchObject({ code: 'MEDIA_INVALID_KEY' });
+  });
 });
 
 describe('MediaHandlers.resolveImageDownloadUrl', () => {
@@ -186,6 +324,9 @@ describe('MediaHandlers.resolveImageDownloadUrl', () => {
         uploadedBy: 'u1',
         vendorId: 'v1',
         storeId: null,
+        status: 'ready',
+        rejectionReason: null,
+        processedAt: new Date(),
         createdAt: new Date(),
       })),
     };
@@ -200,6 +341,29 @@ describe('MediaHandlers.resolveImageDownloadUrl', () => {
     expect(objectStorage.createPresignedGet).toHaveBeenCalled();
   });
 
+  it('hides quarantined assets from public download resolution', async () => {
+    const media = {
+      save: vi.fn(),
+      findById: vi.fn(async () => ({
+        id: 'm1',
+        contentType: 'image/png',
+        storageKey: 'vendors/v1/a.png',
+        originalFilename: 'a.png',
+        byteSize: 10,
+        uploadedBy: 'u1',
+        vendorId: 'v1',
+        storeId: null,
+        status: 'quarantined',
+        rejectionReason: null,
+        processedAt: null,
+        createdAt: new Date(),
+      })),
+    };
+    const { handlers, objectStorage } = createHandlers(media);
+    await expect(handlers.resolveImageDownloadUrl('m1')).resolves.toBeNull();
+    expect(objectStorage.createPresignedGet).not.toHaveBeenCalled();
+  });
+
   it('returns a stable CDN URL when MEDIA_PUBLIC_BASE_URL is set', async () => {
     const media = {
       save: vi.fn(),
@@ -212,6 +376,9 @@ describe('MediaHandlers.resolveImageDownloadUrl', () => {
         uploadedBy: 'u1',
         vendorId: 'v1',
         storeId: null,
+        status: 'ready',
+        rejectionReason: null,
+        processedAt: new Date(),
         createdAt: new Date(),
       })),
     };

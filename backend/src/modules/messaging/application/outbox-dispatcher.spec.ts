@@ -19,6 +19,10 @@ describe('routeQueueForEvent', () => {
     expect(routeQueueForEvent('SearchReindexBatch')).toBe(QUEUE_NAMES.searchIndexing);
     expect(routeQueueForEvent('NotificationDeliver')).toBe(QUEUE_NAMES.email);
     expect(routeQueueForEvent('CartAbandonedEvent')).toBe(QUEUE_NAMES.email);
+    expect(routeQueueForEvent('WebhookDeliver')).toBe(QUEUE_NAMES.webhooks);
+    expect(routeQueueForEvent('WebhookOutboundPartner')).toBe(QUEUE_NAMES.webhooks);
+    expect(routeQueueForEvent('AnalyticsTrack')).toBe(QUEUE_NAMES.analytics);
+    expect(routeQueueForEvent('AnalyticsProductViewed')).toBe(QUEUE_NAMES.analytics);
   });
 
   it('routes shipment events to domain-events queue', () => {

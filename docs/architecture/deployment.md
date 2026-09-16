@@ -67,6 +67,20 @@ Contract: new app versions must tolerate the current schema; breaking drops wait
 
 Image push, registry scan, and environment deploy automation remain Phase 28 / ops (no CD pipeline in-repo yet).
 
+## Local deploy / rollback drill (Phase 30)
+
+Prove the immutable-image path without a production host:
+
+```text
+npm.cmd run deploy:drill
+```
+
+Requires Docker and `docker compose up -d postgres redis`. The script builds `backend/Dockerfile`, tags `octopus-api:drill-a` / `drill-b`, runs A → B (rolling deploy) → A (rollback to previous image), and asserts `/api/v1/health/live` + `/ready` after each switch. Schema is never down-migrated.
+
+Optional: `DEPLOY_DRILL_SKIP_BUILD=1`, `DEPLOY_DRILL_PORT=13100`, `DEPLOY_DRILL_KEEP=1`.
+
+Quarterly **production** drills still redeploy the previous registry digest on the real host and record wall-clock RTO in ops notes.
+
 ## Infrastructure (Phase 28.1)
 
 Environment and IaC policy: [infrastructure.md](./infrastructure.md) (Compose for local deps; Hostinger + Cloudflare for production; Terraform only when automating cloud resources).

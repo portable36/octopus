@@ -4,6 +4,8 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { fieldClass, labelClass } from '@/components/ui/field';
+import { PasswordInput } from '@/components/ui/password-input';
 import { ApiClientError } from '@/lib/api-client';
 import { fetchGlobalConfig, patchGlobalConfig } from '@/lib/global-config-api';
 import {
@@ -33,14 +35,6 @@ const TABS: readonly { id: GlobalConfigTab; label: string }[] = [
   { id: 'marketing', label: 'Marketing & Ad Platforms' },
   { id: 'operations', label: 'Store Core Operations' },
 ];
-
-function fieldClassName() {
-  return 'h-10 w-full rounded-md border border-border bg-background px-3 text-sm';
-}
-
-function labelClassName() {
-  return 'flex flex-col gap-1 text-sm';
-}
 
 export function GlobalConfigDashboard() {
   const token = useAccessToken();
@@ -139,7 +133,7 @@ export function GlobalConfigDashboard() {
       ) : null}
       {saved ? (
         <div
-          className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+          className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success"
           role="status"
         >
           {saved}
@@ -169,7 +163,7 @@ export function GlobalConfigDashboard() {
       ) : (
         <form
           onSubmit={(e) => void onSubmit(e)}
-          className="max-w-2xl space-y-4 border border-border p-4"
+          className="max-w-2xl space-y-4 rounded-lg border border-border bg-card p-4"
         >
           {activeTab === 'seo' ? (
             <>
@@ -178,10 +172,10 @@ export function GlobalConfigDashboard() {
                 Sitemap schedules, canonical URL, and Google Search Console service account
                 credentials.
               </p>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Sitemap cron (BullMQ)</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={seoForm.SEO_SITEMAP_CRON}
                   onChange={(e) =>
                     setSeoForm((prev) =>
@@ -190,10 +184,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Sitemap items per chunk</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={seoForm.SITEMAP_ITEMS_PER_CHUNK}
                   onChange={(e) =>
@@ -203,10 +197,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Canonical app URL</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={seoForm.SEO_CANONICAL_APP_URL}
                   onChange={(e) =>
                     setSeoForm((prev) =>
@@ -216,10 +210,10 @@ export function GlobalConfigDashboard() {
                   placeholder="https://shop.example.com"
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Google Search Console client email</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={seoForm.GOOGLE_SERVICES_CLIENT_EMAIL}
                   onChange={(e) =>
                     setSeoForm((prev) =>
@@ -228,12 +222,12 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">
                   Google Search Console private key (PEM)
                 </span>
                 <textarea
-                  className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs"
+                  className="min-h-[7rem] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   value={seoForm.GOOGLE_SERVICES_PRIVATE_KEY}
                   onChange={(e) =>
                     setSeoForm((prev) =>
@@ -251,10 +245,10 @@ export function GlobalConfigDashboard() {
               <p className="text-sm text-muted-foreground">
                 GTM, GA4, Meta Pixel/CAPI, GEM schema, and Andromeda privacy options.
               </p>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">GTM container ID</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.MARKETING_GTM_CONTAINER_ID}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -268,10 +262,10 @@ export function GlobalConfigDashboard() {
                   placeholder="GTM-XXXXXXX"
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">GA4 measurement ID</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.MARKETING_GA4_MEASUREMENT_ID}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -285,10 +279,10 @@ export function GlobalConfigDashboard() {
                   placeholder="G-XXXXXXXX"
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">GEM schema version</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.GEM_SCHEMA_VERSION}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -297,10 +291,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">GEM tracking environment</span>
                 <select
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.GEM_TRACKING_ENVIRONMENT}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -313,10 +307,10 @@ export function GlobalConfigDashboard() {
                   <option value="development">development</option>
                 </select>
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Meta Pixel ID</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.META_PIXEL_ID}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -325,11 +319,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Meta CAPI access token</span>
-                <input
-                  type="password"
-                  className={fieldClassName()}
+                <PasswordInput
+                  className="pl-10"
                   value={marketingForm.META_ACCESS_TOKEN}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -338,12 +331,12 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">
                   Andromeda data processing options (JSON)
                 </span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.META_ANDROMEDA_DATA_PROCESSING_OPTIONS}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -357,10 +350,10 @@ export function GlobalConfigDashboard() {
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className={labelClassName()}>
+                <label className={labelClass}>
                   <span className="text-muted-foreground">Andromeda country code</span>
                   <input
-                    className={fieldClassName()}
+                    className={fieldClass}
                     inputMode="numeric"
                     value={marketingForm.META_ANDROMEDA_COUNTRY}
                     onChange={(e) =>
@@ -370,10 +363,10 @@ export function GlobalConfigDashboard() {
                     }
                   />
                 </label>
-                <label className={labelClassName()}>
+                <label className={labelClass}>
                   <span className="text-muted-foreground">Andromeda state code</span>
                   <input
-                    className={fieldClassName()}
+                    className={fieldClass}
                     inputMode="numeric"
                     value={marketingForm.META_ANDROMEDA_STATE}
                     onChange={(e) =>
@@ -384,10 +377,10 @@ export function GlobalConfigDashboard() {
                   />
                 </label>
               </div>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Meta CAPI data source</span>
                 <select
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={marketingForm.META_CAPI_DATA_SOURCE}
                   onChange={(e) =>
                     setMarketingForm((prev) =>
@@ -409,10 +402,10 @@ export function GlobalConfigDashboard() {
                 Catalog defaults, checkout rules, free-shipping threshold, and payment gateway
                 toggles.
               </p>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Default currency code</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   value={operationsForm.default_currency_code}
                   onChange={(e) =>
                     setOperationsForm((prev) =>
@@ -433,10 +426,10 @@ export function GlobalConfigDashboard() {
                 />
                 <span>Hide out-of-stock products from search</span>
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Default low-stock threshold</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={operationsForm.low_stock_threshold}
                   onChange={(e) =>
@@ -446,10 +439,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Minimum order (minor units)</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={operationsForm.minimum_order_minor}
                   onChange={(e) =>
@@ -483,10 +476,10 @@ export function GlobalConfigDashboard() {
                 />
                 <span>Automated tax computation enabled</span>
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Tax rate (basis points)</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={operationsForm.tax_rate_bps}
                   onChange={(e) =>
@@ -496,12 +489,12 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">
                   Platform commission rate (basis points)
                 </span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={operationsForm.commission_rate_bps}
                   onChange={(e) =>
@@ -511,10 +504,10 @@ export function GlobalConfigDashboard() {
                   }
                 />
               </label>
-              <label className={labelClassName()}>
+              <label className={labelClass}>
                 <span className="text-muted-foreground">Free shipping threshold (minor units)</span>
                 <input
-                  className={fieldClassName()}
+                  className={fieldClass}
                   inputMode="numeric"
                   value={operationsForm.free_shipping_threshold_minor}
                   onChange={(e) =>

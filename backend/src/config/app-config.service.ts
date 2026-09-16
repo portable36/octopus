@@ -195,7 +195,7 @@ export class AppConfigService {
     return this.configService.get('COURIER_HTTP_TIMEOUT_MS', { infer: true });
   }
 
-  /** Hostnames allowed for server-side outbound HTTP (SSRF). Includes courier base URL hosts. */
+  /** Hostnames allowed for server-side outbound HTTP (SSRF). Includes courier + webhook hosts. */
   get outboundUrlAllowlistHosts(): string[] {
     const hosts = new Set<string>();
     const extra = this.configService.get('OUTBOUND_URL_ALLOWLIST', { infer: true }) ?? '';
@@ -205,7 +205,7 @@ export class AppConfigService {
         hosts.add(host);
       }
     }
-    for (const raw of [this.pathaoBaseUrl, this.steadfastBaseUrl]) {
+    for (const raw of [this.pathaoBaseUrl, this.steadfastBaseUrl, ...this.webhookOutboundUrls]) {
       try {
         hosts.add(new URL(raw).hostname.toLowerCase());
       } catch {
@@ -213,6 +213,18 @@ export class AppConfigService {
       }
     }
     return [...hosts];
+  }
+
+  get webhookOutboundUrls(): string[] {
+    const raw = this.configService.get('WEBHOOK_OUTBOUND_URLS', { infer: true }) ?? '';
+    return raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+  }
+
+  get webhookOutboundSecret(): string | undefined {
+    return this.configService.get('WEBHOOK_OUTBOUND_SECRET', { infer: true });
   }
 
   get steadfastBaseUrl(): string {

@@ -47,10 +47,16 @@ generated output, or a transcript of previous chats.
   announcements.
 - Do not invent promotions, client-side totals, or
   external image URLs without an API contract.
-- Media: presigned PUT upload + magic-byte register; HeadObject size check;
-  public/admin download via signed GET (or `MEDIA_PUBLIC_BASE_URL` CDN).
-- Admin Store Phase B (partial): store detail tabs Branding (scoped Settings), Shipping
-  (vendor courier readiness), Analytics (store report row); COD remains on Settings.
+- Ops alerts: `GET /health/alerts` evaluates dependency/heap/queue conditions;
+  admin UI at `/admin/system/alerts` (rule catalog includes external burn-rate note).
+- Local drills: `npm.cmd run restore:drill` (Postgres dump→restore); `npm.cmd run deploy:drill`
+  (API image build + A→B→A rollback with live/ready probes).
+- Media: presigned PUT (≤10MB) + multipart/resumable (≤100MB, ListParts resume);
+  magic-byte register; HeadObject size check; async quarantine on
+  `octopus.media-processing` (download gated until `ready`); signed GET or CDN.
+- Admin Store Phase B: Branding (scoped Settings), Shipping (vendor courier),
+  Analytics (report row), SEO / Notifications / GEM (platform deep-links); COD on
+  Settings. Platform notifications hub at `/admin/system/notifications`.
 - Wishlist and product reviews are supported via Customer engagement APIs
   (`/customer/wishlist`, `/customer/reviews`, public `/products/:id/reviews`).
 - Auth polish: email verify (`/auth/email/verify*`), Google/Facebook OAuth
@@ -67,6 +73,10 @@ generated output, or a transcript of previous chats.
   admin surfaces at `/admin/system/commerce` and Global config Operations.
 - Email queue: `octopus.email` worker handles `NotificationDeliver` + `CartAbandonedEvent`;
   notification delivery enqueuer targets that queue (log email provider still default).
+- Outbound webhooks: `octopus.webhooks` consumes `WebhookDeliver` / `WebhookOutbound*`;
+  signed POST when `WEBHOOK_OUTBOUND_URLS` + `WEBHOOK_OUTBOUND_SECRET` set (SSRF allowlist).
+- Analytics queue: `octopus.analytics` consumes `AnalyticsTrack` / `Analytics*`; OTel
+  `octopus.analytics.events` (first-party; third-party tags remain marketing).
 
 ## Agent workflow
 

@@ -11,6 +11,10 @@ import {
   MediaDomainError,
   MediaNotFoundError,
 } from '../errors/media.errors';
+import {
+  MEDIA_PROCESSING_ENQUEUER,
+  type MediaProcessingEnqueuerPort,
+} from '../ports/media-processing-enqueuer.port';
 import { OBJECT_STORAGE, type ObjectStoragePort } from '../ports/object-storage.port';
 import { MEDIA_REPOSITORY, type MediaRepository } from '../ports/media-repository.interface';
 
@@ -31,6 +35,14 @@ export const MEDIA_ALLOWED_CONTENT_TYPES = new Set([
 ]);
 
 export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Large-object path via S3 multipart (rule 38). Single PUT stays at MEDIA_MAX_BYTES. */
+export const MEDIA_MULTIPART_MAX_BYTES = 100 * 1024 * 1024;
+
+/** Hint for clients; S3 minimum part size is 5 MiB except the last part. */
+export const MEDIA_MULTIPART_PART_SIZE_BYTES = 5 * 1024 * 1024;
+
+export const MEDIA_MULTIPART_MAX_PART_NUMBER = 10_000;
 
 export const MEDIA_UPLOAD_SESSION_TTL_SECONDS = 15 * 60;
 
@@ -79,7 +91,11 @@ function extensionForContentType(contentType: string): string {
   return extension;
 }
 
-function assertAllowedMediaMetadata(contentType: string, byteSize: number): void {
+function assertAllowedMediaMetadata(
+  contentType: string,
+  byteSize: number,
+  maxBytes: number = MEDIA_MULTIPART_MAX_BYTES,
+): void {
   const normalized = contentType.trim().toLowerCase();
   if (!MEDIA_ALLOWED_CONTENT_TYPES.has(normalized)) {
     throw new MediaDomainError(
@@ -90,8 +106,8 @@ function assertAllowedMediaMetadata(contentType: string, byteSize: number): void
   if (byteSize <= 0) {
     throw new MediaDomainError('byteSize must be positive.', 'MEDIA_INVALID_SIZE');
   }
-  if (byteSize > MEDIA_MAX_BYTES) {
-    throw new MediaDomainError(`byteSize exceeds ${MEDIA_MAX_BYTES} bytes.`, 'MEDIA_INVALID_SIZE');
+  if (byteSize > maxBytes) {
+    throw new MediaDomainError(`byteSize exceeds ${maxBytes} bytes.`, 'MEDIA_INVALID_SIZE');
   }
 }
 
@@ -122,6 +138,9 @@ export class MediaHandlers {
     @Inject(OBJECT_STORAGE) private readonly objectStorage: ObjectStoragePort,
     @Inject(AppConfigService) private readonly config: AppConfigService,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
+    @Optional()
+    @Inject(MEDIA_PROCESSING_ENQUEUER)
+    private readonly processingEnqueuer: MediaProcessingEnqueuerPort | null = null,
   ) {}
 
   public async createUploadSession(input: {
@@ -135,7 +154,7 @@ export class MediaHandlers {
     if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
       throw new MediaAccessDeniedError('Missing permission media.write.');
     }
-    assertAllowedMediaMetadata(input.contentType, input.byteSize);
+    assertAllowedMediaMetadata(input.contentType, input.byteSize, MEDIA_MAX_BYTES);
 
     const extension = extensionForContentType(input.contentType);
     const objectId = UniqueID.create().value;
@@ -157,6 +176,175 @@ export class MediaHandlers {
       originalFilename: input.originalFilename.trim(),
       contentType: input.contentType.trim().toLowerCase(),
       byteSize: input.byteSize,
+    };
+  }
+
+  public async createMultipartSession(input: {
+    readonly vendorId: string;
+    readonly originalFilename: string;
+    readonly contentType: string;
+    readonly byteSize: number;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertAllowedMediaMetadata(input.contentType, input.byteSize, MEDIA_MULTIPART_MAX_BYTES);
+
+    const extension = extensionForContentType(input.contentType);
+    const objectId = UniqueID.create().value;
+    const storageKey = `vendors/${input.vendorId}/${objectId}.${extension}`;
+    assertSafeStorageKey(storageKey);
+
+    const contentType = input.contentType.trim().toLowerCase();
+    const init = await this.objectStorage.createMultipartUpload({
+      storageKey,
+      contentType,
+    });
+
+    return {
+      storageKey: init.storageKey,
+      uploadId: init.uploadId,
+      expiresAt: new Date(Date.now() + MEDIA_UPLOAD_SESSION_TTL_SECONDS * 1000).toISOString(),
+      partSizeHintBytes: MEDIA_MULTIPART_PART_SIZE_BYTES,
+      originalFilename: input.originalFilename.trim(),
+      contentType,
+      byteSize: input.byteSize,
+    };
+  }
+
+  public async createMultipartPartUrl(input: {
+    readonly vendorId: string;
+    readonly storageKey: string;
+    readonly uploadId: string;
+    readonly partNumber: number;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertSafeStorageKey(input.storageKey);
+    assertVendorStorageKey(input.vendorId, input.storageKey);
+    if (
+      !Number.isInteger(input.partNumber) ||
+      input.partNumber < 1 ||
+      input.partNumber > MEDIA_MULTIPART_MAX_PART_NUMBER
+    ) {
+      throw new MediaDomainError(
+        `partNumber must be an integer from 1 to ${MEDIA_MULTIPART_MAX_PART_NUMBER}.`,
+        'MEDIA_INVALID_PART',
+      );
+    }
+
+    const part = await this.objectStorage.createPresignedUploadPart({
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      partNumber: input.partNumber,
+      expiresInSeconds: MEDIA_UPLOAD_SESSION_TTL_SECONDS,
+    });
+
+    return {
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      partNumber: part.partNumber,
+      uploadUrl: part.uploadUrl,
+      expiresAt: part.expiresAt.toISOString(),
+      requiredHeaders: part.requiredHeaders,
+    };
+  }
+
+  public async listMultipartParts(input: {
+    readonly vendorId: string;
+    readonly storageKey: string;
+    readonly uploadId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertSafeStorageKey(input.storageKey);
+    assertVendorStorageKey(input.vendorId, input.storageKey);
+
+    const parts = await this.objectStorage.listUploadedParts({
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+    });
+
+    return {
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      parts: parts.map((part) => ({
+        partNumber: part.partNumber,
+        etag: part.etag,
+        size: part.size,
+      })),
+    };
+  }
+
+  public async completeMultipartSession(input: {
+    readonly vendorId: string;
+    readonly storageKey: string;
+    readonly uploadId: string;
+    readonly parts: readonly { readonly partNumber: number; readonly etag: string }[];
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertSafeStorageKey(input.storageKey);
+    assertVendorStorageKey(input.vendorId, input.storageKey);
+    if (input.parts.length === 0) {
+      throw new MediaDomainError('At least one uploaded part is required.', 'MEDIA_INVALID_PART');
+    }
+    const sorted = [...input.parts].sort((a, b) => a.partNumber - b.partNumber);
+    for (const part of sorted) {
+      if (
+        !Number.isInteger(part.partNumber) ||
+        part.partNumber < 1 ||
+        !part.etag.trim()
+      ) {
+        throw new MediaDomainError('Each part needs partNumber and etag.', 'MEDIA_INVALID_PART');
+      }
+    }
+
+    await this.objectStorage.completeMultipartUpload({
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      parts: sorted.map((part) => ({
+        partNumber: part.partNumber,
+        etag: part.etag.trim(),
+      })),
+    });
+
+    return {
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      completed: true as const,
+    };
+  }
+
+  public async abortMultipartSession(input: {
+    readonly vendorId: string;
+    readonly storageKey: string;
+    readonly uploadId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    assertSafeStorageKey(input.storageKey);
+    assertVendorStorageKey(input.vendorId, input.storageKey);
+
+    await this.objectStorage.abortMultipartUpload({
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+    });
+
+    return {
+      storageKey: input.storageKey.trim(),
+      uploadId: input.uploadId.trim(),
+      aborted: true as const,
     };
   }
 
@@ -195,6 +383,7 @@ export class MediaHandlers {
       );
     }
 
+    const queueActive = this.processingEnqueuer?.isQueueActive() === true;
     const asset = {
       id: UniqueID.create().value,
       originalFilename: input.originalFilename.trim(),
@@ -204,9 +393,16 @@ export class MediaHandlers {
       uploadedBy: input.actorUserId,
       vendorId: input.vendorId,
       storeId: input.storeId,
+      // Queue off (tests / OUTBOX_DISPATCH_ENABLED=false): client magic already passed → ready.
+      status: queueActive ? ('quarantined' as const) : ('ready' as const),
+      rejectionReason: null,
+      processedAt: queueActive ? null : new Date(),
       createdAt: new Date(),
     };
     await this.media.save(asset);
+    if (queueActive) {
+      await this.processingEnqueuer?.enqueueQuarantineValidate(asset.id);
+    }
     await this.audit?.append({
       actorUserId: input.actorUserId,
       action: 'media.registered',
@@ -219,6 +415,7 @@ export class MediaHandlers {
         contentType: asset.contentType,
         byteSize: asset.byteSize,
         storageKey: asset.storageKey,
+        status: asset.status,
       },
     });
     return asset;
@@ -242,7 +439,7 @@ export class MediaHandlers {
     readonly expiresAt: string | null;
   } | null> {
     const asset = await this.media.findById(mediaId);
-    if (!asset || !asset.contentType.startsWith('image/')) {
+    if (!asset || !asset.contentType.startsWith('image/') || asset.status !== 'ready') {
       return null;
     }
     return this.toDownloadResponse(asset);
@@ -258,6 +455,12 @@ export class MediaHandlers {
     readonly expiresAt: string | null;
   }> {
     const asset = await this.getById(mediaId, actorRoles);
+    if (asset.status !== 'ready') {
+      throw new MediaDomainError(
+        `Media asset is not ready for download (status=${asset.status}).`,
+        'MEDIA_NOT_READY',
+      );
+    }
     return this.toDownloadResponse(asset);
   }
 

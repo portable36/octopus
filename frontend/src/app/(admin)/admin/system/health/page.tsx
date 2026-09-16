@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import {
@@ -120,7 +121,10 @@ export default function AdminSystemHealthPage() {
 
       {lastRefreshed ? (
         <p className="text-xs text-muted-foreground">
-          Last checked: {lastRefreshed.toLocaleTimeString()}
+          Last checked: {lastRefreshed.toLocaleTimeString()} ·{' '}
+          <Link href="/admin/system/alerts" className="underline underline-offset-2">
+            Ops alerts
+          </Link>
         </p>
       ) : null}
 

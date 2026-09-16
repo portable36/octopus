@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { pushToDataLayer, minorToMajor } from '@/infrastructure/analytics/dataLayer';
 import {
   cartLinesValueMinor,
@@ -199,24 +201,24 @@ export default function CheckoutPage() {
           <legend className="text-lg font-semibold">Where should we deliver?</legend>
           <label>
             <span>Address line 1</span>
-            <input name="line1" required />
+            <Input name="line1" required />
           </label>
           <label>
             <span>
               Address line 2 <span className="font-normal text-muted-foreground">(optional)</span>
             </span>
-            <input name="line2" />
+            <Input name="line2" />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
               <span>City</span>
-              <input name="city" required />
+              <Input name="city" required />
             </label>
             <label>
               <span>
                 Region <span className="font-normal text-muted-foreground">(optional)</span>
               </span>
-              <input name="region" />
+              <Input name="region" />
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -224,20 +226,20 @@ export default function CheckoutPage() {
               <span>
                 Postal code <span className="font-normal text-muted-foreground">(optional)</span>
               </span>
-              <input name="postalCode" />
+              <Input name="postalCode" />
             </label>
             <label>
               <span>Country</span>
-              <input name="countryCode" defaultValue="BD" required maxLength={2} />
+              <Input name="countryCode" defaultValue="BD" required maxLength={2} />
             </label>
           </div>
         </fieldset>
 
         <label>
           <span>Shipping method</span>
-          <select name="shippingMethod" defaultValue="STANDARD">
+          <Select name="shippingMethod" defaultValue="STANDARD">
             <option value="STANDARD">Standard</option>
-          </select>
+          </Select>
         </label>
 
         <fieldset className="space-y-3">
@@ -358,7 +360,7 @@ export default function CheckoutPage() {
               </div>
 
               {recalc && recalc.displayDiscountMinor > 0 ? (
-                <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                <div className="flex justify-between text-sm font-medium text-success">
                   <span>
                     Promotion Discount
                     {couponCode ? ` (${couponCode.trim().toUpperCase()})` : ''}
@@ -370,15 +372,15 @@ export default function CheckoutPage() {
               ) : null}
 
               {/* Coupon input on checkout */}
-              <div className="pt-2 border-t border-border/50">
+              <div className="border-t border-border/50 pt-2">
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="text"
                     placeholder="Coupon code"
                     value={couponCode}
                     disabled={pending || recalculating}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm uppercase"
+                    className="flex-1 uppercase"
                   />
                   <Button
                     type="button"
@@ -395,9 +397,7 @@ export default function CheckoutPage() {
                   </Button>
                 </div>
                 {couponMessage ? (
-                  <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-                    {couponMessage}
-                  </p>
+                  <p className="mt-1 text-xs text-success">{couponMessage}</p>
                 ) : null}
                 {couponError ? (
                   <p className="mt-1 text-xs text-destructive">{couponError}</p>

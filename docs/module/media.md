@@ -32,12 +32,25 @@ Authoritative rule: `.cursor/rules/38-media-uploads.mdc`.
 ## Public contracts (expected)
 
 ```text
-createUploadSession(contentHints, size) → { storageKey, uploadUrl, expiresAt, requiredHeaders }
-registerMetadata(storageKey, contentPrefixBase64, …) → mediaId
-  (requires object present in storage; magic-byte + size match)
-getPublicMedia(mediaId) → { url, expiresAt? }  // CDN base or signed GET
-getMedia(mediaId) → metadata + downloadUrl when authorized
+createUploadSession(contentHints, size≤10MB) → { storageKey, uploadUrl, expiresAt, requiredHeaders }
+createMultipartSession(size≤100MB) → { storageKey, uploadId, partSizeHintBytes, … }
+createMultipartPartUrl(storageKey, uploadId, partNumber) → { uploadUrl, … }
+listMultipartParts(storageKey, uploadId) → { parts: [{ partNumber, etag, size }] }  // resume
+completeMultipartSession(storageKey, uploadId, parts) → { completed: true }
+abortMultipartSession(storageKey, uploadId) → { aborted: true }
+registerMetadata(storageKey, contentPrefixBase64, …) → mediaId (+ status quarantined|ready)
+  (requires object present in storage; magic-byte + size match; enqueues quarantine when queue active)
+getPublicMedia(mediaId) → { url, expiresAt? }  // only when status=ready
+getMedia(mediaId) → metadata + downloadUrl when authorized and ready
 ```
+
+### Processing lifecycle
+
+1. Client completes PUT/multipart, then `registerMetadata` (sync magic + HeadObject).
+2. When `OUTBOX_DISPATCH_ENABLED=true`, asset is `quarantined` and `MediaQuarantineValidate` is enqueued on `octopus.media-processing`.
+3. Worker Range-GETs object prefix, re-sniffs magic bytes, sets `ready` or `rejected`.
+4. On `ready`, enqueues `MediaGenerateVariants` stub (no derivatives yet).
+5. Public/authorized download URLs are issued only for `ready` assets.
 
 Provider SDKs (S3/MinIO/R2) stay in infrastructure adapters.
 
@@ -45,9 +58,12 @@ Provider SDKs (S3/MinIO/R2) stay in infrastructure adapters.
 
 | Shipped | Later |
 | --- | --- |
-| Presigned single-object PUT | Multipart + resumable parts |
-| Magic-byte + HeadObject checks | Async virus/scan quarantine queue |
-| Signed GET or `MEDIA_PUBLIC_BASE_URL` CDN | Image variants / derivatives |
+| Presigned single-object PUT (≤10MB) | Virus/malware scanner beyond magic-byte quarantine |
+| Multipart + resumable parts (≤100MB; ListParts resume) | Image variants / derivatives (job stubbed) |
+| Magic-byte + HeadObject checks | Dedicated multipart session DB rows (S3 uploadId is enough today) |
+| Signed GET or `MEDIA_PUBLIC_BASE_URL` CDN | |
+| Async quarantine (`octopus.media-processing` / `MediaQuarantineValidate`) | |
+| Download gated until `status=ready` | |
 
 ## Testing requirements
 

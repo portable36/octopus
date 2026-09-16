@@ -12,7 +12,9 @@ and Vendor/Store admin list/detail read APIs. **Phase 20.2** adds admin detail
 UIs for vendor/store lifecycle and staff over existing `/vendors/:id/*` and
 `/stores/:id/*` mutation routes (no parallel admin mutation controllers). Store
 Phase B tabs include branding (store Settings scope), shipping (vendor courier
-read-only), and analytics (store report summary); COD stays on Settings.
+read-only), analytics (store report summary), plus thin SEO / notifications / GEM
+tabs that deep-link to platform hubs (`/admin/system/seo`, `/notifications`,
+`/marketing` + global-config); COD stays on Settings.
 **Phase 20.4 (partial)** adds COD settings forms on vendor/store detail (same
 `PATCH …/settings` routes) plus a thin `/admin/system/commerce` hub; shipping
 courier and tax/commission admin remain open (no public courier API / engines later).
@@ -24,6 +26,8 @@ cache remain deferred until Media + CMS exist.
 `/inventory`, `/users`) over thin module list APIs (no admin BFF business rules).
 **Phase 20.7** adds `/admin/system/security` over `GET /admin/audit/events`
 (login history + `auth.*` security events); identity appends via `AUDIT_PORT`.
+**Phase 24.7 / 30** adds `/admin/system/alerts` over `GET /health/alerts`
+(in-process ops alert evaluation + rule catalog).
 **Phase 20.8** adds dashboard operational counts from existing list APIs
 (vendors/stores + recent orders/payments/users); Phase 21 owns real analytics.
 **Phase 21.1** adds `reporting_order_facts` + `GET /admin/reports/orders/summary`

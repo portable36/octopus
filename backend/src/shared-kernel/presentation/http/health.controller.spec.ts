@@ -116,4 +116,21 @@ describe('HealthController', () => {
     expect(typeof result.summary.totalQueues).toBe('number');
     expect(Array.isArray(result.queues)).toBe(true);
   });
+
+  it('alerts returns evaluation status, fired list, and rule catalog', async () => {
+    const { controller } = createMockServices();
+    const result = await controller.alerts();
+    expect(result.status).toBe('ok');
+    expect(result.fired).toEqual([]);
+    expect(result.rules.length).toBeGreaterThan(0);
+    expect(typeof result.timestamp).toBe('string');
+  });
+
+  it('alerts fires critical when database is down', async () => {
+    const { controller, database } = createMockServices();
+    database.isHealthy.mockRejectedValueOnce(new Error('Connection refused'));
+    const result = await controller.alerts();
+    expect(result.status).toBe('critical');
+    expect(result.fired.some((a) => a.id === 'dependency.database.down')).toBe(true);
+  });
 });

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthPanel } from '@/components/auth/auth-panel';
 import { FieldWithIcon, UserFieldIcon } from '@/components/auth/field-with-icon';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { ApiClientError } from '@/lib/api-client';
 import {
@@ -268,21 +270,20 @@ function LoginForm() {
         {mfaToken ? (
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">Authenticator code</span>
-            <input
+            <Input
               name="code"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
               required
               pattern="\d{6}"
-              className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </label>
         ) : mode === 'otp' ? (
           <>
             <label className="flex flex-col gap-1.5 text-sm">
               <span className="font-medium">Phone</span>
-              <input
+              <Input
                 name="phone"
                 type="tel"
                 required
@@ -293,19 +294,17 @@ function LoginForm() {
                   setOtpSent(false);
                   setDevOtpCode(null);
                 }}
-                className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
               />
             </label>
             {otpSent ? (
               <label className="flex flex-col gap-1.5 text-sm">
                 <span className="font-medium">One-time code</span>
-                <input
+                <Input
                   name="otp"
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
-                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
                 {devOtpCode ? (
                   <span className="text-xs text-muted-foreground">Dev code: {devOtpCode}</span>
@@ -333,9 +332,7 @@ function LoginForm() {
             </label>
             <div className="flex items-center justify-between gap-3 text-sm">
               <label className="flex items-center gap-2 text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border border-border accent-foreground"
+                <Checkbox
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />

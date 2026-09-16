@@ -94,20 +94,23 @@ export default function AdminStoreAnalyticsPage() {
       </section>
 
       <section className="space-y-2 border border-border bg-background p-4">
-        <h2 className="text-sm font-medium">SEO & marketing</h2>
+        <h2 className="text-sm font-medium">Related</h2>
         <ul className="list-inside list-disc text-xs text-muted-foreground">
           <li>
-            Product / category overrides:{' '}
-            <Link href="/admin/system/seo" className="underline underline-offset-2">
-              SEO admin
-            </Link>
-          </li>
-          <li>
-            Platform marketing tags:{' '}
-            <Link href="/admin/system/marketing" className="underline underline-offset-2">
-              Marketing
+            <Link
+              href={`/admin/stores/${storeId}/seo`}
+              className="underline underline-offset-2"
+            >
+              SEO
             </Link>{' '}
-            (GEM / Meta stay platform-scoped)
+            ·{' '}
+            <Link
+              href={`/admin/stores/${storeId}/gem`}
+              className="underline underline-offset-2"
+            >
+              GEM
+            </Link>{' '}
+            — platform-scoped deep links
           </li>
         </ul>
       </section>

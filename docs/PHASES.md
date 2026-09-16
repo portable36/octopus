@@ -451,11 +451,11 @@ This allows one vendor product to be offered differently by different stores.
 ### Media
 
 - [x] Media metadata references on products/variants (IDs + ordering)
-- [x] S3/R2 binary upload pipeline — presigned PUT sessions + register after direct upload (MinIO/S3); multipart/resumable still later for large objects
+- [x] S3/R2 binary upload pipeline — presigned PUT sessions + register after direct upload (MinIO/S3); multipart/resumable for large objects
 - [x] Signed URLs — short-lived GET when no `MEDIA_PUBLIC_BASE_URL`; stable CDN URL when set
 - [x] Upload validation — content-type allowlist, size cap, magic-byte sniff, HeadObject size check on register
-- [ ] Multipart / resumable upload sessions (rule 38 large-object path)
-- [ ] Async quarantine / variants worker (BullMQ)
+- [x] Multipart / resumable upload sessions (rule 38 large-object path)
+- [x] Async quarantine / variants worker (BullMQ)
 
 ### Tests
 
@@ -895,9 +895,9 @@ Consumer (idempotent Redis NX by outbox id)
 - [x] Email (`octopus.email`) — worker for `NotificationDeliver` + `CartAbandonedEvent` (domain-events fan-out); delivery enqueuer targets this queue; `EmailProviderPort` remains log stub until SMTP env is chosen
 - [x] Notification (`octopus.notification`)
 - [x] Search indexing (`octopus.search-indexing`)
-- [ ] Webhooks (`octopus.webhooks`)
+- [x] Webhooks (`octopus.webhooks`) — `WebhookDeliver` / `WebhookOutbound*` → signed POST when `WEBHOOK_OUTBOUND_URLS` set; log stub otherwise
 - [x] Payout (`octopus.payout`)
-- [ ] Analytics (`octopus.analytics`)
+- [x] Analytics (`octopus.analytics`) — `AnalyticsTrack` / `Analytics*` → OTel `octopus.analytics.events` (first-party; GA4/Meta stay marketing)
 - [x] Dead-letter (`octopus.dead-letter`)
 
 ### Reliability
@@ -1460,7 +1460,7 @@ Build the platform admin **presentation layer** over existing bounded contexts
 - [x] Admin Store Management Phase A — paginated list/stats, overview+health, admin lifecycle/provisioning routes, create via reused wizard, details shell (Overview / Provisioning / Settings / Staff / Activity placeholder)
 - [ ] Optional verification document fields (when domain supports them)
 - [x] Vendor/store staff management from admin shell
-- [ ] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓, activity ✓, branding ✓, shipping ✓, analytics ✓; payments=COD on Settings; tax→Commerce hub; SEO/notifications/GEM still platform-scoped / open)
+- [x] Admin Store Management Phase B — tab integrations (catalog ✓, inventory ✓, orders ✓, POS receipt ✓, activity ✓, branding ✓, shipping ✓, analytics ✓, SEO ✓, notifications ✓, GEM ✓; payments=COD on Settings; tax→Commerce hub; SEO/notifications/GEM deep-link to platform hubs)
 
 ---
 
@@ -1775,6 +1775,7 @@ Optimize based on real measurements.
 - [x] Real-time dependency ping & diagnostics API (`GET /health/diagnostics` with Postgres, Redis, Meilisearch ms latency)
 - [x] BullMQ background worker queue metrics snapshot (`GET /health/workers` and `getQueueMetricsSnapshot()`)
 - [x] Admin System Health Dashboard (`/admin/system/health`) with live ping latencies, auto-refresh, memory meter, and queue metrics table
+- [x] Ops alerts evaluation (`GET /health/alerts`) + Admin Ops Alerts UI (`/admin/system/alerts`) with fired conditions and rule/runbook catalog
 - [x] Unit test coverage for HealthController, MeilisearchHealthIndicator, and QueueMetricsSnapshot
 
 ### Rule
@@ -1837,7 +1838,7 @@ Perform a dedicated security pass.
 - Slice **25.2** — global `PermissionsGuard` + `@RequirePermissions` on admin HTTP; new `platform.*` read/reindex permissions; reject `CORS_ORIGINS=*`.
 - Slice **25.3** — SSRF outbound allowlist on courier clients; JWT previous-secret rotation; webhook HMAC/timestamp helpers; output encoding (JSON-LD); secrets/rotation docs.
 - Slice **25.4** — opt-in TOTP MFA (`/auth/mfa/*`); login returns `mfaRequired` when enabled; storefront MFA step.
-- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. **Still open:** S3 Head/Get magic verify after upload; provider-native signature schemes (SSLCommerz verify_sign MD5).
+- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. S3 Range-GET magic re-verify shipped via media quarantine worker. **Still open:** provider-native signature schemes (SSLCommerz verify_sign MD5).
 - [x] commit push
 
 ---
@@ -2123,7 +2124,7 @@ Evidence sync against shipped Phases 00–29. Open items stay unchecked.
 - [x] Metrics (OTel / app meters)
 - [x] Traces (OTel)
 - [x] Error monitoring (Sentry scrubbed)
-- [ ] Alerts (pager / burn-rate rules not provisioned)
+- [x] Alerts (in-process evaluation via `GET /health/alerts` + admin `/admin/system/alerts`; external pager / Prometheus burn-rate still host ops)
 - [x] Dashboards (admin reporting / system health UI; dedicated ops metric boards later)
 
 ### Testing
@@ -2140,14 +2141,15 @@ Evidence sync against shipped Phases 00–29. Open items stay unchecked.
 
 - [x] Backups (policy Phase 29)
 - [x] Restore tested (local `restore:drill`)
-- [ ] Deployment tested (no prod deploy drill yet)
-- [ ] Rollback tested (policy only — Phase 27.2)
+- [x] Deployment tested (local `deploy:drill`; quarterly prod digest rollback remains ops cadence)
+- [x] Rollback tested (local A→B→A previous-image switch; policy Phase 27.2 — no down-migrate)
 - [x] Incident runbooks (OPERATIONS + DR outline)
-- [ ] Monitoring alerts (not provisioned)
+- [x] Monitoring alerts (in-app ops alert evaluation + rule catalog; external pager/uptime still host ops)
 
 ### Notes
 
-- Slice **30.1** — production-readiness checkbox sync + fix `Migration20250822210000` so `app.*` RLS helpers exist before policies (clean migrate). **Still open:** ops alerts; prod deploy/rollback drills; live payment webhooks; authenticated E2E revenue paths; Phase 26 MikroORM container / live payment adapter IT.
+- Slice **30.1** — production-readiness checkbox sync + fix `Migration20250822210000` so `app.*` RLS helpers exist before policies (clean migrate).
+- Slice **30.2** — local `npm.cmd run deploy:drill` (image build + rolling deploy/rollback readiness). **Still open:** live payment webhooks; authenticated E2E revenue paths; Phase 26 MikroORM container / live payment adapter IT; external pager/Prometheus burn-rate; quarterly prod digest drill on host.
 - [x] commit push
 
 ## Definition of Production Ready

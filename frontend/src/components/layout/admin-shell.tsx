@@ -52,6 +52,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
     label: 'System',
     items: [
       { href: '/admin/system/health', label: 'System health', permission: 'settings.read' },
+      { href: '/admin/system/alerts', label: 'Ops alerts', permission: 'settings.read' },
       { href: '/admin/system/reports', label: 'Reports', permission: 'platform.reports.read' },
       { href: '/admin/system/audit', label: 'Audit trail', permission: 'audit.read' },
       { href: '/admin/system/security', label: 'Security', permission: 'audit.read' },
@@ -63,6 +64,11 @@ const NAV_GROUPS: readonly NavGroup[] = [
       },
       { href: '/admin/system/marketing', label: 'Marketing', permission: 'settings.read' },
       { href: '/admin/system/seo', label: 'SEO', permission: 'settings.read' },
+      {
+        href: '/admin/system/notifications',
+        label: 'Notifications',
+        permission: 'settings.read',
+      },
       { href: '/admin/system/commerce', label: 'Commerce', permission: 'settings.read' },
     ],
   },

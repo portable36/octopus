@@ -49,9 +49,9 @@ Permissions: `platform.stores.read` (list/overview), `platform.stores.write` (li
 
 Health checks (cheap): lifecycle status, `store_domains` present/verified, warehouse row, POS receipt template, store settings document. Order/revenue metrics return `available: false` until reporting projections exist.
 
-**Deferred (remaining Phase B tabs):** payments config, shipping/tax, branding/SEO, notifications, analytics/GEM, full activity, domains CRUD, store groups, import/export.
+**Deferred beyond Phase B:** domains CRUD, store groups, import/export, store-owned SEO/notification Settings documents, full GEM recommendation BC.
 
-**Phase B shipped so far:** Store Details tabs for Catalog (store offers read), Inventory (warehouses + stock), Orders (store-scoped list), POS (receipt template + register placeholder).
+**Phase B shipped:** Catalog, Inventory, Orders, POS receipt, Activity, Branding, Shipping, Analytics, SEO / Notifications / GEM (platform deep-links); COD on Settings; tax/commission via Commerce hub.
 
 ## Store offers
 

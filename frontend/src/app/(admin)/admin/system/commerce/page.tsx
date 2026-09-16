@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ApiClientError, apiRequest } from '@/lib/api-client';
 import { fetchGlobalConfig, patchGlobalConfig } from '@/lib/global-config-api';
 import { useAccessToken } from '@/lib/use-access-token';
@@ -153,17 +157,16 @@ export default function AdminCommerceConfigPage() {
           {saved}
         </p>
       ) : null}
-      <section className="space-y-3 border border-border p-4 text-sm">
-        <h2 className="font-medium">Vendor registration</h2>
+      <Card className="space-y-3 text-sm">
+        <CardTitle>Vendor registration</CardTitle>
         <p className="text-muted-foreground">
           When enabled, authenticated customers can submit vendor applications for admin review.
           Applications start in pending status and do not bypass approval.
         </p>
         <label className="flex items-center gap-2" htmlFor="commerce-vendor-registration">
-          <input
+          <Checkbox
             id="commerce-vendor-registration"
             name="vendor_registration_enabled"
-            type="checkbox"
             checked={vendorRegistrationEnabled}
             onChange={(event) => setVendorRegistrationEnabled(event.target.checked)}
             disabled={loading || pending}
@@ -177,9 +180,9 @@ export default function AdminCommerceConfigPage() {
         >
           {pending ? 'Saving…' : 'Save vendor registration'}
         </Button>
-      </section>
-      <section className="space-y-3 border border-border p-4 text-sm">
-        <h2 className="font-medium">Tax &amp; commission</h2>
+      </Card>
+      <Card className="space-y-3 text-sm">
+        <CardTitle>Tax &amp; commission</CardTitle>
         <p className="text-muted-foreground">
           Platform rates applied at checkout (basis points: 1000 = 10%). Tax only applies when
           automated tax computation is enabled. Commission is deducted from the taxable base when
@@ -190,10 +193,9 @@ export default function AdminCommerceConfigPage() {
           .
         </p>
         <label className="flex items-center gap-2" htmlFor="commerce-tax-computation-enabled">
-          <input
+          <Checkbox
             id="commerce-tax-computation-enabled"
             name="tax_computation_enabled"
-            type="checkbox"
             checked={taxCommission.tax_computation_enabled}
             onChange={(event) =>
               setTaxCommission((prev) => ({
@@ -205,12 +207,11 @@ export default function AdminCommerceConfigPage() {
           />
           Automated tax computation enabled
         </label>
-        <label className="flex flex-col gap-1" htmlFor="commerce-tax-rate-bps">
+        <Label htmlFor="commerce-tax-rate-bps">
           <span className="text-muted-foreground">Tax rate (basis points)</span>
-          <input
+          <Input
             id="commerce-tax-rate-bps"
             name="tax_rate_bps"
-            className="border border-border bg-background px-2 py-1"
             inputMode="numeric"
             value={taxCommission.tax_rate_bps}
             onChange={(event) =>
@@ -218,13 +219,12 @@ export default function AdminCommerceConfigPage() {
             }
             disabled={loading || taxPending}
           />
-        </label>
-        <label className="flex flex-col gap-1" htmlFor="commerce-commission-rate-bps">
+        </Label>
+        <Label htmlFor="commerce-commission-rate-bps">
           <span className="text-muted-foreground">Platform commission rate (basis points)</span>
-          <input
+          <Input
             id="commerce-commission-rate-bps"
             name="commission_rate_bps"
-            className="border border-border bg-background px-2 py-1"
             inputMode="numeric"
             value={taxCommission.commission_rate_bps}
             onChange={(event) =>
@@ -232,7 +232,7 @@ export default function AdminCommerceConfigPage() {
             }
             disabled={loading || taxPending}
           />
-        </label>
+        </Label>
         <Button
           type="button"
           onClick={() => void saveTaxCommission()}
@@ -240,9 +240,9 @@ export default function AdminCommerceConfigPage() {
         >
           {taxPending ? 'Saving…' : 'Save tax & commission'}
         </Button>
-      </section>
-      <section className="space-y-3 border border-border p-4 text-sm">
-        <h2 className="font-medium">Payment / COD</h2>
+      </Card>
+      <Card className="space-y-3 text-sm">
+        <CardTitle>Payment / COD</CardTitle>
         <p className="text-muted-foreground">
           Enable COD and set min/max amounts (minor units) and reservation TTL on each vendor and
           store. Checkout requires both scopes enabled. Gateway kill-switches live under Global
@@ -262,7 +262,7 @@ export default function AdminCommerceConfigPage() {
             → open a store → COD settings
           </li>
         </ul>
-      </section>
+      </Card>
     </div>
   );
 }

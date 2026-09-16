@@ -95,6 +95,8 @@ Concrete RTO/RPO, Redis reconstructability, object-storage lifecycle, and DR run
 
 Local restore drill: `npm.cmd run restore:drill` (Docker Compose Postgres).
 
+Local deploy/rollback drill: `npm.cmd run deploy:drill` (builds `backend/Dockerfile`, rolling switch A→B→A with live+ready probes; no down-migrate).
+
 ## Incident readiness
 
 Maintain:

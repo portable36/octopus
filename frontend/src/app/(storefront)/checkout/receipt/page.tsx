@@ -98,19 +98,19 @@ function ReceiptBody() {
       </header>
 
       {isSuccess && (
-        <div className="sf-panel space-y-4 border-emerald-500/30 bg-emerald-500/5">
+        <div className="sf-panel space-y-4 border-success/30 bg-success/5">
           <div className="flex items-center gap-3">
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-sm font-bold text-success-foreground"
               aria-hidden="true"
             >
               ✓
             </span>
             <div>
-              <h2 className="text-base font-semibold text-emerald-950 dark:text-emerald-200">
+              <h2 className="text-base font-semibold text-success">
                 Transaction Captured Successfully
               </h2>
-              <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
+              <p className="text-xs text-success/80">
                 Your payment was verified and processed by {providerDisplayName(provider)}.
               </p>
             </div>

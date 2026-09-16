@@ -9,6 +9,7 @@ import {
 import { DatabaseHealthIndicator } from '../../infrastructure/health/database.health-indicator';
 import { MeilisearchHealthIndicator } from '../../infrastructure/health/meilisearch.health-indicator';
 import { RedisHealthIndicator } from '../../infrastructure/health/redis.health-indicator';
+import { evaluateOpsAlerts } from '../../infrastructure/observability/ops-alerts';
 import { getQueueMetricsSnapshot } from '../../infrastructure/observability/queue-metrics';
 import { Public } from './public.decorator';
 
@@ -55,6 +56,49 @@ export class HealthController {
   @Get('diagnostics')
   @ApiOperation({ summary: 'Comprehensive dependency ping & production health diagnostics' })
   async diagnostics() {
+    return this.buildDiagnostics();
+  }
+
+  @Get('alerts')
+  @ApiOperation({
+    summary:
+      'In-process ops alert evaluation (dependencies, heap, queue lag/failures) + rule catalog',
+  })
+  async alerts() {
+    const diagnostics = await this.buildDiagnostics();
+    const evaluated = evaluateOpsAlerts(diagnostics);
+    return {
+      timestamp: diagnostics.timestamp,
+      status: evaluated.status,
+      fired: evaluated.fired,
+      rules: evaluated.rules,
+      diagnosticsStatus: diagnostics.status,
+    };
+  }
+
+  @Get('workers')
+  @ApiOperation({ summary: 'Background worker BullMQ queue metrics snapshot' })
+  async workers() {
+    const queueSnapshots = await getQueueMetricsSnapshot();
+    const totalWaiting = queueSnapshots.reduce((acc, q) => acc + q.waiting, 0);
+    const totalActive = queueSnapshots.reduce((acc, q) => acc + q.active, 0);
+    const totalFailed = queueSnapshots.reduce((acc, q) => acc + q.failed, 0);
+    const totalDelayed = queueSnapshots.reduce((acc, q) => acc + q.delayed, 0);
+
+    return {
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalQueues: queueSnapshots.length,
+        totalWaiting,
+        totalActive,
+        totalFailed,
+        totalDelayed,
+      },
+      queues: queueSnapshots,
+    };
+  }
+
+  private async buildDiagnostics() {
     const mem = process.memoryUsage();
 
     let dbStatus: 'up' | 'down' = 'down';
@@ -96,7 +140,7 @@ export class HealthController {
       totalFailed === 0;
 
     return {
-      status: isSystemHealthy ? 'healthy' : 'degraded',
+      status: isSystemHealthy ? ('healthy' as const) : ('degraded' as const),
       timestamp: new Date().toISOString(),
       process: {
         uptimeSec: Math.floor(process.uptime()),
@@ -143,28 +187,6 @@ export class HealthController {
         },
         queues: queueSnapshots,
       },
-    };
-  }
-
-  @Get('workers')
-  @ApiOperation({ summary: 'Background worker BullMQ queue metrics snapshot' })
-  async workers() {
-    const queueSnapshots = await getQueueMetricsSnapshot();
-    const totalWaiting = queueSnapshots.reduce((acc, q) => acc + q.waiting, 0);
-    const totalActive = queueSnapshots.reduce((acc, q) => acc + q.active, 0);
-    const totalFailed = queueSnapshots.reduce((acc, q) => acc + q.failed, 0);
-    const totalDelayed = queueSnapshots.reduce((acc, q) => acc + q.delayed, 0);
-
-    return {
-      timestamp: new Date().toISOString(),
-      summary: {
-        totalQueues: queueSnapshots.length,
-        totalWaiting,
-        totalActive,
-        totalFailed,
-        totalDelayed,
-      },
-      queues: queueSnapshots,
     };
   }
 }

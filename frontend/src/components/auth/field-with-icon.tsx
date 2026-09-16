@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { fieldClass } from '@/components/ui/field';
 
 type FieldWithIconProps = InputHTMLAttributes<HTMLInputElement> & {
   readonly icon: ReactNode;
@@ -14,13 +15,7 @@ export function FieldWithIcon({ icon, className, ...props }: FieldWithIconProps)
       >
         {icon}
       </span>
-      <input
-        {...props}
-        className={cn(
-          'h-11 w-full rounded-md border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          className,
-        )}
-      />
+      <input {...props} className={cn(fieldClass, 'pl-10 pr-3', className)} />
     </div>
   );
 }

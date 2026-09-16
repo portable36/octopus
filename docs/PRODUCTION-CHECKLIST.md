@@ -1,27 +1,27 @@
 # Production Checklist
 
 - [ ] Production secrets come from a secret manager.
-- [ ] Database backups are enabled and restore-tested.
-- [ ] PostgreSQL RLS policies are enabled and tested.
-- [ ] Tenant/vendor/store authorization tests pass.
-- [ ] Refresh-token rotation/revocation is enabled.
-- [ ] Privileged accounts have stronger authentication controls.
-- [ ] CORS is an explicit allowlist.
-- [ ] Rate limiting is configured.
-- [ ] Webhook signatures are verified.
-- [ ] Payment callbacks are idempotent.
-- [ ] Financial ledger is auditable.
-- [ ] Inventory reservation is transactionally safe.
-- [ ] Outbox dispatcher is operational.
-- [ ] Queue retry/dead-letter behavior is tested.
-- [ ] Search indexing is recoverable.
-- [ ] Structured logs are enabled.
-- [ ] Tracing is enabled.
-- [ ] Sentry is configured without sensitive-data leakage.
-- [ ] Liveness/readiness endpoints exist.
-- [ ] Graceful shutdown is tested.
-- [ ] CI gates are enforced.
-- [ ] Database migrations are reviewed.
-- [ ] Expand/contract migration strategy is used for breaking schema changes.
-- [ ] Rollback/forward-recovery procedure is documented.
-- [ ] E2E smoke tests pass in a production-like environment.
+- [ ] Database backups are enabled and restore-tested (local `restore:drill` OK; prod automation still ops).
+- [x] PostgreSQL RLS policies are enabled and tested.
+- [x] Tenant/vendor/store authorization tests pass.
+- [x] Refresh-token rotation/revocation is enabled.
+- [x] Privileged accounts have stronger authentication controls (opt-in TOTP + platform MFA gate).
+- [x] CORS is an explicit allowlist.
+- [x] Rate limiting is configured.
+- [x] Webhook signatures are verified (inbound helpers + optional payment IPN HMAC; outbound `WebhookDeliver` HMAC).
+- [x] Payment callbacks are idempotent.
+- [x] Financial ledger is auditable.
+- [x] Inventory reservation is transactionally safe.
+- [x] Outbox dispatcher is operational (`OUTBOX_DISPATCH_ENABLED`).
+- [x] Queue retry/dead-letter behavior is tested.
+- [x] Search indexing is recoverable.
+- [x] Structured logs are enabled.
+- [ ] Tracing is enabled in the target environment (`OTEL_ENABLED` + exporter endpoint).
+- [ ] Sentry is configured without sensitive-data leakage (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`).
+- [x] Liveness/readiness endpoints exist.
+- [x] Graceful shutdown is tested.
+- [x] CI gates are enforced.
+- [x] Database migrations are reviewed.
+- [x] Expand/contract migration strategy is used for breaking schema changes.
+- [x] Rollback/forward-recovery procedure is documented (`deploy:drill` + deployment.md).
+- [ ] E2E smoke tests pass in a production-like environment (CI e2e is frontend-only today).

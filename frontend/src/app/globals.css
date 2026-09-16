@@ -5,37 +5,62 @@
 :root {
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
   --primary: 222 47% 11%;
   --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
   --muted: 210 40% 96%;
   --muted-foreground: 215 16% 47%;
+  --accent: 45 100% 51%;
+  --accent-foreground: 0 0% 10%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
+  --success: 142 72% 29%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 10%;
   --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 222 47% 11%;
   --radius: 0.5rem;
 }
 
 .sf-theme {
-  --cf-accent: #ffc107;
-  --cf-accent-ink: #1a1a1a;
-  --cf-ink: #1a1a1a;
-  --cf-muted: #6b7280;
-  --cf-line: #e5e7eb;
-  --cf-canvas: #ffffff;
-  --cf-soft: #f7f7f8;
-  --cf-footer: #111827;
-  --cf-sale: #b91c1c;
-  --cf-ok: #15803d;
+  /* Brand accent remains injectable at runtime via storefront-shell. */
+  --cf-accent: hsl(var(--accent));
+  --cf-accent-ink: hsl(var(--accent-foreground));
+  --cf-ink: hsl(var(--foreground));
+  --cf-muted: hsl(var(--muted-foreground));
+  --cf-line: hsl(var(--border));
+  --cf-canvas: hsl(var(--background));
+  --cf-soft: hsl(var(--muted));
+  --cf-footer: hsl(var(--foreground));
+  --cf-sale: hsl(var(--destructive));
+  --cf-ok: hsl(var(--success));
   --background: 0 0% 100%;
   --foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
   --primary: 0 0% 10%;
   --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 97%;
+  --secondary-foreground: 0 0% 10%;
   --muted: 210 20% 97%;
   --muted-foreground: 215 16% 47%;
+  --accent: 45 100% 51%;
+  --accent-foreground: 0 0% 10%;
   --destructive: 0 63% 42%;
   --destructive-foreground: 0 0% 100%;
+  --success: 142 72% 29%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 10%;
   --border: 214 20% 91%;
-  --radius: 0.75rem;
+  --input: 214 20% 91%;
+  --ring: 45 100% 51%;
+  --radius: 0.5rem;
   font-family:
     'Segoe UI',
     system-ui,
@@ -152,7 +177,7 @@ body {
 
 .sf-search-input:focus {
   border-color: var(--cf-ink);
-  outline: 3px solid rgb(255 193 7 / 45%);
+  outline: 3px solid color-mix(in srgb, var(--cf-accent) 45%, transparent);
 }
 
 .sf-search-submit {
@@ -162,7 +187,7 @@ body {
   border-radius: 999px;
   background: var(--cf-ink);
   padding: 0.625rem 1rem;
-  color: #fff;
+  color: hsl(var(--primary-foreground));
   cursor: pointer;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -284,7 +309,7 @@ body {
 
 .sf-footer {
   background: var(--cf-footer);
-  color: #fff;
+  color: hsl(var(--primary-foreground));
 }
 
 .sf-footer-inner {
@@ -313,14 +338,14 @@ body {
 
 .sf-footer-heading {
   margin: 0 0 0.25rem;
-  color: #fff !important;
+  color: hsl(var(--primary-foreground)) !important;
   font-size: 0.8125rem;
   font-weight: 700;
 }
 
 .sf-footer-brand p,
 .sf-footer a {
-  color: #d1d5db;
+  color: color-mix(in srgb, hsl(var(--primary-foreground)) 75%, transparent);
 }
 
 .sf-footer a:hover {
@@ -332,9 +357,9 @@ body {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
-  border-top: 1px solid rgb(255 255 255 / 20%);
+  border-top: 1px solid color-mix(in srgb, hsl(var(--primary-foreground)) 20%, transparent);
   padding-top: 1rem;
-  color: #9ca3af;
+  color: color-mix(in srgb, hsl(var(--primary-foreground)) 55%, transparent);
   font-size: 0.75rem;
 }
 
@@ -386,7 +411,7 @@ body {
 
 .sf-button-primary {
   background: var(--cf-ink);
-  color: #fff;
+  color: hsl(var(--primary-foreground));
 }
 
 .sf-button-primary:hover {
@@ -435,7 +460,7 @@ body {
   grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
   overflow: hidden;
   background: var(--cf-ink);
-  color: #fff;
+  color: hsl(var(--primary-foreground));
 }
 
 .sf-hero-copy {
@@ -448,7 +473,7 @@ body {
 
 .sf-hero-copy p {
   max-width: 31rem;
-  color: #d1d5db;
+  color: color-mix(in srgb, hsl(var(--primary-foreground)) 75%, transparent);
   font-size: 1.05rem;
 }
 

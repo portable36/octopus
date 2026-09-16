@@ -19,9 +19,11 @@ import {
   type QueueName,
 } from '../domain/outbox.types';
 import { DomainEventsProcessor } from './processors/domain-events.processor';
+import { AnalyticsProcessor } from './processors/analytics.processor';
 import { MarketingProcessor } from './processors/marketing.processor';
 import { NotificationProcessor } from './processors/notification.processor';
 import { SearchIndexingProcessor } from './processors/search-indexing.processor';
+import { WebhooksProcessor } from './processors/webhooks.processor';
 
 export function isDuplicateJobIdError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -44,6 +46,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     private readonly searchIndexing: SearchIndexingProcessor,
     private readonly notifications: NotificationProcessor,
     private readonly marketing: MarketingProcessor,
+    private readonly webhooks: WebhooksProcessor,
+    private readonly analytics: AnalyticsProcessor,
   ) {
     // BullMQ requires maxRetriesPerRequest: null on its dedicated connection.
     this.connection = {
@@ -65,6 +69,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     this.ensureQueue(QUEUE_NAMES.notification);
     this.ensureQueue(QUEUE_NAMES.email);
     this.ensureQueue(QUEUE_NAMES.marketing);
+    this.ensureQueue(QUEUE_NAMES.webhooks);
+    this.ensureQueue(QUEUE_NAMES.analytics);
     this.ensureQueue(QUEUE_NAMES.deadLetter);
 
     registerBullmqQueueMetrics(
@@ -119,6 +125,16 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
       new Worker<OutboxJobPayload>(
         QUEUE_NAMES.marketing,
         async (job) => this.marketing.handle(job.data),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.webhooks,
+        async (job) => this.webhooks.handle(job.data),
+        bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
+      ),
+      new Worker<OutboxJobPayload>(
+        QUEUE_NAMES.analytics,
+        async (job) => this.analytics.handle(job.data),
         bullmqWorkerOptions(this.connection, defaultConcurrency, lockDurationMs),
       ),
     );

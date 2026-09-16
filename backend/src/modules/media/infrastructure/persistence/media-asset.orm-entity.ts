@@ -26,6 +26,15 @@ export class MediaAssetOrmEntity {
   @Property({ fieldName: 'store_id', type: 'uuid', nullable: true })
   storeId: string | null = null;
 
+  @Property({ fieldName: 'status', length: 32 })
+  status: string = 'ready';
+
+  @Property({ fieldName: 'rejection_reason', type: 'text', nullable: true })
+  rejectionReason: string | null = null;
+
+  @Property({ fieldName: 'processed_at', nullable: true })
+  processedAt: Date | null = null;
+
   @Property({ fieldName: 'created_at' })
   createdAt!: Date;
 }

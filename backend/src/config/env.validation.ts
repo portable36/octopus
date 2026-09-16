@@ -182,6 +182,13 @@ const baseEnvSchema = z.object({
   STEADFAST_WEBHOOK_SECRET: z.string().optional(),
   /** Optional webhook signature/token secret for Pathao courier callbacks. */
   PATHAO_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Comma-separated HTTPS URLs for outbound partner webhooks (`WebhookDeliver`).
+   * Hosts must also appear on OUTBOUND_URL_ALLOWLIST (or courier bases).
+   */
+  WEBHOOK_OUTBOUND_URLS: z.string().optional(),
+  /** HMAC secret for outbound webhook signatures (`x-octopus-signature`). */
+  WEBHOOK_OUTBOUND_SECRET: z.string().optional(),
   /** Extra outbound hosts (comma-separated) for SSRF allowlist; courier env base URLs are always included. */
   OUTBOUND_URL_ALLOWLIST: z.string().optional(),
   OUTBOX_DISPATCH_ENABLED: z

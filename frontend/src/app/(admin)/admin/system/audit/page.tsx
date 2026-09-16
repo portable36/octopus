@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { ApiClientError } from '@/lib/api-client';
 import {
   queryAdminAuditEvents,
@@ -26,19 +28,18 @@ const ACTION_CATEGORIES = [
 ] as const;
 
 function getActionBadgeColor(action: string): string {
-  if (action.startsWith('auth.'))
-    return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+  if (action.startsWith('auth.')) return 'bg-muted text-foreground border-border';
   if (action.startsWith('store.') || action.startsWith('vendor.')) {
-    return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20';
+    return 'bg-secondary text-secondary-foreground border-border';
   }
   if (action.startsWith('payment.') || action.startsWith('payout.')) {
-    return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    return 'bg-success/15 text-success border-success/20';
   }
   if (action.startsWith('permission.') || action.startsWith('settings.')) {
-    return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+    return 'bg-warning/15 text-warning-foreground border-warning/20';
   }
   if (action.startsWith('inventory.')) {
-    return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+    return 'bg-muted text-muted-foreground border-border';
   }
   return 'bg-muted text-foreground border-border';
 }
@@ -139,32 +140,30 @@ export default function AdminAuditTrailPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">Category</label>
-            <select
+            <Select
               value={category}
               onChange={(e) => {
                 setCategory(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             >
               {ACTION_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Action Name
             </label>
-            <input
+            <Input
               type="text"
               placeholder="e.g. auth.login.failed"
               value={actionSearch}
               onChange={(e) => setActionSearch(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
 
@@ -172,23 +171,21 @@ export default function AdminAuditTrailPage() {
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Resource Type
             </label>
-            <input
+            <Input
               type="text"
               placeholder="e.g. store, user, order"
               value={resourceType}
               onChange={(e) => setResourceType(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">Store ID</label>
-            <input
+            <Input
               type="text"
               placeholder="UUID"
               value={storeId}
               onChange={(e) => setStoreId(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
         </div>
@@ -198,12 +195,11 @@ export default function AdminAuditTrailPage() {
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Vendor ID
             </label>
-            <input
+            <Input
               type="text"
               placeholder="UUID"
               value={vendorId}
               onChange={(e) => setVendorId(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
 
@@ -211,12 +207,11 @@ export default function AdminAuditTrailPage() {
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Resource ID
             </label>
-            <input
+            <Input
               type="text"
               placeholder="UUID or Key"
               value={resourceId}
               onChange={(e) => setResourceId(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
 
@@ -224,12 +219,11 @@ export default function AdminAuditTrailPage() {
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Actor User ID
             </label>
-            <input
+            <Input
               type="text"
               placeholder="UUID"
               value={actorUserId}
               onChange={(e) => setActorUserId(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             />
           </div>
         </div>

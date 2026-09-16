@@ -897,3 +897,35 @@ export function getSystemWorkerMetrics(token?: string): Promise<{
     headers: token ? authHeaders(token) : {},
   });
 }
+
+export type OpsAlertSeverity = 'warning' | 'critical';
+
+export type OpsAlert = {
+  id: string;
+  severity: OpsAlertSeverity;
+  title: string;
+  detail: string;
+  source: string;
+};
+
+export type OpsAlertRuleCatalogEntry = {
+  id: string;
+  name: string;
+  severity: OpsAlertSeverity;
+  condition: string;
+  runbook: string;
+};
+
+export type SystemOpsAlerts = {
+  timestamp: string;
+  status: 'ok' | 'warning' | 'critical';
+  fired: OpsAlert[];
+  rules: OpsAlertRuleCatalogEntry[];
+  diagnosticsStatus: 'healthy' | 'degraded';
+};
+
+export function getSystemOpsAlerts(token?: string): Promise<SystemOpsAlerts> {
+  return apiRequest<SystemOpsAlerts>('/health/alerts', {
+    headers: token ? authHeaders(token) : {},
+  });
+}

@@ -4,6 +4,10 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { ApiClientError } from '@/lib/api-client';
 import { getAccessToken } from '@/lib/auth-session';
 import {
@@ -17,10 +21,10 @@ import {
 
 function statusBadge(status: string) {
   if (status === 'fresh' || status === 'configured') {
-    return 'bg-emerald-100 text-emerald-900';
+    return 'bg-success/15 text-success';
   }
   if (status === 'stale') {
-    return 'bg-amber-100 text-amber-900';
+    return 'bg-warning/15 text-warning-foreground';
   }
   return 'bg-muted text-muted-foreground';
 }
@@ -235,66 +239,57 @@ export default function AdminSeoPage() {
       <section className="grid gap-6 lg:grid-cols-2">
         <form
           onSubmit={(e) => void onOverrideSubmit(e)}
-          className="space-y-4 border border-border p-4"
+          className="space-y-4 rounded-lg border border-border bg-card p-4"
         >
-          <h2 className="text-lg font-medium">SEO override</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-sm font-medium">SEO override</h2>
+          <p className="text-xs text-muted-foreground">
             Override title, description, robots indexing, and canonical URL for a product, category,
             or CMS page.
           </p>
-          <label className="block space-y-1 text-sm">
+          <Label>
             <span>Entity type</span>
-            <select
-              name="entityType"
-              className="w-full border border-input bg-background px-2 py-1.5"
-              defaultValue="product"
-            >
+            <Select name="entityType" defaultValue="product">
               <option value="product">Product</option>
               <option value="category">Category</option>
               <option value="cms">CMS page</option>
-            </select>
-          </label>
-          <label className="block space-y-1 text-sm">
+            </Select>
+          </Label>
+          <Label>
             <span>Entity ID (UUID)</span>
-            <input
+            <Input
               name="entityId"
               required
-              className="w-full border border-input bg-background px-2 py-1.5 font-mono text-xs"
+              className="font-mono text-xs"
               placeholder="11111111-1111-4111-8111-111111111111"
             />
-          </label>
-          <label className="block space-y-1 text-sm">
+          </Label>
+          <Label>
             <span>Product URL path (reference)</span>
-            <input
-              name="productPath"
-              className="w-full border border-input bg-background px-2 py-1.5"
-              placeholder="/products/wireless-mouse"
-            />
-          </label>
-          <label className="block space-y-1 text-sm">
+            <Input name="productPath" placeholder="/products/wireless-mouse" />
+          </Label>
+          <Label>
             <span>SEO title</span>
-            <input name="title" className="w-full border border-input bg-background px-2 py-1.5" />
-          </label>
-          <label className="block space-y-1 text-sm">
+            <Input name="title" />
+          </Label>
+          <Label>
             <span>Meta description</span>
             <textarea
               name="description"
               rows={3}
-              className="w-full border border-input bg-background px-2 py-1.5"
+              className="min-h-[5rem] h-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="noindex" />
+          </Label>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Checkbox name="noindex" />
             <span>noindex (hide from search engines)</span>
           </label>
-          <label className="block space-y-1 text-sm">
+          <Label>
             <span>Canonical URL</span>
-            <input
+            <Input
               name="canonicalUrl"
-              className="w-full border border-input bg-background px-2 py-1.5"
               placeholder="https://shop.example.com/products/wireless-mouse"
             />
-          </label>
+          </Label>
           <Button type="submit" disabled={pending}>
             Save override
           </Button>
@@ -302,41 +297,28 @@ export default function AdminSeoPage() {
 
         <form
           onSubmit={(e) => void onRedirectSubmit(e)}
-          className="space-y-4 border border-border p-4"
+          className="space-y-4 rounded-lg border border-border bg-card p-4"
         >
-          <h2 className="text-lg font-medium">Redirect rule</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-sm font-medium">Redirect rule</h2>
+          <p className="text-xs text-muted-foreground">
             Create or update a 301/302/410 redirect. Use bulk import via API for large migrations.
           </p>
-          <label className="block space-y-1 text-sm">
+          <Label>
             <span>Source path</span>
-            <input
-              name="sourcePath"
-              required
-              className="w-full border border-input bg-background px-2 py-1.5"
-              placeholder="/old-product-url"
-            />
-          </label>
-          <label className="block space-y-1 text-sm">
+            <Input name="sourcePath" required placeholder="/old-product-url" />
+          </Label>
+          <Label>
             <span>Target path (optional for 410)</span>
-            <input
-              name="targetPath"
-              className="w-full border border-input bg-background px-2 py-1.5"
-              placeholder="/products/new-slug"
-            />
-          </label>
-          <label className="block space-y-1 text-sm">
+            <Input name="targetPath" placeholder="/products/new-slug" />
+          </Label>
+          <Label>
             <span>Status code</span>
-            <select
-              name="statusCode"
-              className="w-full border border-input bg-background px-2 py-1.5"
-              defaultValue="301"
-            >
+            <Select name="statusCode" defaultValue="301">
               <option value="301">301 Permanent</option>
               <option value="302">302 Temporary</option>
               <option value="410">410 Gone</option>
-            </select>
-          </label>
+            </Select>
+          </Label>
           <Button type="submit" disabled={pending}>
             Save redirect
           </Button>

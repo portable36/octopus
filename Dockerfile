@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1 (Builder): install workspaces (incl. root devDependencies) and build.
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -41,7 +41,7 @@ RUN npm run build:backend && npm run build:frontend
 # -----------------------------------------------------------------------------
 # Intermediate: drop devDependencies from root + workspace packages.
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS production-prune
+FROM node:26-alpine AS production-prune
 
 WORKDIR /app
 
@@ -57,7 +57,7 @@ RUN npm prune --omit=dev \
 # -----------------------------------------------------------------------------
 # Stage 2 (Runner): production-only tree, non-root, API + worker + storefront.
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 
 WORKDIR /app
 

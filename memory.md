@@ -31,6 +31,14 @@ generated output, or a transcript of previous chats.
   and deduplicated only after successful delivery.
 - Cross-module imports are forbidden. Use ports in the shared kernel when a
   boundary genuinely needs collaboration.
+- Manual IP denylist: Postgres `blocked_ips` is source of truth; Redis key
+  `security:blocked-ips` caches active entries; `IpBlockMiddleware` denies with
+  `403 IP_BLOCKED` (health live/ready exempt). Admin CRUD at
+  `/admin/security/blocked-ips` on `/admin/system/security`.
+- Push notifications (Phase 17.3): `PushProviderPort` log stub +
+  `notification_push_devices` registry; register/list/revoke under
+  `/notifications/devices`. PUSH delivers only when callers include it in
+  `channels` (no auto-fan-out). Never log raw device tokens.
 
 ## Frontend baseline
 

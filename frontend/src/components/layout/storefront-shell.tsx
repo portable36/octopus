@@ -265,7 +265,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             )}
           </div>
           <div className="sf-footer-meta">
-            <span>
+            <span suppressHydrationWarning>
               © {new Date().getFullYear()} {theme.footer.copyrightText || siteName}
             </span>
             <span>

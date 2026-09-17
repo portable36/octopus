@@ -33,6 +33,8 @@ import { PayoutModule } from './modules/payout/payout.module';
 import { DatabaseModule } from './shared-kernel/infrastructure/persistence/database.module';
 import { HealthModule } from './shared-kernel/infrastructure/health/health.module';
 import { RedisModule } from './shared-kernel/infrastructure/redis/redis.module';
+import { IpBlockModule } from './shared-kernel/infrastructure/security/ip-block.module';
+import { IpBlockMiddleware } from './shared-kernel/infrastructure/security/ip-block.middleware';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
@@ -101,6 +103,7 @@ import { AiPersonalizationModule } from './modules/ai-personalization/ai-persona
     }),
     RedisModule,
     DatabaseModule,
+    IpBlockModule,
     HealthModule,
     ConfigurationModule,
     CatalogModule,
@@ -137,6 +140,6 @@ import { AiPersonalizationModule } from './modules/ai-personalization/ai-persona
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ContextMiddleware).forRoutes('{*splat}');
+    consumer.apply(ContextMiddleware, IpBlockMiddleware).forRoutes('{*splat}');
   }
 }

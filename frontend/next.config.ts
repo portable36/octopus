@@ -1,10 +1,5 @@
 import type { NextConfig } from 'next';
-import bundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
-
-const withAnalyzer = bundleAnalyzer({
-  enabled: process.env['ANALYZE'] === 'true',
-});
 
 type RemotePattern = {
   protocol: 'http' | 'https';
@@ -47,7 +42,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withAnalyzer(nextConfig), {
+/** Bundle analyzer is a devDependency — skip after `npm prune --omit=dev`. */
+function withOptionalAnalyzer(config: NextConfig): NextConfig {
+  if (process.env['ANALYZE'] !== 'true') {
+    return config;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const bundleAnalyzer = require('@next/bundle-analyzer') as (
+    options: { enabled?: boolean },
+  ) => (c: NextConfig) => NextConfig;
+  return bundleAnalyzer({ enabled: true })(config);
+}
+
+export default withSentryConfig(withOptionalAnalyzer(nextConfig), {
   silent: true,
   // Source maps upload only when SENTRY_AUTH_TOKEN is set in CI.
   sourcemaps: {

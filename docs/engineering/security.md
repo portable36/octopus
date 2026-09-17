@@ -17,6 +17,7 @@ Repository security requirements live in [SECURITY.md](../../SECURITY.md). This 
 | SSRF           | Courier outbound URLs must match `OUTBOUND_URL_ALLOWLIST` + PATHAO/STEADFAST base hosts; https only                                                                                                            |
 | API rate limit | Redis `API_RATE_LIMITER`: checkout 20/min/IP; search 60/min/IP; COD collect 30/min/IP; refund 20/min/IP; media register/upload-session 30/min/user                                                             |
 | Trust proxy    | `TRUST_PROXY_HOPS` (default `0`): Express hop count for `req.ip`. Set to `1` behind a single LB; never `true` (spoofable `X-Forwarded-For`)                                                                    |
+| IP denylist    | Manual blocks in `blocked_ips` (Postgres) + Redis cache `security:blocked-ips`; `IpBlockMiddleware` returns `403` `IP_BLOCKED` before auth. Health `/live` + `/ready` exempt. Admin CRUD: `GET/POST/PATCH/DELETE /admin/security/blocked-ips` (`settings.read` / `settings.write`); audit `security.ip_block.*` |
 
 ### CSRF strategy
 

@@ -8,15 +8,18 @@ import { NotificationEventConsumer } from './application/commands/notification-e
 import { NotificationHandlers } from './application/commands/notification.handlers';
 import { EMAIL_PROVIDER } from './application/ports/email-provider.port';
 import { SMS_PROVIDER } from './application/ports/sms-provider.port';
+import { PUSH_PROVIDER } from './application/ports/push-provider.port';
 import { NOTIFICATION_DELIVERY_ENQUEUER } from './application/ports/notification-delivery-enqueuer.port';
 import { NOTIFICATION_REPOSITORY } from './application/ports/notification-repository.interface';
 import { NotificationDeliveryEnqueuerAdapter } from './infrastructure/bullmq/notification-delivery-enqueuer.adapter';
 import { LogEmailProviderAdapter } from './infrastructure/email/log-email.provider.adapter';
 import { LogSmsProviderAdapter } from './infrastructure/sms/log-sms.provider.adapter';
+import { LogPushProviderAdapter } from './infrastructure/push/log-push.provider.adapter';
 import { NotificationConfigProvisionerAdapter } from './infrastructure/access/notification-config-provisioner.adapter';
 import { NotificationDeliveryAttemptOrmEntity } from './infrastructure/persistence/notification-delivery-attempt.orm-entity';
 import { NotificationOrmEntity } from './infrastructure/persistence/notification.orm-entity';
 import { NotificationPreferenceOrmEntity } from './infrastructure/persistence/notification-preference.orm-entity';
+import { NotificationPushDeviceOrmEntity } from './infrastructure/persistence/notification-push-device.orm-entity';
 import { NotificationRepositoryAdapter } from './infrastructure/persistence/notification.repository.adapter';
 import { NotificationTemplateOrmEntity } from './infrastructure/persistence/notification-template.orm-entity';
 import { NotificationController } from './presentation/http/notification.controller';
@@ -30,6 +33,7 @@ import { NotificationController } from './presentation/http/notification.control
       NotificationTemplateOrmEntity,
       NotificationDeliveryAttemptOrmEntity,
       NotificationPreferenceOrmEntity,
+      NotificationPushDeviceOrmEntity,
     ]),
   ],
   controllers: [NotificationController],
@@ -39,11 +43,13 @@ import { NotificationController } from './presentation/http/notification.control
     NotificationRepositoryAdapter,
     LogEmailProviderAdapter,
     LogSmsProviderAdapter,
+    LogPushProviderAdapter,
     NotificationDeliveryEnqueuerAdapter,
     NotificationConfigProvisionerAdapter,
     { provide: NOTIFICATION_REPOSITORY, useExisting: NotificationRepositoryAdapter },
     { provide: EMAIL_PROVIDER, useExisting: LogEmailProviderAdapter },
     { provide: SMS_PROVIDER, useExisting: LogSmsProviderAdapter },
+    { provide: PUSH_PROVIDER, useExisting: LogPushProviderAdapter },
     { provide: NOTIFICATION_DELIVERY_ENQUEUER, useExisting: NotificationDeliveryEnqueuerAdapter },
     { provide: NOTIFICATION_PORT, useExisting: NotificationHandlers },
     { provide: NOTIFICATION_OUTBOX_HANDLER, useExisting: NotificationEventConsumer },
@@ -54,6 +60,7 @@ import { NotificationController } from './presentation/http/notification.control
     NOTIFICATION_OUTBOX_HANDLER,
     NOTIFICATION_CONFIG_PROVISIONER,
     SMS_PROVIDER,
+    PUSH_PROVIDER,
     NotificationHandlers,
   ],
 })

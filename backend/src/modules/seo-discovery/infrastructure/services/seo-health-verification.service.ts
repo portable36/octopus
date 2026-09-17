@@ -71,7 +71,12 @@ export class SeoHealthVerificationService implements SeoHealthVerificationPort {
     }
 
     const scannedAt = new Date();
-    const issues: SeoHealthIssue[] = [];
+    const issueDrafts: Array<{
+      readonly url: string;
+      readonly issueType: SeoHealthIssueFinding['issueType'];
+      readonly severity: SeoHealthIssueFinding['severity'];
+      readonly detail: string;
+    }> = [];
 
     for (const page of pages) {
       const findings: readonly SeoHealthIssueFinding[] =
@@ -86,36 +91,41 @@ export class SeoHealthVerificationService implements SeoHealthVerificationPort {
           : analyzePageSeoHealth(page.html, { titleCounts });
 
       for (const finding of findings) {
-        issues.push(
-          this.em.create(SeoHealthIssue, {
-            id: randomUUID(),
-            url: page.url,
-            issueType: finding.issueType,
-            severity: finding.severity,
-            detail: finding.detail,
-            scannedAt,
-          }),
-        );
+        issueDrafts.push({
+          url: page.url,
+          issueType: finding.issueType,
+          severity: finding.severity,
+          detail: finding.detail,
+        });
       }
     }
 
     await this.em.transactional(async (tx) => {
       await tx.nativeDelete(SeoHealthIssue, {});
-      for (const issue of issues) {
-        tx.persist(issue);
+      for (const draft of issueDrafts) {
+        tx.persist(
+          tx.create(SeoHealthIssue, {
+            id: randomUUID(),
+            url: draft.url,
+            issueType: draft.issueType,
+            severity: draft.severity,
+            detail: draft.detail,
+            scannedAt,
+          }),
+        );
       }
     });
 
     await this.writeLastScanMarker({
       scannedAt: scannedAt.toISOString(),
       scanned: routes.length,
-      issues: issues.length,
+      issues: issueDrafts.length,
     });
 
     this.logger.log(
-      `SEO health verification complete: ${routes.length} routes, ${issues.length} issues.`,
+      `SEO health verification complete: ${routes.length} routes, ${issueDrafts.length} issues.`,
     );
-    return { scanned: routes.length, issues: issues.length };
+    return { scanned: routes.length, issues: issueDrafts.length };
   }
 
   public async countOpenIssues(): Promise<number> {

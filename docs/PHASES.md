@@ -1166,7 +1166,8 @@ Prefer **OSS/free**: SMTP (or console stub in dev); SMS/push adapters stubbed un
 
 ### 17.3 — SMS / Push ports (adapters stub)
 
-- [ ] `SmsProviderPort` / `PushProviderPort` + device registry schema
+- [x] `SmsProviderPort` / `PushProviderPort` + device registry schema (`notification_push_devices`)
+- [x] Log stub adapters; device register/list/revoke HTTP; PUSH sync delivery in `notify()`
 - [ ] Real providers later — no paid SaaS required for skeleton
 
 ### Deferred
@@ -1516,6 +1517,8 @@ Ship admin UIs **only after** owning domain modules exist:
 - [x] Login history — `auth.login.*` via existing `GET /admin/audit/events?actionPrefix=`
 - [x] Security events — identity writes `auth.*` through `AUDIT_PORT`; admin UI at
       `/admin/system/security` (Phase 22 sensitive-op catalog wired)
+- [x] Manual IP denylist — `blocked_ips` + Redis cache + `IpBlockMiddleware`; admin CRUD
+      `/admin/security/blocked-ips` on the Security page (`settings.read` / `settings.write`)
 
 ---
 
@@ -1838,7 +1841,7 @@ Perform a dedicated security pass.
 - Slice **25.2** — global `PermissionsGuard` + `@RequirePermissions` on admin HTTP; new `platform.*` read/reindex permissions; reject `CORS_ORIGINS=*`.
 - Slice **25.3** — SSRF outbound allowlist on courier clients; JWT previous-secret rotation; webhook HMAC/timestamp helpers; output encoding (JSON-LD); secrets/rotation docs.
 - Slice **25.4** — opt-in TOTP MFA (`/auth/mfa/*`); login returns `mfaRequired` when enabled; storefront MFA step.
-- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. S3 Range-GET magic re-verify shipped via media quarantine worker. **Still open:** provider-native signature schemes (SSLCommerz verify_sign MD5).
+- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. S3 Range-GET magic re-verify shipped via media quarantine worker. Manual IP denylist (`blocked_ips` + `IpBlockMiddleware` + admin Security CRUD). **Still open:** provider-native signature schemes (SSLCommerz verify_sign MD5).
 - [x] commit push
 
 ---

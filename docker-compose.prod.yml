@@ -1,8 +1,9 @@
-# Production / staging matrix — Hostinger VPS, DigitalOcean, or AWS verification loops.
-# Local dev infra only: docker compose up (see docker-compose.yml).
+# Production / staging matrix — Hostinger VPS, DigitalOcean, or local verification.
+# Local infra-only deps: docker compose up (see docker-compose.yml).
 #
 # Build:  docker compose -f docker-compose.prod.yml build
 # Start:  docker compose -f docker-compose.prod.yml up -d
+# Logs:   docker compose -f docker-compose.prod.yml logs -f backend-api seo-worker frontend-store
 #
 # Required: copy backend/.env.production.template values into a root `.env` file
 # (or export secrets in your orchestrator) before first boot.
@@ -22,7 +23,7 @@ x-octopus-app-env: &octopus-app-env
   S3_ACCESS_KEY: minioadmin
   S3_SECRET_KEY: minioadmin
   S3_BUCKET: octopus-media
-  CORS_ORIGINS: http://localhost:3001
+  CORS_ORIGINS: http://localhost:3000
   LOG_LEVEL: info
   SHUTDOWN_TIMEOUT_MS: 10000
   OUTBOX_DISPATCH_ENABLED: 'true'
@@ -50,6 +51,7 @@ services:
       POSTGRES_PASSWORD: octopus
       POSTGRES_DB: octopus
     volumes:
+      # PG 18+ images expect the mount at /var/lib/postgresql (versioned data dir underneath).
       - pgdata:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U octopus -d octopus']
@@ -95,7 +97,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:4000/api/v1
-        NEXT_PUBLIC_SITE_URL: http://localhost:3001
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
     image: octopus:prod
     restart: unless-stopped
     working_dir: /app
@@ -141,6 +143,28 @@ services:
         condition: service_healthy
       backend-api:
         condition: service_healthy
+
+  frontend-store:
+    image: octopus:prod
+    restart: unless-stopped
+    working_dir: /app
+    command: ['npm', 'run', 'start', '-w', 'frontend']
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_TELEMETRY_DISABLED: '1'
+    ports:
+      - '3000:3000'
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
 
 volumes:
   pgdata:

@@ -26,6 +26,8 @@ cache remain deferred until Media + CMS exist.
 `/inventory`, `/users`) over thin module list APIs (no admin BFF business rules).
 **Phase 20.7** adds `/admin/system/security` over `GET /admin/audit/events`
 (login history + `auth.*` security events); identity appends via `AUDIT_PORT`.
+The same page manages the manual IP denylist (`/admin/security/blocked-ips`)
+enforced by `IpBlockMiddleware`.
 **Phase 24.7 / 30** adds `/admin/system/alerts` over `GET /health/alerts`
 (in-process ops alert evaluation + rule catalog).
 **Phase 20.8** adds dashboard operational counts from existing list APIs

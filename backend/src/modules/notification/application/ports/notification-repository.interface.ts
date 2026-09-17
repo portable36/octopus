@@ -4,6 +4,8 @@ import type {
   NotificationLocale,
   NotificationRecord,
   NotificationTemplate,
+  PushDeviceRecord,
+  PushPlatform,
 } from '../../domain/notification.types';
 
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');
@@ -30,6 +32,13 @@ export type NotificationPreferences = {
   readonly userId: string;
   readonly marketingEmail: boolean;
   readonly marketingInApp: boolean;
+};
+
+export type UpsertPushDeviceInput = {
+  readonly userId: string;
+  readonly platform: PushPlatform;
+  readonly token: string;
+  readonly label?: string | null;
 };
 
 export interface NotificationRepository {
@@ -68,4 +77,7 @@ export interface NotificationRepository {
     userId: string,
     patch: { readonly marketingEmail?: boolean; readonly marketingInApp?: boolean },
   ): Promise<NotificationPreferences>;
+  upsertPushDevice(input: UpsertPushDeviceInput): Promise<PushDeviceRecord>;
+  listActivePushDevices(userId: string): Promise<readonly PushDeviceRecord[]>;
+  revokePushDevice(userId: string, deviceId: string): Promise<boolean>;
 }

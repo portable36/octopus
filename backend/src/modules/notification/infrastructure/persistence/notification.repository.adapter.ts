@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { EntityManager, UniqueConstraintViolationException } from '@mikro-orm/core';
+import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
 import type {
   DeliveryStatus,
@@ -7,15 +9,19 @@ import type {
   NotificationLocale,
   NotificationRecord,
   NotificationTemplate,
+  PushDeviceRecord,
+  PushPlatform,
 } from '../../domain/notification.types';
 import type {
   CreateNotificationInput,
   NotificationPreferences,
   NotificationRepository,
+  UpsertPushDeviceInput,
 } from '../../application/ports/notification-repository.interface';
 import { NotificationDeliveryAttemptOrmEntity } from './notification-delivery-attempt.orm-entity';
 import { NotificationOrmEntity } from './notification.orm-entity';
 import { NotificationPreferenceOrmEntity } from './notification-preference.orm-entity';
+import { NotificationPushDeviceOrmEntity } from './notification-push-device.orm-entity';
 import { NotificationTemplateOrmEntity } from './notification-template.orm-entity';
 
 @Injectable()
@@ -223,6 +229,80 @@ export class NotificationRepositoryAdapter implements NotificationRepository {
       };
     });
   }
+
+  public async upsertPushDevice(input: UpsertPushDeviceInput): Promise<PushDeviceRecord> {
+    const fingerprint = fingerprintToken(input.token);
+    const now = new Date();
+    return withRlsContext(this.em, async (tx) => {
+      let row = await tx.findOne(NotificationPushDeviceOrmEntity, {
+        userId: input.userId,
+        tokenFingerprint: fingerprint,
+      });
+      if (row) {
+        row.token = input.token;
+        row.platform = input.platform;
+        row.label = input.label?.trim() ? input.label.trim() : row.label;
+        row.lastSeenAt = now;
+        row.revokedAt = null;
+        await tx.flush();
+        return mapPushDevice(row);
+      }
+
+      row = new NotificationPushDeviceOrmEntity();
+      row.id = UniqueID.create().value;
+      row.userId = input.userId;
+      row.platform = input.platform;
+      row.token = input.token;
+      row.tokenFingerprint = fingerprint;
+      row.label = input.label?.trim() ? input.label.trim() : null;
+      row.lastSeenAt = now;
+      row.createdAt = now;
+      row.revokedAt = null;
+      await tx.persistAndFlush(row);
+      return mapPushDevice(row);
+    });
+  }
+
+  public async listActivePushDevices(userId: string): Promise<readonly PushDeviceRecord[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(
+        NotificationPushDeviceOrmEntity,
+        { userId, revokedAt: null },
+        { orderBy: { lastSeenAt: 'desc' } },
+      );
+      return rows.map(mapPushDevice);
+    });
+  }
+
+  public async revokePushDevice(userId: string, deviceId: string): Promise<boolean> {
+    return withRlsContext(this.em, async (tx) => {
+      const row = await tx.findOne(NotificationPushDeviceOrmEntity, { id: deviceId, userId });
+      if (!row || row.revokedAt) {
+        return false;
+      }
+      row.revokedAt = new Date();
+      await tx.flush();
+      return true;
+    });
+  }
+}
+
+function fingerprintToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+function mapPushDevice(row: NotificationPushDeviceOrmEntity): PushDeviceRecord {
+  return {
+    id: row.id,
+    userId: row.userId,
+    platform: row.platform as PushPlatform,
+    token: row.token,
+    tokenFingerprint: row.tokenFingerprint,
+    label: row.label,
+    lastSeenAt: row.lastSeenAt,
+    createdAt: row.createdAt,
+    revokedAt: row.revokedAt,
+  };
 }
 
 function mapTemplate(row: NotificationTemplateOrmEntity): NotificationTemplate {

@@ -21,6 +21,7 @@ import { ShippingConfigProvisionerAdapter } from './infrastructure/access/shippi
 import { PathaoCourierClient } from './infrastructure/integrations/pathao.client';
 import { SteadfastCourierClient } from './infrastructure/integrations/steadfast.client';
 import { CourierAccountStore } from './infrastructure/persistence/courier-account.store';
+import { COURIER_ACCOUNT_ADMIN_PORT } from './application/ports/courier-account-admin.port';
 import {
   CourierAccountOrmEntity,
   CourierOauthTokenOrmEntity,
@@ -58,6 +59,7 @@ import { FulfillmentWebhookController } from './presentation/http/fulfillment-we
     ProcessCourierWebhookHandler,
     FulfillmentStatusPollerService,
     CourierAccountStore,
+    { provide: COURIER_ACCOUNT_ADMIN_PORT, useExisting: CourierAccountStore },
     SteadfastCourierClient,
     PathaoCourierClient,
     { provide: FULFILLMENT_REPOSITORY, useClass: FulfillmentRepositoryAdapter },

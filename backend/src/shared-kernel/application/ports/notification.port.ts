@@ -1,6 +1,6 @@
 export const NOTIFICATION_PORT = Symbol('NOTIFICATION_PORT');
 
-export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS';
+export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS' | 'PUSH';
 export type NotificationLocale = 'en' | 'bn';
 /** SECURITY/TRANSACTIONAL ignore marketing prefs; MARKETING is gated. */
 export type NotificationCategory = 'SECURITY' | 'TRANSACTIONAL' | 'MARKETING';

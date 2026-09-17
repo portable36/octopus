@@ -1,6 +1,20 @@
-export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS';
+export type NotificationChannel = 'EMAIL' | 'IN_APP' | 'SMS' | 'PUSH';
 export type NotificationLocale = 'en' | 'bn';
 export type DeliveryStatus = 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED';
+
+export type PushPlatform = 'web' | 'android' | 'ios';
+
+export type PushDeviceRecord = {
+  readonly id: string;
+  readonly userId: string;
+  readonly platform: PushPlatform;
+  readonly token: string;
+  readonly tokenFingerprint: string;
+  readonly label: string | null;
+  readonly lastSeenAt: Date;
+  readonly createdAt: Date;
+  readonly revokedAt: Date | null;
+};
 
 export type NotificationTemplate = {
   readonly id: string;

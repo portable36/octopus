@@ -35,7 +35,14 @@ function readStored(): StoredAttribution | null {
 }
 
 function writeStored(value: StoredAttribution): void {
-  window.sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(value));
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(value));
+  } catch {
+    // Private mode / quota — attribution is best-effort.
+  }
 }
 
 function pickParams(url: URL): AttributionSnapshot {
@@ -74,9 +81,13 @@ function hasTouchSignals(snap: AttributionSnapshot): boolean {
 }
 
 /** Capture first/last touch from the current URL into sessionStorage. */
-export function captureAttributionFromLocation(href = window.location.href): AttributionSnapshot {
+export function captureAttributionFromLocation(href?: string): AttributionSnapshot {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+  const resolvedHref = href ?? window.location.href;
   const now = new Date().toISOString();
-  const incoming = pickParams(new URL(href));
+  const incoming = pickParams(new URL(resolvedHref));
   const existing = readStored();
 
   if (!existing) {

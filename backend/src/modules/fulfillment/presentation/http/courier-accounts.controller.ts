@@ -7,7 +7,10 @@ import {
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import type { CourierProvider } from '../../domain/fulfillment.types';
 import { FulfillmentAuthorizationService } from '../../application/services/fulfillment-authorization.service';
-import { CourierAccountStore } from '../../infrastructure/persistence/courier-account.store';
+import {
+  COURIER_ACCOUNT_ADMIN_PORT,
+  type CourierAccountAdminPort,
+} from '../../application/ports/courier-account-admin.port';
 import { FulfillmentExceptionFilter } from './filters/fulfillment-exception.filter';
 
 class UpsertCourierAccountDto {
@@ -29,7 +32,7 @@ class UpsertCourierAccountDto {
 @UseFilters(FulfillmentExceptionFilter)
 export class CourierAccountsController {
   constructor(
-    @Inject(CourierAccountStore) private readonly accounts: CourierAccountStore,
+    @Inject(COURIER_ACCOUNT_ADMIN_PORT) private readonly accounts: CourierAccountAdminPort,
     @Inject(FulfillmentAuthorizationService)
     private readonly authz: FulfillmentAuthorizationService,
   ) {}

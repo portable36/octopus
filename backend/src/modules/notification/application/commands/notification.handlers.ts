@@ -9,9 +9,11 @@ import {
   renderTemplate,
   type NotificationChannel,
   type NotificationLocale,
+  type PushPlatform,
 } from '../../domain/notification.types';
 import { EMAIL_PROVIDER, type EmailProviderPort } from '../ports/email-provider.port';
 import { SMS_PROVIDER, type SmsProviderPort } from '../ports/sms-provider.port';
+import { PUSH_PROVIDER, type PushProviderPort } from '../ports/push-provider.port';
 import {
   NOTIFICATION_DELIVERY_ENQUEUER,
   type NotificationDeliveryEnqueuerPort,
@@ -34,6 +36,10 @@ const BUILT_IN_FALLBACK_TEMPLATES: Record<string, { subject?: string; bodyText: 
     bodyText:
       'Octopus: Order {{orderNumber}} shipped with {{courier}}. Tracking: {{trackingCode}}.',
   },
+  'fulfillment.shipment_shipped:PUSH:en': {
+    subject: 'Shipped — {{orderNumber}}',
+    bodyText: 'Order {{orderNumber}} shipped with {{courier}}. Tracking: {{trackingCode}}.',
+  },
   'fulfillment.shipment_out_for_delivery:EMAIL:en': {
     subject: 'Out for delivery — {{orderNumber}}',
     bodyText: 'Your order {{orderNumber}} is out for delivery with {{courier}} today.',
@@ -44,11 +50,23 @@ const BUILT_IN_FALLBACK_TEMPLATES: Record<string, { subject?: string; bodyText: 
   'fulfillment.shipment_out_for_delivery:SMS:en': {
     bodyText: 'Octopus: Order {{orderNumber}} is out for delivery today.',
   },
+  'fulfillment.shipment_out_for_delivery:PUSH:en': {
+    subject: 'Out for delivery — {{orderNumber}}',
+    bodyText: 'Order {{orderNumber}} is out for delivery today.',
+  },
   'fulfillment.shipment_delivered:SMS:en': {
     bodyText: 'Octopus: Order {{orderNumber}} has been delivered. Thank you!',
   },
+  'fulfillment.shipment_delivered:PUSH:en': {
+    subject: 'Delivered — {{orderNumber}}',
+    bodyText: 'Order {{orderNumber}} has been delivered. Thank you!',
+  },
   'payment.cod_collected:SMS:en': {
     bodyText: 'Octopus: Cash on delivery {{amountLabel}} collected for order {{orderNumber}}.',
+  },
+  'payment.cod_collected:PUSH:en': {
+    subject: 'COD collected — {{orderNumber}}',
+    bodyText: 'Cash on delivery {{amountLabel}} collected for order {{orderNumber}}.',
   },
 };
 
@@ -62,6 +80,7 @@ export class NotificationHandlers implements NotificationPort {
     @Inject(NOTIFICATION_DELIVERY_ENQUEUER)
     private readonly enqueuer: NotificationDeliveryEnqueuerPort,
     @Optional() @Inject(SMS_PROVIDER) private readonly sms?: SmsProviderPort,
+    @Optional() @Inject(PUSH_PROVIDER) private readonly push?: PushProviderPort,
   ) {}
 
   public async notify(command: NotifyCommand): Promise<NotifyResult> {
@@ -110,7 +129,7 @@ export class NotificationHandlers implements NotificationPort {
 
       const body = renderTemplate(template.bodyText, data);
       const title =
-        channel === 'EMAIL'
+        channel === 'EMAIL' || channel === 'PUSH'
           ? renderTemplate(template.subject ?? command.templateKey, data)
           : body.slice(0, 120);
 
@@ -175,6 +194,35 @@ export class NotificationHandlers implements NotificationPort {
             }
           } else {
             await this.failDelivery(record.id, 'SMS', 'MISSING_RECIPIENT_PHONE');
+          }
+        }
+        if (channel === 'PUSH') {
+          const devices = await this.repo.listActivePushDevices(command.recipientUserId);
+          if (devices.length === 0 || !this.push) {
+            await this.failDelivery(record.id, 'PUSH', 'NO_PUSH_DEVICES');
+          } else {
+            try {
+              const res = await this.push.send({
+                tokens: devices.map((d) => d.token),
+                title,
+                body,
+                notificationId: record.id,
+              });
+              await this.repo.appendDeliveryAttempt({
+                id: UniqueID.create().value,
+                notificationId: record.id,
+                channel: 'PUSH',
+                attemptNumber: 1,
+                status: 'SENT',
+                providerMessageId: res.providerMessageId,
+                errorCode: null,
+                createdAt: new Date(),
+              });
+              await this.repo.updateDeliveryStatus(record.id, 'SENT');
+            } catch (err) {
+              const code = err instanceof Error ? err.name : 'PUSH_SEND_FAILED';
+              await this.failDelivery(record.id, 'PUSH', code.slice(0, 64));
+            }
           }
         }
       }
@@ -255,6 +303,47 @@ export class NotificationHandlers implements NotificationPort {
     return this.repo.upsertPreferences(userId, patch);
   }
 
+  public async registerPushDevice(input: {
+    readonly userId: string;
+    readonly platform: PushPlatform;
+    readonly token: string;
+    readonly label?: string | null;
+  }) {
+    const device = await this.repo.upsertPushDevice(input);
+    return {
+      id: device.id,
+      platform: device.platform,
+      label: device.label,
+      lastSeenAt: device.lastSeenAt,
+      createdAt: device.createdAt,
+    };
+  }
+
+  public async listPushDevices(userId: string) {
+    const devices = await this.repo.listActivePushDevices(userId);
+    return devices.map((device) => ({
+      id: device.id,
+      platform: device.platform,
+      label: device.label,
+      lastSeenAt: device.lastSeenAt,
+      createdAt: device.createdAt,
+    }));
+  }
+
+  public async revokePushDevice(userId: string, deviceId: string) {
+    const revoked = await this.repo.revokePushDevice(userId, deviceId);
+    if (!revoked) {
+      throw new NotFoundException({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'Push device not found.',
+        code: 'PUSH_DEVICE_NOT_FOUND',
+      });
+    }
+    return { ok: true as const };
+  }
+
   private async filterChannelsByPreference(
     command: NotifyCommand,
   ): Promise<readonly NotificationChannel[]> {
@@ -269,6 +358,7 @@ export class NotificationHandlers implements NotificationPort {
       if (channel === 'IN_APP') {
         return prefs.marketingInApp;
       }
+      // Marketing push/SMS stay opt-in later; fail closed for now.
       return false;
     });
   }

@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { once } from 'node:events';
+import type { WriteStream } from 'node:fs';
 import { AppConfigService } from '../../../config/app-config.service';
 import { escapeXml } from '../application/services/sitemap-xml.renderer';
 import { PRODUCT_FEED_SOURCE, type ProductFeedSourcePort } from './product-feed-source.port';
@@ -20,29 +22,51 @@ export class ProductFeedService {
     readonly metaJsonPath: string;
     readonly itemCount: number;
   }> {
-    const googleParts: string[] = [this.googleFeedHeader()];
-    const metaItems: Record<string, unknown>[] = [];
+    const google = await this.artifacts.openFeedWriteStream('google-products.xml');
+    const meta = await this.artifacts.openFeedWriteStream('meta-catalog.json');
     let itemCount = 0;
+    let metaFirst = true;
 
-    for await (const batch of this.source.streamItems(batchSize)) {
-      for (const item of batch) {
-        googleParts.push(this.renderGoogleItem(item));
-        metaItems.push(this.renderMetaItem(item));
-        itemCount += 1;
+    try {
+      await this.writeChunk(google.stream, this.googleFeedHeader());
+      await this.writeChunk(meta.stream, '{"data":[');
+
+      for await (const batch of this.source.streamItems(batchSize)) {
+        for (const item of batch) {
+          await this.writeChunk(google.stream, this.renderGoogleItem(item));
+          const metaJson = JSON.stringify(this.renderMetaItem(item));
+          await this.writeChunk(meta.stream, metaFirst ? metaJson : `,${metaJson}`);
+          metaFirst = false;
+          itemCount += 1;
+        }
       }
+
+      await this.writeChunk(google.stream, '</channel>\n</rss>\n');
+      await this.writeChunk(meta.stream, ']}');
+    } catch (error) {
+      google.stream.destroy();
+      meta.stream.destroy();
+      throw error;
     }
 
-    googleParts.push('</channel>\n</rss>\n');
-    const googleXmlPath = await this.artifacts.writeFeed(
-      'google-products.xml',
-      googleParts.join(''),
-    );
-    const metaJsonPath = await this.artifacts.writeFeed(
-      'meta-catalog.json',
-      JSON.stringify({ data: metaItems }, null, 2),
-    );
+    await Promise.all([this.closeStream(google.stream), this.closeStream(meta.stream)]);
 
-    return { googleXmlPath, metaJsonPath, itemCount };
+    return {
+      googleXmlPath: google.path,
+      metaJsonPath: meta.path,
+      itemCount,
+    };
+  }
+
+  private async writeChunk(stream: WriteStream, chunk: string): Promise<void> {
+    if (!stream.write(chunk)) {
+      await once(stream, 'drain');
+    }
+  }
+
+  private async closeStream(stream: WriteStream): Promise<void> {
+    stream.end();
+    await once(stream, 'finish');
   }
 
   private googleFeedHeader(): string {

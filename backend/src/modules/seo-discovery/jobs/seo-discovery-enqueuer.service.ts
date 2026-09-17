@@ -15,6 +15,12 @@ import type {
   SeoDiscoveryMaintenanceJobPayload,
 } from './seo-discovery-job.types';
 import { SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS } from './seo-search-console-job.options';
+import { SEO_META_CAPI_JOB_OPTIONS } from './seo-meta-capi-job.options';
+
+function isDuplicateJobIdError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /already exists|JobId/i.test(message);
+}
 
 @Injectable()
 export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
@@ -68,10 +74,18 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
       requestedAt: new Date().toISOString(),
     };
 
-    await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.pingSearchConsole, payload, {
-      ...SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS,
-      jobId: SEO_DISCOVERY_JOB_NAMES.pingSearchConsole,
-    });
+    try {
+      await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.pingSearchConsole, payload, {
+        ...SEO_SEARCH_CONSOLE_PING_JOB_OPTIONS,
+        jobId: SEO_DISCOVERY_JOB_NAMES.pingSearchConsole,
+      });
+    } catch (error) {
+      if (isDuplicateJobIdError(error)) {
+        this.logger.debug('Search Console ping already queued; treating as success.');
+        return;
+      }
+      throw error;
+    }
   }
 
   public async enqueueProductFeeds(): Promise<void> {
@@ -109,10 +123,20 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
       ...input,
     };
 
-    await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.sendMetaCapiEvent, payload, {
-      ...BULLMQ_DEFAULT_JOB_OPTIONS,
-      jobId: `${SEO_DISCOVERY_JOB_NAMES.sendMetaCapiEvent}-${input.eventId}`,
-    });
+    try {
+      await this.ensureQueue().add(SEO_DISCOVERY_JOB_NAMES.sendMetaCapiEvent, payload, {
+        ...SEO_META_CAPI_JOB_OPTIONS,
+        jobId: `${SEO_DISCOVERY_JOB_NAMES.sendMetaCapiEvent}-${input.eventId}`,
+      });
+    } catch (error) {
+      if (isDuplicateJobIdError(error)) {
+        this.logger.debug(
+          `Meta CAPI event ${input.eventId} already queued; treating as success.`,
+        );
+        return;
+      }
+      throw error;
+    }
   }
 
   public async onModuleDestroy(): Promise<void> {

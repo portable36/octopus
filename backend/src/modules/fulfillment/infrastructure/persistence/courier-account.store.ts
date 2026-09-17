@@ -8,7 +8,8 @@ import { decryptSecret, encryptSecret } from '../crypto/credential-crypto';
 import {
   CourierAccountOrmEntity,
   CourierOauthTokenOrmEntity,
-} from '../persistence/fulfillment.orm-entity';
+} from './fulfillment.orm-entity';
+import type { CourierAccountAdminPort } from '../../application/ports/courier-account-admin.port';
 
 export interface SteadfastCredentials {
   readonly apiKey: string;
@@ -26,7 +27,7 @@ export interface PathaoCredentials {
 }
 
 @Injectable()
-export class CourierAccountStore {
+export class CourierAccountStore implements CourierAccountAdminPort {
   constructor(
     @Inject(EntityManager) private readonly em: EntityManager,
     @Inject(AppConfigService) private readonly config: AppConfigService,

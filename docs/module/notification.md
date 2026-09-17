@@ -12,6 +12,7 @@ Outbox (payment/fulfillment/…)
 → NotificationEventConsumer (TRANSACTIONAL)
 → templates + preference gate
 → IN_APP / EMAIL (`octopus.email` for `NotificationDeliver`; log stub provider)
+→ SMS / PUSH (sync in notify(); log stubs; PUSH requires registered devices)
 
 Identity register / password change
 → NOTIFICATION_PORT.notify (SECURITY / TRANSACTIONAL; inline until identity_outbox)
@@ -32,6 +33,9 @@ Identity register / password change
 - `GET /notifications` — in-app inbox + unreadCount
 - `POST /notifications/:id/read`
 - `GET/PATCH /notifications/preferences`
+- `POST /notifications/devices` — register/refresh push token (upsert by sha256 fingerprint)
+- `GET /notifications/devices` — list active devices (id/platform/label/timestamps only; no raw tokens)
+- `DELETE /notifications/devices/:deviceId` — revoke
 
 ## Wired events (17.2)
 
@@ -46,11 +50,14 @@ Recipient: `ORDER_PORT.getNotificationSnapshot` + `USER_CONTACT_PORT` (email). G
 
 ## Channels
 
-| Channel  | v1       | Notes      |
-| -------- | -------- | ---------- |
-| EMAIL    | log stub | SMTP later |
-| IN_APP   | Postgres |            |
-| SMS/PUSH | 17.3     |            |
+| Channel | v1        | Notes                                      |
+| ------- | --------- | ------------------------------------------ |
+| EMAIL   | log stub  | SMTP later                                 |
+| IN_APP  | Postgres  |                                            |
+| SMS     | log stub  | needs `recipientPhone` on notify           |
+| PUSH    | log stub  | device registry; caller must include PUSH |
+
+PUSH is **not** auto-added by the event consumer — only when `channels` includes `PUSH`.
 
 ## Rules
 

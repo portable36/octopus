@@ -76,6 +76,13 @@ export class AbandonedCartRecoveryService
       return;
     }
 
+    // Retry-safe: prior successful publish must not create another coupon.
+    const alreadyPublished = await this.hasCartAbandonedOutbox(cartId);
+    if (alreadyPublished) {
+      this.logger.debug(`CartAbandonedEvent already published for ${cartId}; skip recovery.`);
+      return;
+    }
+
     const firstLine = cart.lines[0]!;
     const couponCode = generateRecoveryCouponCode();
     const startsAt = new Date();
@@ -116,6 +123,20 @@ export class AbandonedCartRecoveryService
 
     await this.outboxPublisher.publish(cart.cartId, eventPayload);
     this.logger.log(`Dispatched CartAbandonedEvent for cart ${cartId}.`);
+  }
+
+  private async hasCartAbandonedOutbox(cartId: string): Promise<boolean> {
+    const rows = await this.em.getConnection().execute<{ id: string }[]>(
+      `
+        select id
+        from order_outbox
+        where aggregate_id = ?
+          and event_type = 'CartAbandonedEvent'
+        limit 1
+      `,
+      [cartId],
+    );
+    return rows.length > 0;
   }
 
   private async resolveCartIdForOrder(orderId: string): Promise<string | null> {

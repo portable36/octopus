@@ -929,3 +929,50 @@ export function getSystemOpsAlerts(token?: string): Promise<SystemOpsAlerts> {
     headers: token ? authHeaders(token) : {},
   });
 }
+
+export type AdminBlockedIp = {
+  id: string;
+  ipCidr: string;
+  reason: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function listAdminBlockedIps(token: string): Promise<{ items: AdminBlockedIp[] }> {
+  return apiRequest<{ items: AdminBlockedIp[] }>('/admin/security/blocked-ips', {
+    headers: authHeaders(token),
+  });
+}
+
+export function createAdminBlockedIp(
+  token: string,
+  body: { ipCidr: string; reason?: string; expiresAt?: string },
+): Promise<AdminBlockedIp> {
+  return apiRequest<AdminBlockedIp>('/admin/security/blocked-ips', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body,
+  });
+}
+
+export function updateAdminBlockedIp(
+  token: string,
+  id: string,
+  body: { reason?: string | null; expiresAt?: string | null; isActive?: boolean },
+): Promise<AdminBlockedIp> {
+  return apiRequest<AdminBlockedIp>(`/admin/security/blocked-ips/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body,
+  });
+}
+
+export function deleteAdminBlockedIp(token: string, id: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>(`/admin/security/blocked-ips/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+}

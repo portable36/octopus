@@ -177,4 +177,177 @@ describe('NotificationHandlers', () => {
     expect(result).toEqual({ notificationIds: [], created: false });
     expect(repo.insertIgnoreConflict).not.toHaveBeenCalled();
   });
+
+  it('sends PUSH when active devices exist', async () => {
+    const repo = {
+      findByIdempotency: vi.fn().mockResolvedValue(null),
+      findLatestTemplate: vi.fn().mockResolvedValue(null),
+      insertIgnoreConflict: vi.fn(async (input: { id: string }) => ({
+        ...input,
+        readAt: null,
+      })),
+      appendDeliveryAttempt: vi.fn(),
+      updateDeliveryStatus: vi.fn(),
+      listActivePushDevices: vi.fn().mockResolvedValue([
+        {
+          id: 'd1',
+          userId: 'u1',
+          platform: 'web',
+          token: 'tok-secret',
+          tokenFingerprint: 'fp',
+          label: null,
+          lastSeenAt: new Date(),
+          createdAt: new Date(),
+          revokedAt: null,
+        },
+      ]),
+      getPreferences: vi.fn().mockResolvedValue({
+        userId: 'u1',
+        marketingEmail: false,
+        marketingInApp: false,
+      }),
+    };
+    const push = {
+      send: vi.fn().mockResolvedValue({ providerMessageId: 'p1', deliveredCount: 1 }),
+    };
+    const handlers = new NotificationHandlers(
+      repo as never,
+      { send: vi.fn() } as never,
+      { enqueueEmailDelivery: vi.fn() } as never,
+      undefined,
+      push as never,
+    );
+
+    const result = await handlers.notify({
+      eventId: 'push-1',
+      recipientUserId: 'u1',
+      type: 'fulfillment.shipment_shipped',
+      templateKey: 'fulfillment.shipment_shipped',
+      category: 'TRANSACTIONAL',
+      channels: ['PUSH'],
+      data: { orderNumber: 'O1', courier: 'Pathao', trackingCode: 'T1' },
+    });
+
+    expect(result.created).toBe(true);
+    expect(push.send).toHaveBeenCalledWith(
+      expect.objectContaining({ tokens: ['tok-secret'], title: expect.any(String) }),
+    );
+    expect(repo.appendDeliveryAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: 'PUSH', status: 'SENT' }),
+    );
+    expect(repo.updateDeliveryStatus).toHaveBeenCalledWith(expect.any(String), 'SENT');
+  });
+
+  it('fails PUSH with NO_PUSH_DEVICES when none registered', async () => {
+    const repo = {
+      findByIdempotency: vi.fn().mockResolvedValue(null),
+      findLatestTemplate: vi.fn().mockResolvedValue(null),
+      insertIgnoreConflict: vi.fn(async (input: { id: string }) => ({
+        ...input,
+        readAt: null,
+      })),
+      appendDeliveryAttempt: vi.fn(),
+      updateDeliveryStatus: vi.fn(),
+      countDeliveryAttempts: vi.fn().mockResolvedValue(0),
+      listActivePushDevices: vi.fn().mockResolvedValue([]),
+      getPreferences: vi.fn().mockResolvedValue({
+        userId: 'u1',
+        marketingEmail: false,
+        marketingInApp: false,
+      }),
+    };
+    const push = { send: vi.fn() };
+    const handlers = new NotificationHandlers(
+      repo as never,
+      { send: vi.fn() } as never,
+      { enqueueEmailDelivery: vi.fn() } as never,
+      undefined,
+      push as never,
+    );
+
+    await handlers.notify({
+      eventId: 'push-2',
+      recipientUserId: 'u1',
+      type: 'fulfillment.shipment_shipped',
+      templateKey: 'fulfillment.shipment_shipped',
+      category: 'TRANSACTIONAL',
+      channels: ['PUSH'],
+      data: { orderNumber: 'O1', courier: 'Pathao', trackingCode: 'T1' },
+    });
+
+    expect(push.send).not.toHaveBeenCalled();
+    expect(repo.appendDeliveryAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: 'PUSH', status: 'FAILED', errorCode: 'NO_PUSH_DEVICES' }),
+    );
+  });
+
+  it('upserts push devices by fingerprint and omits tokens from list', async () => {
+    const upsertPushDevice = vi
+      .fn()
+      .mockResolvedValueOnce({
+        id: 'd1',
+        userId: 'u1',
+        platform: 'android',
+        token: 'same-token',
+        tokenFingerprint: 'abc',
+        label: 'phone',
+        lastSeenAt: new Date('2026-01-01T00:00:00.000Z'),
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        revokedAt: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'd1',
+        userId: 'u1',
+        platform: 'android',
+        token: 'same-token',
+        tokenFingerprint: 'abc',
+        label: 'phone',
+        lastSeenAt: new Date('2026-01-02T00:00:00.000Z'),
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        revokedAt: null,
+      });
+    const listActivePushDevices = vi.fn().mockResolvedValue([
+      {
+        id: 'd1',
+        userId: 'u1',
+        platform: 'android',
+        token: 'same-token',
+        tokenFingerprint: 'abc',
+        label: 'phone',
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+        revokedAt: null,
+      },
+    ]);
+    const repo = {
+      upsertPushDevice,
+      listActivePushDevices,
+      revokePushDevice: vi.fn(),
+    };
+    const handlers = new NotificationHandlers(
+      repo as never,
+      { send: vi.fn() } as never,
+      { enqueueEmailDelivery: vi.fn() } as never,
+    );
+
+    const first = await handlers.registerPushDevice({
+      userId: 'u1',
+      platform: 'android',
+      token: 'same-token',
+      label: 'phone',
+    });
+    const second = await handlers.registerPushDevice({
+      userId: 'u1',
+      platform: 'android',
+      token: 'same-token',
+      label: 'phone',
+    });
+    expect(first.id).toBe(second.id);
+    expect(upsertPushDevice).toHaveBeenCalledTimes(2);
+
+    const listed = await handlers.listPushDevices('u1');
+    expect(listed).toHaveLength(1);
+    expect(listed[0]).not.toHaveProperty('token');
+    expect(listed[0]).toMatchObject({ id: 'd1', platform: 'android', label: 'phone' });
+  });
 });

@@ -2,8 +2,9 @@
 
 ## Targets
 
-- **Local**: Docker Compose for PostgreSQL, Redis, Meilisearch, MinIO, and backend dev container
-- **Production**: immutable container images, rolling or blue/green deploys, separate worker processes for queues
+- **Local**: Docker Compose for PostgreSQL, Redis, Meilisearch, MinIO, and backend dev container (`docker-compose.yml`)
+- **Production / staging matrix**: root `Dockerfile` + `docker-compose.prod.yml` (API, SEO worker, storefront, Postgres, Redis)
+- **Production (hosted)**: immutable container images, rolling or blue/green deploys, separate worker processes for queues
 
 ## Components
 
@@ -33,6 +34,20 @@ Internet -> reverse proxy / TLS termination
 
 Separate liveness and readiness probes. Readiness includes PostgreSQL and Redis when required for serving traffic.
 
+## Origin nginx (API / SEO)
+
+Origin reverse proxy config: [`deploy/nginx/nginx.conf`](../../deploy/nginx/nginx.conf).
+
+| Setting | Value |
+| --- | --- |
+| Upstream | `127.0.0.1:3000` (Nest `PORT` default; change if API listens on 4000 in Compose prod) |
+| Gzip | `text/xml`, `application/xml`, `application/json` (+ common text types) |
+| Security headers | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, strict API CSP (`default-src 'none'; frame-ancestors 'none'`) |
+| Rate limit | `limit_req` on `/api/` only — 10 r/s, burst 20; sitemaps/robots exempt |
+| Proxied paths | `/api/`, `/sitemap.xml`, `/sitemaps/`, `/robots.txt`; other paths return 444 |
+
+Set Nest `TRUST_PROXY_HOPS` so `req.ip` / IP-block middleware see the real client: **1** behind nginx only, **2** behind Cloudflare + nginx (see [`.env.example`](../../.env.example)).
+
 ## CI (Phase 27.1)
 
 Pull requests and `main` run `.github/workflows/ci.yml`:
@@ -40,9 +55,58 @@ Pull requests and `main` run `.github/workflows/ci.yml`:
 1. `validate` job — Postgres 18 + Redis 8 services, `npm run validate` (format → lint → typecheck → architecture → tests → env contract → security → migration apply → build).
 2. `e2e` job — Playwright Chromium against a built frontend (after validate).
 
+Pushes to `main` also run `.github/workflows/deploy.yml` — the production-path **gate + build** workflow (Node.js **22**, npm cache, format → typecheck → architecture → tests → `build:backend` / `build:frontend`). It does not SSH, push images, or migrate production yet (Phase 28 / ops). **This workflow needs zero GitHub Actions secrets today** (ephemeral Postgres/Redis + placeholder env in the job).
+
+### Repository secrets (SSH image deploy)
+
+When CD is wired to pull/build images and deploy over SSH, add these under **Settings → Secrets and variables → Actions**:
+
+**SSH (required for remote deploy)**
+
+- [ ] `DEPLOY_SSH_HOST` — production host hostname or IP
+- [ ] `DEPLOY_SSH_USER` — deploy user on the host
+- [ ] `DEPLOY_SSH_PRIVATE_KEY` — private key (ed25519/RSA) paired with `authorized_keys` on the host
+- [ ] `DEPLOY_SSH_PORT` — only if SSH is not on port 22
+
+**Runtime / data plane (host env or injected by CD — never commit)**
+
+- [ ] `DATABASE_URL` — production Postgres
+- [ ] `REDIS_URL` — production Redis
+- [ ] `JWT_SECRET` / `JWT_SECRET_PREVIOUS` — access-token signing (≥32 chars; rotation overlap)
+- [ ] `MEILISEARCH_HOST` / `MEILISEARCH_API_KEY`
+- [ ] `S3_ENDPOINT` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_BUCKET`
+- [ ] `CORS_ORIGINS` — production storefront/admin origins (no `*`)
+
+**Optional later**
+
+- [ ] `DOCKER_REGISTRY` / `DOCKER_USERNAME` / `DOCKER_PASSWORD` (or use `GITHUB_TOKEN` for GHCR)
+- [ ] `SENTRY_AUTH_TOKEN` / `SENTRY_DSN` — release + source maps
+- [ ] Payment / courier secrets — runtime host only, not required for gate+build Actions
+
+## Production Compose matrix
+
+Full local/staging stack from the monorepo root image:
+
+| Artifact | Role |
+| --- | --- |
+| Root [`Dockerfile`](../../Dockerfile) | Multi-stage `node:22-alpine` image (`octopus:prod`): builds backend + frontend, prunes devDependencies, runs as `USER node`, exposes **4000** (API) and **3000** (storefront) |
+| [`docker-compose.prod.yml`](../../docker-compose.prod.yml) | `backend-api`, `seo-worker` (same image, `npm run start:seo-worker -w backend`), `frontend-store`, plus healthy `postgres` / `redis` volumes (Meilisearch + MinIO kept as required deps) |
+
+```bash
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml logs -f backend-api seo-worker frontend-store
+```
+
+Smoke: `http://localhost:4000/api/v1/health/live` and `http://localhost:3000`.
+
+`backend-api` waits for PostgreSQL and Redis **healthy** before start. Storefront `PORT=3000`; API `PORT=4000`.
+
+Lean API-only drill image remains [`backend/Dockerfile`](../../backend/Dockerfile) (see deploy drill below).
+
 ## Deployment strategies (Phase 27.2)
 
-Policy for when a container platform / CD exists. Image build source: `backend/Dockerfile` (API). Frontend deploys as its own immutable artifact (e.g. Next standalone or static host). Workers share the API image with a different process command when separated.
+Policy for when a container platform / CD exists. **Primary image:** root `Dockerfile` (API + storefront artifacts + workers). Workers share that image with a different process command. `backend/Dockerfile` is the lean API-only path for drills.
 
 | Strategy           | Octopus default                                                                                                   |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -55,10 +119,10 @@ Policy for when a container platform / CD exists. Image build source: `backend/D
 ### Ordered deploy sequence
 
 ```text
-build image (backend/Dockerfile)
+build image (root Dockerfile → octopus:prod)
 → registry push + vulnerability scan (ops)
 → apply additive / expand migrations
-→ rolling (or blue/green) deploy API + workers
+→ rolling (or blue/green) deploy API + workers + storefront
 → readiness (Postgres + Redis) + smoke
 → monitor (errors, queue lag, payment/checkout)
 ```

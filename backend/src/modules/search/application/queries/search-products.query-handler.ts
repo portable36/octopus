@@ -33,7 +33,12 @@ export class SearchProductsQueryHandler {
 
     const trimmedQuery = query.q?.trim();
     if (trimmedQuery && result.estimatedTotal === 0) {
-      void this.searchSynonyms.recordZeroResultQuery(trimmedQuery).catch(() => undefined);
+      // Await so the request-scoped EM/TX finishes before RequestContext tears down.
+      try {
+        await this.searchSynonyms.recordZeroResultQuery(trimmedQuery);
+      } catch {
+        // Synonym analytics must not fail search responses.
+      }
     }
 
     return { ...result, hits };

@@ -226,10 +226,16 @@ export async function submitCheckout(input: {
 const CHECKOUT_OUTCOME_KEY = 'octopus.checkoutOutcome';
 
 export function stashCheckoutOutcome(outcome: CheckoutOutcome): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.sessionStorage.setItem(CHECKOUT_OUTCOME_KEY, JSON.stringify(outcome));
 }
 
 export function readStashedCheckoutOutcome(): CheckoutOutcome | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
   const raw = window.sessionStorage.getItem(CHECKOUT_OUTCOME_KEY);
   if (!raw) {
     return null;

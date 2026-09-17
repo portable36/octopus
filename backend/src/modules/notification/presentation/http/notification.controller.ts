@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -10,12 +11,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import {
   CurrentUser,
   type RequestPrincipal,
 } from '../../../../shared-kernel/presentation/http/current-user.decorator';
 import { NotificationHandlers } from '../../application/commands/notification.handlers';
+import type { PushPlatform } from '../../domain/notification.types';
 
 class UpdateNotificationPreferencesDto {
   @IsOptional()
@@ -25,6 +27,21 @@ class UpdateNotificationPreferencesDto {
   @IsOptional()
   @IsBoolean()
   marketingInApp?: boolean;
+}
+
+class RegisterPushDeviceDto {
+  @IsIn(['web', 'android', 'ios'])
+  platform!: PushPlatform;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(4096)
+  token!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  label?: string;
 }
 
 @ApiTags('notifications')
@@ -79,6 +96,45 @@ export class NotificationController {
       marketingEmail: prefs.marketingEmail,
       marketingInApp: prefs.marketingInApp,
     };
+  }
+
+  @Post('devices')
+  @ApiOperation({ summary: 'Register or refresh a push device token (upsert by fingerprint)' })
+  async registerDevice(@CurrentUser() user: RequestPrincipal, @Body() body: RegisterPushDeviceDto) {
+    const device = await this.notifications.registerPushDevice({
+      userId: user.userId,
+      platform: body.platform,
+      token: body.token,
+      label: body.label ?? null,
+    });
+    return {
+      id: device.id,
+      platform: device.platform,
+      label: device.label,
+      lastSeenAt: device.lastSeenAt.toISOString(),
+      createdAt: device.createdAt.toISOString(),
+    };
+  }
+
+  @Get('devices')
+  @ApiOperation({ summary: 'List active push devices for the current user (no raw tokens)' })
+  async listDevices(@CurrentUser() user: RequestPrincipal) {
+    const devices = await this.notifications.listPushDevices(user.userId);
+    return {
+      items: devices.map((device) => ({
+        id: device.id,
+        platform: device.platform,
+        label: device.label,
+        lastSeenAt: device.lastSeenAt.toISOString(),
+        createdAt: device.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  @Delete('devices/:deviceId')
+  @ApiOperation({ summary: 'Revoke a push device for the current user' })
+  async revokeDevice(@CurrentUser() user: RequestPrincipal, @Param('deviceId') deviceId: string) {
+    return this.notifications.revokePushDevice(user.userId, deviceId);
   }
 
   @Post(':id/read')

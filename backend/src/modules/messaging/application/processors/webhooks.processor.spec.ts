@@ -58,11 +58,14 @@ describe('WebhooksProcessor', () => {
     });
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchImpl.mock.calls[0]!;
+    const call = fetchImpl.mock.calls.at(0) as unknown as [string, RequestInit] | undefined;
+    expect(call).toBeDefined();
+    const [url, init] = call!;
     expect(url).toBe('https://hooks.example.com/octopus');
     expect(init.method).toBe('POST');
-    expect(init.headers['x-octopus-signature']).toMatch(/^[a-f0-9]{64}$/);
-    expect(init.headers['x-octopus-event']).toBe('OrderPaid');
+    const headers = init.headers as Record<string, string>;
+    expect(headers['x-octopus-signature']).toMatch(/^[a-f0-9]{64}$/);
+    expect(headers['x-octopus-event']).toBe('OrderPaid');
     expect(JSON.parse(init.body as string).aggregateId).toBe('ord-2');
   });
 

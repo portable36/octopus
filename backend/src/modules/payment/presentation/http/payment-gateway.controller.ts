@@ -24,6 +24,7 @@ import {
   assertPaymentWebhookIntegrity,
   parseWebhookTimestampSec,
 } from './payment-webhook-integrity';
+import { assertSslCommerzIpnSign } from '../../infrastructure/gateways/sslcommerz-verify-sign';
 
 @ApiTags('payments-gateways')
 @Controller('payments/gateways')
@@ -125,6 +126,10 @@ export class PaymentGatewayController {
     }
     const payload = { ...(query || {}), ...(body || {}) };
     this.assertIpnIntegrity(req, payload);
+    assertSslCommerzIpnSign({
+      payload,
+      storePasswd: this.appConfig?.sslCommerzStorePasswd,
+    });
     const res = await this.callbackHandler.execute({
       provider: 'SSLCOMMERZ',
       payload,

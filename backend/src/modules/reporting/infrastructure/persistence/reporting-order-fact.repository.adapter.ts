@@ -17,6 +17,7 @@ import type {
   TrendDataPoint,
   VendorPerformanceRow,
 } from '../../application/ports/reporting-order-fact-repository.interface';
+import { countUniqueCustomers } from '../../domain/count-unique-customers';
 import { ReportingOrderFactOrmEntity } from './reporting-order-fact.orm-entity';
 import { ReportingOrderItemFactOrmEntity } from './reporting-order-item-fact.orm-entity';
 import { ReportingRefundFactOrmEntity } from './reporting-refund-fact.orm-entity';
@@ -415,6 +416,7 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
         currencies: sortedCurrencies(byCurrency),
         orderCount,
         paidOrderCount,
+        uniqueCustomerCount: countUniqueCustomers(rows),
         revenueMinor,
         commissionMinor,
         aovMinor,
@@ -458,6 +460,7 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
         currencies: sortedCurrencies(byCurrency),
         orderCount,
         paidOrderCount,
+        uniqueCustomerCount: countUniqueCustomers(rows),
         revenueMinor,
         commissionMinor,
         aovMinor,

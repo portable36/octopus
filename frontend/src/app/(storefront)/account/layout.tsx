@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/account/addresses', label: 'Addresses' },
   { href: '/account/orders', label: 'Orders' },
   { href: '/account/wishlist', label: 'Wishlist' },
+  { href: '/account/notifications', label: 'Notifications' },
 ] as const;
 
 export default function AccountLayout({ children }: { readonly children: ReactNode }) {

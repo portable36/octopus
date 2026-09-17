@@ -79,7 +79,7 @@ Partial/full refunds; uncollected COD and unpaid gateway intents are refused. `R
 
 Provider callbacks are untrusted external input. Every callback must:
 
-- verify signature/authenticity where supported
+- verify signature/authenticity where supported (SSLCommerz IPN: `verify_sign` MD5 via `assertSslCommerzIpnSign` when `SSLCOMMERZ_STORE_PASSWD` is set; optional `PAYMENT_IPN_HMAC_SECRET`)
 - validate schema and idempotency
 - match amount, currency, and order/payment reference
 - apply state transition inside a transaction

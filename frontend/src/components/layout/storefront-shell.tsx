@@ -8,6 +8,7 @@ import { GoogleTagManager } from '@/components/marketing/GoogleTagManager';
 import { TrackingService } from '@/components/marketing/tracking-service';
 import { AccountNavLink } from '@/components/storefront/account-nav-link';
 import { CartNavLink } from '@/components/storefront/cart-nav-link';
+import { NotificationBell } from '@/components/storefront/notification-bell';
 import { getPublicAppName } from '@/lib/env';
 import {
   DEFAULT_THEME_SETTINGS,
@@ -173,6 +174,7 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             ))}
           </nav>
           <div className="sf-actions">
+            <NotificationBell />
             <AccountNavLink />
             <CartNavLink />
           </div>

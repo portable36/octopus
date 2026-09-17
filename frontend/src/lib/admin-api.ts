@@ -705,6 +705,7 @@ export type AdminScopedAnalyticsSummary = {
   currencies: AdminOrderReportCurrency[];
   orderCount: number;
   paidOrderCount: number;
+  uniqueCustomerCount: number;
   revenueMinor: number;
   commissionMinor: number;
   aovMinor: number;
@@ -975,4 +976,78 @@ export function deleteAdminBlockedIp(token: string, id: string): Promise<{ ok: b
     method: 'DELETE',
     headers: authHeaders(token),
   });
+}
+
+export type AdminNotificationTemplate = {
+  id: string;
+  templateKey: string;
+  channel: string;
+  locale: string;
+  version: number;
+  subject: string | null;
+};
+
+export type AdminNotificationDelivery = {
+  id: string;
+  eventId: string;
+  recipientUserId: string;
+  recipientEmailMasked: string | null;
+  notificationType: string;
+  channel: string;
+  locale: string;
+  templateKey: string;
+  templateVersion: number;
+  title: string;
+  deliveryStatus: string;
+  createdAt: string;
+};
+
+export type AdminNotificationAttempt = {
+  id: string;
+  notificationId: string;
+  channel: string;
+  attemptNumber: number;
+  status: string;
+  providerMessageId: string | null;
+  errorCode: string | null;
+  createdAt: string;
+};
+
+export function listAdminNotificationTemplates(
+  token: string,
+): Promise<{ items: AdminNotificationTemplate[] }> {
+  return apiRequest<{ items: AdminNotificationTemplate[] }>('/admin/notifications/templates', {
+    headers: authHeaders(token),
+  });
+}
+
+export function listAdminNotificationDeliveries(
+  token: string,
+  query?: {
+    limit?: number;
+    channel?: string;
+    deliveryStatus?: string;
+    templateKey?: string;
+  },
+): Promise<{ items: AdminNotificationDelivery[] }> {
+  const params = new URLSearchParams();
+  if (query?.limit != null) params.set('limit', String(query.limit));
+  if (query?.channel) params.set('channel', query.channel);
+  if (query?.deliveryStatus) params.set('deliveryStatus', query.deliveryStatus);
+  if (query?.templateKey) params.set('templateKey', query.templateKey);
+  const qs = params.toString();
+  return apiRequest<{ items: AdminNotificationDelivery[] }>(
+    `/admin/notifications${qs ? `?${qs}` : ''}`,
+    { headers: authHeaders(token) },
+  );
+}
+
+export function listAdminNotificationAttempts(
+  token: string,
+  notificationId: string,
+): Promise<{ items: AdminNotificationAttempt[] }> {
+  return apiRequest<{ items: AdminNotificationAttempt[] }>(
+    `/admin/notifications/${encodeURIComponent(notificationId)}/attempts`,
+    { headers: authHeaders(token) },
+  );
 }

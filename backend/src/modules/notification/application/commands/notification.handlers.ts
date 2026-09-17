@@ -344,6 +344,23 @@ export class NotificationHandlers implements NotificationPort {
     return { ok: true as const };
   }
 
+  public async listTemplatesForAdmin() {
+    return this.repo.listTemplates();
+  }
+
+  public async listRecentForAdmin(filter: {
+    readonly limit: number;
+    readonly channel?: NotificationChannel;
+    readonly deliveryStatus?: 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED';
+    readonly templateKey?: string;
+  }) {
+    return this.repo.listRecentForAdmin(filter);
+  }
+
+  public async listDeliveryAttemptsForAdmin(notificationId: string) {
+    return this.repo.listDeliveryAttempts(notificationId);
+  }
+
   private async filterChannelsByPreference(
     command: NotifyCommand,
   ): Promise<readonly NotificationChannel[]> {

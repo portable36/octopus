@@ -1172,7 +1172,15 @@ Prefer **OSS/free**: SMTP (or console stub in dev); SMS/push adapters stubbed un
 
 ### Deferred
 
-- Marketing campaigns · abandoned cart · full admin notification center UI · provider webhooks · Firebase unless free tier chosen explicitly
+- Marketing campaigns · abandoned cart · provider webhooks · Firebase unless free tier chosen explicitly
+- Customer inbox UI: shipped under Phase **18.8** (storefront bell + `/account/notifications`)
+- Admin notification center (read-only): shipped under Phase **17.4** (`/admin/system/notifications` + `GET /admin/notifications*`)
+
+### 17.4 — Admin notification center (read-only)
+
+- [x] `GET /admin/notifications/templates` · `GET /admin/notifications` · `GET /admin/notifications/:id/attempts` (`settings.read`)
+- [x] Admin UI: queue health (`octopus.email` / `octopus.notification`), templates table, recent deliveries + attempts
+- [x] Recipient email masked in admin list responses
 
 ### Rules
 
@@ -1231,8 +1239,14 @@ Gap analysis (full engine vs repo): [engineering/seo-gap-analysis.md](./engineer
 
 ### Deferred (not Phase 18 blockers)
 
-- In-app notifications (Phase 17) · flash/best-seller engines · WebSockets
+- flash/best-seller engines · WebSockets
 - Full SEO center (keywords, health scanner, opportunities, AI drafts) — see seo-gap-analysis P2–P5 / marketing M8
+
+### 18.8 — Customer in-app notifications (Phase 17 APIs)
+
+- [x] Storefront header bell (unread badge) → `/account/notifications`
+- [x] Inbox list + mark-read over `GET /notifications` / `POST /notifications/:id/read`
+- [x] Marketing prefs toggles (`GET`/`PATCH /notifications/preferences`)
 
 ### 18.7 — Wishlist & product reviews
 
@@ -1366,8 +1380,8 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 - [x] Sales
 - [x] Orders rollup
 - [x] Revenue charts
-- [ ] Customers
-- [ ] Inventory
+- [x] Customers (30d unique buyers from reporting overview)
+- [x] Inventory (low/out-of-stock alert count across stores)
 - [x] Payouts (request UI) — manage stays platform
 
 ### Catalog
@@ -1405,8 +1419,8 @@ Vendor finance depth over **existing** ledger/payout APIs (session auth). Route:
 ### Multi-Store
 
 - [x] Store switcher (19.1)
-- [ ] Store permissions UX
-- [ ] Store-specific catalog
+- [x] Store permissions UX (staff add/remove on store detail Staff tab)
+- [x] Store-specific catalog (`/stores/:storeId/catalog` offers + activate/suspend)
 - [x] Store inventory
 - [x] Store reports
 
@@ -1841,7 +1855,7 @@ Perform a dedicated security pass.
 - Slice **25.2** — global `PermissionsGuard` + `@RequirePermissions` on admin HTTP; new `platform.*` read/reindex permissions; reject `CORS_ORIGINS=*`.
 - Slice **25.3** — SSRF outbound allowlist on courier clients; JWT previous-secret rotation; webhook HMAC/timestamp helpers; output encoding (JSON-LD); secrets/rotation docs.
 - Slice **25.4** — opt-in TOTP MFA (`/auth/mfa/*`); login returns `mfaRequired` when enabled; storefront MFA step.
-- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. S3 Range-GET magic re-verify shipped via media quarantine worker. Manual IP denylist (`blocked_ips` + `IpBlockMiddleware` + admin Security CRUD). **Still open:** provider-native signature schemes (SSLCommerz verify_sign MD5).
+- Slice **25.5** — media magic-byte prefix on register; Redis `API_RATE_LIMITER` on checkout/search; platform admin MFA gate on `platform.*` permissions. Payment IPN HMAC/timestamp wired via `PAYMENT_IPN_HMAC_SECRET` on SSLCommerz IPN + bKash SNS. S3 Range-GET magic re-verify shipped via media quarantine worker. Manual IP denylist (`blocked_ips` + `IpBlockMiddleware` + admin Security CRUD). SSLCommerz provider-native `verify_sign` (MD5) enforced on IPN when `SSLCOMMERZ_STORE_PASSWD` is set.
 - [x] commit push
 
 ---

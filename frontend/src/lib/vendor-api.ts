@@ -8,6 +8,14 @@ export type VendorSummary = {
   ownerUserId: string;
 };
 
+export type StoreStaffRole = 'STORE_MANAGER' | 'STORE_STAFF';
+
+export type StoreStaffMember = {
+  userId: string;
+  role: StoreStaffRole | string;
+  addedAt: string;
+};
+
 export type StoreSummary = {
   id: string;
   vendorId: string;
@@ -30,6 +38,7 @@ export type StoreSummary = {
     acceptsOnlineOrders?: boolean;
     codEnabled?: boolean;
   };
+  staff?: readonly StoreStaffMember[];
 };
 
 export type VendorFinanceSummary = {
@@ -254,6 +263,27 @@ export function getVendorStore(storeId: string): Promise<StoreSummary> {
   return authedRequest<StoreSummary>(`/stores/${encodeURIComponent(storeId)}`);
 }
 
+export function addVendorStoreStaff(
+  storeId: string,
+  userId: string,
+  role: StoreStaffRole,
+): Promise<StoreSummary> {
+  return authedRequest<StoreSummary>(`/stores/${encodeURIComponent(storeId)}/staff`, {
+    method: 'POST',
+    body: { userId, role },
+  });
+}
+
+export function removeVendorStoreStaff(
+  storeId: string,
+  staffUserId: string,
+): Promise<StoreSummary> {
+  return authedRequest<StoreSummary>(
+    `/stores/${encodeURIComponent(storeId)}/staff/${encodeURIComponent(staffUserId)}`,
+    { method: 'DELETE' },
+  );
+}
+
 export function createVendorStore(input: {
   vendorId: string;
   displayName: string;
@@ -357,9 +387,7 @@ export type CourierAccountStatus = {
 };
 
 export function listVendorCourierAccounts(vendorId: string): Promise<CourierAccountStatus[]> {
-  return authedRequest<CourierAccountStatus[]>(
-    `/fulfillment/vendors/${vendorId}/courier-accounts`,
-  );
+  return authedRequest<CourierAccountStatus[]>(`/fulfillment/vendors/${vendorId}/courier-accounts`);
 }
 
 export function upsertVendorCourierAccount(
@@ -857,6 +885,7 @@ export type ScopedSalesAnalytics = {
   readonly aovMinor: number;
   readonly orderCount: number;
   readonly paidOrderCount: number;
+  readonly uniqueCustomerCount: number;
   readonly revenueMinor: number;
   readonly commissionMinor: number;
   readonly currencies: readonly {

@@ -78,6 +78,8 @@ export type ScopedAnalyticsSummary = {
   readonly currencies: readonly ScopeReportCurrencyBucket[];
   readonly orderCount: number;
   readonly paidOrderCount: number;
+  /** Distinct non-null customerId values in the analytics window. */
+  readonly uniqueCustomerCount: number;
   readonly revenueMinor: number;
   readonly commissionMinor: number;
   readonly aovMinor: number;

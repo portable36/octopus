@@ -51,12 +51,13 @@ Opt-in authenticator MFA (`POST /auth/mfa/setup` → `enable`; `disable` with pa
 
 ## Webhook helpers
 
-Shared utilities (wire when online gateways land):
+Shared utilities:
 
-- `verifyHmacSha256Hex` — timing-safe HMAC-SHA256
+- `verifyHmacSha256Hex` — timing-safe HMAC-SHA256 (optional `PAYMENT_IPN_HMAC_SECRET` + `x-signature` on IPNs)
 - `assertWebhookTimestampFresh` — ±5m skew / replay window
+- `verifySslCommerzSign` / `assertSslCommerzIpnSign` — SSLCommerz provider-native MD5 `verify_sign` (enforced on `POST …/sslcommerz/ipn` when `SSLCOMMERZ_STORE_PASSWD` is set)
 
-COD has no provider webhook. Online gateway callbacks must use these before mutating payment state.
+COD has no provider webhook. Online gateway callbacks must authenticate before mutating payment state.
 
 ## Secrets
 

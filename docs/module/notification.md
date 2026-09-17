@@ -37,6 +37,21 @@ Identity register / password change
 - `GET /notifications/devices` — list active devices (id/platform/label/timestamps only; no raw tokens)
 - `DELETE /notifications/devices/:deviceId` — revoke
 
+## Storefront UI (Phase 18.8)
+
+- Header **Alerts** bell (authenticated only) with unread badge → `/account/notifications`
+- Account inbox: list, mark-read, marketing email / in-app preference toggles
+- Client: `frontend/src/lib/notifications-api.ts`
+
+## Admin notification center (Phase 17.4)
+
+Read-only ops hub at `/admin/system/notifications` (`settings.read`):
+
+- `GET /admin/notifications/templates`
+- `GET /admin/notifications` (filters: channel, deliveryStatus, templateKey; email masked)
+- `GET /admin/notifications/:id/attempts`
+- Queue cards reuse `/health/diagnostics` for `octopus.email` / `octopus.notification`
+
 ## Wired events (17.2)
 
 | Event                      | Template                                        |

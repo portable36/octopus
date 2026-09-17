@@ -39,6 +39,27 @@ describe('PaymentGatewayController', () => {
     expect(res.status).toBe('CAPTURED');
   });
 
+  it('rejects sslcommerz ipn when store passwd is set and verify_sign is invalid', async () => {
+    const secured = new PaymentGatewayController(mockHandler as never, undefined, {
+      sslCommerzStorePasswd: 'store-secret',
+    } as never);
+    const req = { ip: '127.0.0.1', headers: {} } as never;
+    await expect(
+      secured.handleSslCommerzIpn(
+        req,
+        {
+          tran_id: 'intent-bad',
+          status: 'VALID',
+          verify_key: 'status,tran_id',
+          verify_sign: '00'.repeat(16),
+        },
+        {},
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'SSLCOMMERZ_VERIFY_SIGN_INVALID' }),
+    });
+  });
+
   it('routes bkash callback correctly', async () => {
     const req = { ip: '127.0.0.1' } as never;
     const query = { paymentIntentId: 'intent-bkash' };

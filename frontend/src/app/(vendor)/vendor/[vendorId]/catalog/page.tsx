@@ -37,6 +37,7 @@ export default function VendorCatalogPage() {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [offeredOnly, setOfferedOnly] = useState(false);
 
   const offersByProductId = useMemo(() => {
     const map = new Map<string, StoreOffer>();
@@ -45,6 +46,14 @@ export default function VendorCatalogPage() {
     }
     return map;
   }, [storeOffers]);
+
+  const visibleProducts = useMemo(() => {
+    const rows = products ?? [];
+    if (!offeredOnly || !storeId) {
+      return rows;
+    }
+    return rows.filter((product) => offersByProductId.has(product.id));
+  }, [products, offeredOnly, storeId, offersByProductId]);
 
   useEffect(() => {
     const sync = () => setStoreId(getSelectedStoreId());
@@ -82,7 +91,7 @@ export default function VendorCatalogPage() {
     return () => {
       cancelled = true;
     };
-  }, [reload]);
+  }, [reload, storeId]);
 
   async function onAddProduct() {
     setPending(true);
@@ -124,7 +133,24 @@ export default function VendorCatalogPage() {
         <p className="text-sm text-muted-foreground">
           Select a store in the header to see offer status in the list.
         </p>
-      ) : null}
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={offeredOnly}
+              onChange={(e) => setOfferedOnly(e.target.checked)}
+            />
+            Offered in selected store only
+          </label>
+          <Link
+            href={`/vendor/${vendorId}/stores/${storeId}/catalog`}
+            className="text-sm underline underline-offset-4"
+          >
+            Open store catalog
+          </Link>
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-md border border-border bg-background">
         <table className="min-w-full text-left text-sm">
@@ -139,14 +165,16 @@ export default function VendorCatalogPage() {
             </tr>
           </thead>
           <tbody>
-            {(products ?? []).length === 0 ? (
+            {visibleProducts.length === 0 ? (
               <tr>
                 <td className="px-3 py-4 text-muted-foreground" colSpan={storeId ? 6 : 5}>
-                  No products yet. Click Add product to start a draft.
+                  {offeredOnly
+                    ? 'No products with an offer in the selected store.'
+                    : 'No products yet. Click Add product to start a draft.'}
                 </td>
               </tr>
             ) : (
-              (products ?? []).map((product) => {
+              visibleProducts.map((product) => {
                 const offer = offersByProductId.get(product.id);
                 return (
                   <tr key={product.id} className="border-b border-border last:border-0">

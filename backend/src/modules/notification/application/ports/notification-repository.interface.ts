@@ -41,12 +41,31 @@ export type UpsertPushDeviceInput = {
   readonly label?: string | null;
 };
 
+export type NotificationDeliveryAttempt = {
+  readonly id: string;
+  readonly notificationId: string;
+  readonly channel: NotificationChannel;
+  readonly attemptNumber: number;
+  readonly status: 'SENT' | 'FAILED';
+  readonly providerMessageId: string | null;
+  readonly errorCode: string | null;
+  readonly createdAt: Date;
+};
+
+export type AdminNotificationListFilter = {
+  readonly limit: number;
+  readonly channel?: NotificationChannel;
+  readonly deliveryStatus?: DeliveryStatus;
+  readonly templateKey?: string;
+};
+
 export interface NotificationRepository {
   findLatestTemplate(
     templateKey: string,
     channel: NotificationChannel,
     locale: NotificationLocale,
   ): Promise<NotificationTemplate | null>;
+  listTemplates(): Promise<readonly NotificationTemplate[]>;
   findByIdempotency(
     eventId: string,
     recipientUserId: string,
@@ -59,6 +78,10 @@ export interface NotificationRepository {
     userId: string,
     limit: number,
   ): Promise<{ readonly items: readonly NotificationRecord[]; readonly unreadCount: number }>;
+  listRecentForAdmin(
+    filter: AdminNotificationListFilter,
+  ): Promise<readonly NotificationRecord[]>;
+  listDeliveryAttempts(notificationId: string): Promise<readonly NotificationDeliveryAttempt[]>;
   markRead(id: string, userId: string, readAt: Date): Promise<NotificationRecord | null>;
   updateDeliveryStatus(id: string, status: DeliveryStatus): Promise<void>;
   appendDeliveryAttempt(input: {

@@ -23,6 +23,7 @@ import { NotificationPushDeviceOrmEntity } from './infrastructure/persistence/no
 import { NotificationRepositoryAdapter } from './infrastructure/persistence/notification.repository.adapter';
 import { NotificationTemplateOrmEntity } from './infrastructure/persistence/notification-template.orm-entity';
 import { NotificationController } from './presentation/http/notification.controller';
+import { AdminNotificationController } from './presentation/http/admin-notification.controller';
 
 @Global()
 @Module({
@@ -36,7 +37,7 @@ import { NotificationController } from './presentation/http/notification.control
       NotificationPushDeviceOrmEntity,
     ]),
   ],
-  controllers: [NotificationController],
+  controllers: [NotificationController, AdminNotificationController],
   providers: [
     NotificationHandlers,
     NotificationEventConsumer,

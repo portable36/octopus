@@ -180,6 +180,11 @@ export default function AccountProfilePage() {
           <p className="mt-2 text-lg font-semibold">Saved products</p>
           <p className="mt-1 text-sm text-muted-foreground">Items you bookmarked</p>
         </Link>
+        <Link href="/account/notifications" className="sf-panel block hover:border-foreground">
+          <p className="sf-eyebrow">Notifications</p>
+          <p className="mt-2 text-lg font-semibold">Alerts & prefs</p>
+          <p className="mt-1 text-sm text-muted-foreground">Inbox and marketing toggles</p>
+        </Link>
         <Link href="/search" className="sf-panel block hover:border-foreground">
           <p className="sf-eyebrow">Next action</p>
           <p className="mt-2 text-lg font-semibold">Find something new</p>

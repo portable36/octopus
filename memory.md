@@ -39,6 +39,12 @@ generated output, or a transcript of previous chats.
   `notification_push_devices` registry; register/list/revoke under
   `/notifications/devices`. PUSH delivers only when callers include it in
   `channels` (no auto-fan-out). Never log raw device tokens.
+- Customer in-app inbox (Phase 18.8): storefront header Alerts bell +
+  `/account/notifications` (list, mark-read, marketing prefs) via
+  `notifications-api.ts`.
+- Admin notification center (Phase 17.4): `/admin/system/notifications` —
+  templates + recent deliveries + attempts (`GET /admin/notifications*`,
+  `settings.read`); emails masked.
 
 ## Frontend baseline
 

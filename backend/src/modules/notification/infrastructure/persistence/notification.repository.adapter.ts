@@ -14,6 +14,8 @@ import type {
 } from '../../domain/notification.types';
 import type {
   CreateNotificationInput,
+  NotificationDeliveryAttempt,
+  AdminNotificationListFilter,
   NotificationPreferences,
   NotificationRepository,
   UpsertPushDeviceInput,
@@ -40,6 +42,17 @@ export class NotificationRepositoryAdapter implements NotificationRepository {
         { orderBy: { version: 'desc' } },
       );
       return row ? mapTemplate(row) : null;
+    });
+  }
+
+  public async listTemplates(): Promise<readonly NotificationTemplate[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(
+        NotificationTemplateOrmEntity,
+        {},
+        { orderBy: { templateKey: 'asc', channel: 'asc', locale: 'asc', version: 'desc' } },
+      );
+      return rows.map(mapTemplate);
     });
   }
 
@@ -123,6 +136,42 @@ export class NotificationRepositoryAdapter implements NotificationRepository {
         readAt: null,
       });
       return { items: items.map(mapNotification), unreadCount };
+    });
+  }
+
+  public async listRecentForAdmin(
+    filter: AdminNotificationListFilter,
+  ): Promise<readonly NotificationRecord[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const take = Math.min(100, Math.max(1, filter.limit));
+      const where: Record<string, unknown> = {};
+      if (filter.channel) {
+        where.channel = filter.channel;
+      }
+      if (filter.deliveryStatus) {
+        where.deliveryStatus = filter.deliveryStatus;
+      }
+      if (filter.templateKey?.trim()) {
+        where.templateKey = filter.templateKey.trim();
+      }
+      const items = await tx.find(NotificationOrmEntity, where, {
+        orderBy: { createdAt: 'desc' },
+        limit: take,
+      });
+      return items.map(mapNotification);
+    });
+  }
+
+  public async listDeliveryAttempts(
+    notificationId: string,
+  ): Promise<readonly NotificationDeliveryAttempt[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(
+        NotificationDeliveryAttemptOrmEntity,
+        { notificationId },
+        { orderBy: { attemptNumber: 'asc' } },
+      );
+      return rows.map(mapDeliveryAttempt);
     });
   }
 
@@ -314,6 +363,19 @@ function mapTemplate(row: NotificationTemplateOrmEntity): NotificationTemplate {
     version: row.version,
     subject: row.subject,
     bodyText: row.bodyText,
+  };
+}
+
+function mapDeliveryAttempt(row: NotificationDeliveryAttemptOrmEntity): NotificationDeliveryAttempt {
+  return {
+    id: row.id,
+    notificationId: row.notificationId,
+    channel: row.channel as NotificationChannel,
+    attemptNumber: row.attemptNumber,
+    status: row.status as 'SENT' | 'FAILED',
+    providerMessageId: row.providerMessageId,
+    errorCode: row.errorCode,
+    createdAt: row.createdAt,
   };
 }
 

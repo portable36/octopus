@@ -355,8 +355,8 @@ export function StoreWizardStepContent({
     case 14:
       return (
         <p className="text-sm text-muted-foreground">
-          You will be assigned as store manager. Invite additional staff from store settings after
-          activation.
+          You will be assigned as store manager. Invite additional staff from the store Staff tab
+          after activation.
         </p>
       );
     case 15:

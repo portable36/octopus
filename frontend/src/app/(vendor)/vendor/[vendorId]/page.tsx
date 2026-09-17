@@ -8,6 +8,8 @@ import {
   formatVendorMoney,
   getVendor,
   getVendorFinanceSummary,
+  getVendorSalesAnalytics,
+  listStoreLowStockItems,
   listStoresForVendor,
   submitVendorForReview,
   type VendorFinanceSummary,
@@ -23,6 +25,8 @@ export default function VendorDashboardPage() {
   const [vendor, setVendor] = useState<VendorSummary | null>(null);
   const [summary, setSummary] = useState<VendorFinanceSummary | null>(null);
   const [storeCount, setStoreCount] = useState<number | null>(null);
+  const [customerCount, setCustomerCount] = useState<number | null>(null);
+  const [lowStockCount, setLowStockCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [actionPending, setActionPending] = useState(false);
@@ -40,18 +44,35 @@ export default function VendorDashboardPage() {
         if (v.status !== 'active') {
           setSummary(null);
           setStoreCount(null);
+          setCustomerCount(null);
+          setLowStockCount(null);
           return;
         }
-        const [finance, stores] = await Promise.all([
+        const [finance, stores, sales] = await Promise.all([
           getVendorFinanceSummary(vendorId),
           listStoresForVendor(vendorId),
+          getVendorSalesAnalytics(vendorId, 30),
         ]);
         if (cancelled) {
           return;
         }
         setSummary(finance);
         setStoreCount(stores.length);
+        setCustomerCount(sales.uniqueCustomerCount);
         setError(null);
+
+        try {
+          const lowStockLists = await Promise.all(
+            stores.map((store) => listStoreLowStockItems(store.id, 50)),
+          );
+          if (!cancelled) {
+            setLowStockCount(lowStockLists.reduce((sum, rows) => sum + rows.length, 0));
+          }
+        } catch {
+          if (!cancelled) {
+            setLowStockCount(null);
+          }
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof ApiClientError ? err.message : 'Failed to load dashboard.');
@@ -142,6 +163,22 @@ export default function VendorDashboardPage() {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Stores</p>
           <p className="mt-2 text-2xl font-semibold tabular-nums">{storeCount ?? '—'}</p>
         </div>
+        <Link
+          href={`/vendor/${vendorId}/orders`}
+          className="rounded-md border border-border bg-background p-4 hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Customers (30d)</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{customerCount ?? '—'}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Distinct buyers with orders</p>
+        </Link>
+        <Link
+          href={`/vendor/${vendorId}/inventory`}
+          className="rounded-md border border-border bg-background p-4 hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Inventory alerts</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{lowStockCount ?? '—'}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Low / out-of-stock across stores</p>
+        </Link>
         {summary ? (
           <>
             <div className="rounded-md border border-border bg-background p-4">

@@ -350,4 +350,59 @@ describe('NotificationHandlers', () => {
     expect(listed[0]).not.toHaveProperty('token');
     expect(listed[0]).toMatchObject({ id: 'd1', platform: 'android', label: 'phone' });
   });
+
+  it('lists templates and recent deliveries for admin read models', async () => {
+    const listTemplates = vi.fn().mockResolvedValue([
+      {
+        id: 't1',
+        templateKey: 'account.welcome',
+        channel: 'EMAIL',
+        locale: 'en',
+        version: 1,
+        subject: 'Welcome',
+        bodyText: 'Hi',
+      },
+    ]);
+    const listRecentForAdmin = vi.fn().mockResolvedValue([
+      {
+        id: 'n1',
+        eventId: 'e1',
+        recipientUserId: 'u1',
+        recipientEmail: 'a@example.com',
+        notificationType: 'account.welcome',
+        channel: 'EMAIL',
+        locale: 'en',
+        templateKey: 'account.welcome',
+        templateVersion: 1,
+        title: 'Welcome',
+        body: 'Hi',
+        payload: {},
+        deliveryStatus: 'SENT',
+        readAt: null,
+        createdAt: new Date('2026-09-17T00:00:00.000Z'),
+      },
+    ]);
+    const listDeliveryAttempts = vi.fn().mockResolvedValue([
+      {
+        id: 'a1',
+        notificationId: 'n1',
+        channel: 'EMAIL',
+        attemptNumber: 1,
+        status: 'SENT',
+        providerMessageId: null,
+        errorCode: null,
+        createdAt: new Date('2026-09-17T00:00:01.000Z'),
+      },
+    ]);
+    const handlers = new NotificationHandlers(
+      { listTemplates, listRecentForAdmin, listDeliveryAttempts } as never,
+      { send: vi.fn() } as never,
+      { enqueueEmailDelivery: vi.fn() } as never,
+    );
+
+    await expect(handlers.listTemplatesForAdmin()).resolves.toHaveLength(1);
+    await expect(handlers.listRecentForAdmin({ limit: 20 })).resolves.toHaveLength(1);
+    await expect(handlers.listDeliveryAttemptsForAdmin('n1')).resolves.toHaveLength(1);
+    expect(listRecentForAdmin).toHaveBeenCalledWith({ limit: 20 });
+  });
 });

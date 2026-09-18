@@ -250,6 +250,18 @@ function ReturnTimelineDetail() {
           )}
         </div>
 
+        {timeline.returnTrackingCode ? (
+          <div className="rounded-lg border border-border bg-card p-4 text-sm">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Return pickup tracking
+            </p>
+            <p className="mt-1 font-mono text-base font-semibold">{timeline.returnTrackingCode}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Pack the approved items and hand them to the courier using this tracking code.
+            </p>
+          </div>
+        ) : null}
+
         {/* Action bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-xs">
           <div className="flex gap-2">

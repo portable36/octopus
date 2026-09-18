@@ -3,6 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_ssh:
+        description: 'Skip SSH host deploy even if secrets are configured'
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -68,3 +74,110 @@ jobs:
       - run: npm run test
       - run: npm run build:backend
       - run: npm run build:frontend
+
+  publish-image:
+    needs: gate-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image coordinates
+        id: meta
+        run: |
+          OWNER_REPO="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          IMAGE="ghcr.io/${OWNER_REPO}"
+          SHA_TAG="${IMAGE}:${{ github.sha }}"
+          {
+            echo "image=${SHA_TAG}"
+            echo "tags<<EOF"
+            echo "${SHA_TAG}"
+            echo "${IMAGE}:main"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://api.example.com/api/v1' }}
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL || 'https://shop.example.com' }}
+
+      - name: Vulnerability scan (informational)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ steps.meta.outputs.image }}
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+  deploy-ssh:
+    needs: publish-image
+    # Skips automatically when SSH secrets are unset (gate+build+push still run).
+    if: >-
+      secrets.DEPLOY_SSH_HOST != '' &&
+      secrets.DEPLOY_SSH_USER != '' &&
+      secrets.DEPLOY_SSH_PRIVATE_KEY != '' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.skip_ssh != 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Trust host key
+        env:
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+        run: |
+          PORT="${PORT:-22}"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p "${PORT}" -H "${HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload host pull script
+        env:
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+        run: |
+          PORT="${PORT:-22}"
+          scp -P "${PORT}" deploy/host-pull-roll.sh "${USER}@${HOST}:/tmp/octopus-host-pull-roll.sh"
+
+      - name: Pull and roll on host
+        env:
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          IMAGE: ${{ needs.publish-image.outputs.image }}
+          COMPOSE_DIR: ${{ secrets.DEPLOY_COMPOSE_DIR }}
+        run: |
+          PORT="${PORT:-22}"
+          COMPOSE_DIR="${COMPOSE_DIR:-/opt/octopus}"
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "chmod +x /tmp/octopus-host-pull-roll.sh && DEPLOY_COMPOSE_DIR='${COMPOSE_DIR}' /tmp/octopus-host-pull-roll.sh '${IMAGE}'"

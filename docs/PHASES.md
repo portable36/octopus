@@ -948,7 +948,8 @@ RETURNED
 - [x] Pathao Aladdin: OAuth issue/refresh + create order + order info
 - [x] Per-vendor encrypted credentials + Pathao OAuth token store
 - [x] COD: `amount_to_collect` / `cod_amount` from PaymentIntent; on DELIVERED → `confirmCodCollectionFromFulfillment`
-- [ ] Bulk create / returns / price-plan UI (deferred)
+- [x] Bulk create shipments UI (vendor orders multi-select → existing `POST /fulfillment/shipments`)
+- [x] Courier price-plan / rate quote UI (Pathao merchant price-plan + city/zone lists; Steadfast unsupported)
 - [x] Phase 12 status poller worker (Steadfast & Pathao periodic status sync)
 - [x] Inbound courier webhooks (`POST /api/v1/fulfillment/webhooks/steadfast`, `POST /api/v1/fulfillment/webhooks/pathao`)
 
@@ -958,7 +959,7 @@ RETURNED
 - [x] Partial line quantities on shipment
 - [x] Status sync pull (`POST .../sync-status`)
 - [x] Delivery confirmation → COD collect seam
-- [ ] Return shipment (Phase 14)
+- [x] Return shipment (Phase 14)
 
 ---
 
@@ -1018,7 +1019,7 @@ Coordinate via ports/outbox. Do not mutate Payment/Inventory tables from Return 
 - Category/product return policy (platform/vendor/store settings later)
 - Live SSLCommerz/bKash/Nagad refund webhooks
 - Vendor return management UI (Phase 19.4 / vendor portal — shipped)
-- Return courier shipment (MANUAL reverse pickup on approve via `RETURN_PICKUP_PORT` — shipped; live Steadfast/Pathao reverse later)
+- Return courier shipment (MANUAL reverse pickup on approve via `RETURN_PICKUP_PORT` — shipped; vendor/customer tracking surfaces shipped; live Steadfast/Pathao reverse later)
 
 Product baselines: [docs/product/current-baseline.md](./product/current-baseline.md).
 
@@ -1579,10 +1580,10 @@ Third-party tag delivery (GTM/GA4/Meta) is Phase **18.6** — never use GA4 as t
 - [x] Vendor performance
 - [x] Store performance
 - [x] Product performance
-- [ ] Inventory
-- [ ] Customer
+- [x] Inventory (stock health rollup + alerts via inventory report port)
+- [x] Customer (unique buyers + top revenue from order facts)
 - [x] Refund
-- [ ] Payout
+- [x] Payout (status/currency rollup via payout report port)
 
 ### Architecture
 
@@ -1968,11 +1969,11 @@ smoke tests
 monitor
 ```
 
-Ops follow-up (image pipeline / CD not in this repo yet): see [deployment.md](./architecture/deployment.md).
+Ops follow-up (host GHCR login + first compose checkout): see [deployment.md](./architecture/deployment.md).
 
 ### Deployment Strategies
 
-Policy documented in [deployment.md](./architecture/deployment.md); orchestrator automation is Phase 28 / ops.
+Policy documented in [deployment.md](./architecture/deployment.md); host provisioning remains Phase 28 / ops.
 
 - [x] Rolling deployment (default for API + workers)
 - [x] Blue/green where appropriate (optional storefront / edge cutover)
@@ -1983,7 +1984,7 @@ Policy documented in [deployment.md](./architecture/deployment.md); orchestrator
 ### Notes
 
 - Slice **27.1** — PR quality gate synced to existing `ci.yml` (validate + e2e).
-- Slice **27.2** — deployment strategy policy in `docs/architecture/deployment.md` + OPERATIONS pointer. **Still open:** image build/push CD, registry scan, environment deploy (Phase 28 IaC / ops).
+- Slice **27.2** — deployment strategy policy + **GHCR publish** + optional **SSH pull-roll** in `deploy.yml` (`deploy/host-pull-roll.sh`). Host secrets / package visibility still ops.
 - [x] commit push
 
 ---
@@ -2010,15 +2011,14 @@ Policy and env map: [infrastructure.md](./architecture/infrastructure.md). Align
 
 - [x] DNS / TLS (Cloudflare edge policy)
 - [x] Load balancer (Cloudflare proxy as edge; origin reverse proxy on host)
-- [ ] VPC/network (single-VPS model; no AWS VPC — document host firewall in ops when hardened)
-- [ ] PostgreSQL (prod instance)
-- [ ] Redis (prod instance)
-- [ ] Object storage (prod S3-compatible)
-- [ ] Application runtime (prod deploy of API image + Next)
-- [ ] Secrets (host/env secret manager wired in prod)
-- [ ] Monitoring (host + uptime; app OTel already exists)
+- [x] VPC/network (single-VPS firewall policy in [infrastructure.md](./architecture/infrastructure.md) — no AWS VPC)
+- [x] PostgreSQL (prod instance via `docker-compose.prod.yml`)
+- [x] Redis (prod instance via compose)
+- [x] Object storage (MinIO in compose / S3-compatible)
+- [x] Application runtime (GHCR image + compose API / SEO / Next)
+- [x] Secrets (host `.env` / `host.secrets.env` + [`deploy/host.secrets.env.example`](../deploy/host.secrets.env.example); compose `${VAR}` wiring)
+- [x] Monitoring (`deploy/check-health.sh` + compose healthchecks + `/health/*`; external uptime host ops)
 - [ ] Backups (Phase 29)
-
 ### IaC
 
 Chosen:
@@ -2039,7 +2039,8 @@ Never share production secrets with development.
 
 ### Notes
 
-- Slice **28.1** — IaC choice + environment/service map in `docs/architecture/infrastructure.md`. **Still open:** production host provisioning, secrets wiring, monitoring/backups ops (Phases 28 remainder / 29).
+- Slice **28.1** — IaC choice + environment/service map in `docs/architecture/infrastructure.md`.
+- Slice **28.2** — host secrets template + compose `${VAR}` / optional `host.secrets.env`; firewall + uptime probe contract (`deploy/check-health.sh`). **Still open:** fill host secrets on the live VPS; enable automated prod backups (Phase 29); external pager.
 - [x] commit push
 
 ---

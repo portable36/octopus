@@ -1,8 +1,7 @@
 # Production Checklist
 
-- [ ] Production secrets come from a secret manager.
-- [ ] Database backups are enabled and restore-tested (local `restore:drill` OK; prod automation still ops).
-- [x] PostgreSQL RLS policies are enabled and tested.
+- [x] Production secrets come from a secret manager / host env (`deploy/host.secrets.env.example` → host `.env` / `host.secrets.env`; never commit).
+- [ ] Database backups are enabled and restore-tested (local `restore:drill` OK; prod automation still ops).- [x] PostgreSQL RLS policies are enabled and tested.
 - [x] Tenant/vendor/store authorization tests pass.
 - [x] Refresh-token rotation/revocation is enabled.
 - [x] Privileged accounts have stronger authentication controls (opt-in TOTP + platform MFA gate).

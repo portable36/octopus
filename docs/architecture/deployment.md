@@ -55,34 +55,45 @@ Pull requests and `main` run `.github/workflows/ci.yml`:
 1. `validate` job — Postgres 18 + Redis 8 services, `npm run validate` (format → lint → typecheck → architecture → tests → env contract → security → migration apply → build).
 2. `e2e` job — Playwright Chromium against a built frontend (after validate).
 
-Pushes to `main` also run `.github/workflows/deploy.yml` — the production-path **gate + build** workflow (Node.js **22**, npm cache, format → typecheck → architecture → tests → `build:backend` / `build:frontend`). It does not SSH, push images, or migrate production yet (Phase 28 / ops). **This workflow needs zero GitHub Actions secrets today** (ephemeral Postgres/Redis + placeholder env in the job).
+Pushes to `main` (and manual `workflow_dispatch`) run `.github/workflows/deploy.yml`:
+
+1. **gate-and-build** — Node.js **22**, format → typecheck → architecture → tests → `build:backend` / `build:frontend` (ephemeral Postgres/Redis; no repo secrets required).
+2. **publish-image** — build root `Dockerfile`, push to **GHCR** (`ghcr.io/<owner>/<repo>:<sha>` and `:main`) using `GITHUB_TOKEN` (`packages: write`). Optional Trivy scan is informational (`continue-on-error`).
+3. **deploy-ssh** — runs only when `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, and `DEPLOY_SSH_PRIVATE_KEY` are set; SCPs [`deploy/host-pull-roll.sh`](../../deploy/host-pull-roll.sh) and rolls `docker-compose.prod.yml` with `OCTOPUS_IMAGE=<sha tag>`, readiness on `/api/v1/health/ready`, rollback to previous image digest on timeout.
+
+Compose services use `image: ${OCTOPUS_IMAGE:-octopus:prod}` so the host can pull without rebuilding.
 
 ### Repository secrets (SSH image deploy)
 
-When CD is wired to pull/build images and deploy over SSH, add these under **Settings → Secrets and variables → Actions**:
+Configure under **Settings → Secrets and variables → Actions**:
 
-**SSH (required for remote deploy)**
+**SSH (required for remote deploy job)**
 
+- [x] Wired in `deploy.yml` when present: `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PRIVATE_KEY`
 - [ ] `DEPLOY_SSH_HOST` — production host hostname or IP
 - [ ] `DEPLOY_SSH_USER` — deploy user on the host
 - [ ] `DEPLOY_SSH_PRIVATE_KEY` — private key (ed25519/RSA) paired with `authorized_keys` on the host
-- [ ] `DEPLOY_SSH_PORT` — only if SSH is not on port 22
+- [ ] `DEPLOY_SSH_PORT` — optional; defaults to 22
+- [ ] `DEPLOY_COMPOSE_DIR` — optional; defaults to `/opt/octopus` (must contain `docker-compose.prod.yml`)
 
-**Runtime / data plane (host env or injected by CD — never commit)**
+**GHCR**
 
-- [ ] `DATABASE_URL` — production Postgres
-- [ ] `REDIS_URL` — production Redis
-- [ ] `JWT_SECRET` / `JWT_SECRET_PREVIOUS` — access-token signing (≥32 chars; rotation overlap)
-- [ ] `MEILISEARCH_HOST` / `MEILISEARCH_API_KEY`
-- [ ] `S3_ENDPOINT` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_BUCKET`
-- [ ] `CORS_ORIGINS` — production storefront/admin origins (no `*`)
+- [x] `GITHUB_TOKEN` (automatic) — push to `ghcr.io/<owner>/<repo>`
+- Host must `docker login ghcr.io` (read package) for the deploy user / machine identity
 
-**Optional later**
+**Optional Actions variables** (Settings → Variables)
 
-- [ ] `DOCKER_REGISTRY` / `DOCKER_USERNAME` / `DOCKER_PASSWORD` (or use `GITHUB_TOKEN` for GHCR)
-- [ ] `SENTRY_AUTH_TOKEN` / `SENTRY_DSN` — release + source maps
-- [ ] Payment / courier secrets — runtime host only, not required for gate+build Actions
+- [ ] `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_SITE_URL` — baked into the storefront image at build time
 
+**Runtime / data plane (host env — never commit)**
+
+Copy [`deploy/host.secrets.env.example`](../../deploy/host.secrets.env.example) to `/opt/octopus/.env` and/or `host.secrets.env` (`chmod 600`). Compose interpolates `${VAR}`; app services optionally load `host.secrets.env`.
+
+- [x] Template + compose `${VAR}` / optional `env_file` wiring (Phase 28.2)
+- [ ] Host filled: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET` (≥32), `CORS_ORIGINS`
+- [ ] Host filled: `MEILISEARCH_*`, `S3_*`
+- [ ] Payment / courier secrets — runtime host only
+- [ ] `SENTRY_DSN` — optional
 ## Production Compose matrix
 
 Full local/staging stack from the monorepo root image:
@@ -119,17 +130,17 @@ Policy for when a container platform / CD exists. **Primary image:** root `Docke
 ### Ordered deploy sequence
 
 ```text
-build image (root Dockerfile → octopus:prod)
-→ registry push + vulnerability scan (ops)
-→ apply additive / expand migrations
-→ rolling (or blue/green) deploy API + workers + storefront
+build image (root Dockerfile → octopus:prod / GHCR sha tag)
+→ registry push + optional Trivy (deploy.yml publish-image)
+→ apply additive / expand migrations (host / ops)
+→ rolling pull via deploy/host-pull-roll.sh (SSH when secrets set)
 → readiness (Postgres + Redis) + smoke
 → monitor (errors, queue lag, payment/checkout)
 ```
 
 Contract: new app versions must tolerate the current schema; breaking drops wait for a later contract phase after all runners are upgraded.
 
-Image push, registry scan, and environment deploy automation remain Phase 28 / ops (no CD pipeline in-repo yet).
+Image push to GHCR and optional SSH pull-roll are in `.github/workflows/deploy.yml`. Host package visibility (GHCR read) and first-time compose checkout under `DEPLOY_COMPOSE_DIR` remain ops setup.
 
 ## Local deploy / rollback drill (Phase 30)
 

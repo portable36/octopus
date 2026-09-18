@@ -1,14 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
 import type {
+  CourierQuoteCity,
+  CourierQuoteZone,
   CreateCourierConsignmentInput,
   CreateCourierConsignmentResult,
   GetCourierConsignmentStatusInput,
   GetCourierConsignmentStatusResult,
+  QuoteCourierDeliveryInput,
+  QuoteCourierDeliveryResult,
 } from '../../../../shared-kernel/application/ports/courier.port';
 import { resolveAllowedBaseUrl } from '../../../../shared-kernel/infrastructure/security/assert-allowed-outbound-url';
 import { CourierProviderError } from '../../application/errors/fulfillment.errors';
 import { mapPathaoStatus, minorToMajorUnits } from '../../domain/services/courier-status.mapper';
+import { parsePathaoPricePlan } from '../../domain/services/parse-pathao-price-plan';
 import { CourierAccountStore, type PathaoCredentials } from '../persistence/courier-account.store';
 
 @Injectable()
@@ -87,6 +92,75 @@ export class PathaoCourierClient {
       normalizedStatus: mapPathaoStatus(raw),
       rawStatus: raw,
     };
+  }
+
+  public async quoteDelivery(input: QuoteCourierDeliveryInput): Promise<QuoteCourierDeliveryResult> {
+    const creds = await this.requireCreds(input.vendorId);
+    const token = await this.getAccessToken(creds, input.vendorId);
+    const json = await this.authedRequest<{
+      message?: string;
+      data?: {
+        price?: number;
+        discount?: number;
+        final_price?: number;
+      };
+    }>(creds, token, 'POST', '/aladdin/api/v1/merchant/price-plan', {
+      store_id: creds.pathaoStoreId,
+      item_type: input.itemType ?? 2,
+      delivery_type: input.deliveryType ?? 48,
+      item_weight: input.weightKg,
+      recipient_city: input.recipientCityId,
+      recipient_zone: input.recipientZoneId,
+    });
+    if (!json.data) {
+      throw new CourierProviderError(
+        json.message ?? 'Pathao price-plan returned no data.',
+        'PATHAO_PRICE_PLAN_FAILED',
+      );
+    }
+    const parsed = parsePathaoPricePlan(json.data);
+    return {
+      provider: 'PATHAO',
+      currencyCode: parsed.currencyCode,
+      priceMinor: parsed.priceMinor,
+      discountMinor: parsed.discountMinor,
+      finalPriceMinor: parsed.finalPriceMinor,
+    };
+  }
+
+  public async listCities(vendorId: string): Promise<readonly CourierQuoteCity[]> {
+    const creds = await this.requireCreds(vendorId);
+    const token = await this.getAccessToken(creds, vendorId);
+    const json = await this.authedRequest<{
+      data?: { data?: readonly { city_id?: number; city_name?: string }[] };
+    }>(creds, token, 'GET', '/aladdin/api/v1/city-list');
+    const rows = json.data?.data ?? [];
+    return rows
+      .filter(
+        (row): row is { city_id: number; city_name: string } =>
+          typeof row.city_id === 'number' && typeof row.city_name === 'string',
+      )
+      .map((row) => ({ id: row.city_id, name: row.city_name }));
+  }
+
+  public async listZones(vendorId: string, cityId: number): Promise<readonly CourierQuoteZone[]> {
+    const creds = await this.requireCreds(vendorId);
+    const token = await this.getAccessToken(creds, vendorId);
+    const json = await this.authedRequest<{
+      data?: { data?: readonly { zone_id?: number; zone_name?: string }[] };
+    }>(
+      creds,
+      token,
+      'GET',
+      `/aladdin/api/v1/cities/${encodeURIComponent(String(cityId))}/zone-list`,
+    );
+    const rows = json.data?.data ?? [];
+    return rows
+      .filter(
+        (row): row is { zone_id: number; zone_name: string } =>
+          typeof row.zone_id === 'number' && typeof row.zone_name === 'string',
+      )
+      .map((row) => ({ id: row.zone_id, name: row.zone_name }));
   }
 
   private async requireCreds(vendorId: string): Promise<PathaoCredentials> {

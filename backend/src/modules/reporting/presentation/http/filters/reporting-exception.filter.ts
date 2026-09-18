@@ -1,16 +1,26 @@
 import { Catch, ExceptionFilter, ArgumentsHost, HttpStatus } from '@nestjs/common';
-import { ReportingAccessDeniedError } from '../../../application/queries/reporting-query.handler';
+import {
+  ReportingAccessDeniedError,
+  ReportingDependencyMissingError,
+} from '../../../application/queries/reporting-query.handler';
 
-@Catch(ReportingAccessDeniedError)
+@Catch(ReportingAccessDeniedError, ReportingDependencyMissingError)
 export class ReportingExceptionFilter implements ExceptionFilter {
-  catch(exception: ReportingAccessDeniedError, host: ArgumentsHost): void {
+  catch(
+    exception: ReportingAccessDeniedError | ReportingDependencyMissingError,
+    host: ArgumentsHost,
+  ): void {
     const res = host.switchToHttp().getResponse<{
       status: (code: number) => { json: (body: unknown) => void };
     }>();
-    res.status(HttpStatus.FORBIDDEN).json({
+    const status =
+      exception instanceof ReportingDependencyMissingError
+        ? HttpStatus.SERVICE_UNAVAILABLE
+        : HttpStatus.FORBIDDEN;
+    res.status(status).json({
       message: exception.message,
       code: exception.code,
-      status: HttpStatus.FORBIDDEN,
+      status,
     });
   }
 }

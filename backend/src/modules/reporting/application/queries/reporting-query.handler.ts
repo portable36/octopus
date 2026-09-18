@@ -1,5 +1,15 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import {
+  INVENTORY_REPORT,
+  type InventoryReportPort,
+  type InventoryReportSummary,
+} from '../../../../shared-kernel/application/ports/inventory-report.port';
+import {
+  PAYOUT_REPORT,
+  type PayoutReportPort,
+  type PayoutReportSummary,
+} from '../../../../shared-kernel/application/ports/payout-report.port';
+import {
   STORE_ACCESS,
   type StoreAccessPort,
 } from '../../../../shared-kernel/application/ports/store-access.port';
@@ -9,6 +19,7 @@ import {
 } from '../../../../shared-kernel/application/ports/vendor-access.port';
 import {
   REPORTING_ORDER_FACT_REPOSITORY,
+  type CustomerReportSummary,
   type DetailedSalesAnalytics,
   type OrderReportSummary,
   type ProductPerformanceRow,
@@ -27,6 +38,14 @@ export class ReportingAccessDeniedError extends Error {
   }
 }
 
+export class ReportingDependencyMissingError extends Error {
+  readonly code = 'REPORTING_DEPENDENCY_MISSING';
+  constructor(dependency: string) {
+    super(`${dependency} report port is not registered.`);
+    this.name = 'ReportingDependencyMissingError';
+  }
+}
+
 @Injectable()
 export class ReportingQueryHandler {
   constructor(
@@ -38,6 +57,12 @@ export class ReportingQueryHandler {
     @Optional()
     @Inject(STORE_ACCESS)
     private readonly stores?: StoreAccessPort,
+    @Optional()
+    @Inject(INVENTORY_REPORT)
+    private readonly inventoryReport?: InventoryReportPort,
+    @Optional()
+    @Inject(PAYOUT_REPORT)
+    private readonly payoutReport?: PayoutReportPort,
   ) {}
 
   private requirePlatform(actorRoles: readonly string[]): void {
@@ -191,5 +216,33 @@ export class ReportingQueryHandler {
   ): Promise<RefundReportSummary> {
     await this.requireStoreAccess(storeId, actorUserId, actorRoles);
     return this.facts.getRefundAnalytics({ storeId, days });
+  }
+
+  public async customerAnalytics(
+    actorRoles: readonly string[],
+    days = 30,
+    limit = 20,
+  ): Promise<CustomerReportSummary> {
+    this.requirePlatform(actorRoles);
+    return this.facts.getCustomerAnalytics({ days, limit });
+  }
+
+  public async inventoryAnalytics(actorRoles: readonly string[]): Promise<InventoryReportSummary> {
+    this.requirePlatform(actorRoles);
+    if (!this.inventoryReport) {
+      throw new ReportingDependencyMissingError('Inventory');
+    }
+    return this.inventoryReport.summarize(20);
+  }
+
+  public async payoutAnalytics(
+    actorRoles: readonly string[],
+    days = 30,
+  ): Promise<PayoutReportSummary> {
+    this.requirePlatform(actorRoles);
+    if (!this.payoutReport) {
+      throw new ReportingDependencyMissingError('Payout');
+    }
+    return this.payoutReport.summarize(days);
   }
 }

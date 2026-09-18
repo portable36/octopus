@@ -87,4 +87,32 @@ export class AdminReportsController {
     const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
     return this.queries.refundAnalytics(user.roles, numDays);
   }
+
+  @Get('customers/summary')
+  @ApiOperation({ summary: 'Platform admin: customer acquisition from order facts' })
+  @ApiQuery({ name: 'days', required: false, description: 'Time horizon in days (default 30)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Top customers (default 20)' })
+  async customerSummary(
+    @CurrentUser() user: RequestPrincipal,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
+    const numLimit = limit ? Math.max(1, Math.min(100, parseInt(limit, 10) || 20)) : 20;
+    return this.queries.customerAnalytics(user.roles, numDays, numLimit);
+  }
+
+  @Get('inventory/summary')
+  @ApiOperation({ summary: 'Platform admin: inventory stock health rollup' })
+  async inventorySummary(@CurrentUser() user: RequestPrincipal) {
+    return this.queries.inventoryAnalytics(user.roles);
+  }
+
+  @Get('payouts/summary')
+  @ApiOperation({ summary: 'Platform admin: payout request rollup by status/currency' })
+  @ApiQuery({ name: 'days', required: false, description: 'Time horizon in days (default 30)' })
+  async payoutSummary(@CurrentUser() user: RequestPrincipal, @Query('days') days?: string) {
+    const numDays = days ? Math.max(1, Math.min(365, parseInt(days, 10) || 30)) : 30;
+    return this.queries.payoutAnalytics(user.roles, numDays);
+  }
 }

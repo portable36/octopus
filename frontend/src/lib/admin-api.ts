@@ -676,6 +676,87 @@ export function getAdminStoreReportSummary(token: string): Promise<AdminStorePer
   });
 }
 
+export type AdminCustomerPerformanceRow = {
+  customerId: string;
+  orderCount: number;
+  paidOrderCount: number;
+  revenueMinor: number;
+  currencyCode: string;
+};
+
+export type AdminCustomerReportSummary = {
+  uniqueCustomerCount: number;
+  guestOrderCount: number;
+  orderCount: number;
+  topCustomers: AdminCustomerPerformanceRow[];
+};
+
+export type AdminInventoryStockAlert = {
+  storeId: string;
+  variantId: string;
+  available: number;
+  lowStockThreshold: number;
+  stockStatus: 'LOW_STOCK' | 'OUT_OF_STOCK';
+};
+
+export type AdminInventoryReportSummary = {
+  itemCount: number;
+  storeCount: number;
+  inStockCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  alerts: AdminInventoryStockAlert[];
+};
+
+export type AdminPayoutReportStatusBucket = {
+  status: string;
+  count: number;
+  amountMinor: number;
+};
+
+export type AdminPayoutReportCurrencyBucket = {
+  currencyCode: string;
+  count: number;
+  amountMinor: number;
+  completedMinor: number;
+  reservedMinor: number;
+};
+
+export type AdminPayoutReportSummary = {
+  days: number;
+  payoutCount: number;
+  byStatus: AdminPayoutReportStatusBucket[];
+  byCurrency: AdminPayoutReportCurrencyBucket[];
+};
+
+export function getAdminCustomerReportSummary(
+  token: string,
+  days = 30,
+  limit = 20,
+): Promise<AdminCustomerReportSummary> {
+  return apiRequest<AdminCustomerReportSummary>(
+    `/admin/reports/customers/summary?days=${days}&limit=${limit}`,
+    { headers: authHeaders(token) },
+  );
+}
+
+export function getAdminInventoryReportSummary(
+  token: string,
+): Promise<AdminInventoryReportSummary> {
+  return apiRequest<AdminInventoryReportSummary>('/admin/reports/inventory/summary', {
+    headers: authHeaders(token),
+  });
+}
+
+export function getAdminPayoutReportSummary(
+  token: string,
+  days = 30,
+): Promise<AdminPayoutReportSummary> {
+  return apiRequest<AdminPayoutReportSummary>(`/admin/reports/payouts/summary?days=${days}`, {
+    headers: authHeaders(token),
+  });
+}
+
 export type AdminTrendDataPoint = {
   date: string;
   orderCount: number;

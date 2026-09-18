@@ -59,9 +59,52 @@ export interface GetCourierConsignmentStatusResult {
   readonly rawStatus: string;
 }
 
+/** Pathao merchant price-plan; Steadfast has no public quote API. */
+export interface QuoteCourierDeliveryInput {
+  readonly vendorId: string;
+  readonly provider: CourierProviderDto;
+  readonly weightKg: number;
+  /** Pathao city id from listQuoteCities. */
+  readonly recipientCityId: number;
+  /** Pathao zone id from listQuoteZones. */
+  readonly recipientZoneId: number;
+  /** Pathao: 48 normal, 12 on-demand. */
+  readonly deliveryType?: number;
+  /** Pathao: 1 document, 2 parcel. */
+  readonly itemType?: number;
+}
+
+export interface QuoteCourierDeliveryResult {
+  readonly provider: CourierProviderDto;
+  readonly currencyCode: string;
+  readonly priceMinor: number;
+  readonly discountMinor: number;
+  readonly finalPriceMinor: number;
+}
+
+export interface CourierQuoteCity {
+  readonly id: number;
+  readonly name: string;
+}
+
+export interface CourierQuoteZone {
+  readonly id: number;
+  readonly name: string;
+}
+
 export interface CourierPort {
   createConsignment(input: CreateCourierConsignmentInput): Promise<CreateCourierConsignmentResult>;
   getConsignmentStatus(
     input: GetCourierConsignmentStatusInput,
   ): Promise<GetCourierConsignmentStatusResult>;
+  quoteDelivery(input: QuoteCourierDeliveryInput): Promise<QuoteCourierDeliveryResult>;
+  listQuoteCities(input: {
+    readonly vendorId: string;
+    readonly provider: CourierProviderDto;
+  }): Promise<readonly CourierQuoteCity[]>;
+  listQuoteZones(input: {
+    readonly vendorId: string;
+    readonly provider: CourierProviderDto;
+    readonly cityId: number;
+  }): Promise<readonly CourierQuoteZone[]>;
 }

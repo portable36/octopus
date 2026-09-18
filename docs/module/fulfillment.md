@@ -30,11 +30,11 @@ Exception paths include `FAILED` and `RETURNED`. Transitions are explicit domain
 
 ## Courier providers
 
-| Provider  | Auth                     | Create                   | Status                                  |
-| --------- | ------------------------ | ------------------------ | --------------------------------------- |
-| STEADFAST | Api-Key + Secret-Key     | Packzy `/create_order`   | `/status_by_cid\|invoice\|trackingcode` |
-| PATHAO    | OAuth password + refresh | `/aladdin/api/v1/orders` | `/orders/{id}/info`                     |
-| MANUAL    | none                     | local ids                | staff mark-delivered                    |
+| Provider  | Auth                     | Create                   | Status                                  | Quote                          |
+| --------- | ------------------------ | ------------------------ | --------------------------------------- | ------------------------------ |
+| STEADFAST | Api-Key + Secret-Key     | Packzy `/create_order`   | `/status_by_cid\|invoice\|trackingcode` | none (portal pricing only)     |
+| PATHAO    | OAuth password + refresh | `/aladdin/api/v1/orders` | `/orders/{id}/info`                     | `/merchant/price-plan` + cities |
+| MANUAL    | none                     | local ids                | staff mark-delivered                    | n/a                            |
 
 Credentials are **per vendor**, AES-GCM encrypted at rest. Env vars supply sandbox defaults only.
 
@@ -55,6 +55,11 @@ Storefront never marks paid. Partial-delivered / cancelled does not auto-collect
 - `POST /api/v1/fulfillment/shipments`
 - `POST /api/v1/fulfillment/shipments/:id/sync-status`
 - `POST /api/v1/fulfillment/shipments/:id/mark-delivered` (MANUAL)
+- `GET /api/v1/fulfillment/vendors/:vendorId/courier-accounts`
+- `PUT /api/v1/fulfillment/vendors/:vendorId/courier-accounts`
+- `GET /api/v1/fulfillment/vendors/:vendorId/courier-accounts/pathao/cities`
+- `GET /api/v1/fulfillment/vendors/:vendorId/courier-accounts/pathao/cities/:cityId/zones`
+- `POST /api/v1/fulfillment/vendors/:vendorId/courier-accounts/quote` (Pathao price-plan)
 
 ## Testing requirements
 
@@ -69,8 +74,10 @@ Storefront never marks paid. Partial-delivered / cancelled does not auto-collect
 
 - [x] Shipment aggregate integrated with Order via ports
 - [x] Carrier adapters behind `CourierPort`
-- [ ] Return shipment workflows (Phase 14)
-- [ ] Background status poller (Phase 12)
+- [x] Return shipment workflows (Phase 14 — MANUAL reverse pickup on approve via `RETURN_PICKUP_PORT`; live Steadfast/Pathao reverse later)
+- [x] Background status poller (Phase 12)
+- [x] Vendor bulk create shipments UI (multi-select → existing create API)
+- [x] Pathao price-plan quote UI (Steadfast has no public rate API)
 
 ## Related
 

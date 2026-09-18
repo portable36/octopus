@@ -10,6 +10,8 @@ Expose separate endpoints:
 
 Do not make liveness depend on PostgreSQL.
 
+Host / uptime probe script: [`deploy/check-health.sh`](./deploy/check-health.sh) (`live`, `ready`, `alerts`, storefront). Secrets on the VPS: [`deploy/host.secrets.env.example`](./deploy/host.secrets.env.example) → `/opt/octopus/.env` and optional `host.secrets.env`.
+
 ## Graceful shutdown
 
 On SIGTERM:

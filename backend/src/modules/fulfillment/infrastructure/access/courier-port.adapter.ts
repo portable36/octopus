@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import type {
   CourierPort,
+  CourierQuoteCity,
+  CourierQuoteZone,
   CreateCourierConsignmentInput,
   CreateCourierConsignmentResult,
   GetCourierConsignmentStatusInput,
   GetCourierConsignmentStatusResult,
+  QuoteCourierDeliveryInput,
+  QuoteCourierDeliveryResult,
 } from '../../../../shared-kernel/application/ports/courier.port';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
 import { CourierProviderError } from '../../application/errors/fulfillment.errors';
@@ -60,6 +64,43 @@ export class CourierPortAdapter implements CourierPort {
     throw new CourierProviderError(
       `Unsupported provider ${input.provider}`,
       'UNSUPPORTED_PROVIDER',
+    );
+  }
+
+  public async quoteDelivery(input: QuoteCourierDeliveryInput): Promise<QuoteCourierDeliveryResult> {
+    if (input.provider === 'PATHAO') {
+      return this.pathao.quoteDelivery(input);
+    }
+    throw new CourierProviderError(
+      `${input.provider} does not support delivery fee quotes. Use Pathao price-plan.`,
+      'QUOTE_UNSUPPORTED',
+    );
+  }
+
+  public async listQuoteCities(input: {
+    readonly vendorId: string;
+    readonly provider: QuoteCourierDeliveryInput['provider'];
+  }): Promise<readonly CourierQuoteCity[]> {
+    if (input.provider === 'PATHAO') {
+      return this.pathao.listCities(input.vendorId);
+    }
+    throw new CourierProviderError(
+      `${input.provider} does not expose quote cities.`,
+      'QUOTE_UNSUPPORTED',
+    );
+  }
+
+  public async listQuoteZones(input: {
+    readonly vendorId: string;
+    readonly provider: QuoteCourierDeliveryInput['provider'];
+    readonly cityId: number;
+  }): Promise<readonly CourierQuoteZone[]> {
+    if (input.provider === 'PATHAO') {
+      return this.pathao.listZones(input.vendorId, input.cityId);
+    }
+    throw new CourierProviderError(
+      `${input.provider} does not expose quote zones.`,
+      'QUOTE_UNSUPPORTED',
     );
   }
 }

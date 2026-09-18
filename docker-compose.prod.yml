@@ -5,42 +5,45 @@
 # Start:  docker compose -f docker-compose.prod.yml up -d
 # Logs:   docker compose -f docker-compose.prod.yml logs -f backend-api seo-worker frontend-store
 #
-# Required: copy backend/.env.production.template values into a root `.env` file
-# (or export secrets in your orchestrator) before first boot.
+# Secrets: copy deploy/host.secrets.env.example → `.env` (or `host.secrets.env`) next to
+# this file on the host (`chmod 600`). Compose interpolates `${VAR}` from `.env`; app
+# services also load optional `host.secrets.env` when present. Never commit real values.
 
 x-octopus-app-env: &octopus-app-env
   NODE_ENV: production
   PORT: 4000
-  DATABASE_URL: postgresql://octopus:octopus@postgres:5432/octopus
-  REDIS_URL: redis://redis:6379
-  JWT_SECRET: change-me-to-a-random-32-plus-character-secret
-  JWT_EXPIRES_IN: 15m
-  JWT_REFRESH_EXPIRES_IN: 7d
-  MEILISEARCH_HOST: http://meilisearch:7700
-  MEILISEARCH_API_KEY: masterKey
-  SEARCH_PRODUCTS_INDEX: products
-  S3_ENDPOINT: http://minio:9000
-  S3_ACCESS_KEY: minioadmin
-  S3_SECRET_KEY: minioadmin
-  S3_BUCKET: octopus-media
-  CORS_ORIGINS: http://localhost:3000
-  LOG_LEVEL: info
-  SHUTDOWN_TIMEOUT_MS: 10000
-  OUTBOX_DISPATCH_ENABLED: 'true'
-  SEO_PUBLIC_SITE_URL: https://shop.example.com
+  DATABASE_URL: ${DATABASE_URL:-postgresql://octopus:octopus@postgres:5432/octopus}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+  JWT_SECRET: ${JWT_SECRET:-change-me-to-a-random-32-plus-character-secret}
+  JWT_SECRET_PREVIOUS: ${JWT_SECRET_PREVIOUS:-}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+  JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+  MEILISEARCH_HOST: ${MEILISEARCH_HOST:-http://meilisearch:7700}
+  MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY:-masterKey}
+  SEARCH_PRODUCTS_INDEX: ${SEARCH_PRODUCTS_INDEX:-products}
+  S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+  S3_BUCKET: ${S3_BUCKET:-octopus-media}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  SHUTDOWN_TIMEOUT_MS: ${SHUTDOWN_TIMEOUT_MS:-10000}
+  OUTBOX_DISPATCH_ENABLED: ${OUTBOX_DISPATCH_ENABLED:-true}
+  SEO_PUBLIC_SITE_URL: ${SEO_PUBLIC_SITE_URL:-https://shop.example.com}
   SEO_CACHE_DIR: .cache/seo
   SEO_CACHE_TTL_SECONDS: '86400'
   SITEMAP_ITEMS_PER_CHUNK: '5000'
-  META_PIXEL_ID: '123456789012345'
-  META_ACCESS_TOKEN: replace-with-meta-system-user-token
-  META_ANDROMEDA_DATA_PROCESSING_OPTIONS: '["LDU"]'
-  META_ANDROMEDA_COUNTRY: '1'
-  META_ANDROMEDA_STATE: '0'
-  META_CAPI_DATA_SOURCE: server
-  GEM_SCHEMA_VERSION: 2.4.0
-  GEM_TRACKING_ENVIRONMENT: production
-  GOOGLE_SERVICES_CLIENT_EMAIL: seo-automation@project.iam.gserviceaccount.com
-  GOOGLE_SERVICES_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nREPLACE\n-----END PRIVATE KEY-----\n"
+  META_PIXEL_ID: ${META_PIXEL_ID:-123456789012345}
+  META_ACCESS_TOKEN: ${META_ACCESS_TOKEN:-replace-with-meta-system-user-token}
+  META_ANDROMEDA_DATA_PROCESSING_OPTIONS: ${META_ANDROMEDA_DATA_PROCESSING_OPTIONS:-["LDU"]}
+  META_ANDROMEDA_COUNTRY: ${META_ANDROMEDA_COUNTRY:-1}
+  META_ANDROMEDA_STATE: ${META_ANDROMEDA_STATE:-0}
+  META_CAPI_DATA_SOURCE: ${META_CAPI_DATA_SOURCE:-server}
+  GEM_SCHEMA_VERSION: ${GEM_SCHEMA_VERSION:-2.4.0}
+  GEM_TRACKING_ENVIRONMENT: ${GEM_TRACKING_ENVIRONMENT:-production}
+  GOOGLE_SERVICES_CLIENT_EMAIL: ${GOOGLE_SERVICES_CLIENT_EMAIL:-seo-automation@project.iam.gserviceaccount.com}
+  GOOGLE_SERVICES_PRIVATE_KEY: ${GOOGLE_SERVICES_PRIVATE_KEY:-"-----BEGIN PRIVATE KEY-----\nREPLACE\n-----END PRIVATE KEY-----\n"}
+  SENTRY_DSN: ${SENTRY_DSN:-}
 
 services:
   postgres:
@@ -98,10 +101,13 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:4000/api/v1
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
-    image: octopus:prod
+    image: ${OCTOPUS_IMAGE:-octopus:prod}
     restart: unless-stopped
     working_dir: /app
     command: ['npm', 'run', 'start', '-w', 'backend']
+    env_file:
+      - path: host.secrets.env
+        required: false
     environment:
       <<: *octopus-app-env
       SEO_DISCOVERY_WORKER_ENABLED: 'false'
@@ -126,10 +132,13 @@ services:
       start_period: 60s
 
   seo-worker:
-    image: octopus:prod
+    image: ${OCTOPUS_IMAGE:-octopus:prod}
     restart: unless-stopped
     working_dir: /app
     command: ['npm', 'run', 'start:seo-worker', '-w', 'backend']
+    env_file:
+      - path: host.secrets.env
+        required: false
     environment:
       <<: *octopus-app-env
       SEO_DISCOVERY_WORKER_ENABLED: 'true'
@@ -145,7 +154,7 @@ services:
         condition: service_healthy
 
   frontend-store:
-    image: octopus:prod
+    image: ${OCTOPUS_IMAGE:-octopus:prod}
     restart: unless-stopped
     working_dir: /app
     command: ['npm', 'run', 'start', '-w', 'frontend']

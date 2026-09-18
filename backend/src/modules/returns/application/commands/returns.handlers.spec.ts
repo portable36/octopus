@@ -71,14 +71,52 @@ describe('ReturnsHandlers', () => {
       findEmailByUserId: vi.fn().mockResolvedValue('customer@example.com'),
       findUserIdByEmail: vi.fn().mockResolvedValue(customerId),
     };
+    const returnPickup = {
+      schedulePickup: vi.fn().mockResolvedValue({
+        shipmentId: 'ship-return-1',
+        trackingCode: 'RET-TRACK-1',
+        provider: 'MANUAL',
+        providerConsignmentId: 'consign-ret-1',
+      }),
+    };
+    const shipmentTracking = {
+      getShipmentsForOrder: vi.fn().mockResolvedValue([
+        {
+          shipmentId: 'ship-out-1',
+          orderId,
+          provider: 'STEADFAST',
+          status: 'DELIVERED',
+          providerStatus: 'delivered',
+          trackingCode: 'OUT-1',
+          providerConsignmentId: 'c-out-1',
+          recipientName: 'Ada Customer',
+          recipientPhone: '01711112222',
+          recipientAddress: '12 Road, Dhaka, BD',
+          createdAt: new Date('2026-01-02T00:00:00Z'),
+          updatedAt: new Date('2026-01-02T00:00:00Z'),
+        },
+      ]),
+    };
     const handlers = new ReturnsHandlers(
       returns as never,
       orders as never,
       inventory as never,
       authz as never,
       userContact as never,
+      returnPickup as never,
+      shipmentTracking as never,
     );
-    return { handlers, returns, orders, authz, inventory, userContact, orderSnapshot };
+    return {
+      handlers,
+      returns,
+      orders,
+      authz,
+      inventory,
+      userContact,
+      returnPickup,
+      shipmentTracking,
+      orderSnapshot,
+    };
   }
 
   it('creates a valid partial return request', async () => {
@@ -131,6 +169,37 @@ describe('ReturnsHandlers', () => {
         actorRoles: ['VENDOR_OWNER'],
       }),
     ).rejects.toBeInstanceOf(ReturnsAccessDeniedError);
+  });
+
+  it('schedules return pickup from outbound recipient on approve', async () => {
+    const { handlers, returns, returnPickup, shipmentTracking } = build();
+    const existing = await handlers.requestReturn({
+      orderId,
+      actorUserId: customerId,
+      actorRoles: ['CUSTOMER'],
+      idempotencyKey: 'idem-return-pickup',
+      items: [{ orderItemId: lineId, quantity: 1, reasonCode: 'DAMAGED' }],
+    });
+    returns.findById.mockResolvedValue(existing);
+
+    const approved = await handlers.approve({
+      returnId: existing.id.value,
+      actorUserId: 'vendor-owner-1',
+      actorRoles: ['VENDOR_OWNER'],
+    });
+
+    expect(shipmentTracking.getShipmentsForOrder).toHaveBeenCalledWith(orderId);
+    expect(returnPickup.schedulePickup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientName: 'Ada Customer',
+        recipientPhone: '01711112222',
+        recipientAddress: '12 Road, Dhaka, BD',
+        idempotencyKey: `return-pickup:${existing.id.value}`,
+      }),
+    );
+    expect(approved.returnShipmentId).toBe('ship-return-1');
+    expect(approved.returnTrackingCode).toBe('RET-TRACK-1');
+    expect(approved.status).toBe('AWAITING_RETURN');
   });
 
   it('performs public lookup for an order and returns eligibility & lines', async () => {

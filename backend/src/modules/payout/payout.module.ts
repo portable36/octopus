@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { LEDGER_PORT } from '../../shared-kernel/application/ports/ledger.port';
+import { PAYOUT_REPORT } from '../../shared-kernel/application/ports/payout-report.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import { LedgerCommandHandler } from './application/commands/ledger.handlers';
 import { PayoutCommandHandler } from './application/commands/payout.handlers';
@@ -10,6 +11,7 @@ import { PAYOUT_REPOSITORY } from './application/ports/payout-repository.interfa
 import { LedgerAuthorizationService } from './application/services/ledger-authorization.service';
 import { PayoutAuthorizationService } from './application/services/payout-authorization.service';
 import { LedgerPortAdapter } from './infrastructure/access/ledger-port.adapter';
+import { PayoutReportAdapter } from './infrastructure/access/payout-report.adapter';
 import {
   PayoutOutboxOrmEntity,
   VendorLedgerBalanceOrmEntity,
@@ -43,7 +45,8 @@ import { PayoutController } from './presentation/http/payout.controller';
     { provide: PAYOUT_REPOSITORY, useClass: PayoutRepositoryAdapter },
     { provide: PAYOUT_PROVIDER, useClass: DualModePayoutProviderAdapter },
     { provide: LEDGER_PORT, useClass: LedgerPortAdapter },
+    { provide: PAYOUT_REPORT, useClass: PayoutReportAdapter },
   ],
-  exports: [LEDGER_PORT, LedgerCommandHandler, PayoutCommandHandler],
+  exports: [LEDGER_PORT, PAYOUT_REPORT, LedgerCommandHandler, PayoutCommandHandler],
 })
 export class PayoutModule {}

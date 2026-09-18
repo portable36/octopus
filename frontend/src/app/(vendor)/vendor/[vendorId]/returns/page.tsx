@@ -311,6 +311,22 @@ export default function VendorReturnsPage() {
                     Rejection: {selected.rejectionNote}
                   </p>
                 ) : null}
+                {selected.returnTrackingCode || selected.returnShipmentId ? (
+                  <p className="rounded-md border border-border bg-muted/30 p-2 text-xs">
+                    <span className="font-medium">Return shipment:</span>{' '}
+                    {selected.returnTrackingCode ? (
+                      <span className="font-mono">{selected.returnTrackingCode}</span>
+                    ) : (
+                      'scheduled'
+                    )}
+                    {selected.returnShipmentId ? (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        · id {selected.returnShipmentId.slice(0, 8)}…
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -337,7 +353,10 @@ export default function VendorReturnsPage() {
                       size="sm"
                       disabled={pending}
                       onClick={() =>
-                        void run(() => approveReturn(selected.id), 'Return approved — awaiting customer shipment.')
+                        void run(
+                          () => approveReturn(selected.id),
+                          'Return approved — reverse pickup scheduled when available.',
+                        )
                       }
                     >
                       Approve

@@ -65,6 +65,9 @@ generated output, or a transcript of previous chats.
   admin UI at `/admin/system/alerts` (rule catalog includes external burn-rate note).
 - Local drills: `npm.cmd run restore:drill` (Postgres dump→restore); `npm.cmd run deploy:drill`
   (API image build + A→B→A rollback with live/ready probes).
+- Prod host secrets: copy `deploy/host.secrets.env.example` → `/opt/octopus/.env` and/or
+  `host.secrets.env` (`chmod 600`). Compose `${VAR}` + optional `env_file`. Uptime:
+  `deploy/check-health.sh` (live/ready/alerts/storefront).
 - Media: presigned PUT (≤10MB) + multipart/resumable (≤100MB, ListParts resume);
   magic-byte register; HeadObject size check; async quarantine on
   `octopus.media-processing` (download gated until `ready`); signed GET or CDN.
@@ -76,8 +79,14 @@ generated output, or a transcript of previous chats.
 - Auth polish: email verify (`/auth/email/verify*`), Google/Facebook OAuth
   (dual-mode mock), carrier OTP login (`/auth/otp/*`); storefront login +
   `/verify-email`.
+- Vendor courier page: Pathao **price-plan quote** (cities/zones + fee) via
+  `CourierPort.quoteDelivery`; Steadfast quotes unsupported.
+- Vendor orders list supports multi-select **bulk ship** (loops
+  `POST /fulfillment/shipments`; per-order success/fail; no bulk backend).
 - Vendor return approve schedules MANUAL reverse pickup via `RETURN_PICKUP_PORT`
-  (tracking on return). Courier credentials: `/fulfillment/vendors/:id/courier-accounts`.
+  (tracking on return; recipient from outbound shipment when present). Courier
+  credentials: `/fulfillment/vendors/:id/courier-accounts`. Vendor + customer
+  returns UIs surface `returnTrackingCode`.
 - Finance statement CSV: `GET /finance/vendors/:id/statement.csv`. Payment gateway
   readiness: `GET /admin/payments/gateways` (booleans only).
 - Playwright authenticated revenue path: `e2e/revenue-path.spec.ts` (skips without API).

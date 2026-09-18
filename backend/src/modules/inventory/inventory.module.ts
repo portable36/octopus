@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { INVENTORY_PORT } from '../../shared-kernel/application/ports/inventory.port';
+import { INVENTORY_REPORT } from '../../shared-kernel/application/ports/inventory-report.port';
 import { WAREHOUSE_PROVISIONER } from '../../shared-kernel/application/ports/warehouse-provisioner.port';
 import { DatabaseModule } from '../../shared-kernel/infrastructure/persistence/database.module';
 import {
@@ -12,6 +13,7 @@ import { INVENTORY_REPOSITORY } from './application/ports/inventory-repository.i
 import { WAREHOUSE_REPOSITORY } from './application/ports/warehouse-repository.interface';
 import { InventoryAuthorizationService } from './application/services/inventory-authorization.service';
 import { InventoryPortAdapter } from './infrastructure/access/inventory-port.adapter';
+import { InventoryReportAdapter } from './infrastructure/access/inventory-report.adapter';
 import { WarehouseProvisionerAdapter } from './infrastructure/access/warehouse-provisioner.adapter';
 import { InventoryItemOrmEntity } from './infrastructure/persistence/inventory-item.orm-entity';
 import { InventoryMovementOrmEntity } from './infrastructure/persistence/inventory-movement.orm-entity';
@@ -45,10 +47,12 @@ import { InventoryController } from './presentation/http/inventory.controller';
     { provide: WAREHOUSE_REPOSITORY, useClass: WarehouseRepositoryAdapter },
     { provide: INVENTORY_REPOSITORY, useClass: InventoryRepositoryAdapter },
     { provide: INVENTORY_PORT, useClass: InventoryPortAdapter },
+    { provide: INVENTORY_REPORT, useClass: InventoryReportAdapter },
     { provide: WAREHOUSE_PROVISIONER, useClass: WarehouseProvisionerAdapter },
   ],
   exports: [
     INVENTORY_PORT,
+    INVENTORY_REPORT,
     INVENTORY_REPOSITORY,
     WAREHOUSE_REPOSITORY,
     WAREHOUSE_PROVISIONER,

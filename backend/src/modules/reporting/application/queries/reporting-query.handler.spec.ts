@@ -268,4 +268,54 @@ describe('ReportingQueryHandler', () => {
       ReportingAccessDeniedError,
     );
   });
+
+  it('exposes customer, inventory, and payout analytics for platform admin', async () => {
+    const customerSummary = {
+      uniqueCustomerCount: 2,
+      guestOrderCount: 1,
+      orderCount: 5,
+      topCustomers: [],
+    };
+    const inventorySummary = {
+      itemCount: 10,
+      storeCount: 2,
+      inStockCount: 7,
+      lowStockCount: 2,
+      outOfStockCount: 1,
+      alerts: [],
+    };
+    const payoutSummary = {
+      days: 30,
+      payoutCount: 3,
+      byStatus: [],
+      byCurrency: [],
+    };
+    const facts = {
+      getCustomerAnalytics: vi.fn().mockResolvedValue(customerSummary),
+    };
+    const inventoryReport = { summarize: vi.fn().mockResolvedValue(inventorySummary) };
+    const payoutReport = { summarize: vi.fn().mockResolvedValue(payoutSummary) };
+    const handler = new ReportingQueryHandler(
+      facts as never,
+      undefined,
+      undefined,
+      inventoryReport as never,
+      payoutReport as never,
+    );
+
+    await expect(handler.customerAnalytics(['PLATFORM_ADMIN'], 30, 10)).resolves.toBe(
+      customerSummary,
+    );
+    expect(facts.getCustomerAnalytics).toHaveBeenCalledWith({ days: 30, limit: 10 });
+
+    await expect(handler.inventoryAnalytics(['PLATFORM_ADMIN'])).resolves.toBe(inventorySummary);
+    expect(inventoryReport.summarize).toHaveBeenCalledWith(20);
+
+    await expect(handler.payoutAnalytics(['PLATFORM_ADMIN'], 14)).resolves.toBe(payoutSummary);
+    expect(payoutReport.summarize).toHaveBeenCalledWith(14);
+
+    await expect(handler.customerAnalytics(['VENDOR_OWNER'])).rejects.toBeInstanceOf(
+      ReportingAccessDeniedError,
+    );
+  });
 });

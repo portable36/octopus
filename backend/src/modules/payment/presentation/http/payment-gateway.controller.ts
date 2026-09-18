@@ -24,7 +24,7 @@ import {
   assertPaymentWebhookIntegrity,
   parseWebhookTimestampSec,
 } from './payment-webhook-integrity';
-import { assertSslCommerzIpnSign } from '../../infrastructure/gateways/sslcommerz-verify-sign';
+import { assertSslCommerzIpnSign } from '../../application/services/sslcommerz-verify-sign';
 
 @ApiTags('payments-gateways')
 @Controller('payments/gateways')

@@ -16,7 +16,9 @@ import type {
   StorePerformanceRow,
   TrendDataPoint,
   VendorPerformanceRow,
+  CustomerReportSummary,
 } from '../../application/ports/reporting-order-fact-repository.interface';
+import { buildCustomerReportSummary } from '../../domain/build-customer-report-summary';
 import { countUniqueCustomers } from '../../domain/count-unique-customers';
 import { ReportingOrderFactOrmEntity } from './reporting-order-fact.orm-entity';
 import { ReportingOrderItemFactOrmEntity } from './reporting-order-item-fact.orm-entity';
@@ -628,6 +630,31 @@ export class ReportingOrderFactRepositoryAdapter implements ReportingOrderFactRe
         refundsByMethod,
         recentRefunds,
       };
+    });
+  }
+
+  public async getCustomerAnalytics(query: {
+    vendorId?: string;
+    storeId?: string;
+    days?: number;
+    limit?: number;
+  }): Promise<CustomerReportSummary> {
+    return withRlsContext(this.em, async (tx) => {
+      const days = query.days ?? 30;
+      const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000);
+      const where: Record<string, unknown> = {
+        createdAt: { $gte: cutoff },
+      };
+      if (query.vendorId) {
+        where.vendorId = query.vendorId;
+      }
+      if (query.storeId) {
+        where.storeId = query.storeId;
+      }
+      const rows = await tx.find(ReportingOrderFactOrmEntity, where, {
+        fields: ['customerId', 'paymentStatus', 'totalMinor', 'currencyCode'],
+      });
+      return buildCustomerReportSummary(rows, query.limit ?? 20);
     });
   }
 }

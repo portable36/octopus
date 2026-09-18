@@ -14,6 +14,10 @@ import {
   type ReturnPickupPort,
 } from '../../../../shared-kernel/application/ports/return-pickup.port';
 import {
+  SHIPMENT_TRACKING_PORT,
+  type ShipmentTrackingPort,
+} from '../../../../shared-kernel/application/ports/shipment-tracking.port';
+import {
   USER_CONTACT_PORT,
   type UserContactPort,
 } from '../../../../shared-kernel/application/ports/user-contact.port';
@@ -62,6 +66,9 @@ export class ReturnsHandlers {
     @Inject(ReturnsAuthorizationService) private readonly authz: ReturnsAuthorizationService,
     @Optional() @Inject(USER_CONTACT_PORT) private readonly userContact?: UserContactPort,
     @Optional() @Inject(RETURN_PICKUP_PORT) private readonly returnPickup?: ReturnPickupPort,
+    @Optional()
+    @Inject(SHIPMENT_TRACKING_PORT)
+    private readonly shipmentTracking?: ShipmentTrackingPort,
   ) {}
 
   public async requestReturn(input: {
@@ -240,7 +247,7 @@ export class ReturnsHandlers {
     if (!order) {
       return;
     }
-    const address = [
+    const addressFromOrder = [
       order.shippingAddress.line1,
       order.shippingAddress.line2,
       order.shippingAddress.city,
@@ -253,6 +260,12 @@ export class ReturnsHandlers {
     const email = returnRequest.customerId
       ? await this.userContact?.findEmailByUserId(returnRequest.customerId)
       : null;
+    // Prefer outbound shipment recipient (name/phone) over email-derived placeholders.
+    const outbound = this.shipmentTracking
+      ? (await this.shipmentTracking.getShipmentsForOrder(returnRequest.orderId))
+          .slice()
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+      : undefined;
     const pickup = await this.returnPickup.schedulePickup({
       returnId: returnRequest.id.value,
       orderId: returnRequest.orderId,
@@ -263,9 +276,10 @@ export class ReturnsHandlers {
         orderLineId: item.orderItemId,
         quantity: item.quantity,
       })),
-      recipientName: email?.split('@')[0] || 'Customer',
-      recipientPhone: '01700000000',
-      recipientAddress: address || 'Address on file',
+      recipientName: outbound?.recipientName?.trim() || email?.split('@')[0] || 'Customer',
+      recipientPhone: outbound?.recipientPhone?.trim() || '01700000000',
+      recipientAddress:
+        outbound?.recipientAddress?.trim() || addressFromOrder || 'Address on file',
       idempotencyKey: `return-pickup:${returnRequest.id.value}`,
     });
     returnRequest.attachReturnShipment({

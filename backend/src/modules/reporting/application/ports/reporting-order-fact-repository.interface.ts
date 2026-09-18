@@ -147,6 +147,21 @@ export type RefundReportSummary = {
   }[];
 };
 
+export type CustomerPerformanceRow = {
+  readonly customerId: string;
+  readonly orderCount: number;
+  readonly paidOrderCount: number;
+  readonly revenueMinor: number;
+  readonly currencyCode: string;
+};
+
+export type CustomerReportSummary = {
+  readonly uniqueCustomerCount: number;
+  readonly guestOrderCount: number;
+  readonly orderCount: number;
+  readonly topCustomers: readonly CustomerPerformanceRow[];
+};
+
 export const REPORTING_ORDER_FACT_REPOSITORY = Symbol('REPORTING_ORDER_FACT_REPOSITORY');
 
 export interface ReportingOrderFactRepository {
@@ -170,4 +185,10 @@ export interface ReportingOrderFactRepository {
     storeId?: string;
     days?: number;
   }): Promise<RefundReportSummary>;
+  getCustomerAnalytics(query: {
+    vendorId?: string;
+    storeId?: string;
+    days?: number;
+    limit?: number;
+  }): Promise<CustomerReportSummary>;
 }

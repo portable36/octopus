@@ -225,6 +225,8 @@ export type VendorReturn = {
   receivedAt: string | null;
   inspectedAt: string | null;
   completedAt: string | null;
+  returnShipmentId: string | null;
+  returnTrackingCode: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -402,6 +404,45 @@ export function upsertVendorCourierAccount(
     method: 'PUT',
     body: input,
   });
+}
+
+export type CourierQuoteCity = { id: number; name: string };
+export type CourierQuoteZone = { id: number; name: string };
+export type CourierDeliveryQuote = {
+  provider: string;
+  currencyCode: string;
+  priceMinor: number;
+  discountMinor: number;
+  finalPriceMinor: number;
+};
+
+export function listPathaoQuoteCities(vendorId: string): Promise<CourierQuoteCity[]> {
+  return authedRequest<CourierQuoteCity[]>(
+    `/fulfillment/vendors/${encodeURIComponent(vendorId)}/courier-accounts/pathao/cities`,
+  );
+}
+
+export function listPathaoQuoteZones(vendorId: string, cityId: number): Promise<CourierQuoteZone[]> {
+  return authedRequest<CourierQuoteZone[]>(
+    `/fulfillment/vendors/${encodeURIComponent(vendorId)}/courier-accounts/pathao/cities/${cityId}/zones`,
+  );
+}
+
+export function quoteCourierDelivery(
+  vendorId: string,
+  input: {
+    provider: 'PATHAO' | 'STEADFAST' | 'MANUAL';
+    weightKg: number;
+    recipientCityId: number;
+    recipientZoneId: number;
+    deliveryType?: number;
+    itemType?: number;
+  },
+): Promise<CourierDeliveryQuote> {
+  return authedRequest<CourierDeliveryQuote>(
+    `/fulfillment/vendors/${encodeURIComponent(vendorId)}/courier-accounts/quote`,
+    { method: 'POST', body: input },
+  );
 }
 
 export function listVendorLedger(vendorId: string, limit = 20): Promise<VendorLedgerEntry[]> {

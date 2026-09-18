@@ -30,11 +30,11 @@ Exception paths include `FAILED` and `RETURNED`. Transitions are explicit domain
 
 ## Courier providers
 
-| Provider  | Auth                     | Create                   | Status                                  | Quote                          |
-| --------- | ------------------------ | ------------------------ | --------------------------------------- | ------------------------------ |
-| STEADFAST | Api-Key + Secret-Key     | Packzy `/create_order`   | `/status_by_cid\|invoice\|trackingcode` | none (portal pricing only)     |
+| Provider  | Auth                     | Create                   | Status                                  | Quote                           |
+| --------- | ------------------------ | ------------------------ | --------------------------------------- | ------------------------------- |
+| STEADFAST | Api-Key + Secret-Key     | Packzy `/create_order`   | `/status_by_cid\|invoice\|trackingcode` | none (portal pricing only)      |
 | PATHAO    | OAuth password + refresh | `/aladdin/api/v1/orders` | `/orders/{id}/info`                     | `/merchant/price-plan` + cities |
-| MANUAL    | none                     | local ids                | staff mark-delivered                    | n/a                            |
+| MANUAL    | none                     | local ids                | staff mark-delivered                    | n/a                             |
 
 Credentials are **per vendor**, AES-GCM encrypted at rest. Env vars supply sandbox defaults only.
 

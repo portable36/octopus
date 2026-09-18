@@ -151,18 +151,14 @@ export default function AdminStoreBrandingPage() {
                 type="color"
                 aria-label="Primary accent color picker"
                 value={colorInputValue(branding.primaryColor, '#fcca19')}
-                onChange={(e) =>
-                  setBranding((prev) => ({ ...prev, primaryColor: e.target.value }))
-                }
+                onChange={(e) => setBranding((prev) => ({ ...prev, primaryColor: e.target.value }))}
                 className="h-10 w-12 cursor-pointer p-0.5"
               />
               <Input
                 id="store-branding-primaryColor"
                 name="primaryColor"
                 value={branding.primaryColor ?? ''}
-                onChange={(e) =>
-                  setBranding((prev) => ({ ...prev, primaryColor: e.target.value }))
-                }
+                onChange={(e) => setBranding((prev) => ({ ...prev, primaryColor: e.target.value }))}
                 onBlur={(e) => {
                   const normalized = normalizeCssHexColor(e.target.value);
                   if (normalized) {
@@ -191,9 +187,7 @@ export default function AdminStoreBrandingPage() {
               id="store-branding-faviconMediaId"
               name="faviconMediaId"
               value={branding.faviconMediaId ?? ''}
-              onChange={(e) =>
-                setBranding((prev) => ({ ...prev, faviconMediaId: e.target.value }))
-              }
+              onChange={(e) => setBranding((prev) => ({ ...prev, faviconMediaId: e.target.value }))}
               className="font-mono text-xs"
             />
           </Label>

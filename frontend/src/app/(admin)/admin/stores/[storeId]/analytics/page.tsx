@@ -4,10 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ApiClientError } from '@/lib/api-client';
-import {
-  getAdminStoreReportSummary,
-  type AdminStorePerformanceRow,
-} from '@/lib/admin-api';
+import { getAdminStoreReportSummary, type AdminStorePerformanceRow } from '@/lib/admin-api';
 import { useAccessToken } from '@/lib/use-access-token';
 
 function formatMinor(amount: number, currencyCode: string): string {
@@ -97,17 +94,11 @@ export default function AdminStoreAnalyticsPage() {
         <h2 className="text-sm font-medium">Related</h2>
         <ul className="list-inside list-disc text-xs text-muted-foreground">
           <li>
-            <Link
-              href={`/admin/stores/${storeId}/seo`}
-              className="underline underline-offset-2"
-            >
+            <Link href={`/admin/stores/${storeId}/seo`} className="underline underline-offset-2">
               SEO
             </Link>{' '}
             ·{' '}
-            <Link
-              href={`/admin/stores/${storeId}/gem`}
-              className="underline underline-offset-2"
-            >
+            <Link href={`/admin/stores/${storeId}/gem`} className="underline underline-offset-2">
               GEM
             </Link>{' '}
             — platform-scoped deep links

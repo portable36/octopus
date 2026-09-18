@@ -61,9 +61,7 @@ export default function AdminCommerceConfigPage() {
             tax_computation_enabled: Boolean(
               checkout.tax_computation_enabled ?? DEFAULT_TAX_COMMISSION.tax_computation_enabled,
             ),
-            tax_rate_bps: String(
-              checkout.tax_rate_bps ?? DEFAULT_TAX_COMMISSION.tax_rate_bps,
-            ),
+            tax_rate_bps: String(checkout.tax_rate_bps ?? DEFAULT_TAX_COMMISSION.tax_rate_bps),
             commission_rate_bps: String(
               checkout.commission_rate_bps ?? DEFAULT_TAX_COMMISSION.commission_rate_bps,
             ),

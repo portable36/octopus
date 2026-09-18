@@ -102,7 +102,13 @@ export default function AdminSystemNotificationsPage() {
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void reload()}
+          disabled={loading}
+        >
           Refresh
         </Button>
         <Link
@@ -119,7 +125,10 @@ export default function AdminSystemNotificationsPage() {
         </Link>
       </div>
 
-      <section className="space-y-3 border border-border bg-background p-4" aria-labelledby="queue-heading">
+      <section
+        className="space-y-3 border border-border bg-background p-4"
+        aria-labelledby="queue-heading"
+      >
         <h2 id="queue-heading" className="text-sm font-medium">
           Queue health
         </h2>
@@ -157,7 +166,10 @@ export default function AdminSystemNotificationsPage() {
         )}
       </section>
 
-      <section className="space-y-3 border border-border bg-background p-4" aria-labelledby="tpl-heading">
+      <section
+        className="space-y-3 border border-border bg-background p-4"
+        aria-labelledby="tpl-heading"
+      >
         <h2 id="tpl-heading" className="text-sm font-medium">
           Templates
         </h2>
@@ -199,7 +211,10 @@ export default function AdminSystemNotificationsPage() {
         )}
       </section>
 
-      <section className="space-y-3 border border-border bg-background p-4" aria-labelledby="del-heading">
+      <section
+        className="space-y-3 border border-border bg-background p-4"
+        aria-labelledby="del-heading"
+      >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="del-heading" className="text-sm font-medium">
             Recent deliveries
@@ -240,7 +255,9 @@ export default function AdminSystemNotificationsPage() {
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
             {deliveries.length === 0 ? (
-              <li className="px-3 py-4 text-sm text-muted-foreground">No deliveries match filters.</li>
+              <li className="px-3 py-4 text-sm text-muted-foreground">
+                No deliveries match filters.
+              </li>
             ) : (
               deliveries.map((d) => (
                 <li key={d.id} className="space-y-2 px-3 py-3 text-sm">

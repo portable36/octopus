@@ -103,7 +103,10 @@ export default function AccountNotificationsPage() {
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No notifications yet.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border" aria-label="Notifications">
+          <ul
+            className="divide-y divide-border rounded-lg border border-border"
+            aria-label="Notifications"
+          >
             {items.map((item) => {
               const unread = item.readAt === null;
               return (

@@ -78,9 +78,7 @@ export interface NotificationRepository {
     userId: string,
     limit: number,
   ): Promise<{ readonly items: readonly NotificationRecord[]; readonly unreadCount: number }>;
-  listRecentForAdmin(
-    filter: AdminNotificationListFilter,
-  ): Promise<readonly NotificationRecord[]>;
+  listRecentForAdmin(filter: AdminNotificationListFilter): Promise<readonly NotificationRecord[]>;
   listDeliveryAttempts(notificationId: string): Promise<readonly NotificationDeliveryAttempt[]>;
   markRead(id: string, userId: string, readAt: Date): Promise<NotificationRecord | null>;
   updateDeliveryStatus(id: string, status: DeliveryStatus): Promise<void>;

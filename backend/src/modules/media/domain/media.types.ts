@@ -1,4 +1,4 @@
-export type MediaAssetStatus = 'quarantined' | 'ready' | 'rejected';
+export type MediaAssetStatus = 'quarantined' | 'ready' | 'rejected' | 'archived';
 
 export type MediaAssetRecord = {
   readonly id: string;

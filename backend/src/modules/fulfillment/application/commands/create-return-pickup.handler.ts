@@ -4,10 +4,7 @@ import {
   COURIER_PORT,
   type CourierPort,
 } from '../../../../shared-kernel/application/ports/courier.port';
-import {
-  ORDER_PORT,
-  type OrderPort,
-} from '../../../../shared-kernel/application/ports/order.port';
+import { ORDER_PORT, type OrderPort } from '../../../../shared-kernel/application/ports/order.port';
 import type {
   ScheduleReturnPickupInput,
   ScheduleReturnPickupResult,

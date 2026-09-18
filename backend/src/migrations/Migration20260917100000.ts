@@ -72,8 +72,12 @@ export class Migration20260917100000 extends Migration {
   }
 
   override async down(): Promise<void> {
-    this.addSql(`drop policy if exists notification_push_devices_write on "notification_push_devices";`);
-    this.addSql(`drop policy if exists notification_push_devices_select on "notification_push_devices";`);
+    this.addSql(
+      `drop policy if exists notification_push_devices_write on "notification_push_devices";`,
+    );
+    this.addSql(
+      `drop policy if exists notification_push_devices_select on "notification_push_devices";`,
+    );
     this.addSql(`drop table if exists "notification_push_devices";`);
 
     this.addSql(`

@@ -366,7 +366,9 @@ function mapTemplate(row: NotificationTemplateOrmEntity): NotificationTemplate {
   };
 }
 
-function mapDeliveryAttempt(row: NotificationDeliveryAttemptOrmEntity): NotificationDeliveryAttempt {
+function mapDeliveryAttempt(
+  row: NotificationDeliveryAttemptOrmEntity,
+): NotificationDeliveryAttempt {
   return {
     id: row.id,
     notificationId: row.notificationId,

@@ -56,14 +56,15 @@ export default function VendorCourierPage() {
         if (!cancelled) setError(null);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiClientError ? err.message : 'Failed to load courier accounts.');
+          setError(
+            err instanceof ApiClientError ? err.message : 'Failed to load courier accounts.',
+          );
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on vendor change only
   }, [vendorId]);
 
   useEffect(() => {

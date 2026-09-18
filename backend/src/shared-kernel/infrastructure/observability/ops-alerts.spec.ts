@@ -6,9 +6,7 @@ import {
 } from './ops-alerts';
 import type { QueueMetricsSnapshot } from './queue-metrics';
 
-function baseInput(
-  overrides: Partial<OpsAlertsDiagnosticsInput> = {},
-): OpsAlertsDiagnosticsInput {
+function baseInput(overrides: Partial<OpsAlertsDiagnosticsInput> = {}): OpsAlertsDiagnosticsInput {
   return {
     dependencies: {
       database: { status: 'up', latencyMs: 5 },

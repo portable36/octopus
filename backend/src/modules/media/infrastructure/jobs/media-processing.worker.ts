@@ -8,11 +8,11 @@ import {
   MEDIA_REPOSITORY,
   type MediaRepository,
 } from '../../application/ports/media-repository.interface';
-import { OBJECT_STORAGE, type ObjectStoragePort } from '../../application/ports/object-storage.port';
 import {
-  MEDIA_PROCESSING_JOB_NAMES,
-  MEDIA_PROCESSING_QUEUE,
-} from './media-processing.constants';
+  OBJECT_STORAGE,
+  type ObjectStoragePort,
+} from '../../application/ports/object-storage.port';
+import { MEDIA_PROCESSING_JOB_NAMES, MEDIA_PROCESSING_QUEUE } from './media-processing.constants';
 import type { MediaProcessingJobPayload } from './media-processing-job.types';
 import { MediaProcessingEnqueuerService } from './media-processing-enqueuer.service';
 
@@ -39,9 +39,7 @@ export class MediaProcessingWorker implements OnModuleInit, OnModuleDestroy {
 
   public async onModuleInit(): Promise<void> {
     if (!this.enqueuer.isQueueActive()) {
-      this.logger.log(
-        'Media processing worker disabled (test or OUTBOX_DISPATCH_ENABLED=false).',
-      );
+      this.logger.log('Media processing worker disabled (test or OUTBOX_DISPATCH_ENABLED=false).');
       return;
     }
 

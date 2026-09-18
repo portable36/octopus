@@ -219,6 +219,15 @@ body {
   letter-spacing: -0.08em;
 }
 
+.sf-brand-logo {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: transparent;
+}
+
 .sf-brand-copy {
   display: grid;
   gap: 0.125rem;
@@ -484,13 +493,12 @@ body {
 .sf-hero-main--photo .sf-hero-main-media {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      105deg,
-      color-mix(in srgb, var(--cf-ink) 88%, transparent) 0%,
-      color-mix(in srgb, var(--cf-ink) 45%, transparent) 48%,
-      color-mix(in srgb, var(--cf-ink) 15%, transparent) 100%
-    );
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--cf-ink) 88%, transparent) 0%,
+    color-mix(in srgb, var(--cf-ink) 45%, transparent) 48%,
+    color-mix(in srgb, var(--cf-ink) 15%, transparent) 100%
+  );
   pointer-events: none;
 }
 

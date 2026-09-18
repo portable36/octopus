@@ -41,12 +41,8 @@ export type RegisteredMediaAsset = {
   createdAt: string;
 };
 
-export type PublicMediaUrl = {
-  id: string;
-  contentType: string;
-  url: string;
-  expiresAt?: string | null;
-};
+export type { PublicMediaUrl } from '@/lib/media-public';
+export { getPublicMediaUrl } from '@/lib/media-public';
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -139,10 +135,10 @@ export function abortVendorMultipartSession(
   vendorId: string,
   input: { storageKey: string; uploadId: string },
 ): Promise<{ storageKey: string; uploadId: string; aborted: true }> {
-  return authedRequest(
-    `/vendors/${encodeURIComponent(vendorId)}/media/multipart-sessions/abort`,
-    { method: 'POST', body: input },
-  );
+  return authedRequest(`/vendors/${encodeURIComponent(vendorId)}/media/multipart-sessions/abort`, {
+    method: 'POST',
+    body: input,
+  });
 }
 
 export function registerVendorMedia(
@@ -269,13 +265,4 @@ export async function uploadVendorImage(
     storageKey: session.storageKey,
     contentPrefixBase64,
   });
-}
-
-export async function getPublicMediaUrl(mediaId: string): Promise<PublicMediaUrl | null> {
-  const { apiRequest } = await import('@/lib/api-client');
-  try {
-    return await apiRequest<PublicMediaUrl>(`/public/media/${encodeURIComponent(mediaId)}`);
-  } catch {
-    return null;
-  }
 }

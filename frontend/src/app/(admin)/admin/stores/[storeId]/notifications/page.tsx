@@ -31,8 +31,7 @@ export default function AdminStoreNotificationsPage() {
             <Link href="/admin/system/health" className="underline underline-offset-2">
               System health
             </Link>{' '}
-            — Redis / queue readiness for{' '}
-            <code className="text-[11px]">octopus.email</code>
+            — Redis / queue readiness for <code className="text-[11px]">octopus.email</code>
           </li>
           <li>
             Store id <code className="font-mono text-[11px]">{storeId}</code> appears on order

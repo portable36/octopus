@@ -2,7 +2,6 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ApiClientError } from '@/lib/api-client';
 import { OfferCard } from '@/components/storefront/offer-card';
-import { getPublicAppName } from '@/lib/env';
 import { absoluteUrl } from '@/lib/seo';
 import { fetchPublicCategories, searchProducts } from '@/lib/storefront-api';
 import { DEFAULT_THEME_SETTINGS, fetchStorefrontConfig } from '@/lib/storefront-config-api';
@@ -11,7 +10,6 @@ import { DEFAULT_THEME_SETTINGS, fetchStorefrontConfig } from '@/lib/storefront-
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: getPublicAppName(),
   description: 'Browse published categories and sellable offers',
   alternates: { canonical: absoluteUrl('/') },
 };

@@ -422,7 +422,10 @@ export function listPathaoQuoteCities(vendorId: string): Promise<CourierQuoteCit
   );
 }
 
-export function listPathaoQuoteZones(vendorId: string, cityId: number): Promise<CourierQuoteZone[]> {
+export function listPathaoQuoteZones(
+  vendorId: string,
+  cityId: number,
+): Promise<CourierQuoteZone[]> {
   return authedRequest<CourierQuoteZone[]>(
     `/fulfillment/vendors/${encodeURIComponent(vendorId)}/courier-accounts/pathao/cities/${cityId}/zones`,
   );

@@ -10,6 +10,8 @@ import { AccountNavLink } from '@/components/storefront/account-nav-link';
 import { CartNavLink } from '@/components/storefront/cart-nav-link';
 import { NotificationBell } from '@/components/storefront/notification-bell';
 import { getPublicAppName } from '@/lib/env';
+import { getPublicMediaUrl } from '@/lib/media-public';
+import { brandMarkLetter, pickSiteName } from '@/lib/storefront-branding';
 import {
   DEFAULT_THEME_SETTINGS,
   fetchStorefrontConfig,
@@ -28,6 +30,8 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const [siteName, setSiteName] = useState(getPublicAppName());
+  const [tagline, setTagline] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [brandStyle, setBrandStyle] = useState<CSSProperties | undefined>(undefined);
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME_SETTINGS);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,9 +73,18 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             },
           });
         }
-        const name = config.branding.siteName?.trim();
-        if (name) {
-          setSiteName(name);
+        const name = pickSiteName(config.branding.siteName);
+        setSiteName(name);
+        setTagline(config.branding.tagline?.trim() || null);
+
+        const logoMediaId = config.branding.logoMediaId?.trim() || null;
+        if (logoMediaId) {
+          const logo = await getPublicMediaUrl(logoMediaId);
+          if (!cancelled) {
+            setLogoUrl(logo?.url ?? null);
+          }
+        } else if (!cancelled) {
+          setLogoUrl(null);
         }
       } catch {
         // Fall back to env app name / default theme.
@@ -129,12 +142,16 @@ export function StorefrontShell({ children }: { readonly children: ReactNode }) 
             {menuOpen ? 'Close' : 'Menu'}
           </button>
           <Link href="/" className="sf-brand" onClick={() => setMenuOpen(false)}>
-            <span className="sf-brand-mark" aria-hidden="true">
-              O.
-            </span>
+            {logoUrl ? (
+              <img className="sf-brand-logo" src={logoUrl} alt="" />
+            ) : (
+              <span className="sf-brand-mark" aria-hidden="true">
+                {brandMarkLetter(siteName)}
+              </span>
+            )}
             <span className="sf-brand-copy">
               <strong>{siteName}</strong>
-              <small>Marketplace</small>
+              <small>{tagline || 'Marketplace'}</small>
             </span>
           </Link>
           <form

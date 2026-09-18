@@ -60,11 +60,7 @@ export function ProductEngagementPanel({ productId }: { readonly productId: stri
         setMessage('Saved to wishlist.');
       }
     } catch (err) {
-      setError(
-        err instanceof ApiClientError
-          ? err.message
-          : 'Sign in to manage your wishlist.',
-      );
+      setError(err instanceof ApiClientError ? err.message : 'Sign in to manage your wishlist.');
     } finally {
       setPending(false);
     }
@@ -81,9 +77,7 @@ export function ProductEngagementPanel({ productId }: { readonly productId: stri
       setMessage('Review published.');
       await reload();
     } catch (err) {
-      setError(
-        err instanceof ApiClientError ? err.message : 'Sign in to leave a review.',
-      );
+      setError(err instanceof ApiClientError ? err.message : 'Sign in to leave a review.');
     } finally {
       setPending(false);
     }
@@ -102,7 +96,13 @@ export function ProductEngagementPanel({ productId }: { readonly productId: stri
               : 'No reviews yet — be the first.'}
           </p>
         </div>
-        <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => void toggleWishlist()}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          onClick={() => void toggleWishlist()}
+        >
           {wishlisted ? '♥ Saved' : '♡ Save to wishlist'}
         </Button>
       </div>
@@ -130,7 +130,10 @@ export function ProductEngagementPanel({ productId }: { readonly productId: stri
         ))}
       </ul>
 
-      <form onSubmit={(e) => void onSubmitReview(e)} className="space-y-3 rounded-md border border-border p-4">
+      <form
+        onSubmit={(e) => void onSubmitReview(e)}
+        className="space-y-3 rounded-md border border-border p-4"
+      >
         <h3 className="text-sm font-semibold">Write a review</h3>
         <label className="block text-xs">
           Rating

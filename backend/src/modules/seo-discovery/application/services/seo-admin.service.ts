@@ -57,7 +57,8 @@ export class SeoAdminService {
     @Inject(CRAWL_ERROR_LOG_PORT) private readonly crawlErrors: CrawlErrorLogPort,
     @Inject(SEO_HEALTH_VERIFICATION_PORT) private readonly seoHealth: SeoHealthVerificationPort,
     @Inject(SYSTEM_SETTINGS_PORT) private readonly systemSettings: SystemSettingsPort,
-    @Inject(SystemSettingsRuntimeBridge) private readonly runtimeSettings: SystemSettingsRuntimeBridge,
+    @Inject(SystemSettingsRuntimeBridge)
+    private readonly runtimeSettings: SystemSettingsRuntimeBridge,
   ) {}
 
   public async getHealth(): Promise<SeoAdminHealth> {

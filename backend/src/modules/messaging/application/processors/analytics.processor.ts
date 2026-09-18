@@ -20,9 +20,7 @@ export class AnalyticsProcessor {
     const processed = await runOutboxDelivery(this.redis, job.outboxId, async () => {
       const eventName = resolveAnalyticsEventName(job);
       recordAnalyticsEvent(eventName);
-      this.logger.log(
-        `Analytics ${eventName} aggregate=${job.aggregateId} source=${job.source}`,
-      );
+      this.logger.log(`Analytics ${eventName} aggregate=${job.aggregateId} source=${job.source}`);
     });
     if (!processed) {
       this.logger.debug(`Skipping duplicate analytics job ${job.outboxId} (${job.eventType})`);

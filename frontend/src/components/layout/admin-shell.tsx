@@ -58,6 +58,12 @@ const NAV_GROUPS: readonly NavGroup[] = [
       { href: '/admin/system/security', label: 'Security', permission: 'audit.read' },
       { href: '/admin/system/website', label: 'Website', permission: 'settings.read' },
       {
+        href: '/admin/system/content/pages',
+        label: 'Content pages',
+        permission: 'website.read',
+      },
+      { href: '/admin/system/media', label: 'Media', permission: 'media.read' },
+      {
         href: '/admin/system/global-config',
         label: 'Platform config',
         permission: 'settings.read',

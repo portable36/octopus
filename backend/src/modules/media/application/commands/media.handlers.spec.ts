@@ -26,7 +26,7 @@ function createHandlers(
       expiresAt: new Date('2030-01-01T01:00:00.000Z'),
     })),
     headObject: vi.fn(async () => ({
-      storageKey: 'vendors/v1/logo.png',
+      storageKey: 'platform/logo.png',
       contentLength: 1024,
       contentType: 'image/png',
     })),
@@ -70,7 +70,7 @@ describe('MediaHandlers.registerMetadata', () => {
     originalFilename: 'logo.png',
     contentType: 'image/png',
     byteSize: 1024,
-    storageKey: 'vendors/v1/logo.png',
+    storageKey: 'platform/logo.png',
     contentPrefixBase64: PNG_PREFIX,
     actorUserId: 'user-1',
     actorRoles: ['PLATFORM_ADMIN'] as const,
@@ -133,7 +133,7 @@ describe('MediaHandlers.registerMetadata', () => {
   it('rejects when declared size does not match HeadObject', async () => {
     const { handlers, media } = createHandlers(undefined, {
       headObject: vi.fn(async () => ({
-        storageKey: 'vendors/v1/logo.png',
+        storageKey: 'platform/logo.png',
         contentLength: 999,
         contentType: 'image/png',
       })),
@@ -142,6 +142,20 @@ describe('MediaHandlers.registerMetadata', () => {
     await expect(handlers.registerMetadata(base)).rejects.toMatchObject({
       code: 'MEDIA_SIZE_MISMATCH',
     });
+    expect(media.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects platform register when storage key is outside platform namespace', async () => {
+    const { handlers, media } = createHandlers();
+
+    await expect(
+      handlers.registerMetadata({
+        ...base,
+        vendorId: null,
+        storageKey: 'vendors/v1/logo.png',
+      }),
+    ).rejects.toMatchObject({ code: 'MEDIA_INVALID_KEY' });
+
     expect(media.save).not.toHaveBeenCalled();
   });
 
@@ -166,7 +180,7 @@ describe('MediaHandlers.registerMetadata', () => {
       media as never,
       {
         headObject: vi.fn(async () => ({
-          storageKey: 'vendors/v1/logo.png',
+          storageKey: 'platform/logo.png',
           contentLength: 1024,
           contentType: 'image/png',
         })),
@@ -234,6 +248,81 @@ describe('MediaHandlers.createUploadSession', () => {
         actorRoles: ['VENDOR_OWNER'],
       }),
     ).rejects.toMatchObject({ code: 'MEDIA_INVALID_SIZE' });
+  });
+});
+
+describe('MediaHandlers.createPlatformUploadSession', () => {
+  it('returns a presigned session under the platform namespace', async () => {
+    const { handlers, objectStorage } = createHandlers();
+
+    const session = await handlers.createPlatformUploadSession({
+      originalFilename: 'brand.png',
+      contentType: 'image/png',
+      byteSize: 2048,
+      actorUserId: 'admin-1',
+      actorRoles: ['PLATFORM_ADMIN'],
+    });
+
+    expect(session.storageKey).toMatch(/^platform\/.+\.png$/);
+    expect(objectStorage.createPresignedPut).toHaveBeenCalled();
+  });
+
+  it('rejects non-admin roles', async () => {
+    const { handlers } = createHandlers();
+    await expect(
+      handlers.createPlatformUploadSession({
+        originalFilename: 'brand.png',
+        contentType: 'image/png',
+        byteSize: 2048,
+        actorUserId: 'user-1',
+        actorRoles: ['VENDOR_OWNER'],
+      }),
+    ).rejects.toMatchObject({ message: expect.stringMatching(/PLATFORM_ADMIN/) });
+  });
+});
+
+describe('MediaHandlers.listMedia and archiveMedia', () => {
+  it('lists via repository and archives ready assets', async () => {
+    const asset = {
+      id: 'm1',
+      originalFilename: 'logo.png',
+      contentType: 'image/png',
+      byteSize: 100,
+      storageKey: 'platform/x.png',
+      uploadedBy: 'admin-1',
+      vendorId: null,
+      storeId: null,
+      status: 'ready' as const,
+      rejectionReason: null,
+      processedAt: new Date(),
+      createdAt: new Date(),
+    };
+    const media = {
+      save: vi.fn(),
+      findById: vi.fn(async () => asset),
+      list: vi.fn(async () => ({ items: [asset], nextCursor: null })),
+      updateProcessingStatus: vi.fn(async () => undefined),
+    };
+    const { handlers } = createHandlers(media);
+
+    const listed = await handlers.listMedia({
+      actorRoles: ['PLATFORM_ADMIN'],
+      scope: 'platform',
+    });
+    expect(listed.items).toHaveLength(1);
+    expect(media.list).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: 'platform', includeArchived: false }),
+    );
+
+    const archived = await handlers.archiveMedia({
+      mediaId: 'm1',
+      actorUserId: 'admin-1',
+      actorRoles: ['PLATFORM_ADMIN'],
+    });
+    expect(archived.status).toBe('archived');
+    expect(media.updateProcessingStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'm1', status: 'archived' }),
+    );
   });
 });
 
@@ -382,10 +471,14 @@ describe('MediaHandlers.resolveImageDownloadUrl', () => {
         createdAt: new Date(),
       })),
     };
-    const { handlers, objectStorage } = createHandlers(media, {}, {
-      hasExplicitMediaPublicBaseUrl: true,
-      mediaPublicBaseUrl: 'https://cdn.example/media',
-    });
+    const { handlers, objectStorage } = createHandlers(
+      media,
+      {},
+      {
+        hasExplicitMediaPublicBaseUrl: true,
+        mediaPublicBaseUrl: 'https://cdn.example/media',
+      },
+    );
 
     const resolved = await handlers.resolveImageDownloadUrl('m1');
     expect(resolved).toEqual({

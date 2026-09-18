@@ -4,10 +4,7 @@ import { AppConfigService } from '../../../../config/app-config.service';
 import { User } from '../../domain/aggregates/user.aggregate';
 import { InvalidOtpError } from '../errors/identity.errors';
 import type { AuthSession } from '../dto/auth-session.dto';
-import {
-  LOGIN_RATE_LIMITER,
-  type LoginRateLimiter,
-} from '../ports/login-rate-limiter.interface';
+import { LOGIN_RATE_LIMITER, type LoginRateLimiter } from '../ports/login-rate-limiter.interface';
 import { OTP_STORE, type OtpStore } from '../ports/otp-store.interface';
 import { PASSWORD_HASHER, type PasswordHasher } from '../ports/password-hasher.interface';
 import { USER_REPOSITORY, type UserRepository } from '../ports/user-repository.interface';

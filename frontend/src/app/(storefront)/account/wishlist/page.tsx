@@ -68,7 +68,10 @@ export default function AccountWishlistPage() {
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border">
           {items.map((item) => (
-            <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+            <li
+              key={item.id}
+              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
+            >
               <div>
                 <Link
                   href={`/products/${encodeURIComponent(item.productId)}`}

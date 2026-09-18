@@ -602,7 +602,9 @@ describe('CheckoutSubmitHandler', () => {
       ],
     });
     const pricing = {
-      quote: vi.fn(async () => quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }])),
+      quote: vi.fn(async () =>
+        quoteFor('store-a', [{ lineId: 'line-a', quantity: 1, unit: 1000 }]),
+      ),
       recordUsage: vi.fn(),
     };
     const inventory = {

@@ -65,12 +65,12 @@ Recipient: `ORDER_PORT.getNotificationSnapshot` + `USER_CONTACT_PORT` (email). G
 
 ## Channels
 
-| Channel | v1        | Notes                                      |
-| ------- | --------- | ------------------------------------------ |
-| EMAIL   | log stub  | SMTP later                                 |
-| IN_APP  | Postgres  |                                            |
-| SMS     | log stub  | needs `recipientPhone` on notify           |
-| PUSH    | log stub  | device registry; caller must include PUSH |
+| Channel | v1       | Notes                                     |
+| ------- | -------- | ----------------------------------------- |
+| EMAIL   | log stub | SMTP later                                |
+| IN_APP  | Postgres |                                           |
+| SMS     | log stub | needs `recipientPhone` on notify          |
+| PUSH    | log stub | device registry; caller must include PUSH |
 
 PUSH is **not** auto-added by the event consumer — only when `channels` includes `PUSH`.
 

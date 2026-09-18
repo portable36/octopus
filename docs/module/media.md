@@ -56,14 +56,14 @@ Provider SDKs (S3/MinIO/R2) stay in infrastructure adapters.
 
 ## Shipped vs later
 
-| Shipped | Later |
-| --- | --- |
-| Presigned single-object PUT (≤10MB) | Virus/malware scanner beyond magic-byte quarantine |
-| Multipart + resumable parts (≤100MB; ListParts resume) | Image variants / derivatives (job stubbed) |
-| Magic-byte + HeadObject checks | Dedicated multipart session DB rows (S3 uploadId is enough today) |
-| Signed GET or `MEDIA_PUBLIC_BASE_URL` CDN | |
-| Async quarantine (`octopus.media-processing` / `MediaQuarantineValidate`) | |
-| Download gated until `status=ready` | |
+| Shipped                                                                   | Later                                                             |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Presigned single-object PUT (≤10MB)                                       | Virus/malware scanner beyond magic-byte quarantine                |
+| Multipart + resumable parts (≤100MB; ListParts resume)                    | Image variants / derivatives (job stubbed)                        |
+| Magic-byte + HeadObject checks                                            | Dedicated multipart session DB rows (S3 uploadId is enough today) |
+| Signed GET or `MEDIA_PUBLIC_BASE_URL` CDN                                 |                                                                   |
+| Async quarantine (`octopus.media-processing` / `MediaQuarantineValidate`) |                                                                   |
+| Download gated until `status=ready`                                       |                                                                   |
 
 ## Testing requirements
 

@@ -1482,8 +1482,9 @@ Build the platform admin **presentation layer** over existing bounded contexts
 
 ## Phase 20.3 — Website Control Center
 
-Settings-backed branding/general is ready; **CMS page builder** stays deferred
-(no CMS module). Do not start page-builder / draft→publish work until Media + CMS exist.
+Settings-backed branding/general is ready. **Admin Media Library** unblocked CMS
+pages. Thin CMS Pages vertical (`content` module) ships draft→publish + public
+`/pages/[slug]`; **visual page builder** / menus / banners still deferred.
 
 ### 20.3.1 — Storefront config + branding (skeleton) & Theme Customizer
 
@@ -1494,7 +1495,10 @@ Settings-backed branding/general is ready; **CMS page builder** stays deferred
 - [x] Real-time Interactive Storefront Live Theme Preview (desktop & mobile viewports)
 - [x] StorefrontShell & Storefront HomePage dynamic consumption (theme styling, custom announcement bar, hero & promo banner slots, header nav, and footer columns)
 - [x] Redis cache for effective config only; DB remains truth
-- [ ] CMS page builder / full draft→publish versioning (deferred until dedicated Media/CMS module)
+- [x] CMS pages vertical (P1): `content` module draft→publish, admin
+      `/admin/system/content/pages`, public `GET /storefront/content/pages/:slug` +
+      storefront `/pages/[slug]` (structured JSON blocks; no visual builder)
+- [ ] Visual CMS page builder / menus / redirects (still deferred)
 
 ---
 
@@ -2019,6 +2023,7 @@ Policy and env map: [infrastructure.md](./architecture/infrastructure.md). Align
 - [x] Secrets (host `.env` / `host.secrets.env` + [`deploy/host.secrets.env.example`](../deploy/host.secrets.env.example); compose `${VAR}` wiring)
 - [x] Monitoring (`deploy/check-health.sh` + compose healthchecks + `/health/*`; external uptime host ops)
 - [ ] Backups (Phase 29)
+
 ### IaC
 
 Chosen:

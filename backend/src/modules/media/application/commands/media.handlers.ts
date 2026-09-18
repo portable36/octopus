@@ -32,6 +32,8 @@ export const MEDIA_ALLOWED_CONTENT_TYPES = new Set([
   'image/png',
   'image/webp',
   'image/gif',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
 ]);
 
 export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
@@ -54,7 +56,17 @@ const CONTENT_TYPE_EXTENSION: Readonly<Record<string, string>> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'image/gif': 'gif',
+  'image/x-icon': 'ico',
+  'image/vnd.microsoft.icon': 'ico',
 };
+
+function normalizeContentType(contentType: string): string {
+  const normalized = contentType.trim().toLowerCase();
+  if (normalized === 'image/vnd.microsoft.icon') {
+    return 'image/x-icon';
+  }
+  return normalized;
+}
 
 function assertSafeStorageKey(storageKey: string): void {
   const key = storageKey.trim();
@@ -79,9 +91,19 @@ function assertVendorStorageKey(vendorId: string, storageKey: string): void {
   }
 }
 
+function assertPlatformStorageKey(storageKey: string): void {
+  if (!storageKey.startsWith('platform/')) {
+    throw new MediaDomainError(
+      'storageKey must belong to the platform upload namespace.',
+      'MEDIA_INVALID_KEY',
+    );
+  }
+}
+
 function extensionForContentType(contentType: string): string {
-  const normalized = contentType.trim().toLowerCase();
-  const extension = CONTENT_TYPE_EXTENSION[normalized];
+  const normalized = normalizeContentType(contentType);
+  const extension =
+    CONTENT_TYPE_EXTENSION[normalized] ?? CONTENT_TYPE_EXTENSION[contentType.trim().toLowerCase()];
   if (!extension) {
     throw new MediaDomainError(
       `contentType not allowed: ${normalized}`,
@@ -122,8 +144,9 @@ function assertMagicMatchesDeclared(contentType: string, contentPrefixBase64: st
     );
   }
   const sniffed = sniffImageContentType(prefix);
-  const declared = contentType.trim().toLowerCase();
-  if (!sniffed || sniffed !== declared) {
+  const declared = normalizeContentType(contentType);
+  const sniffedNormalized = sniffed ? normalizeContentType(sniffed) : null;
+  if (!sniffedNormalized || sniffedNormalized !== declared) {
     throw new MediaDomainError(
       'File header does not match declared contentType.',
       'MEDIA_MAGIC_MISMATCH',
@@ -176,6 +199,120 @@ export class MediaHandlers {
       originalFilename: input.originalFilename.trim(),
       contentType: input.contentType.trim().toLowerCase(),
       byteSize: input.byteSize,
+    };
+  }
+
+  public async createPlatformUploadSession(input: {
+    readonly originalFilename: string;
+    readonly contentType: string;
+    readonly byteSize: number;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    if (!input.actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new MediaAccessDeniedError('Platform media uploads require PLATFORM_ADMIN.');
+    }
+    assertAllowedMediaMetadata(input.contentType, input.byteSize, MEDIA_MAX_BYTES);
+
+    const extension = extensionForContentType(input.contentType);
+    const objectId = UniqueID.create().value;
+    const storageKey = `platform/${objectId}.${extension}`;
+    assertSafeStorageKey(storageKey);
+    assertPlatformStorageKey(storageKey);
+
+    const contentType = normalizeContentType(input.contentType);
+    const session = await this.objectStorage.createPresignedPut({
+      storageKey,
+      contentType,
+      byteSize: input.byteSize,
+      expiresInSeconds: MEDIA_UPLOAD_SESSION_TTL_SECONDS,
+    });
+
+    return {
+      storageKey: session.storageKey,
+      uploadUrl: session.uploadUrl,
+      expiresAt: session.expiresAt.toISOString(),
+      requiredHeaders: session.requiredHeaders,
+      originalFilename: input.originalFilename.trim(),
+      contentType,
+      byteSize: input.byteSize,
+    };
+  }
+
+  public getUploadLimits() {
+    return {
+      allowedContentTypes: [...MEDIA_ALLOWED_CONTENT_TYPES].sort(),
+      maxBytes: MEDIA_MAX_BYTES,
+      multipartMaxBytes: MEDIA_MULTIPART_MAX_BYTES,
+    };
+  }
+
+  public async listMedia(input: {
+    readonly actorRoles: readonly string[];
+    readonly limit?: number;
+    readonly cursor?: string | null;
+    readonly status?: import('../../domain/media.types').MediaAssetStatus | null;
+    readonly includeArchived?: boolean;
+    readonly contentType?: string | null;
+    readonly q?: string | null;
+    readonly scope?: 'platform' | 'all';
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_READ_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.read.');
+    }
+    const limit = Math.min(Math.max(input.limit ?? 24, 1), 100);
+    return this.media.list({
+      limit,
+      cursor: input.cursor ?? null,
+      status: input.status ?? null,
+      includeArchived: input.includeArchived === true,
+      contentType: input.contentType ?? null,
+      q: input.q ?? null,
+      scope: input.scope ?? 'platform',
+    });
+  }
+
+  public async archiveMedia(input: {
+    readonly mediaId: string;
+    readonly actorUserId: string;
+    readonly actorRoles: readonly string[];
+  }) {
+    if (!input.actorRoles.some((role) => MEDIA_WRITE_ROLES.has(role))) {
+      throw new MediaAccessDeniedError('Missing permission media.write.');
+    }
+    if (!input.actorRoles.includes('PLATFORM_ADMIN')) {
+      throw new MediaAccessDeniedError('Archiving media requires PLATFORM_ADMIN.');
+    }
+    const asset = await this.media.findById(input.mediaId);
+    if (!asset) {
+      throw new MediaNotFoundError();
+    }
+    if (asset.status === 'archived') {
+      return asset;
+    }
+    const processedAt = new Date();
+    await this.media.updateProcessingStatus({
+      id: asset.id,
+      status: 'archived',
+      rejectionReason: asset.rejectionReason,
+      processedAt,
+    });
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'media.archived',
+      resourceType: 'media_asset',
+      resourceId: asset.id,
+      vendorId: asset.vendorId,
+      storeId: asset.storeId,
+      after: { status: 'archived' },
+    });
+    return {
+      ...asset,
+      status: 'archived' as const,
+      processedAt,
     };
   }
 
@@ -299,11 +436,7 @@ export class MediaHandlers {
     }
     const sorted = [...input.parts].sort((a, b) => a.partNumber - b.partNumber);
     for (const part of sorted) {
-      if (
-        !Number.isInteger(part.partNumber) ||
-        part.partNumber < 1 ||
-        !part.etag.trim()
-      ) {
+      if (!Number.isInteger(part.partNumber) || part.partNumber < 1 || !part.etag.trim()) {
         throw new MediaDomainError('Each part needs partNumber and etag.', 'MEDIA_INVALID_PART');
       }
     }
@@ -366,6 +499,8 @@ export class MediaHandlers {
     assertSafeStorageKey(input.storageKey);
     if (input.vendorId) {
       assertVendorStorageKey(input.vendorId, input.storageKey);
+    } else {
+      assertPlatformStorageKey(input.storageKey);
     }
     assertMagicMatchesDeclared(input.contentType, input.contentPrefixBase64);
 
@@ -384,10 +519,11 @@ export class MediaHandlers {
     }
 
     const queueActive = this.processingEnqueuer?.isQueueActive() === true;
+    const contentType = normalizeContentType(input.contentType);
     const asset = {
       id: UniqueID.create().value,
       originalFilename: input.originalFilename.trim(),
-      contentType: input.contentType.trim().toLowerCase(),
+      contentType,
       byteSize: input.byteSize,
       storageKey: input.storageKey.trim(),
       uploadedBy: input.actorUserId,

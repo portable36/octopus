@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WebhooksProcessor } from './webhooks.processor';
 
-function createProcessor(overrides: {
-  urls?: string[];
-  secret?: string | undefined;
-  allowHosts?: string[];
-  fetchImpl?: typeof fetch;
-} = {}) {
+function createProcessor(
+  overrides: {
+    urls?: string[];
+    secret?: string | undefined;
+    allowHosts?: string[];
+    fetchImpl?: typeof fetch;
+  } = {},
+) {
   const redis = {
     get: vi.fn(async () => null),
     set: vi.fn(async () => 'OK'),

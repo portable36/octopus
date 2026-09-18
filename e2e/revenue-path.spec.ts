@@ -1,11 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { isApiLive } from './helpers/api';
-import {
-  findFirstOfferProductId,
-  loginViaUi,
-  registerViaUi,
-  uniqueE2eEmail,
-} from './helpers/auth';
+import { findFirstOfferProductId, loginViaUi, registerViaUi, uniqueE2eEmail } from './helpers/auth';
 
 /**
  * Phase 26 — authenticated revenue journey.

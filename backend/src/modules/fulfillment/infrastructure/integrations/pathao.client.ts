@@ -94,7 +94,9 @@ export class PathaoCourierClient {
     };
   }
 
-  public async quoteDelivery(input: QuoteCourierDeliveryInput): Promise<QuoteCourierDeliveryResult> {
+  public async quoteDelivery(
+    input: QuoteCourierDeliveryInput,
+  ): Promise<QuoteCourierDeliveryResult> {
     const creds = await this.requireCreds(input.vendorId);
     const token = await this.getAccessToken(creds, input.vendorId);
     const json = await this.authedRequest<{

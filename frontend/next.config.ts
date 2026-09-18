@@ -48,9 +48,9 @@ function withOptionalAnalyzer(config: NextConfig): NextConfig {
     return config;
   }
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const bundleAnalyzer = require('@next/bundle-analyzer') as (
-    options: { enabled?: boolean },
-  ) => (c: NextConfig) => NextConfig;
+  const bundleAnalyzer = require('@next/bundle-analyzer') as (options: {
+    enabled?: boolean;
+  }) => (c: NextConfig) => NextConfig;
   return bundleAnalyzer({ enabled: true })(config);
 }
 

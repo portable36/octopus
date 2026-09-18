@@ -113,9 +113,9 @@ describe('User aggregate', () => {
     expect(user.emailVerified).toBe(true);
     expect(user.getUncommittedEvents().map((e) => e.eventName)).toContain('UserEmailVerified');
     user.markEmailVerified();
-    expect(user.getUncommittedEvents().filter((e) => e.eventName === 'UserEmailVerified')).toHaveLength(
-      1,
-    );
+    expect(
+      user.getUncommittedEvents().filter((e) => e.eventName === 'UserEmailVerified'),
+    ).toHaveLength(1);
   });
 
   it('clearEvents empties uncommitted events', () => {

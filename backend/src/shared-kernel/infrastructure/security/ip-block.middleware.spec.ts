@@ -47,7 +47,11 @@ describe('IpBlockMiddleware', () => {
     const isBlocked = vi.fn().mockResolvedValue(false);
     const middleware = new IpBlockMiddleware({ isBlocked } as unknown as IpBlockPort);
     const next = vi.fn();
-    middleware.use({ path: '/api/v1/catalog/products', ip: '203.0.113.10' } as Request, mockRes(), next);
+    middleware.use(
+      { path: '/api/v1/catalog/products', ip: '203.0.113.10' } as Request,
+      mockRes(),
+      next,
+    );
     await vi.waitFor(() => expect(next).toHaveBeenCalledOnce());
   });
 });

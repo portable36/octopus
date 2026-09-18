@@ -24,7 +24,9 @@ export async function listNotifications(limit = 50): Promise<NotificationListRes
   return authedRequest<NotificationListResponse>(`/notifications?limit=${clamped}`);
 }
 
-export async function markNotificationRead(id: string): Promise<{ id: string; readAt: string | null }> {
+export async function markNotificationRead(
+  id: string,
+): Promise<{ id: string; readAt: string | null }> {
   return authedRequest(`/notifications/${encodeURIComponent(id)}/read`, { method: 'POST' });
 }
 

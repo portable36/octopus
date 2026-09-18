@@ -3,10 +3,12 @@ import { MediaProcessingWorker } from './media-processing.worker';
 
 const PNG_PREFIX = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 
-function createWorker(overrides: {
-  asset?: Record<string, unknown> | null;
-  prefix?: Buffer | null;
-} = {}) {
+function createWorker(
+  overrides: {
+    asset?: Record<string, unknown> | null;
+    prefix?: Buffer | null;
+  } = {},
+) {
   const asset =
     overrides.asset === null
       ? null

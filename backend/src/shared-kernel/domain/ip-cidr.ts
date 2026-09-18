@@ -137,8 +137,7 @@ export function isBlockedByEntries(
   }
   for (const entry of entries) {
     if (entry.expiresAt) {
-      const expires =
-        entry.expiresAt instanceof Date ? entry.expiresAt : new Date(entry.expiresAt);
+      const expires = entry.expiresAt instanceof Date ? entry.expiresAt : new Date(entry.expiresAt);
       if (Number.isFinite(expires.getTime()) && expires.getTime() <= now.getTime()) {
         continue;
       }

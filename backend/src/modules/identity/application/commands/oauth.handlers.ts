@@ -7,10 +7,7 @@ import {
   InvalidOAuthStateError,
 } from '../errors/identity.errors';
 import type { AuthSession } from '../dto/auth-session.dto';
-import {
-  OAUTH_PROVIDER_CLIENT,
-  type OAuthProviderClient,
-} from '../ports/oauth-provider.interface';
+import { OAUTH_PROVIDER_CLIENT, type OAuthProviderClient } from '../ports/oauth-provider.interface';
 import {
   OAUTH_STATE_STORE,
   type OAuthProvider,

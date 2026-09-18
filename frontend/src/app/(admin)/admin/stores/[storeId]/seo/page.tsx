@@ -24,8 +24,7 @@ export default function AdminStoreSeoPage() {
           </Link>
         </p>
         <p className="text-xs text-muted-foreground">
-          Store id for reference:{' '}
-          <code className="font-mono text-[11px]">{storeId}</code>
+          Store id for reference: <code className="font-mono text-[11px]">{storeId}</code>
         </p>
       </section>
 

@@ -130,9 +130,7 @@ export class SeoDiscoveryEnqueuerService implements OnModuleDestroy {
       });
     } catch (error) {
       if (isDuplicateJobIdError(error)) {
-        this.logger.debug(
-          `Meta CAPI event ${input.eventId} already queued; treating as success.`,
-        );
+        this.logger.debug(`Meta CAPI event ${input.eventId} already queued; treating as success.`);
         return;
       }
       throw error;

@@ -14,8 +14,7 @@ export type MediaGenerateVariantsJobPayload = {
 };
 
 export type MediaProcessingJobPayload =
-  | MediaQuarantineValidateJobPayload
-  | MediaGenerateVariantsJobPayload;
+  MediaQuarantineValidateJobPayload | MediaGenerateVariantsJobPayload;
 
 export function isMediaProcessingJobName(value: string): value is MediaProcessingJobName {
   return (

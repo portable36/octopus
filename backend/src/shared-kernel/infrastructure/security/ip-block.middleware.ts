@@ -21,16 +21,13 @@ export class IpBlockMiddleware implements NestMiddleware {
           next();
           return;
         }
-        res
-          .status(403)
-          .type('application/problem+json')
-          .json({
-            type: 'about:blank',
-            title: 'Forbidden',
-            status: 403,
-            detail: 'Your IP address has been blocked.',
-            code: 'IP_BLOCKED',
-          });
+        res.status(403).type('application/problem+json').json({
+          type: 'about:blank',
+          title: 'Forbidden',
+          status: 403,
+          detail: 'Your IP address has been blocked.',
+          code: 'IP_BLOCKED',
+        });
       })
       .catch(() => {
         // Fail open on unexpected errors so Redis/DB blips do not take down the site.

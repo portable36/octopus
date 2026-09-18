@@ -12,8 +12,5 @@ export const OAUTH_PROVIDER_CLIENT = Symbol('OAUTH_PROVIDER_CLIENT');
 export interface OAuthProviderClient {
   isMockMode(provider: OAuthProvider): boolean;
   buildAuthorizationUrl(provider: OAuthProvider, state: string): string;
-  exchangeAuthorizationCode(
-    provider: OAuthProvider,
-    code: string,
-  ): Promise<OAuthProfile>;
+  exchangeAuthorizationCode(provider: OAuthProvider, code: string): Promise<OAuthProfile>;
 }

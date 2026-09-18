@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState, type CSSProperties } from 'react';
 import { useAccessToken } from '@/lib/use-access-token';
 import { AdminPageHeader } from '@/components/layout/admin-page-header';
+import { MediaLibraryPicker } from '@/components/admin/media-library-picker';
 import { Button } from '@/components/ui/button';
 import { checkboxClass, fieldClass } from '@/components/ui/field';
 import { apiRequest, ApiClientError } from '@/lib/api-client';
@@ -1104,6 +1105,13 @@ export default function AdminWebsiteSettingsPage() {
                   }
                   className={`${fieldClass} font-mono text-xs`}
                 />
+                <MediaLibraryPicker
+                  label="logo"
+                  value={branding?.logoMediaId ?? null}
+                  onChange={(mediaId) =>
+                    setBranding((prev) => (prev ? { ...prev, logoMediaId: mediaId } : null))
+                  }
+                />
               </label>
               <label className="flex flex-col gap-1 text-xs">
                 <span className="font-medium text-foreground">Favicon media ID</span>
@@ -1116,6 +1124,13 @@ export default function AdminWebsiteSettingsPage() {
                     )
                   }
                   className={`${fieldClass} font-mono text-xs`}
+                />
+                <MediaLibraryPicker
+                  label="favicon"
+                  value={branding?.faviconMediaId ?? null}
+                  onChange={(mediaId) =>
+                    setBranding((prev) => (prev ? { ...prev, faviconMediaId: mediaId } : null))
+                  }
                 />
               </label>
             </form>
@@ -1242,8 +1257,7 @@ export default function AdminWebsiteSettingsPage() {
               <div
                 className="px-3 py-1 text-center text-3xs font-medium"
                 style={{
-                  backgroundColor:
-                    normalizeCssHexColor(theme.colors.announcementBg) || '#1e293b',
+                  backgroundColor: normalizeCssHexColor(theme.colors.announcementBg) || '#1e293b',
                   color: normalizeCssHexColor(theme.colors.announcementText) || '#ffffff',
                 }}
               >

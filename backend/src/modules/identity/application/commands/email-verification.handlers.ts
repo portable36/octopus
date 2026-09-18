@@ -1,9 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../../../config/app-config.service';
-import {
-  InvalidEmailVerificationTokenError,
-  UserNotFoundError,
-} from '../errors/identity.errors';
+import { InvalidEmailVerificationTokenError, UserNotFoundError } from '../errors/identity.errors';
 import {
   EMAIL_VERIFICATION_STORE,
   type EmailVerificationStore,

@@ -52,12 +52,12 @@ npx.cmd playwright show-report
 
 ## Layout
 
-| Path                          | Role                                                      |
-| ----------------------------- | --------------------------------------------------------- |
-| `playwright.config.ts`        | baseURL, Chromium project, `webServer`                    |
-| `e2e/smoke.spec.ts`           | Storefront + admin shell smokes (Phase 26.1 page renders) |
-| `e2e/martvill-browse.spec.ts` | Quick view, vendor shop, store PLP (data-dependent skips) |
+| Path                          | Role                                                       |
+| ----------------------------- | ---------------------------------------------------------- |
+| `playwright.config.ts`        | baseURL, Chromium project, `webServer`                     |
+| `e2e/smoke.spec.ts`           | Storefront + admin shell smokes (Phase 26.1 page renders)  |
+| `e2e/martvill-browse.spec.ts` | Quick view, vendor shop, store PLP (data-dependent skips)  |
 | `e2e/revenue-path.spec.ts`    | Authenticated register/login + COD checkout (API + offers) |
-| `e2e/helpers/`                | API live check + auth helpers                             |
+| `e2e/helpers/`                | API live check + auth helpers                              |
 
 `PLAYWRIGHT_BASE_URL` overrides the default `http://127.0.0.1:3001`.

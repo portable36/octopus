@@ -123,10 +123,7 @@ export default function VendorReturnsPage() {
     void reload();
   }, [reload]);
 
-  const visible = useMemo(
-    () => returns.filter((r) => matchesFilter(r, filter)),
-    [returns, filter],
-  );
+  const visible = useMemo(() => returns.filter((r) => matchesFilter(r, filter)), [returns, filter]);
 
   const selected = useMemo(
     () => returns.find((r) => r.id === selectedId) ?? null,
@@ -210,12 +207,18 @@ export default function VendorReturnsPage() {
       </header>
 
       {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+        <p
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="rounded-md border border-emerald-500/30 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200" role="status">
+        <p
+          className="rounded-md border border-emerald-500/30 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+          role="status"
+        >
           {message}
         </p>
       ) : null}
@@ -235,7 +238,13 @@ export default function VendorReturnsPage() {
             {f.label}
           </button>
         ))}
-        <Button type="button" size="sm" variant="outline" disabled={loading || pending} onClick={() => void reload()}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={loading || pending}
+          onClick={() => void reload()}
+        >
           {loading ? 'Refreshing…' : 'Refresh'}
         </Button>
       </div>
@@ -369,7 +378,10 @@ export default function VendorReturnsPage() {
                     size="sm"
                     disabled={pending}
                     onClick={() =>
-                      void run(() => receiveReturn(selected.id), 'Marked received — inspection started.')
+                      void run(
+                        () => receiveReturn(selected.id),
+                        'Marked received — inspection started.',
+                      )
                     }
                   >
                     Mark received
@@ -378,7 +390,10 @@ export default function VendorReturnsPage() {
               </div>
 
               {(selected.status === 'REQUESTED' || selected.status === 'UNDER_REVIEW') && (
-                <form onSubmit={(e) => void onReject(e)} className="space-y-3 rounded-md border border-border p-3">
+                <form
+                  onSubmit={(e) => void onReject(e)}
+                  className="space-y-3 rounded-md border border-border p-3"
+                >
                   <h3 className="text-sm font-semibold">Reject return</h3>
                   <label className="block text-xs">
                     Reason code
@@ -405,7 +420,10 @@ export default function VendorReturnsPage() {
               )}
 
               {(selected.status === 'RECEIVED' || selected.status === 'INSPECTING') && (
-                <form onSubmit={(e) => void onInspect(e)} className="space-y-3 rounded-md border border-border p-3">
+                <form
+                  onSubmit={(e) => void onInspect(e)}
+                  className="space-y-3 rounded-md border border-border p-3"
+                >
                   <h3 className="text-sm font-semibold">Complete inspection</h3>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <label className="block text-xs">

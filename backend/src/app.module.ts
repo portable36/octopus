@@ -25,6 +25,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { MediaModule } from './modules/media/media.module';
+import { ContentModule } from './modules/content/content.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { ReturnsModule } from './modules/returns/returns.module';
@@ -122,6 +123,7 @@ import { AiPersonalizationModule } from './modules/ai-personalization/ai-persona
     CheckoutModule,
     SettingsModule,
     MediaModule,
+    ContentModule,
     AuditModule,
     PayoutModule,
     NotificationModule,

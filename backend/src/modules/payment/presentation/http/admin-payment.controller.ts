@@ -47,17 +47,17 @@ export class AdminPaymentController {
       bkash: {
         configured: Boolean(
           this.config.bkashAppKey &&
-            this.config.bkashAppSecret &&
-            this.config.bkashUsername &&
-            this.config.bkashPassword,
+          this.config.bkashAppSecret &&
+          this.config.bkashUsername &&
+          this.config.bkashPassword,
         ),
         sandbox: this.config.bkashIsSandbox,
       },
       nagad: {
         configured: Boolean(
           this.config.nagadMerchantId &&
-            this.config.nagadMerchantPrivateKey &&
-            this.config.nagadPgPublicKey,
+          this.config.nagadMerchantPrivateKey &&
+          this.config.nagadPgPublicKey,
         ),
         sandbox: this.config.nagadIsSandbox,
       },

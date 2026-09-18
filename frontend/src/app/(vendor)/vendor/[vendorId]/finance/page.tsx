@@ -334,9 +334,7 @@ export default function VendorFinancePage() {
                     ...(statementTo ? { to: statementTo } : {}),
                   });
                 } catch (err) {
-                  setStatementError(
-                    err instanceof Error ? err.message : 'Failed to download CSV.',
-                  );
+                  setStatementError(err instanceof Error ? err.message : 'Failed to download CSV.');
                 } finally {
                   setCsvPending(false);
                 }

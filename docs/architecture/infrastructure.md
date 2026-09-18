@@ -44,12 +44,12 @@ Never share production secrets with development or commit them.
 
 Treat the VPS as the trust boundary. Recommended host firewall (`ufw` or equivalent):
 
-| Allow inbound | Source        | Purpose                          |
-| ------------- | ------------- | -------------------------------- |
-| 22/tcp        | admin IP / VPN | SSH deploy                       |
-| 80/tcp        | Cloudflare only (or world if origin cert) | HTTP → nginx |
-| 443/tcp       | Cloudflare only | HTTPS → nginx                  |
-| Deny          | public        | Postgres `5432`, Redis `6379`, Meilisearch, MinIO, Node ports |
+| Allow inbound | Source                                    | Purpose                                                       |
+| ------------- | ----------------------------------------- | ------------------------------------------------------------- |
+| 22/tcp        | admin IP / VPN                            | SSH deploy                                                    |
+| 80/tcp        | Cloudflare only (or world if origin cert) | HTTP → nginx                                                  |
+| 443/tcp       | Cloudflare only                           | HTTPS → nginx                                                 |
+| Deny          | public                                    | Postgres `5432`, Redis `6379`, Meilisearch, MinIO, Node ports |
 
 Publish only nginx (or Caddy) on 80/443; keep compose service ports bound to `127.0.0.1` when exposing beyond the default matrix. Cloudflare orange-cloud + origin allowlist is preferred over opening the origin to the world.
 
@@ -65,12 +65,12 @@ Compose substitutes `${JWT_SECRET:-…}` from the project `.env`. Optional `host
 
 ## Monitoring / uptime
 
-| Layer            | Contract                                                                 |
-| ---------------- | ------------------------------------------------------------------------ |
-| Process          | Compose `healthcheck` on `backend-api` (`/api/v1/health/ready`) + storefront |
-| App diagnostics  | `GET /api/v1/health/live`, `/ready`, `/alerts` + admin `/admin/system/alerts` |
-| Host cron        | [`deploy/check-health.sh`](../../deploy/check-health.sh) every 5 minutes |
-| External uptime  | Point Cloudflare Health Checks / UptimeRobot / Better Stack at public `/api/v1/health/ready` (and optionally storefront `/`) |
+| Layer           | Contract                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Process         | Compose `healthcheck` on `backend-api` (`/api/v1/health/ready`) + storefront                                                 |
+| App diagnostics | `GET /api/v1/health/live`, `/ready`, `/alerts` + admin `/admin/system/alerts`                                                |
+| Host cron       | [`deploy/check-health.sh`](../../deploy/check-health.sh) every 5 minutes                                                     |
+| External uptime | Point Cloudflare Health Checks / UptimeRobot / Better Stack at public `/api/v1/health/ready` (and optionally storefront `/`) |
 
 OTel remains optional in-app; external pager / Prometheus burn-rate stay host ops.
 

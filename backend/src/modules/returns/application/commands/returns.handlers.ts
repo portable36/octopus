@@ -278,8 +278,7 @@ export class ReturnsHandlers {
       })),
       recipientName: outbound?.recipientName?.trim() || email?.split('@')[0] || 'Customer',
       recipientPhone: outbound?.recipientPhone?.trim() || '01700000000',
-      recipientAddress:
-        outbound?.recipientAddress?.trim() || addressFromOrder || 'Address on file',
+      recipientAddress: outbound?.recipientAddress?.trim() || addressFromOrder || 'Address on file',
       idempotencyKey: `return-pickup:${returnRequest.id.value}`,
     });
     returnRequest.attachReturnShipment({

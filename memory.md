@@ -71,6 +71,11 @@ generated output, or a transcript of previous chats.
 - Media: presigned PUT (≤10MB) + multipart/resumable (≤100MB, ListParts resume);
   magic-byte register; HeadObject size check; async quarantine on
   `octopus.media-processing` (download gated until `ready`); signed GET or CDN.
+  Admin library at `/admin/system/media` (platform scope).
+- CMS pages (content module): draft→publish with optimistic `version`; admin
+  `/admin/system/content/pages`; public `GET /storefront/content/pages/:slug` +
+  storefront `/pages/[slug]`. Permissions `website.read|update|publish`. No
+  Redis published-slug cache yet (DB truth). Visual builder deferred.
 - Admin Store Phase B: Branding (scoped Settings), Shipping (vendor courier),
   Analytics (report row), SEO / Notifications / GEM (platform deep-links); COD on
   Settings. Platform notifications hub at `/admin/system/notifications`.

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
-import type { MediaRepository } from '../../application/ports/media-repository.interface';
+import type {
+  MediaListFilter,
+  MediaListResult,
+  MediaRepository,
+} from '../../application/ports/media-repository.interface';
 import type { MediaAssetRecord, MediaAssetStatus } from '../../domain/media.types';
 import { MediaAssetOrmEntity } from './media-asset.orm-entity';
 
@@ -52,6 +56,43 @@ export class MediaRepositoryAdapter implements MediaRepository {
         return null;
       }
       return toRecord(entity);
+    });
+  }
+
+  public async list(filter: MediaListFilter): Promise<MediaListResult> {
+    return withRlsContext(this.em, async (tx) => {
+      const where: Record<string, unknown> = {};
+      if (filter.scope === 'platform' || filter.scope == null) {
+        where.vendorId = null;
+      }
+      if (filter.status) {
+        where.status = filter.status;
+      } else if (!filter.includeArchived) {
+        where.status = { $ne: 'archived' };
+      }
+      if (filter.contentType?.trim()) {
+        where.contentType = filter.contentType.trim().toLowerCase();
+      }
+      if (filter.q?.trim()) {
+        where.originalFilename = { $like: `%${filter.q.trim()}%` };
+      }
+      if (filter.cursor?.trim()) {
+        const cursorDate = new Date(filter.cursor.trim());
+        if (!Number.isNaN(cursorDate.getTime())) {
+          where.createdAt = { $lt: cursorDate };
+        }
+      }
+
+      const rows = await tx.find(MediaAssetOrmEntity, where, {
+        orderBy: { createdAt: 'DESC', id: 'DESC' },
+        limit: filter.limit + 1,
+      });
+      const page = rows.slice(0, filter.limit);
+      const next = rows.length > filter.limit ? page[page.length - 1] : null;
+      return {
+        items: page.map(toRecord),
+        nextCursor: next ? next.createdAt.toISOString() : null,
+      };
     });
   }
 

@@ -332,10 +332,7 @@ function LoginForm() {
             </label>
             <div className="flex items-center justify-between gap-3 text-sm">
               <label className="flex items-center gap-2 text-muted-foreground">
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
+                <Checkbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
                 Remember me
               </label>
               <Link

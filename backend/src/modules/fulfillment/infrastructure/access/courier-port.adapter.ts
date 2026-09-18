@@ -67,7 +67,9 @@ export class CourierPortAdapter implements CourierPort {
     );
   }
 
-  public async quoteDelivery(input: QuoteCourierDeliveryInput): Promise<QuoteCourierDeliveryResult> {
+  public async quoteDelivery(
+    input: QuoteCourierDeliveryInput,
+  ): Promise<QuoteCourierDeliveryResult> {
     if (input.provider === 'PATHAO') {
       return this.pathao.quoteDelivery(input);
     }

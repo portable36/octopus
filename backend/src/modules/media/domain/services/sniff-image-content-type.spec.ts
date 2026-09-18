@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { decodeContentPrefixBase64, sniffImageContentType } from './sniff-image-content-type';
 
 describe('sniffImageContentType', () => {
-  it('detects png/jpeg/gif/webp', () => {
+  it('detects png/jpeg/gif/webp/ico', () => {
     const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
     expect(sniffImageContentType(png)).toBe('image/png');
 
@@ -16,6 +16,9 @@ describe('sniffImageContentType', () => {
     webp.write('RIFF', 0);
     webp.write('WEBP', 8);
     expect(sniffImageContentType(webp)).toBe('image/webp');
+
+    const ico = Buffer.from([0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0, 0, 0, 0, 0, 0]);
+    expect(sniffImageContentType(ico)).toBe('image/x-icon');
   });
 
   it('rejects unknown / short buffers', () => {

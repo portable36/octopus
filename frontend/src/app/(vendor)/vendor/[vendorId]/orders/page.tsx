@@ -157,9 +157,7 @@ export default function VendorOrdersPage() {
     if (!orders || selectedIds.size === 0) return;
     const form = new FormData(event.currentTarget);
     const provider = String(form.get('provider') || 'MANUAL').trim() as
-      | 'STEADFAST'
-      | 'PATHAO'
-      | 'MANUAL';
+      'STEADFAST' | 'PATHAO' | 'MANUAL';
     const recipientName = String(form.get('recipientName') || '').trim();
     const recipientPhone = String(form.get('recipientPhone') || '').trim();
     const recipientAddress = String(form.get('recipientAddress') || '').trim();

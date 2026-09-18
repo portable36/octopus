@@ -3,10 +3,7 @@ import { Queue, type ConnectionOptions } from 'bullmq';
 import { AppConfigService } from '../../../../config/app-config.service';
 import { bullmqQueueOptions } from '../../../../shared-kernel/infrastructure/observability/bullmq-telemetry';
 import { BULLMQ_DEFAULT_JOB_OPTIONS } from '../../../../shared-kernel/infrastructure/queues/bullmq-default-job-options';
-import {
-  MEDIA_PROCESSING_JOB_NAMES,
-  MEDIA_PROCESSING_QUEUE,
-} from './media-processing.constants';
+import { MEDIA_PROCESSING_JOB_NAMES, MEDIA_PROCESSING_QUEUE } from './media-processing.constants';
 import type { MediaProcessingJobPayload } from './media-processing-job.types';
 import type { MediaProcessingEnqueuerPort } from '../../application/ports/media-processing-enqueuer.port';
 
@@ -32,9 +29,7 @@ export class MediaProcessingEnqueuerService
 
   public async enqueueQuarantineValidate(mediaId: string): Promise<boolean> {
     if (!this.isQueueActive()) {
-      this.logger.warn(
-        'Media quarantine enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).',
-      );
+      this.logger.warn('Media quarantine enqueue skipped (test or OUTBOX_DISPATCH_ENABLED=false).');
       return false;
     }
 

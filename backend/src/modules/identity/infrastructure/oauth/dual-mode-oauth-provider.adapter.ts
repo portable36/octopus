@@ -167,8 +167,7 @@ export class DualModeOAuthProviderAdapter implements OAuthProviderClient {
     if (!profile.id) {
       throw new InvalidOAuthCodeError();
     }
-    const email =
-      profile.email?.toLowerCase() ?? `oauth-facebook-${profile.id}@octopus.local`;
+    const email = profile.email?.toLowerCase() ?? `oauth-facebook-${profile.id}@octopus.local`;
     return {
       provider: 'facebook',
       subject: profile.id,

@@ -15,6 +15,10 @@ export function sniffImageContentType(bytes: Buffer): string | null {
   if (bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') {
     return 'image/webp';
   }
+  // ICO: reserved(0) + type(1) little-endian
+  if (bytes[0] === 0x00 && bytes[1] === 0x00 && bytes[2] === 0x01 && bytes[3] === 0x00) {
+    return 'image/x-icon';
+  }
   return null;
 }
 

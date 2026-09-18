@@ -166,7 +166,9 @@ export async function verifyEmailToken(token: string): Promise<void> {
   });
 }
 
-export async function startOAuth(provider: 'google' | 'facebook'): Promise<{ authorizationUrl: string }> {
+export async function startOAuth(
+  provider: 'google' | 'facebook',
+): Promise<{ authorizationUrl: string }> {
   return apiRequest(`/auth/oauth/${provider}/start`, { method: 'POST' });
 }
 

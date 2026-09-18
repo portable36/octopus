@@ -11,10 +11,7 @@ import type {
 import type { CustomerRepository } from '../../application/ports/customer-repository.interface';
 import { CustomerAddressOrmEntity } from './customer-address.orm-entity';
 import { CustomerProfileOrmEntity } from './customer-profile.orm-entity';
-import {
-  CustomerWishlistItemOrmEntity,
-  ProductReviewOrmEntity,
-} from './engagement.orm-entity';
+import { CustomerWishlistItemOrmEntity, ProductReviewOrmEntity } from './engagement.orm-entity';
 
 @Injectable()
 export class CustomerRepositoryAdapter implements CustomerRepository {

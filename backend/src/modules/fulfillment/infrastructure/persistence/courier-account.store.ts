@@ -5,10 +5,7 @@ import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-objec
 import { withRlsContext } from '../../../../shared-kernel/infrastructure/persistence/rls-session';
 import type { CourierProvider } from '../../domain/fulfillment.types';
 import { decryptSecret, encryptSecret } from '../crypto/credential-crypto';
-import {
-  CourierAccountOrmEntity,
-  CourierOauthTokenOrmEntity,
-} from './fulfillment.orm-entity';
+import { CourierAccountOrmEntity, CourierOauthTokenOrmEntity } from './fulfillment.orm-entity';
 import type { CourierAccountAdminPort } from '../../application/ports/courier-account-admin.port';
 
 export interface SteadfastCredentials {

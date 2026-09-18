@@ -34,8 +34,13 @@ export async function apiRequest<TResponse>(
 ): Promise<TResponse> {
   const baseUrl = getPublicApiBaseUrl();
   const url = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, body, headers: initHeaders, signal, ...rest } =
-    options;
+  const {
+    timeoutMs = DEFAULT_API_TIMEOUT_MS,
+    body,
+    headers: initHeaders,
+    signal,
+    ...rest
+  } = options;
 
   const headers = new Headers(initHeaders);
   if (body !== undefined && !headers.has('Content-Type')) {

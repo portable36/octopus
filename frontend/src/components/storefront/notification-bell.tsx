@@ -48,10 +48,7 @@ export function NotificationBell() {
     return null;
   }
 
-  const label =
-    unreadCount > 0
-      ? `Notifications, ${unreadCount} unread`
-      : 'Notifications';
+  const label = unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications';
 
   return (
     <Link href="/account/notifications" className="sf-action-link relative" aria-label={label}>

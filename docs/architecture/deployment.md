@@ -38,13 +38,13 @@ Separate liveness and readiness probes. Readiness includes PostgreSQL and Redis 
 
 Origin reverse proxy config: [`deploy/nginx/nginx.conf`](../../deploy/nginx/nginx.conf).
 
-| Setting | Value |
-| --- | --- |
-| Upstream | `127.0.0.1:3000` (Nest `PORT` default; change if API listens on 4000 in Compose prod) |
-| Gzip | `text/xml`, `application/xml`, `application/json` (+ common text types) |
+| Setting          | Value                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Upstream         | `127.0.0.1:3000` (Nest `PORT` default; change if API listens on 4000 in Compose prod)                                     |
+| Gzip             | `text/xml`, `application/xml`, `application/json` (+ common text types)                                                   |
 | Security headers | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, strict API CSP (`default-src 'none'; frame-ancestors 'none'`) |
-| Rate limit | `limit_req` on `/api/` only — 10 r/s, burst 20; sitemaps/robots exempt |
-| Proxied paths | `/api/`, `/sitemap.xml`, `/sitemaps/`, `/robots.txt`; other paths return 444 |
+| Rate limit       | `limit_req` on `/api/` only — 10 r/s, burst 20; sitemaps/robots exempt                                                    |
+| Proxied paths    | `/api/`, `/sitemap.xml`, `/sitemaps/`, `/robots.txt`; other paths return 444                                              |
 
 Set Nest `TRUST_PROXY_HOPS` so `req.ip` / IP-block middleware see the real client: **1** behind nginx only, **2** behind Cloudflare + nginx (see [`.env.example`](../../.env.example)).
 
@@ -94,13 +94,14 @@ Copy [`deploy/host.secrets.env.example`](../../deploy/host.secrets.env.example) 
 - [ ] Host filled: `MEILISEARCH_*`, `S3_*`
 - [ ] Payment / courier secrets — runtime host only
 - [ ] `SENTRY_DSN` — optional
+
 ## Production Compose matrix
 
 Full local/staging stack from the monorepo root image:
 
-| Artifact | Role |
-| --- | --- |
-| Root [`Dockerfile`](../../Dockerfile) | Multi-stage `node:22-alpine` image (`octopus:prod`): builds backend + frontend, prunes devDependencies, runs as `USER node`, exposes **4000** (API) and **3000** (storefront) |
+| Artifact                                                   | Role                                                                                                                                                                                     |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root [`Dockerfile`](../../Dockerfile)                      | Multi-stage `node:22-alpine` image (`octopus:prod`): builds backend + frontend, prunes devDependencies, runs as `USER node`, exposes **4000** (API) and **3000** (storefront)            |
 | [`docker-compose.prod.yml`](../../docker-compose.prod.yml) | `backend-api`, `seo-worker` (same image, `npm run start:seo-worker -w backend`), `frontend-store`, plus healthy `postgres` / `redis` volumes (Meilisearch + MinIO kept as required deps) |
 
 ```bash

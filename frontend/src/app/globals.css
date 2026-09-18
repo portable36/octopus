@@ -455,55 +455,213 @@ body {
 }
 
 .sf-hero {
+  /* Zip Trip promo strip: ~460px tall, equal columns, 20px gutters, 10px radii */
   display: grid;
-  min-height: 28rem;
-  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
-  overflow: hidden;
-  background: var(--cf-ink);
+  height: 28.75rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  overflow: visible;
+  border: 0;
+  background: transparent;
   color: hsl(var(--primary-foreground));
 }
 
-.sf-hero-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1.25rem;
-  padding: clamp(2rem, 6vw, 5rem);
-}
-
-.sf-hero-copy p {
-  max-width: 31rem;
-  color: color-mix(in srgb, hsl(var(--primary-foreground)) 75%, transparent);
-  font-size: 1.05rem;
-}
-
-.sf-hero-art {
+.sf-hero-main {
   position: relative;
-  min-height: 20rem;
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
   overflow: hidden;
-  background: var(--cf-accent);
+  border-radius: 0.625rem;
+  background: var(--cf-ink);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
-.sf-hero-art::before,
-.sf-hero-art::after {
+.sf-hero-main--photo .sf-hero-main-media {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--cf-ink) 88%, transparent) 0%,
+      color-mix(in srgb, var(--cf-ink) 45%, transparent) 48%,
+      color-mix(in srgb, var(--cf-ink) 15%, transparent) 100%
+    );
+  pointer-events: none;
+}
+
+.sf-hero-main:not(.sf-hero-main--photo) .sf-hero-main-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--cf-accent) 55%, var(--cf-ink));
+  pointer-events: none;
+}
+
+.sf-hero-main:not(.sf-hero-main--photo) .sf-hero-main-media::before,
+.sf-hero-main:not(.sf-hero-main--photo) .sf-hero-main-media::after {
   position: absolute;
   content: '';
   border: 1px solid rgb(26 26 26 / 35%);
   border-radius: 50%;
 }
 
-.sf-hero-art::before {
+.sf-hero-main:not(.sf-hero-main--photo) .sf-hero-main-media::before {
   width: 24rem;
   height: 24rem;
   right: -5rem;
   bottom: -7rem;
 }
 
-.sf-hero-art::after {
+.sf-hero-main:not(.sf-hero-main--photo) .sf-hero-main-media::after {
   width: 13rem;
   height: 13rem;
   top: 2rem;
   left: 2rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sf-hero-main--photo {
+    animation: sf-hero-ken 18s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes sf-hero-ken {
+  from {
+    background-size: 100% auto;
+  }
+  to {
+    background-size: 108% auto;
+  }
+}
+
+.sf-hero-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  max-width: 26rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding: 1.75rem 2rem;
+}
+
+.sf-hero-copy .sf-display {
+  max-width: 18rem;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.sf-hero-copy .sf-button-accent {
+  min-height: 2.5rem;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+.sf-hero-eyebrow {
+  margin: 0;
+  color: color-mix(in srgb, hsl(var(--primary-foreground)) 70%, transparent);
+  font-size: 0.7rem;
+}
+
+.sf-hero-copy p {
+  margin: 0;
+  max-width: 22rem;
+  color: color-mix(in srgb, hsl(var(--primary-foreground)) 78%, transparent);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.sf-hero-side {
+  /* Zip Trip right stack: taller top promo + dual bottom row (~277:163) */
+  display: grid;
+  grid-template-rows: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  min-height: 0;
+  height: 100%;
+  background: transparent;
+}
+
+.sf-hero-side-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  min-height: 0;
+}
+
+.sf-hero-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0.625rem;
+  padding: 1.35rem 1.5rem;
+  color: var(--cf-ink);
+  text-decoration: none;
+  transition: filter 160ms ease;
+}
+
+.sf-hero-side-row .sf-hero-tile {
+  padding: 1.1rem 1.15rem;
+}
+
+.sf-hero-tile--promo {
+  background: color-mix(in srgb, var(--cf-soft) 55%, white);
+}
+
+.sf-hero-tile--accent {
+  background: var(--cf-accent);
+  color: hsl(var(--primary-foreground));
+}
+
+.sf-hero-tile--ink {
+  background: var(--cf-ink);
+  color: hsl(var(--primary-foreground));
+}
+
+.sf-hero-tile:hover {
+  filter: brightness(0.97);
+}
+
+.sf-hero-tile:focus-visible {
+  outline: 2px solid var(--cf-ink);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.sf-hero-tile-kicker {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.sf-hero-side-row .sf-hero-tile-title {
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+}
+
+.sf-hero-tile-title {
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.sf-hero-tile-action {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .sf-trust-grid {
@@ -1051,11 +1209,37 @@ body {
   }
 
   .sf-hero {
+    height: auto;
     grid-template-columns: 1fr;
+    gap: 0.875rem;
   }
 
-  .sf-hero-art {
-    min-height: 12rem;
+  .sf-hero-main {
+    min-height: 17.5rem;
+    height: auto;
+  }
+
+  .sf-hero-side {
+    height: auto;
+    gap: 0.875rem;
+    grid-template-rows: auto auto;
+  }
+
+  .sf-hero-side-row {
+    gap: 0.875rem;
+  }
+
+  .sf-hero-tile {
+    min-height: 8.75rem;
+  }
+
+  .sf-hero-side-row .sf-hero-tile {
+    min-height: 7.25rem;
+  }
+
+  .sf-hero-copy {
+    padding: 1.35rem 1.35rem;
+    max-width: none;
   }
 
   .sf-category-grid,
@@ -1171,8 +1355,22 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 
-  .sf-hero-copy {
-    padding: 2rem 1.25rem;
+  .sf-hero-main {
+    min-height: 16rem;
+  }
+
+  .sf-hero-tile {
+    min-height: 7.5rem;
+    padding: 1.1rem 1.15rem;
+  }
+
+  .sf-hero-side-row .sf-hero-tile {
+    min-height: 6.5rem;
+    padding: 0.95rem 1rem;
+  }
+
+  .sf-hero-copy .sf-display {
+    font-size: clamp(1.65rem, 7vw, 2.1rem);
   }
 
   .sf-category-grid,

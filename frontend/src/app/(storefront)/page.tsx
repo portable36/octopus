@@ -17,7 +17,6 @@ export const metadata: Metadata = {
 };
 
 export default async function StorefrontHomePage() {
-  const appName = getPublicAppName();
   let categories: Awaited<ReturnType<typeof fetchPublicCategories>> = [];
   let offers: Awaited<ReturnType<typeof searchProducts>>['hits'] = [];
   let theme = DEFAULT_THEME_SETTINGS;
@@ -58,44 +57,72 @@ export default async function StorefrontHomePage() {
     <div className="space-y-12">
       {theme.heroBanner.enabled ? (
         <section className="sf-hero" aria-labelledby="home-title">
-          <div className="sf-hero-copy">
-            <p className="sf-eyebrow text-white/70">
-              {theme.heroBanner.badgeText || 'A marketplace for everyday finds'}
-            </p>
-            <h1 id="home-title" className="sf-display">
-              {theme.heroBanner.title || 'Good finds. Close to home.'}
-            </h1>
-            <p>
-              {theme.heroBanner.subtitle ||
-                'Browse independent stores and published offers. Your final price and availability are confirmed at checkout.'}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {theme.heroBanner.ctaText && theme.heroBanner.ctaUrl ? (
-                <Link href={theme.heroBanner.ctaUrl} className="sf-button-accent">
-                  {theme.heroBanner.ctaText}
-                </Link>
-              ) : (
-                <Link href="/search" className="sf-button-accent">
-                  Explore offers
-                </Link>
-              )}
-              <Link href="/categories" className="sf-button-secondary">
-                Browse categories
+          <div
+            className={`sf-hero-main${theme.heroBanner.imageUrl ? ' sf-hero-main--photo' : ''}`}
+            style={
+              theme.heroBanner.imageUrl
+                ? { backgroundImage: `url(${theme.heroBanner.imageUrl})` }
+                : undefined
+            }
+          >
+            <div className="sf-hero-main-media" aria-hidden="true" />
+            <div className="sf-hero-copy">
+              <p className="sf-eyebrow sf-hero-eyebrow">
+                {theme.heroBanner.badgeText || 'A marketplace for everyday finds'}
+              </p>
+              <h1 id="home-title" className="sf-display">
+                {theme.heroBanner.title || 'Good finds. Close to home.'}
+              </h1>
+              <p>
+                {theme.heroBanner.subtitle ||
+                  'Browse independent stores and published offers. Your final price and availability are confirmed at checkout.'}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {theme.heroBanner.ctaText && theme.heroBanner.ctaUrl ? (
+                  <Link href={theme.heroBanner.ctaUrl} className="sf-button-accent">
+                    {theme.heroBanner.ctaText}
+                  </Link>
+                ) : (
+                  <Link href="/search" className="sf-button-accent">
+                    Explore offers
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="sf-hero-side">
+            {theme.promoBanner?.enabled ? (
+              <Link
+                href={theme.promoBanner.ctaUrl || '/vendor'}
+                className="sf-hero-tile sf-hero-tile--promo"
+              >
+                <span className="sf-hero-tile-kicker">Featured</span>
+                <span className="sf-hero-tile-title">{theme.promoBanner.title}</span>
+                <span className="sf-hero-tile-action">
+                  {theme.promoBanner.ctaText || 'View details'}
+                </span>
+              </Link>
+            ) : (
+              <Link href="/search" className="sf-hero-tile sf-hero-tile--promo">
+                <span className="sf-hero-tile-kicker">Offers</span>
+                <span className="sf-hero-tile-title">Explore the latest marketplace finds</span>
+                <span className="sf-hero-tile-action">Shop now</span>
+              </Link>
+            )}
+            <div className="sf-hero-side-row">
+              <Link href="/categories" className="sf-hero-tile sf-hero-tile--accent">
+                <span className="sf-hero-tile-kicker">Browse</span>
+                <span className="sf-hero-tile-title">Shop by category</span>
+                <span className="sf-hero-tile-action">View details</span>
+              </Link>
+              <Link href="/stores" className="sf-hero-tile sf-hero-tile--ink">
+                <span className="sf-hero-tile-kicker">Stores</span>
+                <span className="sf-hero-tile-title">Discover local sellers</span>
+                <span className="sf-hero-tile-action">View details</span>
               </Link>
             </div>
           </div>
-          {theme.heroBanner.imageUrl ? (
-            <div
-              className="sf-hero-art"
-              style={{
-                backgroundImage: `url(${theme.heroBanner.imageUrl})`,
-                backgroundSize: 'cover',
-              }}
-              aria-label={`${appName} marketplace hero artwork`}
-            />
-          ) : (
-            <div className="sf-hero-art" aria-label={`${appName} marketplace artwork`} />
-          )}
         </section>
       ) : null}
 

@@ -1495,9 +1495,10 @@ pages. Thin CMS Pages vertical (`content` module) ships draft→publish + public
 - [x] Real-time Interactive Storefront Live Theme Preview (desktop & mobile viewports)
 - [x] StorefrontShell & Storefront HomePage dynamic consumption (theme styling, custom announcement bar, hero & promo banner slots, header nav, and footer columns)
 - [x] Redis cache for effective config only; DB remains truth
-- [x] CMS pages vertical (P1): `content` module draft→publish, admin
-      `/admin/system/content/pages`, public `GET /storefront/content/pages/:slug` +
-      storefront `/pages/[slug]` (structured JSON blocks; no visual builder)
+- [x] CMS pages vertical (P1+P2 rollback): `content` module draft→publish,
+  publication history rollback, admin `/admin/system/content/pages`, public
+  `GET /storefront/content/pages/:slug` + storefront `/pages/[slug]`
+  (structured JSON blocks; no visual builder)
 - [ ] Visual CMS page builder / menus / redirects (still deferred)
 
 ---

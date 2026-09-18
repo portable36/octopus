@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import {
   ContentDomainError,
   ContentPageNotFoundError,
+  ContentPagePublicationNotFoundError,
   ContentPageSlugConflictError,
   ContentPageVersionConflictError,
 } from '../../../domain/errors/content.errors';
@@ -10,6 +11,7 @@ import {
 @Catch(
   ContentDomainError,
   ContentPageNotFoundError,
+  ContentPagePublicationNotFoundError,
   ContentPageVersionConflictError,
   ContentPageSlugConflictError,
 )
@@ -18,13 +20,17 @@ export class ContentExceptionFilter implements ExceptionFilter {
     exception:
       | ContentDomainError
       | ContentPageNotFoundError
+      | ContentPagePublicationNotFoundError
       | ContentPageVersionConflictError
       | ContentPageSlugConflictError,
     host: ArgumentsHost,
   ): void {
     const res = host.switchToHttp().getResponse<Response>();
     let status = HttpStatus.UNPROCESSABLE_ENTITY;
-    if (exception instanceof ContentPageNotFoundError) {
+    if (
+      exception instanceof ContentPageNotFoundError ||
+      exception instanceof ContentPagePublicationNotFoundError
+    ) {
       status = HttpStatus.NOT_FOUND;
     } else if (
       exception instanceof ContentPageVersionConflictError ||

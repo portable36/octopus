@@ -121,3 +121,32 @@ export function archiveAdminContentPage(
     body: { expectedVersion },
   });
 }
+
+export type AdminContentPagePublication = {
+  id: string;
+  title: string;
+  slug: string;
+  pageVersion: number;
+  publishedAt: string;
+  publishedBy: string | null;
+  sourcePublicationId: string | null;
+};
+
+export function listAdminContentPagePublications(
+  id: string,
+): Promise<{ items: AdminContentPagePublication[] }> {
+  return authedRequest<{ items: AdminContentPagePublication[] }>(
+    `/admin/content/pages/${id}/publications`,
+  );
+}
+
+export function rollbackAdminContentPage(
+  id: string,
+  expectedVersion: number,
+  publicationId: string,
+): Promise<AdminContentPage> {
+  return authedRequest<AdminContentPage>(`/admin/content/pages/${id}/rollback`, {
+    method: 'POST',
+    body: { expectedVersion, publicationId },
+  });
+}

@@ -10,10 +10,13 @@ import { ApiClientError } from '@/lib/api-client';
 import {
   archiveAdminContentPage,
   getAdminContentPage,
+  listAdminContentPagePublications,
   publishAdminContentPage,
+  rollbackAdminContentPage,
   unpublishAdminContentPage,
   updateAdminContentPage,
   type AdminContentPage,
+  type AdminContentPagePublication,
   type ContentBlock,
 } from '@/lib/admin-content-api';
 
@@ -26,6 +29,7 @@ export default function AdminContentPageEditorPage() {
   const id = params.id;
 
   const [page, setPage] = useState<AdminContentPage | null>(null);
+  const [publications, setPublications] = useState<AdminContentPagePublication[]>([]);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [body, setBody] = useState<ContentBlock[]>([emptyParagraph()]);
@@ -35,20 +39,28 @@ export default function AdminContentPageEditorPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const applyPage = useCallback((loaded: AdminContentPage) => {
+    setPage(loaded);
+    setTitle(loaded.title);
+    setSlug(loaded.slug);
+    setBody(loaded.draftBody.length > 0 ? [...loaded.draftBody] : [emptyParagraph()]);
+    setMetaTitle(loaded.draftSeo.metaTitle ?? '');
+    setMetaDescription(loaded.draftSeo.metaDescription ?? '');
+  }, []);
+
   const load = useCallback(async () => {
     setError(null);
     try {
-      const loaded = await getAdminContentPage(id);
-      setPage(loaded);
-      setTitle(loaded.title);
-      setSlug(loaded.slug);
-      setBody(loaded.draftBody.length > 0 ? [...loaded.draftBody] : [emptyParagraph()]);
-      setMetaTitle(loaded.draftSeo.metaTitle ?? '');
-      setMetaDescription(loaded.draftSeo.metaDescription ?? '');
+      const [loaded, pubs] = await Promise.all([
+        getAdminContentPage(id),
+        listAdminContentPagePublications(id),
+      ]);
+      applyPage(loaded);
+      setPublications(pubs.items);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to load page.');
     }
-  }, [id]);
+  }, [applyPage, id]);
 
   useEffect(() => {
     void load();
@@ -71,7 +83,7 @@ export default function AdminContentPageEditorPage() {
           metaDescription: metaDescription || undefined,
         },
       });
-      setPage(updated);
+      applyPage(updated);
       setNotice('Draft saved.');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to save draft.');
@@ -92,17 +104,41 @@ export default function AdminContentPageEditorPage() {
           : action === 'unpublish'
             ? await unpublishAdminContentPage(page.id, page.version)
             : await archiveAdminContentPage(page.id, page.version);
-      setPage(next);
-      setTitle(next.title);
-      setSlug(next.slug);
-      setBody(next.draftBody.length > 0 ? [...next.draftBody] : [emptyParagraph()]);
-      setMetaTitle(next.draftSeo.metaTitle ?? '');
-      setMetaDescription(next.draftSeo.metaDescription ?? '');
+      applyPage(next);
+      if (action === 'publish') {
+        const pubs = await listAdminContentPagePublications(page.id);
+        setPublications(pubs.items);
+      }
       setNotice(
         action === 'publish' ? 'Published.' : action === 'unpublish' ? 'Unpublished.' : 'Archived.',
       );
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : `Failed to ${action}.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRollback(publicationId: string): Promise<void> {
+    if (!page) return;
+    if (
+      !window.confirm(
+        'Roll back live content to this publication? A new publication record will be created.',
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const next = await rollbackAdminContentPage(page.id, page.version, publicationId);
+      applyPage(next);
+      const pubs = await listAdminContentPagePublications(page.id);
+      setPublications(pubs.items);
+      setNotice('Rolled back to selected publication.');
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Failed to roll back.');
     } finally {
       setBusy(false);
     }
@@ -318,6 +354,45 @@ export default function AdminContentPageEditorPage() {
             </Button>
           </div>
         </form>
+      ) : null}
+
+      {page && publications.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium">Publication history</h2>
+          <ul className="divide-y divide-border rounded-md border border-border">
+            {publications.map((pub) => {
+              const isCurrent = page.currentPublicationId === pub.id;
+              return (
+                <li
+                  key={pub.id}
+                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {pub.title}{' '}
+                      <span className="font-normal text-muted-foreground">/{pub.slug}</span>
+                      {isCurrent ? (
+                        <span className="ml-2 text-xs text-muted-foreground">(current)</span>
+                      ) : null}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      v{pub.pageVersion} · {new Date(pub.publishedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy || isCurrent || Boolean(page.archivedAt)}
+                    onClick={() => void onRollback(pub.id)}
+                  >
+                    Roll back
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       ) : null}
     </div>
   );

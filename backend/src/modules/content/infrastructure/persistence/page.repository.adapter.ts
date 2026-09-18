@@ -12,6 +12,7 @@ import type {
 import type {
   PageListFilter,
   PageListResult,
+  PagePublicationListItem,
   PageRepository,
 } from '../../application/ports/page-repository.interface';
 import { ContentPageOrmEntity } from './content-page.orm-entity';
@@ -198,6 +199,27 @@ export class PageRepositoryAdapter implements PageRepository {
         id: publicationId,
       });
       return entity ? toPublicationSnapshot(entity) : null;
+    });
+  }
+
+  public async listPublicationsByPageId(
+    pageId: string,
+  ): Promise<readonly PagePublicationListItem[]> {
+    return withRlsContext(this.em, async (tx) => {
+      const rows = await tx.find(
+        ContentPagePublicationOrmEntity,
+        { pageId },
+        { orderBy: { publishedAt: 'DESC' } },
+      );
+      return rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        pageVersion: row.pageVersion,
+        publishedAt: row.publishedAt,
+        publishedBy: row.publishedBy,
+        sourcePublicationId: row.sourcePublicationId,
+      }));
     });
   }
 }

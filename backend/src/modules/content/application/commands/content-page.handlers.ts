@@ -15,12 +15,14 @@ import {
   ContentDomainError,
   ContentPageMediaNotReadyError,
   ContentPageNotFoundError,
+  ContentPagePublicationNotFoundError,
   ContentPageSlugConflictError,
 } from '../../domain/errors/content.errors';
 import {
   PAGE_REPOSITORY,
   type PageListFilter,
   type PageListResult,
+  type PagePublicationListItem,
   type PageRepository,
 } from '../ports/page-repository.interface';
 
@@ -229,6 +231,44 @@ export class ContentPageHandlers {
       throw new ContentPageNotFoundError('Published content page was not found.');
     }
     return dto;
+  }
+
+  public async listPublications(pageId: string): Promise<readonly PagePublicationListItem[]> {
+    await this.requirePage(pageId);
+    return this.pages.listPublicationsByPageId(pageId);
+  }
+
+  public async rollback(input: {
+    readonly id: string;
+    readonly expectedVersion: number;
+    readonly publicationId: string;
+    readonly actorUserId: string;
+  }): Promise<AdminContentPageDto> {
+    const page = await this.requirePage(input.id);
+    const source = await this.pages.findPublicationById(input.publicationId);
+    if (!source || source.pageId !== page.id.value) {
+      throw new ContentPagePublicationNotFoundError();
+    }
+    await this.assertMediaReady(source.body);
+    const publication = page.rollbackFromPublication({
+      expectedVersion: input.expectedVersion,
+      source,
+      actorUserId: input.actorUserId,
+    });
+    await this.pages.save(page, publication);
+    await this.audit?.append({
+      actorUserId: input.actorUserId,
+      action: 'content_page.rolled_back',
+      resourceType: 'content_page',
+      resourceId: page.id.value,
+      after: {
+        publicationId: publication.id,
+        sourcePublicationId: source.id,
+        slug: publication.slug,
+        version: page.version,
+      },
+    });
+    return toAdminDto(page);
   }
 
   private async requirePage(id: string): Promise<Page> {

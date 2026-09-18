@@ -30,6 +30,16 @@ export type PageListResult = {
   readonly nextCursor: string | null;
 };
 
+export type PagePublicationListItem = {
+  readonly id: string;
+  readonly title: string;
+  readonly slug: string;
+  readonly pageVersion: number;
+  readonly publishedAt: Date;
+  readonly publishedBy: string | null;
+  readonly sourcePublicationId: string | null;
+};
+
 export interface PageRepository {
   save(page: Page, publication?: PagePublicationSnapshot | null): Promise<void>;
   findById(id: string): Promise<Page | null>;
@@ -37,4 +47,5 @@ export interface PageRepository {
   list(filter: PageListFilter): Promise<PageListResult>;
   findPublishedBySlug(slug: string): Promise<PublicContentPageDto | null>;
   findPublicationById(publicationId: string): Promise<PagePublicationSnapshot | null>;
+  listPublicationsByPageId(pageId: string): Promise<readonly PagePublicationListItem[]>;
 }

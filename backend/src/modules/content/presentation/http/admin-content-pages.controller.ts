@@ -55,6 +55,15 @@ class ExpectedVersionDto {
   expectedVersion!: number;
 }
 
+class RollbackContentPageDto {
+  @IsInt()
+  @Min(1)
+  expectedVersion!: number;
+
+  @IsString()
+  publicationId!: string;
+}
+
 class ListContentPagesQueryDto {
   @IsOptional()
   @IsString()
@@ -191,6 +200,40 @@ export class AdminContentPagesController {
     return this.handlers.unpublish({
       id,
       expectedVersion: body.expectedVersion,
+      actorUserId: user.userId,
+    });
+  }
+
+  @Get(':id/publications')
+  @RequirePermissions('website.read')
+  @ApiOperation({ summary: 'List publication history for a CMS content page' })
+  async listPublications(@Param('id') id: string) {
+    const items = await this.handlers.listPublications(id);
+    return {
+      items: items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        pageVersion: item.pageVersion,
+        publishedAt: item.publishedAt.toISOString(),
+        publishedBy: item.publishedBy,
+        sourcePublicationId: item.sourcePublicationId,
+      })),
+    };
+  }
+
+  @Post(':id/rollback')
+  @RequirePermissions('website.publish')
+  @ApiOperation({ summary: 'Rollback a CMS content page to a prior publication' })
+  async rollback(
+    @CurrentUser() user: RequestPrincipal,
+    @Param('id') id: string,
+    @Body() body: RollbackContentPageDto,
+  ) {
+    return this.handlers.rollback({
+      id,
+      expectedVersion: body.expectedVersion,
+      publicationId: body.publicationId,
       actorUserId: user.userId,
     });
   }

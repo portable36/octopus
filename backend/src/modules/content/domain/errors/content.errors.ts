@@ -37,3 +37,12 @@ export class ContentPageMediaNotReadyError extends ContentDomainError {
     this.name = 'ContentPageMediaNotReadyError';
   }
 }
+
+export class ContentPagePublicationNotFoundError extends Error {
+  readonly code = 'CONTENT_PAGE_PUBLICATION_NOT_FOUND';
+
+  constructor(message = 'Content page publication was not found.') {
+    super(message);
+    this.name = 'ContentPagePublicationNotFoundError';
+  }
+}

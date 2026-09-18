@@ -82,8 +82,8 @@
 
 ## Phase 6: User Story 4 — Rollback (P2)
 
-- [ ] T020 [US4] List publications + rollback command/endpoints.
-- [ ] T021 [P] [US4] Admin UI link to roll back to prior publication.
+- [x] T020 [US4] List publications + rollback command/endpoints.
+- [x] T021 [P] [US4] Admin UI link to roll back to prior publication.
 
 ---
 

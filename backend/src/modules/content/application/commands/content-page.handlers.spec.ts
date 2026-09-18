@@ -13,6 +13,7 @@ import {
 import type {
   PageListFilter,
   PageListResult,
+  PagePublicationListItem,
   PageRepository,
 } from '../ports/page-repository.interface';
 import { ContentPageHandlers } from './content-page.handlers';
@@ -117,6 +118,21 @@ class InMemoryPageRepository implements PageRepository {
   async findPublicationById(publicationId: string): Promise<PagePublicationSnapshot | null> {
     return this.publications.get(publicationId) ?? null;
   }
+
+  async listPublicationsByPageId(pageId: string): Promise<readonly PagePublicationListItem[]> {
+    return [...this.publications.values()]
+      .filter((p) => p.pageId === pageId)
+      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        pageVersion: p.pageVersion,
+        publishedAt: p.publishedAt,
+        publishedBy: p.publishedBy,
+        sourcePublicationId: p.sourcePublicationId,
+      }));
+  }
 }
 
 class StubMediaAccess implements MediaAssetAccessPort {
@@ -204,5 +220,57 @@ describe('ContentPageHandlers SC-004', () => {
     await expect(handlers.getPublishedBySlug('shipping')).rejects.toBeInstanceOf(
       ContentPageNotFoundError,
     );
+  });
+
+  it('publish A → publish B → rollback to A restores public content', async () => {
+    const repo = new InMemoryPageRepository();
+    const handlers = new ContentPageHandlers(repo, new StubMediaAccess(new Set()), null);
+
+    const created = await handlers.create({
+      title: 'Policy',
+      slug: 'policy',
+      body: [{ type: 'paragraph', text: 'Version A' }],
+      actorUserId: 'admin-1',
+    });
+    const pubA = await handlers.publish({
+      id: created.id,
+      expectedVersion: 1,
+      actorUserId: 'admin-1',
+    });
+    const publicationA = pubA.currentPublicationId!;
+
+    await handlers.update({
+      id: created.id,
+      expectedVersion: pubA.version,
+      body: [{ type: 'paragraph', text: 'Version B' }],
+      actorUserId: 'admin-1',
+    });
+    const afterEdit = await handlers.getById(created.id);
+    await handlers.publish({
+      id: created.id,
+      expectedVersion: afterEdit.version,
+      actorUserId: 'admin-1',
+    });
+    expect((await handlers.getPublishedBySlug('policy')).body).toEqual([
+      { type: 'paragraph', text: 'Version B' },
+    ]);
+
+    const history = await handlers.listPublications(created.id);
+    expect(history.length).toBe(2);
+    expect(history.some((h) => h.id === publicationA)).toBe(true);
+
+    const current = await handlers.getById(created.id);
+    const rolled = await handlers.rollback({
+      id: created.id,
+      expectedVersion: current.version,
+      publicationId: publicationA,
+      actorUserId: 'admin-1',
+    });
+    expect(rolled.status).toBe('PUBLISHED');
+    expect(rolled.currentPublicationId).not.toBe(publicationA);
+    expect((await handlers.getPublishedBySlug('policy')).body).toEqual([
+      { type: 'paragraph', text: 'Version A' },
+    ]);
+    expect((await handlers.listPublications(created.id)).length).toBe(3);
   });
 });

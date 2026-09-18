@@ -296,7 +296,7 @@ export class Page extends AggregateRoot<UniqueID> {
     });
   }
 
-  /** P2 rollback helper — kept for aggregate completeness; not wired in P1 handlers. */
+  /** Rollback creates a new publication from a prior snapshot (append-only). */
   public rollbackFromPublication(input: {
     readonly expectedVersion: number;
     readonly source: PagePublicationSnapshot;

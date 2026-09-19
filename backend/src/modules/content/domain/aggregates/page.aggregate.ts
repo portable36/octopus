@@ -1,5 +1,6 @@
 import { AggregateRoot } from '../../../../shared-kernel/domain/aggregate-root';
 import { UniqueID } from '../../../../shared-kernel/domain/unique-id.value-object';
+import { assertValidContentBody } from '../content-block.validation';
 import type {
   ContentBlock,
   ContentPageSeo,
@@ -67,6 +68,11 @@ function assertBodyNotEmpty(body: readonly ContentBlock[]): void {
       'CONTENT_PAGE_EMPTY_BODY',
     );
   }
+}
+
+function assertBodyReady(body: readonly ContentBlock[]): void {
+  assertBodyNotEmpty(body);
+  assertValidContentBody(body);
 }
 
 export class Page extends AggregateRoot<UniqueID> {
@@ -198,6 +204,9 @@ export class Page extends AggregateRoot<UniqueID> {
   }): void {
     this.assertNotArchived();
     this.assertExpectedVersion(input.expectedVersion);
+    if (input.body !== undefined) {
+      assertValidContentBody(input.body);
+    }
     this.props = {
       ...this.props,
       title: input.title !== undefined ? normalizeTitle(input.title) : this.props.title,
@@ -220,7 +229,7 @@ export class Page extends AggregateRoot<UniqueID> {
   }): PagePublicationSnapshot {
     this.assertNotArchived();
     this.assertExpectedVersion(input.expectedVersion);
-    assertBodyNotEmpty(this.props.draftBody);
+    assertBodyReady(this.props.draftBody);
 
     const publicationId = UniqueID.create().value;
     const publishedAt = new Date();
@@ -310,7 +319,7 @@ export class Page extends AggregateRoot<UniqueID> {
         'CONTENT_PAGE_PUBLICATION_MISMATCH',
       );
     }
-    assertBodyNotEmpty(input.source.body);
+    assertBodyReady(input.source.body);
 
     const publicationId = UniqueID.create().value;
     const publishedAt = new Date();

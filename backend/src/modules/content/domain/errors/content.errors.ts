@@ -38,6 +38,13 @@ export class ContentPageMediaNotReadyError extends ContentDomainError {
   }
 }
 
+export class ContentPageCatalogEmbedError extends ContentDomainError {
+  constructor(message = 'Referenced product or offer is missing or not sellable.') {
+    super(message, 'CONTENT_PAGE_CATALOG_EMBED_INVALID');
+    this.name = 'ContentPageCatalogEmbedError';
+  }
+}
+
 export class ContentPagePublicationNotFoundError extends Error {
   readonly code = 'CONTENT_PAGE_PUBLICATION_NOT_FOUND';
 

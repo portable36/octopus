@@ -8,6 +8,7 @@ import { fieldClass } from '@/components/ui/field';
 import { ApiClientError } from '@/lib/api-client';
 import {
   createAdminContentPage,
+  HOME_PAGE_SLUG,
   listAdminContentPages,
   type AdminContentPageListItem,
 } from '@/lib/admin-content-api';
@@ -66,8 +67,14 @@ export default function AdminContentPagesListPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Content pages"
-        description="Draft and publish platform CMS pages (structured blocks, no visual builder)."
+        description="Draft and publish platform CMS pages with a visual block builder."
       />
+
+      <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+        Slug <code className="font-mono text-xs">{HOME_PAGE_SLUG}</code> drives the storefront
+        homepage (replaces theme hero/promo when published). Other slugs are public at{' '}
+        <code className="font-mono text-xs">/pages/&lt;slug&gt;</code>.
+      </p>
 
       {error ? (
         <p className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
@@ -95,9 +102,21 @@ export default function AdminContentPagesListPage() {
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+            placeholder={HOME_PAGE_SLUG}
             required
           />
         </label>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={creating}
+          onClick={() => {
+            if (!title.trim()) setTitle('Home');
+            setSlug(HOME_PAGE_SLUG);
+          }}
+        >
+          Use homepage slug
+        </Button>
         <Button type="submit" disabled={creating}>
           {creating ? 'Creating…' : 'Create page'}
         </Button>

@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ApiClientError } from '@/lib/api-client';
+import { ContentBlockRenderer } from '@/components/content/content-block-renderer';
 import { OfferCard } from '@/components/storefront/offer-card';
+import { ApiClientError } from '@/lib/api-client';
+import { HOME_PAGE_SLUG } from '@/lib/admin-content-api';
+import { fetchPublishedContentPage, type PublicContentPage } from '@/lib/content-public-api';
 import { absoluteUrl } from '@/lib/seo';
 import { fetchPublicCategories, searchProducts } from '@/lib/storefront-api';
 import { DEFAULT_THEME_SETTINGS, fetchStorefrontConfig } from '@/lib/storefront-config-api';
@@ -18,13 +21,15 @@ export default async function StorefrontHomePage() {
   let categories: Awaited<ReturnType<typeof fetchPublicCategories>> = [];
   let offers: Awaited<ReturnType<typeof searchProducts>>['hits'] = [];
   let theme = DEFAULT_THEME_SETTINGS;
+  let homeCms: PublicContentPage | null = null;
   let categoryError: string | null = null;
   let offerError: string | null = null;
 
-  const [categoriesResult, offersResult, configResult] = await Promise.allSettled([
+  const [categoriesResult, offersResult, configResult, homeCmsResult] = await Promise.allSettled([
     fetchPublicCategories(),
     searchProducts({ sort: 'newest', limit: 8 }),
     fetchStorefrontConfig(),
+    fetchPublishedContentPage(HOME_PAGE_SLUG),
   ]);
 
   if (categoriesResult.status === 'fulfilled') {
@@ -49,11 +54,31 @@ export default async function StorefrontHomePage() {
     theme = configResult.value.theme;
   }
 
+  if (homeCmsResult.status === 'fulfilled') {
+    homeCms = homeCmsResult.value;
+  } else if (
+    !(
+      homeCmsResult.status === 'rejected' &&
+      homeCmsResult.reason instanceof ApiClientError &&
+      homeCmsResult.reason.status === 404
+    )
+  ) {
+    // Non-404 failures: keep theme hero; CMS is optional for homepage.
+  }
+
   const roots = categories.filter((c) => c.parentId === null).slice(0, 12);
+  const useCmsHero = homeCms !== null;
 
   return (
     <div className="space-y-12">
-      {theme.heroBanner.enabled ? (
+      {useCmsHero && homeCms ? (
+        <section className="space-y-4" aria-labelledby="home-title">
+          <h1 id="home-title" className="sr-only">
+            {homeCms.title}
+          </h1>
+          <ContentBlockRenderer body={homeCms.body} />
+        </section>
+      ) : theme.heroBanner.enabled ? (
         <section className="sf-hero" aria-labelledby="home-title">
           <div
             className={`sf-hero-main${theme.heroBanner.imageUrl ? ' sf-hero-main--photo' : ''}`}
@@ -155,7 +180,7 @@ export default async function StorefrontHomePage() {
         </div>
       </section>
 
-      {theme.promoBanner?.enabled ? (
+      {!useCmsHero && theme.promoBanner?.enabled ? (
         <section
           className="rounded-2xl border border-border bg-gradient-to-r from-muted/80 via-muted/40 to-background p-8 md:p-10 shadow-sm"
           aria-label="Promotional banner slot"

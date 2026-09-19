@@ -1,10 +1,21 @@
 import { authedRequest } from '@/lib/auth-api';
 
-export type ContentBlock =
+export type ContentLeafBlock =
   | { type: 'heading'; level: 1 | 2 | 3; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'markdown'; markdown: string }
-  | { type: 'image'; mediaId: string; alt?: string };
+  | { type: 'image'; mediaId: string; alt?: string }
+  | { type: 'button'; label: string; href: string }
+  | { type: 'product'; productId: string }
+  | { type: 'offer'; offerId: string };
+
+export type ContentSectionBlock = {
+  type: 'section';
+  columns: 1 | 2 | 3;
+  children: ContentLeafBlock[][];
+};
+
+export type ContentBlock = ContentLeafBlock | ContentSectionBlock;
 
 export type ContentPageSeo = {
   metaTitle?: string;
@@ -40,6 +51,9 @@ export type AdminContentPageListResult = {
   items: AdminContentPageListItem[];
   nextCursor: string | null;
 };
+
+/** Reserved slug: published body drives the storefront homepage at `/`. */
+export const HOME_PAGE_SLUG = 'home';
 
 export function listAdminContentPages(
   input: {

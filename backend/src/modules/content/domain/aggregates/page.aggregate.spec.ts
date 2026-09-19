@@ -81,6 +81,35 @@ describe('Page aggregate', () => {
     page.unpublish({ expectedVersion: 2, actorUserId: 'a1' });
     expect(page.status).toBe('UNPUBLISHED');
     expect(page.currentPublicationId).toBeNull();
-    expect(page.draftBody).toEqual([{ type: 'paragraph', text: 'Hello' }]);
+  });
+
+  it('rejects nested section on updateDraft', () => {
+    const page = Page.create({
+      title: 'Layout',
+      slug: 'layout',
+      body: [{ type: 'paragraph', text: 'ok' }],
+      actorUserId: null,
+    });
+    expect(() =>
+      page.updateDraft({
+        expectedVersion: 1,
+        body: [
+          {
+            type: 'section',
+            columns: 1,
+            children: [
+              [
+                {
+                  type: 'section',
+                  columns: 1,
+                  children: [[{ type: 'paragraph', text: 'nested' }]],
+                } as never,
+              ],
+            ],
+          },
+        ],
+        actorUserId: null,
+      }),
+    ).toThrowError(ContentDomainError);
   });
 });

@@ -75,8 +75,9 @@ generated output, or a transcript of previous chats.
 - CMS pages (content module): draft→publish with optimistic `version`; admin
   `/admin/system/content/pages` (publication history + rollback); public
   `GET /storefront/content/pages/:slug` + storefront `/pages/[slug]`. Permissions
-  `website.read|update|publish`. No Redis published-slug cache yet (DB truth).
-  Visual builder deferred.
+  `website.read|update|publish`. Visual builder v1: additive section/button/
+  product/offer blocks, `@dnd-kit` admin canvas, published slug `home` drives
+  storefront `/` (else theme hero/promo). No nested sections / freeform HTML.
 - Admin Store Phase B: Branding (scoped Settings), Shipping (vendor courier),
   Analytics (report row), SEO / Notifications / GEM (platform deep-links); COD on
   Settings. Platform notifications hub at `/admin/system/notifications`.

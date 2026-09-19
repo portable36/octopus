@@ -1,10 +1,15 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { AUDIT_PORT, type AuditPort } from '../../../../shared-kernel/application/ports/audit.port';
 import {
+  CATALOG_OFFER_SEARCH_SOURCE,
+  type CatalogOfferSearchSourcePort,
+} from '../../../../shared-kernel/application/ports/catalog-offer-search-source.port';
+import {
   MEDIA_ASSET_ACCESS,
   type MediaAssetAccessPort,
 } from '../../../../shared-kernel/application/ports/media-asset-access.port';
 import { Page } from '../../domain/aggregates/page.aggregate';
+import { walkContentLeaves } from '../../domain/content-block.validation';
 import type {
   ContentBlock,
   ContentPageSeo,
@@ -13,6 +18,7 @@ import type {
 } from '../../domain/content.types';
 import {
   ContentDomainError,
+  ContentPageCatalogEmbedError,
   ContentPageMediaNotReadyError,
   ContentPageNotFoundError,
   ContentPagePublicationNotFoundError,
@@ -59,16 +65,6 @@ function toAdminDto(page: Page): AdminContentPageDto {
   };
 }
 
-function collectImageMediaIds(body: readonly ContentBlock[]): string[] {
-  const ids: string[] = [];
-  for (const block of body) {
-    if (block.type === 'image' && block.mediaId.trim()) {
-      ids.push(block.mediaId.trim());
-    }
-  }
-  return ids;
-}
-
 @Injectable()
 export class ContentPageHandlers {
   constructor(
@@ -76,6 +72,9 @@ export class ContentPageHandlers {
     @Optional()
     @Inject(MEDIA_ASSET_ACCESS)
     private readonly mediaAccess: MediaAssetAccessPort | null = null,
+    @Optional()
+    @Inject(CATALOG_OFFER_SEARCH_SOURCE)
+    private readonly catalogOffers: CatalogOfferSearchSourcePort | null = null,
     @Optional() @Inject(AUDIT_PORT) private readonly audit: AuditPort | null = null,
   ) {}
 
@@ -163,7 +162,7 @@ export class ContentPageHandlers {
     readonly actorUserId: string;
   }): Promise<AdminContentPageDto> {
     const page = await this.requirePage(input.id);
-    await this.assertMediaReady(page.draftBody);
+    await this.assertPublishRefsReady(page.draftBody);
     const publication = page.publish({
       expectedVersion: input.expectedVersion,
       actorUserId: input.actorUserId,
@@ -249,7 +248,7 @@ export class ContentPageHandlers {
     if (!source || source.pageId !== page.id.value) {
       throw new ContentPagePublicationNotFoundError();
     }
-    await this.assertMediaReady(source.body);
+    await this.assertPublishRefsReady(source.body);
     const publication = page.rollbackFromPublication({
       expectedVersion: input.expectedVersion,
       source,
@@ -279,22 +278,75 @@ export class ContentPageHandlers {
     return page;
   }
 
-  private async assertMediaReady(body: readonly ContentBlock[]): Promise<void> {
-    const mediaIds = collectImageMediaIds(body);
-    if (mediaIds.length === 0) {
+  private async assertPublishRefsReady(body: readonly ContentBlock[]): Promise<void> {
+    const leaves = walkContentLeaves(body);
+    const mediaIds = leaves
+      .filter((b) => b.type === 'image')
+      .map((b) => b.mediaId.trim())
+      .filter(Boolean);
+    const productIds = leaves
+      .filter((b) => b.type === 'product')
+      .map((b) => b.productId.trim())
+      .filter(Boolean);
+    const offerIds = leaves
+      .filter((b) => b.type === 'offer')
+      .map((b) => b.offerId.trim())
+      .filter(Boolean);
+
+    if (mediaIds.length > 0) {
+      if (!this.mediaAccess) {
+        throw new ContentDomainError(
+          'Media validation is unavailable.',
+          'CONTENT_PAGE_MEDIA_GUARD_UNAVAILABLE',
+        );
+      }
+      for (const mediaId of mediaIds) {
+        const resolved = await this.mediaAccess.resolvePublicImageUrl(mediaId);
+        if (!resolved) {
+          throw new ContentPageMediaNotReadyError(
+            `Media asset is missing or not ready for publish: ${mediaId}`,
+          );
+        }
+      }
+    }
+
+    if (productIds.length === 0 && offerIds.length === 0) {
       return;
     }
-    if (!this.mediaAccess) {
+    if (!this.catalogOffers) {
       throw new ContentDomainError(
-        'Media validation is unavailable.',
-        'CONTENT_PAGE_MEDIA_GUARD_UNAVAILABLE',
+        'Catalog validation is unavailable.',
+        'CONTENT_PAGE_CATALOG_GUARD_UNAVAILABLE',
       );
     }
-    for (const mediaId of mediaIds) {
-      const resolved = await this.mediaAccess.resolvePublicImageUrl(mediaId);
-      if (!resolved) {
-        throw new ContentPageMediaNotReadyError(
-          `Media asset is missing or not ready for publish: ${mediaId}`,
+
+    for (const productId of productIds) {
+      const linked = await this.catalogOffers.listOfferIdsByProductId(productId);
+      if (linked.length === 0) {
+        throw new ContentPageCatalogEmbedError(
+          `Product has no offers for publish: ${productId}`,
+        );
+      }
+      const sources = await this.catalogOffers.loadOfferSources([...linked]);
+      const sellable = sources.some(
+        (s) => s.offerAvailable && s.productStatus.toLowerCase() === 'published',
+      );
+      if (!sellable) {
+        throw new ContentPageCatalogEmbedError(
+          `Product is missing or not sellable for publish: ${productId}`,
+        );
+      }
+    }
+
+    for (const offerId of offerIds) {
+      const source = await this.catalogOffers.loadOfferSource(offerId);
+      if (
+        !source ||
+        !source.offerAvailable ||
+        source.productStatus.toLowerCase() !== 'published'
+      ) {
+        throw new ContentPageCatalogEmbedError(
+          `Offer is missing or not sellable for publish: ${offerId}`,
         );
       }
     }

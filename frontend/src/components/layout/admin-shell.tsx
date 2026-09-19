@@ -59,7 +59,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
       { href: '/admin/system/website', label: 'Website', permission: 'settings.read' },
       {
         href: '/admin/system/content/pages',
-        label: 'Content pages',
+        label: 'Content pages (home → /)',
         permission: 'website.read',
       },
       { href: '/admin/system/media', label: 'Media', permission: 'media.read' },

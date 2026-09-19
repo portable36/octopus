@@ -1484,7 +1484,8 @@ Build the platform admin **presentation layer** over existing bounded contexts
 
 Settings-backed branding/general is ready. **Admin Media Library** unblocked CMS
 pages. Thin CMS Pages vertical (`content` module) ships draft→publish + public
-`/pages/[slug]`; **visual page builder** / menus / banners still deferred.
+`/pages/[slug]`. **Visual page builder v1** ships DnD canvas + homepage `home`
+slug; menus as separate CMS aggregate / freeform HTML still deferred.
 
 ### 20.3.1 — Storefront config + branding (skeleton) & Theme Customizer
 
@@ -1498,8 +1499,11 @@ pages. Thin CMS Pages vertical (`content` module) ships draft→publish + public
 - [x] CMS pages vertical (P1+P2 rollback): `content` module draft→publish,
   publication history rollback, admin `/admin/system/content/pages`, public
   `GET /storefront/content/pages/:slug` + storefront `/pages/[slug]`
-  (structured JSON blocks; no visual builder)
-- [ ] Visual CMS page builder / menus / redirects (still deferred)
+- [x] Visual CMS page builder (v1): additive section/button/product/offer blocks,
+  `@dnd-kit` admin canvas + draft preview; published slug `home` drives `/`
+  (else theme hero/promo); no nested sections / freeform HTML / vendor pages
+- [ ] Menus as separate CMS aggregate (Website theme owns header/footer nav;
+  SEO redirects already exist)
 
 ---
 

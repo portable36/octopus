@@ -1923,7 +1923,7 @@ Reach production-grade test coverage.
 - [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
 - [x] Vendor fulfillment — `e2e/vendor-fulfillment.spec.ts` (skips without API / `E2E_VENDOR_EMAIL` / offers)
 - [x] Refund — `e2e/refund-path.spec.ts` (COD collect via API → customer Request refund; skips without vendor creds)
-- [ ] Payout
+- [x] Payout — `e2e/payout-path.spec.ts` (finance Request payout when spendable; optional COD seed; skips without vendor creds)
 
 ### Notes
 
@@ -1935,6 +1935,7 @@ Reach production-grade test coverage.
 - Slice **26.6** — Playwright authenticated revenue path (`e2e/revenue-path.spec.ts`); payment IPN HMAC/timestamp helpers wired on SSLCommerz IPN + bKash SNS Notification.
 - Slice **26.7** — Playwright vendor fulfillment (`e2e/vendor-fulfillment.spec.ts`): customer COD → process/fulfill → MANUAL shipment; env-gated on `E2E_VENDOR_*`.
 - Slice **26.8** — Playwright refund path (`e2e/refund-path.spec.ts`): vendor COD collect (API) → account Request refund → `REFUND_REQUESTED`.
+- Slice **26.9** — Playwright payout path (`e2e/payout-path.spec.ts`): vendor finance Request payout when spendable (COD seed + ledger poll if needed).
 - [x] commit push
 
 ---

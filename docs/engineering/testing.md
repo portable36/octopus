@@ -30,7 +30,7 @@ Backend Vitest lives next to code under `backend/src/**/*.spec.ts` (run via root
 | MikroORM        | `identity/.../user.orm.integration` (persist/load; `DATABASE_URL`)           |
 | HTTP contracts  | RFC7807 filter, pagination clamps, `test/api/http-auth.contract` (Supertest) |
 
-Playwright (`e2e/smoke.spec.ts`, `e2e/revenue-path.spec.ts`, `e2e/vendor-fulfillment.spec.ts`, `e2e/refund-path.spec.ts`): storefront smokes + authenticated register/login/COD checkout + vendor fulfill/ship + customer refund request when Nest API + indexed offers (+ `E2E_VENDOR_EMAIL` for fulfillment/refund) are available (skips otherwise; CI e2e job is frontend-only today).
+Playwright (`e2e/smoke.spec.ts`, `e2e/revenue-path.spec.ts`, `e2e/vendor-fulfillment.spec.ts`, `e2e/refund-path.spec.ts`, `e2e/payout-path.spec.ts`): storefront smokes + authenticated register/login/COD checkout + vendor fulfill/ship + customer refund + vendor payout request when Nest API + indexed offers (+ `E2E_VENDOR_EMAIL` for vendor-gated journeys) are available (skips otherwise; CI e2e job is frontend-only today).
 
 API contract harness: `backend/src/test/api/create-api-test-app.ts` boots a minimal Nest app with real `JwtAuthGuard` / `PermissionsGuard` (factory-wired for Vitest). Full `AppModule` + Redis/Postgres boot remains a follow-up.
 

@@ -95,3 +95,26 @@ export async function collectCodViaApi(
     .catch(() => null);
   return Boolean(response?.ok());
 }
+
+/** Vendor finance summary, or null when unauthorized / unreachable. */
+export async function fetchVendorFinanceSummary(
+  request: APIRequestContext,
+  input: { accessToken: string; vendorId: string },
+): Promise<{ spendableMinor: number; currencyCode: string } | null> {
+  const response = await request
+    .get(`${API_BASE}/finance/vendors/${encodeURIComponent(input.vendorId)}/summary`, {
+      headers: { Authorization: `Bearer ${input.accessToken}` },
+    })
+    .catch(() => null);
+  if (!response?.ok()) {
+    return null;
+  }
+  const body = (await response.json()) as {
+    spendableMinor?: number;
+    currencyCode?: string;
+  };
+  if (typeof body.spendableMinor !== 'number' || !body.currencyCode) {
+    return null;
+  }
+  return { spendableMinor: body.spendableMinor, currencyCode: body.currencyCode };
+}

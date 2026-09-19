@@ -60,19 +60,20 @@ npx.cmd playwright show-report
 | `e2e/revenue-path.spec.ts`       | Authenticated register/login + COD checkout (API + offers)       |
 | `e2e/vendor-fulfillment.spec.ts` | COD order → vendor process/fulfill → MANUAL shipment (env-gated) |
 | `e2e/refund-path.spec.ts`        | COD collect (API) → customer Request refund (env-gated)          |
+| `e2e/payout-path.spec.ts`        | Vendor finance Request payout when spendable (env-gated)         |
 | `e2e/helpers/`                   | API live check + auth helpers                                    |
 
 `PLAYWRIGHT_BASE_URL` overrides the default `http://127.0.0.1:3001`.
 
 ### Vendor-gated journeys
 
-`e2e/vendor-fulfillment.spec.ts` and `e2e/refund-path.spec.ts` skip unless Nest is up, offers exist, and:
+`e2e/vendor-fulfillment.spec.ts`, `e2e/refund-path.spec.ts`, and `e2e/payout-path.spec.ts` skip unless Nest is up and:
 
-| Variable              | Required | Notes                                            |
-| --------------------- | -------- | ------------------------------------------------ |
-| `E2E_VENDOR_EMAIL`    | yes      | Vendor staff for the offer’s store               |
-| `E2E_VENDOR_PASSWORD` | no       | Defaults to `E2E_PASSWORD` / auth helper default |
-| `E2E_VENDOR_ID`       | no       | Fulfillment only — skip picker with many vendors |
-| `E2E_STORE_ID`        | no       | Fulfillment only — pins vendor shell store       |
+| Variable              | Required | Notes                                              |
+| --------------------- | -------- | -------------------------------------------------- |
+| `E2E_VENDOR_EMAIL`    | yes      | Vendor staff for the offer’s store                 |
+| `E2E_VENDOR_PASSWORD` | no       | Defaults to `E2E_PASSWORD` / auth helper default   |
+| `E2E_VENDOR_ID`       | no       | Skip picker when the account has multiple vendors  |
+| `E2E_STORE_ID`        | no       | Pins vendor shell store when the vendor has many   |
 
-Refund path uses the same vendor email to **collect COD via API** (order must be PAID before the account “Request refund” button appears).
+Refund/payout may also **collect COD via API** (and payout may wait for ledger spendable after CodCollected). Fulfillment needs indexed offers; payout needs spendable balance or a successful COD seed.

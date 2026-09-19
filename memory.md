@@ -100,6 +100,7 @@ generated output, or a transcript of previous chats.
 - Playwright authenticated revenue path: `e2e/revenue-path.spec.ts` (skips without API).
 - Playwright vendor fulfillment: `e2e/vendor-fulfillment.spec.ts` (COD → process/fulfill → MANUAL shipment; needs `E2E_VENDOR_EMAIL` + offer’s store).
 - Playwright refund path: `e2e/refund-path.spec.ts` (vendor COD collect via API → account Request refund → `REFUND_REQUESTED`).
+- Playwright payout path: `e2e/payout-path.spec.ts` (vendor finance Request payout when spendable; COD seed + ledger poll if needed).
 - Payment IPN integrity: optional `PAYMENT_IPN_HMAC_SECRET` + timestamp guards on
   SSLCommerz IPN and bKash SNS Notification.
 - Tax/commission: checkout global config keys `tax_rate_bps` + `commission_rate_bps`;

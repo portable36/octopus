@@ -30,6 +30,15 @@ export class PublicCatalogController {
   }
 
   @Public()
+  @Get('offers/:offerId')
+  @ApiOperation({
+    summary: 'Get sellable storefront offer card by id (published product + active offer)',
+  })
+  getOffer(@Param('offerId') offerId: string) {
+    return this.browse.getPublishedOffer(offerId);
+  }
+
+  @Public()
   @Get('products/:productId')
   @ApiOperation({ summary: 'Get published product PDP (variants + active offers)' })
   getProduct(@Param('productId') productId: string) {

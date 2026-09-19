@@ -1921,8 +1921,8 @@ Reach production-grade test coverage.
 - [x] Multi-vendor checkout — COD path in `e2e/revenue-path.spec.ts` (skips without API/offers)
 - [ ] Payment (live gateway redirect journeys)
 - [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
-- [ ] Vendor fulfillment
-- [ ] Refund
+- [x] Vendor fulfillment — `e2e/vendor-fulfillment.spec.ts` (skips without API / `E2E_VENDOR_EMAIL` / offers)
+- [x] Refund — `e2e/refund-path.spec.ts` (COD collect via API → customer Request refund; skips without vendor creds)
 - [ ] Payout
 
 ### Notes
@@ -1933,6 +1933,8 @@ Reach production-grade test coverage.
 - Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts; authenticated payment-gateway E2E.
 - Slice **26.5** — return pickup handler unit coverage; dual-mode payout simulation unit coverage; auth polish (email verify / OAuth / OTP) handler specs.
 - Slice **26.6** — Playwright authenticated revenue path (`e2e/revenue-path.spec.ts`); payment IPN HMAC/timestamp helpers wired on SSLCommerz IPN + bKash SNS Notification.
+- Slice **26.7** — Playwright vendor fulfillment (`e2e/vendor-fulfillment.spec.ts`): customer COD → process/fulfill → MANUAL shipment; env-gated on `E2E_VENDOR_*`.
+- Slice **26.8** — Playwright refund path (`e2e/refund-path.spec.ts`): vendor COD collect (API) → account Request refund → `REFUND_REQUESTED`.
 - [x] commit push
 
 ---

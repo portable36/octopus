@@ -77,7 +77,8 @@ generated output, or a transcript of previous chats.
   `GET /storefront/content/pages/:slug` + storefront `/pages/[slug]`. Permissions
   `website.read|update|publish`. Visual builder v1: additive section/button/
   product/offer blocks, `@dnd-kit` admin canvas, published slug `home` drives
-  storefront `/` (else theme hero/promo). No nested sections / freeform HTML.
+  storefront `/` (else theme hero/promo). Offer embeds: `GET /public/offers/:id`.
+  No nested sections / freeform HTML.
 - Admin Store Phase B: Branding (scoped Settings), Shipping (vendor courier),
   Analytics (report row), SEO / Notifications / GEM (platform deep-links); COD on
   Settings. Platform notifications hub at `/admin/system/notifications`.
@@ -97,6 +98,8 @@ generated output, or a transcript of previous chats.
 - Finance statement CSV: `GET /finance/vendors/:id/statement.csv`. Payment gateway
   readiness: `GET /admin/payments/gateways` (booleans only).
 - Playwright authenticated revenue path: `e2e/revenue-path.spec.ts` (skips without API).
+- Playwright vendor fulfillment: `e2e/vendor-fulfillment.spec.ts` (COD → process/fulfill → MANUAL shipment; needs `E2E_VENDOR_EMAIL` + offer’s store).
+- Playwright refund path: `e2e/refund-path.spec.ts` (vendor COD collect via API → account Request refund → `REFUND_REQUESTED`).
 - Payment IPN integrity: optional `PAYMENT_IPN_HMAC_SECRET` + timestamp guards on
   SSLCommerz IPN and bKash SNS Notification.
 - Tax/commission: checkout global config keys `tax_rate_bps` + `commission_rate_bps`;

@@ -260,4 +260,85 @@ describe('PublicCatalogQueryHandler', () => {
       NotFoundException,
     );
   });
+
+  it('returns storefront offer card for active offer on published product', async () => {
+    const product = Product.create({
+      vendorId: 'v1',
+      sku: 'abc-def-1234',
+      name: 'Oversized Tee',
+      description: 'Cotton tee',
+    });
+    product.setMedia([{ mediaId: 'media-1', mediaType: 'IMAGE', isPrimary: true, sortOrder: 0 }]);
+
+    const handler = new PublicCatalogQueryHandler(
+      { listActive: vi.fn(), findActiveBySlug: vi.fn() } as never,
+      { findPublishedById: vi.fn().mockResolvedValue(product) } as never,
+      {
+        findById: vi.fn().mockResolvedValue({
+          id: { value: 'var-1' },
+          sku: 'TEE-M',
+          status: 'ACTIVE',
+          media: [],
+        }),
+        findByProductId: vi.fn(),
+      } as never,
+      {
+        findById: vi.fn().mockResolvedValue({
+          id: { value: 'offer-1' },
+          productId: product.id.value,
+          variantId: 'var-1',
+          storeId: 'store-1',
+          priceMinor: 1500,
+          currencyCode: 'BDT',
+          status: 'active',
+          isAvailable: true,
+        }),
+        findActiveByProductId: vi.fn(),
+      } as never,
+      { findActiveBySlug: vi.fn() } as never,
+      { findById: vi.fn(), findActivePublicBySlug: vi.fn() } as never,
+      {
+        findById: vi.fn(),
+        resolvePublicImageUrl: vi.fn().mockResolvedValue({
+          id: 'media-1',
+          contentType: 'image/png',
+          url: 'https://cdn.example/tee.png',
+        }),
+      } as never,
+    );
+
+    await expect(handler.getPublishedOffer('offer-1')).resolves.toMatchObject({
+      offerId: 'offer-1',
+      productId: product.id.value,
+      variantId: 'var-1',
+      storeId: 'store-1',
+      vendorId: 'v1',
+      name: 'Oversized Tee',
+      sku: 'TEE-M',
+      priceMinor: 1500,
+      currencyCode: 'BDT',
+      stockStatus: 'IN_STOCK',
+      primaryImageUrl: 'https://cdn.example/tee.png',
+    });
+  });
+
+  it('404s when offer is not active', async () => {
+    const handler = new PublicCatalogQueryHandler(
+      { listActive: vi.fn(), findActiveBySlug: vi.fn() } as never,
+      { findPublishedById: vi.fn() } as never,
+      { findById: vi.fn(), findByProductId: vi.fn() } as never,
+      {
+        findById: vi.fn().mockResolvedValue({
+          id: { value: 'offer-1' },
+          status: 'suspended',
+          isAvailable: false,
+        }),
+        findActiveByProductId: vi.fn(),
+      } as never,
+      { findActiveBySlug: vi.fn() } as never,
+      { findById: vi.fn(), findActivePublicBySlug: vi.fn() } as never,
+      { findById: vi.fn(), resolvePublicImageUrl: vi.fn() } as never,
+    );
+    await expect(handler.getPublishedOffer('offer-1')).rejects.toBeInstanceOf(NotFoundException);
+  });
 });

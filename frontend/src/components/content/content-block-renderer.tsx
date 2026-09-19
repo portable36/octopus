@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ContentBlock, ContentLeafBlock } from '@/lib/admin-content-api';
 import { getPublicMediaUrl } from '@/lib/media-public';
-import { fetchPublicProduct, formatMoney, isNotFound } from '@/lib/storefront-api';
+import { fetchPublicOffer, fetchPublicProduct, formatMoney, isNotFound } from '@/lib/storefront-api';
 import { cn } from '@/lib/cn';
 
 type Props = {
@@ -102,16 +102,38 @@ async function LeafBlock({ block }: { readonly block: ContentLeafBlock }) {
         return null;
       }
     }
-    case 'offer':
-      // No public offer-by-id fetch yet — link placeholder.
-      return (
-        <p className="text-sm text-muted-foreground">
-          Offer{' '}
-          <Link href="/search" className="font-mono text-xs underline underline-offset-2">
-            {block.offerId}
+    case 'offer': {
+      try {
+        const hit = await fetchPublicOffer(block.offerId);
+        return (
+          <Link
+            href={`/products/${hit.productId}`}
+            className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-muted/40"
+          >
+            {hit.primaryImageUrl ? (
+              <img
+                src={hit.primaryImageUrl}
+                alt=""
+                className="h-16 w-16 shrink-0 rounded object-cover"
+              />
+            ) : (
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded bg-muted text-lg font-semibold text-muted-foreground">
+                {hit.name.trim().charAt(0).toUpperCase() || 'O'}
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-medium">{hit.name}</p>
+              <p className="text-sm tabular-nums text-muted-foreground">
+                {formatMoney(hit.priceMinor, hit.currencyCode)}
+              </p>
+            </div>
           </Link>
-        </p>
-      );
+        );
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        return null;
+      }
+    }
     default: {
       const _exhaustive: never = block;
       return _exhaustive;

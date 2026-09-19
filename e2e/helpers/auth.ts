@@ -45,3 +45,53 @@ export async function findFirstOfferProductId(request: APIRequestContext): Promi
   const first = body.hits?.[0];
   return first?.productId ?? null;
 }
+
+/** Bearer token from `/auth/login`, or null when MFA / bad credentials. */
+export async function loginViaApi(
+  request: APIRequestContext,
+  input: { email: string; password?: string },
+): Promise<string | null> {
+  const response = await request
+    .post(`${API_BASE}/auth/login`, {
+      data: { email: input.email, password: input.password ?? E2E_PASSWORD },
+    })
+    .catch(() => null);
+  if (!response?.ok()) {
+    return null;
+  }
+  const body = (await response.json()) as {
+    accessToken?: string;
+    mfaRequired?: boolean;
+  };
+  if (body.mfaRequired || !body.accessToken) {
+    return null;
+  }
+  return body.accessToken;
+}
+
+/** Staff COD collection — marks the linked order PAID (needed before customer refund request). */
+export async function collectCodViaApi(
+  request: APIRequestContext,
+  input: {
+    accessToken: string;
+    paymentIntentId: string;
+    amountMinor: number;
+    currencyCode: string;
+    idempotencyKey?: string;
+  },
+): Promise<boolean> {
+  const response = await request
+    .post(`${API_BASE}/payments/cod/${encodeURIComponent(input.paymentIntentId)}/collect`, {
+      headers: {
+        Authorization: `Bearer ${input.accessToken}`,
+        'Idempotency-Key': input.idempotencyKey ?? `e2e-cod-${Date.now()}`,
+      },
+      data: {
+        amountMinor: input.amountMinor,
+        currency: input.currencyCode,
+        note: 'E2E COD collect',
+      },
+    })
+    .catch(() => null);
+  return Boolean(response?.ok());
+}

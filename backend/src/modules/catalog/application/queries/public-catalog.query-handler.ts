@@ -68,6 +68,65 @@ export class PublicCatalogQueryHandler {
     };
   }
 
+  public async getPublishedOffer(offerId: string) {
+    const offer = await this.offers.findById(offerId);
+    if (!offer || offer.status !== 'active' || !offer.isAvailable) {
+      throw new NotFoundException({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'Offer not found.',
+        code: 'OFFER_NOT_FOUND',
+      });
+    }
+
+    const product = await this.products.findPublishedById(offer.productId);
+    if (!product) {
+      throw new NotFoundException({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'Offer not found.',
+        code: 'OFFER_NOT_FOUND',
+      });
+    }
+
+    const variant = await this.variants.findById(offer.variantId);
+    if (!variant || variant.status !== 'ACTIVE') {
+      throw new NotFoundException({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'Offer not found.',
+        code: 'OFFER_NOT_FOUND',
+      });
+    }
+
+    const primaryMedia =
+      product.media.find((m) => m.isPrimary)?.mediaId ?? product.media[0]?.mediaId ?? null;
+    const variantPrimary =
+      variant.media.find((m) => m.isPrimary)?.mediaId ?? variant.media[0]?.mediaId ?? null;
+    const mediaId = variantPrimary ?? primaryMedia;
+    const mediaUrls = mediaId ? await this.resolveMediaUrls([mediaId]) : new Map();
+
+    return {
+      id: offer.id.value,
+      offerId: offer.id.value,
+      productId: offer.productId,
+      variantId: offer.variantId,
+      vendorId: product.vendorId,
+      storeId: offer.storeId,
+      name: product.name,
+      slug: slugify(product.name),
+      sku: variant.sku,
+      shortDescription: product.description?.slice(0, 160) ?? '',
+      priceMinor: offer.priceMinor,
+      currencyCode: offer.currencyCode,
+      stockStatus: offer.isAvailable ? 'IN_STOCK' : 'OUT_OF_STOCK',
+      primaryImageUrl: mediaId ? (mediaUrls.get(mediaId) ?? null) : null,
+    };
+  }
+
   public async getPublishedProduct(productId: string) {
     const product = await this.products.findPublishedById(productId);
     if (!product) {

@@ -140,6 +140,11 @@ export async function fetchPublicProduct(productId: string): Promise<PublicProdu
   return apiRequest<PublicProduct>(`/public/products/${encodeURIComponent(productId)}`);
 }
 
+/** Sellable offer card for CMS embeds / storefront (404 if unpublished or inactive). */
+export async function fetchPublicOffer(offerId: string): Promise<SearchHit> {
+  return apiRequest<SearchHit>(`/public/offers/${encodeURIComponent(offerId)}`);
+}
+
 export async function fetchPublicStoreBySlug(
   slug: string,
   vendorId?: string,

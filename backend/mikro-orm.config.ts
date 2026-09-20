@@ -31,9 +31,11 @@ import { SeoHealthIssue } from './src/modules/seo-discovery/infrastructure/entit
 import { SystemSetting } from './src/modules/seo-discovery/infrastructure/entities/system-setting.entity';
 import { GlobalSetting } from './src/modules/configuration/infrastructure/entities/global-setting.entity';
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_OWNER_URL || process.env.DATABASE_URL;
 if (!databaseUrl) {
-  throw new Error('DATABASE_URL is required for MikroORM CLI operations.');
+  throw new Error(
+    'DATABASE_OWNER_URL or DATABASE_URL is required for MikroORM CLI operations.',
+  );
 }
 
 export default defineConfig({

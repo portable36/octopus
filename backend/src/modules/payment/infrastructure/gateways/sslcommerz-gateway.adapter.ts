@@ -9,6 +9,7 @@ import type {
   GatewayVerificationResult,
   PaymentGatewayPort,
 } from '../../domain/ports/payment-gateway.port';
+import { assertPaymentSimulationAllowed } from './assert-payment-simulation-allowed';
 
 @Injectable()
 export class SslCommerzGatewayAdapter implements PaymentGatewayPort {
@@ -18,11 +19,18 @@ export class SslCommerzGatewayAdapter implements PaymentGatewayPort {
   constructor(@Inject(AppConfigService) private readonly appConfig: AppConfigService) {}
 
   private isSimulated(): boolean {
-    return (
+    const simulated =
       this.appConfig.paymentGatewayMode === 'sandbox-mock' ||
       !this.appConfig.sslCommerzStoreId ||
-      !this.appConfig.sslCommerzStorePasswd
-    );
+      !this.appConfig.sslCommerzStorePasswd;
+    if (simulated) {
+      this.assertSimulationAllowed();
+    }
+    return simulated;
+  }
+
+  private assertSimulationAllowed(): void {
+    assertPaymentSimulationAllowed(this.appConfig.isProduction, 'SSLCommerz');
   }
 
   private getBaseUrl(): string {

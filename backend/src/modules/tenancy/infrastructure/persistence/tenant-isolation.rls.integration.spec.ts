@@ -15,11 +15,8 @@ import { applyRlsSessionVariables } from '../../../../shared-kernel/infrastructu
 const databaseUrl = process.env.DATABASE_URL;
 
 async function withRequestScope<T>(work: () => Promise<T>): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    runWithTenantContext(createRequestContext('rls-test'), () => {
-      work().then(resolve).catch(reject);
-    });
-  });
+  // Must pass an async callback so AsyncLocalStorage spans awaits inside work().
+  return runWithTenantContext(createRequestContext('rls-test'), async () => work());
 }
 
 describe.runIf(Boolean(databaseUrl))('tenant isolation RLS integration', () => {
@@ -39,14 +36,20 @@ describe.runIf(Boolean(databaseUrl))('tenant isolation RLS integration', () => {
 
     try {
       const roleRows = (await orm.em.execute(
-        `select rolsuper from pg_roles where rolname = current_user`,
-      )) as Array<{ rolsuper: boolean }>;
+        `select current_user as role_name, rolsuper
+         from pg_roles
+         where rolname = current_user`,
+      )) as Array<{ role_name: string; rolsuper: boolean }>;
+
       if (roleRows[0]?.rolsuper === true) {
-        // ponytail: local DATABASE_URL often uses a superuser that bypasses RLS.
+        // Owner/superuser still bypasses RLS — prefer DATABASE_URL=octopus_app after Migration20260920120000.
         return;
       }
 
+      expect(roleRows[0]?.rolsuper).toBe(false);
+
       await orm.em.transactional(async (em) => {
+        await em.execute(`select set_config('app.platform_scope', 'true', true)`);
         await em.execute(
           `insert into tenant_isolation_samples (id, vendor_id, store_id, label, created_at)
            values (?, ?, ?, ?, now()), (?, ?, null, ?, now())`,
@@ -94,6 +97,7 @@ describe.runIf(Boolean(databaseUrl))('tenant isolation RLS integration', () => {
       expect(platformScopedCount).toBeGreaterThanOrEqual(2);
     } finally {
       await orm.em.transactional(async (em) => {
+        await em.execute(`select set_config('app.platform_scope', 'true', true)`);
         await em.execute(`delete from tenant_isolation_samples where id in (?, ?)`, [
           sampleA,
           sampleB,

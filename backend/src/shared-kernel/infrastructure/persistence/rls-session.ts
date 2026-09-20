@@ -4,17 +4,19 @@ import { tryGetTenantContext } from '../context/tenant-context.storage';
 /**
  * Applies PostgreSQL session variables for the current request scope.
  * Always uses SET LOCAL so values are transaction-scoped and safe with pooling.
+ *
+ * Must use `em.execute` (transactional EM), not `em.getConnection().execute` —
+ * the raw connection is outside the open transaction, so SET LOCAL would not apply.
  */
 export async function applyRlsSessionVariables(em: EntityManager): Promise<void> {
-  const connection = em.getConnection();
   const context = tryGetTenantContext();
 
   if (!context) {
-    await connection.execute(`select set_config('app.platform_scope', 'false', true)`);
-    await connection.execute(`select set_config('app.vendor_id', '', true)`);
-    await connection.execute(`select set_config('app.store_id', '', true)`);
-    await connection.execute(`select set_config('app.user_id', '', true)`);
-    await connection.execute(`select set_config('app.guest_token', '', true)`);
+    await em.execute(`select set_config('app.platform_scope', 'false', true)`);
+    await em.execute(`select set_config('app.vendor_id', '', true)`);
+    await em.execute(`select set_config('app.store_id', '', true)`);
+    await em.execute(`select set_config('app.user_id', '', true)`);
+    await em.execute(`select set_config('app.guest_token', '', true)`);
     return;
   }
 
@@ -24,11 +26,11 @@ export async function applyRlsSessionVariables(em: EntityManager): Promise<void>
   const platformScope = context.platformScope === true ? 'true' : 'false';
   const guestToken = context.guestToken ?? '';
 
-  await connection.execute(`select set_config('app.platform_scope', ?, true)`, [platformScope]);
-  await connection.execute(`select set_config('app.vendor_id', ?, true)`, [vendorId]);
-  await connection.execute(`select set_config('app.store_id', ?, true)`, [storeId]);
-  await connection.execute(`select set_config('app.user_id', ?, true)`, [userId]);
-  await connection.execute(`select set_config('app.guest_token', ?, true)`, [guestToken]);
+  await em.execute(`select set_config('app.platform_scope', ?, true)`, [platformScope]);
+  await em.execute(`select set_config('app.vendor_id', ?, true)`, [vendorId]);
+  await em.execute(`select set_config('app.store_id', ?, true)`, [storeId]);
+  await em.execute(`select set_config('app.user_id', ?, true)`, [userId]);
+  await em.execute(`select set_config('app.guest_token', ?, true)`, [guestToken]);
 }
 
 export async function withRlsContext<T>(

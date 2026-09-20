@@ -9,10 +9,11 @@ const steps = [
   ['lint', 'ESLint'],
   ['typecheck', 'TypeScript'],
   ['architecture', 'Architecture boundaries'],
+  // Migrations before tests so octopus_app (RLS-bound) exists for DATABASE_URL in CI.
+  ['migration:check', 'Database migrations'],
   ['test', 'Unit tests'],
   ['env:check', 'Environment contract'],
   ['build', 'Application build'],
-  ['migration:check', 'Database migrations'],
   ['security', 'Dependency audit'],
 ];
 

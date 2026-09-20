@@ -40,7 +40,8 @@ jobs:
 
     env:
       CI: 'true'
-      DATABASE_URL: postgresql://octopus:octopus@localhost:5432/octopus
+      DATABASE_URL: postgresql://octopus_app:octopus_app@localhost:5432/octopus
+      DATABASE_OWNER_URL: postgresql://octopus:octopus@localhost:5432/octopus
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-test-secret-with-at-least-32-characters
       JWT_EXPIRES_IN: 15m

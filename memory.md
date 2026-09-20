@@ -64,10 +64,11 @@ generated output, or a transcript of previous chats.
 - Ops alerts: `GET /health/alerts` evaluates dependency/heap/queue conditions;
   admin UI at `/admin/system/alerts` (rule catalog includes external burn-rate note).
 - Local drills: `npm.cmd run restore:drill` (Postgres dump→restore); `npm.cmd run deploy:drill`
+  (API image build + A→B→A rollback with live/ready probes).
 - Host Postgres backups: `deploy/backup-postgres.sh` + `deploy/install-backup-cron.sh` (run on VPS; 30d daily + 12 monthly).
 - Host restore drill: `deploy/restore-drill-host.sh` (newest daily dump → `octopus_restore_drill`).
-- Host health pager: optional `PAGER_WEBHOOK_URL` on `deploy/check-health.sh`.
-  (API image build + A→B→A rollback with live/ready probes).
+- Host health cron + pager: `deploy/install-health-cron.sh` + `deploy/check-health.sh`
+  (sources `API_BASE` / `STORE_BASE` / `PAGER_WEBHOOK_URL` from `host.secrets.env`).
 - Prod host secrets: copy `deploy/host.secrets.env.example` → `/opt/octopus/.env` and/or
   `host.secrets.env` (`chmod 600`). Compose `${VAR}` + optional `env_file`. Uptime:
   `deploy/check-health.sh` (live/ready/alerts/storefront).
@@ -105,6 +106,7 @@ generated output, or a transcript of previous chats.
 - Playwright refund path: `e2e/refund-path.spec.ts` (vendor COD collect via API → account Request refund → `REFUND_REQUESTED`).
 - Playwright payout path: `e2e/payout-path.spec.ts` (vendor finance Request payout when spendable; COD seed + ledger poll if needed).
 - Playwright payment gateway redirect: `e2e/payment-path.spec.ts` (sandbox-mock URL; stubs host; optional `E2E_PAYMENT_METHOD`).
+- Playwright SSLCommerz IPN capture: `e2e/payment-ipn-path.spec.ts` (checkout → public IPN → CAPTURED under sandbox-mock; optional verify_sign).
 - Payment gateway adapters: mocked credentialed HTTP path in `payment-gateways.spec.ts`; optional sandbox network IT when SSLCommerz/bKash env keys set.
 - Payment IPN integrity: optional `PAYMENT_IPN_HMAC_SECRET` + timestamp guards on
   SSLCommerz IPN and bKash SNS Notification.

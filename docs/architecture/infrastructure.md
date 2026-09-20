@@ -57,7 +57,7 @@ Publish only nginx (or Caddy) on 80/443; keep compose service ports bound to `12
 
 1. On the host compose directory (default `/opt/octopus`), copy [`deploy/host.secrets.env.example`](../../deploy/host.secrets.env.example) to **`.env`** (for Compose interpolation) and/or **`host.secrets.env`** (loaded by `backend-api` / `seo-worker` when present).
 2. `chmod 600` those files; never commit them.
-3. Set at least: `JWT_SECRET` (≥32 chars), `DATABASE_URL`, `REDIS_URL`, `CORS_ORIGINS`, Meilisearch + S3 keys if not using compose defaults.
+3. Set at least: `JWT_SECRET` (≥32 chars), `DATABASE_URL` (prefer `octopus_app`), `DATABASE_OWNER_URL` (migrator/`octopus`), `REDIS_URL`, `CORS_ORIGINS`, Meilisearch + S3 keys if not using compose defaults.
 4. Rotate JWT with `JWT_SECRET` + `JWT_SECRET_PREVIOUS` overlap ([security.md](../engineering/security.md)).
 5. Payment / courier secrets stay runtime-only on the host (not in GitHub Actions).
 
@@ -69,16 +69,23 @@ Compose substitutes `${JWT_SECRET:-…}` from the project `.env`. Optional `host
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Process         | Compose `healthcheck` on `backend-api` (`/api/v1/health/ready`) + storefront                                                 |
 | App diagnostics | `GET /api/v1/health/live`, `/ready`, `/alerts` + admin `/admin/system/alerts`                                                |
-| Host cron       | [`deploy/check-health.sh`](../../deploy/check-health.sh) every 5 minutes                                                     |
+| Host cron       | [`deploy/check-health.sh`](../../deploy/check-health.sh) every 5 minutes via [`install-health-cron.sh`](../../deploy/install-health-cron.sh) |
 | External uptime | Point Cloudflare Health Checks / UptimeRobot / Better Stack at public `/api/v1/health/ready` (and optionally storefront `/`) |
-| Pager webhook   | Optional `PAGER_WEBHOOK_URL` on `check-health.sh` (Slack/Discord/Better Stack incoming webhook on probe failure)             |
+| Pager webhook   | Optional `PAGER_WEBHOOK_URL` in `host.secrets.env` (sourced by install-health-cron + check-health on FAIL)             |
 
 ### External uptime + pager (host ops checklist)
 
 1. **Public ready URL** — `https://<api-host>/api/v1/health/ready` must return 2xx when Postgres + Redis are up.
 2. **Uptime monitor** (pick one OSS/free-first): Cloudflare Health Checks, [UptimeRobot](https://uptimerobot.com/), or Better Stack — interval ≤ 5m, alert on non-2xx / timeout.
-3. **Host cron** — `*/5 * * * * API_BASE=https://<api-host>/api/v1 STORE_BASE=https://<storefront> /opt/octopus/deploy/check-health.sh >>/var/log/octopus-health.log 2>&1`
-4. **Pager** — set `PAGER_WEBHOOK_URL` in the cron environment (or host `.env` exported for cron) so failures notify Slack/Discord/Better Stack.
+3. **Host cron** — on the VPS:
+
+```bash
+chmod +x deploy/check-health.sh deploy/install-health-cron.sh
+# Set API_BASE / STORE_BASE / PAGER_WEBHOOK_URL in host.secrets.env first
+./deploy/install-health-cron.sh
+```
+
+4. **Pager** — set `PAGER_WEBHOOK_URL` in `host.secrets.env` so failures notify Slack/Discord/Better Stack.
 5. **Escalation** — on alert: check `GET /health/alerts`, compose `ps`, recent deploy digest; do not restart Postgres blindly during restore.
 
 OTel remains optional in-app; Prometheus burn-rate stays optional host ops.

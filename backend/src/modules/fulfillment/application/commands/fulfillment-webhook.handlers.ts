@@ -158,6 +158,11 @@ export class ProcessCourierWebhookHandler {
         : this.config.pathaoWebhookSecret;
 
     if (!secret) {
+      if (this.config.isProduction) {
+        throw new FulfillmentAccessDeniedError(
+          `Courier webhook secret is required in production for ${input.provider}.`,
+        );
+      }
       return;
     }
 

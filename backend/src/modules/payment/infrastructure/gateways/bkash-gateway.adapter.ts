@@ -9,6 +9,7 @@ import type {
   GatewayVerificationResult,
   PaymentGatewayPort,
 } from '../../domain/ports/payment-gateway.port';
+import { assertPaymentSimulationAllowed } from './assert-payment-simulation-allowed';
 
 @Injectable()
 export class BkashGatewayAdapter implements PaymentGatewayPort {
@@ -20,13 +21,16 @@ export class BkashGatewayAdapter implements PaymentGatewayPort {
   constructor(@Inject(AppConfigService) private readonly appConfig: AppConfigService) {}
 
   private isSimulated(): boolean {
-    return (
+    const simulated =
       this.appConfig.paymentGatewayMode === 'sandbox-mock' ||
       !this.appConfig.bkashAppKey ||
       !this.appConfig.bkashAppSecret ||
       !this.appConfig.bkashUsername ||
-      !this.appConfig.bkashPassword
-    );
+      !this.appConfig.bkashPassword;
+    if (simulated) {
+      assertPaymentSimulationAllowed(this.appConfig.isProduction, 'bKash');
+    }
+    return simulated;
   }
 
   private getBaseUrl(): string {

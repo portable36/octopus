@@ -1920,6 +1920,7 @@ Reach production-grade test coverage.
 - [x] Cart (page smoke)
 - [x] Multi-vendor checkout — COD path in `e2e/revenue-path.spec.ts` (skips without API/offers)
 - [x] Payment (live gateway redirect journeys) — `e2e/payment-path.spec.ts` (sandbox-mock redirect; optional `E2E_PAYMENT_METHOD`)
+- [x] Payment IPN capture — `e2e/payment-ipn-path.spec.ts` (SSLCommerz IPN → CAPTURED under sandbox-mock; optional `verify_sign` when `SSLCOMMERZ_STORE_PASSWD` set)
 - [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
 - [x] Vendor fulfillment — `e2e/vendor-fulfillment.spec.ts` (skips without API / `E2E_VENDOR_EMAIL` / offers)
 - [x] Refund — `e2e/refund-path.spec.ts` (COD collect via API → customer Request refund; skips without vendor creds)
@@ -1938,6 +1939,7 @@ Reach production-grade test coverage.
 - Slice **26.9** — Playwright payout path (`e2e/payout-path.spec.ts`): vendor finance Request payout when spendable (COD seed + ledger poll if needed).
 - Slice **26.10** — Playwright payment gateway redirect (`e2e/payment-path.spec.ts`): bKash/SSLCommerz/Nagad sandbox-mock URL navigation (stubs host; not live capture).
 - Slice **26.11** — Payment gateway adapter credentialed path unit tests (mocked fetch) + optional `payment-gateways.sandbox.integration.spec.ts` (`describe.runIf` provider keys).
+- Slice **26.12** — Playwright SSLCommerz IPN capture (`e2e/payment-ipn-path.spec.ts`): checkout → public IPN → `CAPTURED` (+ idempotent replay) under `sandbox-mock`.
 - [x] commit push
 
 ---
@@ -2055,7 +2057,8 @@ Never share production secrets with development.
 ### Notes
 
 - Slice **28.1** — IaC choice + environment/service map in `docs/architecture/infrastructure.md`.
-- Slice **28.2** — host secrets template + compose `${VAR}` / optional `host.secrets.env`; firewall + uptime probe contract (`deploy/check-health.sh`). **Still open:** fill host secrets on the live VPS; wire external uptime monitor + `PAGER_WEBHOOK_URL` on host cron.
+- Slice **28.2** — host secrets template + compose `${VAR}` / optional `host.secrets.env`; firewall + uptime probe contract (`deploy/check-health.sh`).
+- Slice **28.3** — `deploy/install-health-cron.sh` (smoke probes + idempotent crontab; sources `PAGER_WEBHOOK_URL` / `API_BASE` from `host.secrets.env`). **Still open:** run installer on the live VPS; point a free external uptime monitor at public `/health/ready`.
 - [x] commit push
 
 ---
@@ -2101,7 +2104,7 @@ Redis must not contain the only copy of financial/business truth.
 - Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`).
 - Slice **29.3** — `deploy/backup-postgres.sh` + host cron enablement notes in backup-disaster-recovery.md.
 - Slice **29.4** — `deploy/install-backup-cron.sh` (smoke dump + idempotent crontab).
-- Slice **29.5** — `deploy/restore-drill-host.sh` + `PAGER_WEBHOOK_URL` on `check-health.sh` + uptime/pager checklist in infrastructure.md. **Still open:** run installer/cron/pager on the live VPS; off-box sync; quarterly prod restore using host drill script.
+- Slice **29.5** — `deploy/restore-drill-host.sh` + `PAGER_WEBHOOK_URL` on `check-health.sh` + uptime/pager checklist in infrastructure.md + `install-health-cron.sh`. **Still open:** run backup/health installers on the live VPS; off-box sync; quarterly prod restore using host drill script.
 - [x] commit push
 
 ---
@@ -2168,7 +2171,7 @@ Evidence sync against shipped Phases 00–29. Open items stay unchecked.
 - [x] Unit
 - [x] Integration (RLS + Redis when env URLs set)
 - [x] API (Supertest auth contracts)
-- [x] E2E (Playwright smoke; authenticated revenue journeys still open)
+- [x] E2E (Playwright smoke + authenticated COD/revenue + gateway redirect + IPN capture under sandbox-mock; vendor fulfill/refund/payout when `E2E_VENDOR_*` set)
 - [x] Security (authz/MFA/rate-limit/SSRF specs)
 - [x] Concurrency
 - [x] Migration (`migration:check`; clean-DB RLS helper order fixed in `Migration20250822210000`)
@@ -2185,7 +2188,7 @@ Evidence sync against shipped Phases 00–29. Open items stay unchecked.
 ### Notes
 
 - Slice **30.1** — production-readiness checkbox sync + fix `Migration20250822210000` so `app.*` RLS helpers exist before policies (clean migrate).
-- Slice **30.2** — local `npm.cmd run deploy:drill` (image build + rolling deploy/rollback readiness). **Still open:** live payment webhooks; authenticated E2E revenue paths; Phase 26 MikroORM container / live payment adapter IT; external pager/Prometheus burn-rate; quarterly prod digest drill on host.
+- Slice **30.2** — local `npm.cmd run deploy:drill` (image build + rolling deploy/rollback readiness). **Still open:** Phase 26 MikroORM container / live provider network IT; run `install-backup-cron` + `install-health-cron` on VPS; external uptime monitor; quarterly prod restore. Payment IPN capture E2E covered under sandbox-mock (`e2e/payment-ipn-path.spec.ts`). Repo private: blocked until `gh auth login`.
 - [x] commit push
 
 ## Definition of Production Ready

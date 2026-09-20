@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query, UseFilters } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+  UseFilters,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -201,14 +211,16 @@ export class InventoryController {
 
   @Post('reservations/expire-due')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Expire due ACTIVE reservations (idempotent batch)' })
+  @ApiOperation({
+    summary: 'Expire due ACTIVE reservations (platform-admin batch; cross-tenant)',
+  })
   async expireDue(@CurrentUser() user: RequestPrincipal) {
-    const allowed =
-      user.roles.includes('PLATFORM_ADMIN') ||
-      user.roles.includes('VENDOR_OWNER') ||
-      user.roles.includes('STORE_MANAGER');
-    if (!allowed) {
-      return { expired: 0, skipped: true };
+    // Global batch — must not be callable by vendor/store roles (would expire other tenants).
+    if (!user.roles.includes('PLATFORM_ADMIN')) {
+      throw new ForbiddenException({
+        message: 'Only PLATFORM_ADMIN may run cross-tenant reservation expiry.',
+        code: 'INVENTORY_EXPIRE_DUE_FORBIDDEN',
+      });
     }
     const expired = await this.reservations.expireDue(100);
     return { expired };

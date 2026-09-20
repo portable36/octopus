@@ -9,6 +9,7 @@ import type {
   GatewayVerificationResult,
   PaymentGatewayPort,
 } from '../../domain/ports/payment-gateway.port';
+import { assertPaymentSimulationAllowed } from './assert-payment-simulation-allowed';
 
 @Injectable()
 export class NagadGatewayAdapter implements PaymentGatewayPort {
@@ -18,11 +19,14 @@ export class NagadGatewayAdapter implements PaymentGatewayPort {
   constructor(@Inject(AppConfigService) private readonly appConfig: AppConfigService) {}
 
   private isSimulated(): boolean {
-    return (
+    const simulated =
       this.appConfig.paymentGatewayMode === 'sandbox-mock' ||
       !this.appConfig.nagadMerchantId ||
-      !this.appConfig.nagadMerchantPrivateKey
-    );
+      !this.appConfig.nagadMerchantPrivateKey;
+    if (simulated) {
+      assertPaymentSimulationAllowed(this.appConfig.isProduction, 'Nagad');
+    }
+    return simulated;
   }
 
   private getBaseUrl(): string {

@@ -53,7 +53,7 @@ Opt-in authenticator MFA (`POST /auth/mfa/setup` → `enable`; `disable` with pa
 
 Shared utilities:
 
-- `verifyHmacSha256Hex` — timing-safe HMAC-SHA256 (optional `PAYMENT_IPN_HMAC_SECRET` + `x-signature` on IPNs)
+- `verifyHmacSha256Hex` — timing-safe HMAC-SHA256 (`PAYMENT_IPN_HMAC_SECRET` required in production; optional in development + `x-signature` on IPNs)
 - `assertWebhookTimestampFresh` — ±5m skew / replay window
 - `verifySslCommerzSign` / `assertSslCommerzIpnSign` — SSLCommerz provider-native MD5 `verify_sign` (enforced on `POST …/sslcommerz/ipn` when `SSLCOMMERZ_STORE_PASSWD` is set)
 

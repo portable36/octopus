@@ -55,7 +55,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      DATABASE_URL: postgresql://octopus:octopus@postgres:5432/octopus
+      DATABASE_URL: postgresql://octopus_app:octopus_app@postgres:5432/octopus
+      DATABASE_OWNER_URL: postgresql://octopus:octopus@postgres:5432/octopus
       REDIS_URL: redis://redis:6379
       JWT_SECRET: local-dev-secret-with-at-least-32-characters
       JWT_EXPIRES_IN: 15m

@@ -68,6 +68,17 @@ Test:
 
 Never use a superuser connection for normal application traffic if doing so bypasses intended RLS protection.
 
+### App vs owner roles
+
+| Role | Purpose | Local default |
+| --- | --- | --- |
+| `octopus` | Bootstrap / migrations / DDL (`DATABASE_OWNER_URL`) | `postgresql://octopus:octopus@…` |
+| `octopus_app` | Runtime API traffic (`DATABASE_URL`) — `NOSUPERUSER` + `NOBYPASSRLS` | `postgresql://octopus_app:octopus_app@…` |
+
+Migration `Migration20260920120000` creates `octopus_app` and grants DML. Change the password in production (`ALTER ROLE octopus_app PASSWORD …`). Tables already use `FORCE ROW LEVEL SECURITY`; the app role is what makes those policies bind.
+
+Session variables are applied with `SET LOCAL` via the transactional `EntityManager.execute` API (`applyRlsSessionVariables`). Do not use `em.getConnection().execute` for RLS GUCs — that runs outside the open transaction and silently no-ops `SET LOCAL`.
+
 ## Migrations
 
 Migrations are immutable history.

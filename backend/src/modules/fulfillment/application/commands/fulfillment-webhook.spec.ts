@@ -4,9 +4,14 @@ import { ProcessCourierWebhookHandler } from './fulfillment-webhook.handlers';
 import { FulfillmentWebhookController } from '../../presentation/http/fulfillment-webhook.controller';
 
 describe('ProcessCourierWebhookHandler', () => {
-  const createMockConfig = (options?: { steadfastSecret?: string; pathaoSecret?: string }) => ({
+  const createMockConfig = (options?: {
+    steadfastSecret?: string;
+    pathaoSecret?: string;
+    isProduction?: boolean;
+  }) => ({
     steadfastWebhookSecret: options?.steadfastSecret,
     pathaoWebhookSecret: options?.pathaoSecret,
+    isProduction: options?.isProduction ?? false,
   });
 
   it('successfully transitions Steadfast shipment to DELIVERED and collects COD', async () => {
@@ -108,6 +113,21 @@ describe('ProcessCourierWebhookHandler', () => {
         payload: { consignment_id: 12345 },
       }),
     ).rejects.toThrow(FulfillmentAccessDeniedError);
+  });
+
+  it('rejects courier webhooks in production when secret is not configured', async () => {
+    const handler = new ProcessCourierWebhookHandler(
+      {} as never,
+      {} as never,
+      createMockConfig({ isProduction: true }) as never,
+    );
+
+    await expect(
+      handler.execute({
+        provider: 'STEADFAST',
+        payload: { consignment_id: 12345, status: 'delivered' },
+      }),
+    ).rejects.toThrow(/required in production/i);
   });
 
   it('handles Pathao webhook and matches by merchant_order_id', async () => {

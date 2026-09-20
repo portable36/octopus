@@ -36,6 +36,11 @@ Scripts:
 chmod +x deploy/backup-postgres.sh deploy/install-backup-cron.sh
 ./deploy/install-backup-cron.sh
 # Optional: BACKUP_CRON_SCHEDULE='0 3 * * *' ./deploy/install-backup-cron.sh
+
+# Health probes + optional pager (same host):
+chmod +x deploy/check-health.sh deploy/install-health-cron.sh
+# Set API_BASE / STORE_BASE / PAGER_WEBHOOK_URL in host.secrets.env
+./deploy/install-health-cron.sh
 ```
 
 Confirm disk encryption or restricted host volume for backup media. Optional: sync `backups/postgres/` off-box (rsync/S3) for second copy. Quarterly: restore a daily dump into an isolated DB and record RTO (local proof remains `npm.cmd run restore:drill`).

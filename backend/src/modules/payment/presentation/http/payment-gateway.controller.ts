@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   Res,
+  UnauthorizedException,
   UseFilters,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -18,6 +19,7 @@ import {
   API_RATE_LIMITER,
   type ApiRateLimiter,
 } from '../../../../shared-kernel/application/ports/api-rate-limiter.port';
+import { Public } from '../../../../shared-kernel/presentation/http/public.decorator';
 import { ProcessGatewayCallbackHandler } from '../../application/commands/payment-gateway.handlers';
 import { PaymentExceptionFilter } from './filters/payment-exception.filter';
 import {
@@ -26,6 +28,11 @@ import {
 } from './payment-webhook-integrity';
 import { assertSslCommerzIpnSign } from '../../application/services/sslcommerz-verify-sign';
 
+/**
+ * Provider IPNs and browser return URLs have no bearer token.
+ * Integrity is enforced via HMAC / provider verify_sign / live verifyPayment — not JWT.
+ */
+@Public()
 @ApiTags('payments-gateways')
 @Controller('payments/gateways')
 @UseFilters(PaymentExceptionFilter)
@@ -62,6 +69,35 @@ export class PaymentGatewayController {
     });
   }
 
+  /** When SSLCommerz credentials are configured, browser return must carry val_id for server validation. */
+  private assertSslCommerzBrowserReturnIntegrity(payload: Record<string, unknown>): void {
+    const storePasswd = this.appConfig?.sslCommerzStorePasswd?.trim();
+    if (!storePasswd) {
+      return;
+    }
+    const statusRaw = String(payload.status || payload.tran_status || '').toUpperCase();
+    if (statusRaw === 'CANCEL' || statusRaw === 'CANCELLED' || statusRaw === 'FAIL' || statusRaw === 'FAILED') {
+      return;
+    }
+    const valId = String(payload.val_id || '').trim();
+    if (!valId) {
+      throw new UnauthorizedException({
+        type: 'about:blank',
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'SSLCommerz browser return missing val_id for server-side validation.',
+        code: 'SSLCOMMERZ_CALLBACK_VAL_ID_REQUIRED',
+      });
+    }
+    // If the provider included verify_sign on the return URL, enforce it (IPN-compatible).
+    if (String(payload.verify_sign || '').trim()) {
+      assertSslCommerzIpnSign({
+        payload,
+        storePasswd,
+      });
+    }
+  }
+
   private isBrowserNavigation(req: Request): boolean {
     const accept = String(req.headers?.accept || '');
     const dest = String(req.headers?.['sec-fetch-dest'] || '');
@@ -96,6 +132,9 @@ export class PaymentGatewayController {
       await this.rateLimiter.consume(`payment:gw:sslcommerz:${req.ip ?? 'unknown'}`, 120, 60);
     }
     const payload = { ...(query || {}), ...(body || {}) };
+    // Browser returns are unsigned; when store credentials exist, require val_id so
+    // live verifyPayment can call SSLCommerz validation API (never trust status alone).
+    this.assertSslCommerzBrowserReturnIntegrity(payload);
     const outcome = await this.callbackHandler.execute({
       provider: 'SSLCOMMERZ',
       payload,

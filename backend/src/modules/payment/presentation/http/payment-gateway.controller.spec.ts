@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { IS_PUBLIC_KEY } from '../../../../shared-kernel/presentation/http/public.decorator';
 import { PaymentGatewayController } from './payment-gateway.controller';
 
 describe('PaymentGatewayController', () => {
@@ -14,6 +15,10 @@ describe('PaymentGatewayController', () => {
 
   const controller = new PaymentGatewayController(mockHandler as never, undefined);
 
+  it('is marked @Public so gateway IPNs bypass JwtAuthGuard', () => {
+    expect(Reflect.getMetadata(IS_PUBLIC_KEY, PaymentGatewayController)).toBe(true);
+  });
+
   it('routes sslcommerz callback correctly', async () => {
     const req = { ip: '127.0.0.1' } as never;
     const body = { tran_id: 'intent-ssl', val_id: 'val-1', status: 'VALID' };
@@ -28,6 +33,24 @@ describe('PaymentGatewayController', () => {
         paymentIntentId: 'intent-ssl',
       }),
     );
+  });
+
+  it('rejects sslcommerz browser return without val_id when store passwd is configured', async () => {
+    mockHandler.execute.mockClear();
+    const secured = new PaymentGatewayController(mockHandler as never, undefined, {
+      sslCommerzStorePasswd: 'store-secret',
+    } as never);
+    const req = { ip: '127.0.0.1', headers: {} } as never;
+    await expect(
+      secured.handleSslCommerzCallback(
+        req,
+        { tran_id: 'intent-forge', status: 'VALID' },
+        {},
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: 'SSLCOMMERZ_CALLBACK_VAL_ID_REQUIRED' }),
+    });
+    expect(mockHandler.execute).not.toHaveBeenCalled();
   });
 
   it('routes sslcommerz ipn correctly', async () => {

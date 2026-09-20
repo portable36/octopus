@@ -4,9 +4,13 @@ import { SslCommerzGatewayAdapter } from './sslcommerz-gateway.adapter';
 import { BkashGatewayAdapter } from './bkash-gateway.adapter';
 import { NagadGatewayAdapter } from './nagad-gateway.adapter';
 
-function createMockAppConfig(mode: 'sandbox-mock' | 'live' = 'sandbox-mock') {
+function createMockAppConfig(
+  mode: 'sandbox-mock' | 'live' = 'sandbox-mock',
+  options?: { isProduction?: boolean },
+) {
   return {
     paymentGatewayMode: mode,
+    isProduction: options?.isProduction ?? false,
     port: 3000,
     sslCommerzStoreId: mode === 'live' ? 'store_live' : undefined,
     sslCommerzStorePasswd: mode === 'live' ? 'passwd_live' : undefined,
@@ -203,7 +207,7 @@ describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () =
         GatewayPageURL: 'https://sandbox.sslcommerz.com/EasyCheckOut/testcheckout',
         sessionkey: 'sess_live_path',
       }),
-      text: async () => '',
+      text: async (): Promise<string> => '',
     }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -214,7 +218,9 @@ describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () =
     expect(res.redirectUrl).toBe('https://sandbox.sslcommerz.com/EasyCheckOut/testcheckout');
     expect(res.gatewayReferenceId).toBe('sess_live_path');
     expect(fetchMock).toHaveBeenCalledOnce();
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const firstCall = fetchMock.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const [url, init] = firstCall as unknown as [string, RequestInit];
     expect(url).toBe('https://sandbox.sslcommerz.com/gwprocess/v4/api.php');
     expect(String(init.body)).toContain('store_id=store_live');
     expect(String(init.body)).toContain('total_amount=1500.00');
@@ -226,7 +232,7 @@ describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () =
         return {
           ok: true,
           json: async () => ({ id_token: 'bkash_token_test', expires_in: 3600 }),
-          text: async () => '',
+          text: async (): Promise<string> => '',
         };
       }
       return {
@@ -235,7 +241,7 @@ describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () =
           bkashURL: 'https://tokenized.sandbox.bka.sh/v1.2.0-beta/checkout?paymentID=pid_live',
           paymentID: 'pid_live',
         }),
-        text: async () => '',
+        text: async (): Promise<string> => '',
       };
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -249,5 +255,18 @@ describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () =
     expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(2);
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/token/grant');
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/tokenized/checkout/create');
+  });
+
+  it('refuses SSLCommerz mock verify in production', async () => {
+    const adapter = new SslCommerzGatewayAdapter(
+      createMockAppConfig('sandbox-mock', { isProduction: true }),
+    );
+    const intent = createTestIntent('SSLCOMMERZ', 1000);
+    await expect(
+      adapter.verifyPayment({
+        paymentIntent: intent,
+        payload: { status: 'VALID', bank_tran_id: 'forge' },
+      }),
+    ).rejects.toThrow(/forbidden in production/i);
   });
 });

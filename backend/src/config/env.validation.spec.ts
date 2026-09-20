@@ -10,7 +10,8 @@ import {
 const productionBase = {
   NODE_ENV: 'production',
   PORT: '3000',
-  DATABASE_URL: 'postgresql://user:pass@localhost:5432/octopus',
+  DATABASE_URL: 'postgresql://octopus_app:octopus_app@localhost:5432/octopus',
+  DATABASE_OWNER_URL: 'postgresql://octopus:octopus@localhost:5432/octopus',
   REDIS_URL: 'redis://localhost:6379',
   JWT_SECRET: 'abcdefghijklmnopqrstuvwxyz012345',
   MEILISEARCH_HOST: 'http://localhost:7700',
@@ -32,6 +33,10 @@ const productionBase = {
   GEM_TRACKING_ENVIRONMENT: 'production',
   GOOGLE_SERVICES_CLIENT_EMAIL: 'svc@project.iam.gserviceaccount.com',
   GOOGLE_SERVICES_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nLINE\\n-----END PRIVATE KEY-----',
+  PAYMENT_GATEWAY_MODE: 'live',
+  STEADFAST_WEBHOOK_SECRET: 'steadfast-webhook-secret',
+  PATHAO_WEBHOOK_SECRET: 'pathao-webhook-secret',
+  PAYMENT_IPN_HMAC_SECRET: 'payment-ipn-hmac-secret-32chars!!',
 } as const;
 
 describe('env.validation', () => {
@@ -163,6 +168,42 @@ describe('env.validation', () => {
       TRUST_PROXY_HOPS: '1',
     });
     expect(env.TRUST_PROXY_HOPS).toBe(1);
+  });
+
+  it('rejects PAYMENT_GATEWAY_MODE=sandbox-mock in production', () => {
+    const result = envSchema.safeParse({
+      ...productionBase,
+      PAYMENT_GATEWAY_MODE: 'sandbox-mock',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatEnvValidationError(result.error)).toContain('PAYMENT_GATEWAY_MODE');
+    }
+  });
+
+  it('rejects production when courier webhook secrets are missing', () => {
+    const result = envSchema.safeParse({
+      ...productionBase,
+      STEADFAST_WEBHOOK_SECRET: undefined,
+      PATHAO_WEBHOOK_SECRET: undefined,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = formatEnvValidationError(result.error);
+      expect(message).toContain('STEADFAST_WEBHOOK_SECRET');
+      expect(message).toContain('PATHAO_WEBHOOK_SECRET');
+    }
+  });
+
+  it('rejects production when PAYMENT_IPN_HMAC_SECRET is missing', () => {
+    const result = envSchema.safeParse({
+      ...productionBase,
+      PAYMENT_IPN_HMAC_SECRET: undefined,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatEnvValidationError(result.error)).toContain('PAYMENT_IPN_HMAC_SECRET');
+    }
   });
 
   it('validates optional marketing id formats when provided', () => {

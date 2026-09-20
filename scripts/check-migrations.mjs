@@ -8,7 +8,11 @@ const npmCommand = isWindows ? 'npm.cmd' : 'npm';
 const migrationEnv = {
   ...process.env,
   NODE_ENV: process.env.NODE_ENV ?? 'development',
-  DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://octopus:octopus@localhost:5432/octopus',
+  // Migrations need the table-owner / superuser URL; app runtime should use octopus_app.
+  DATABASE_URL:
+    process.env.DATABASE_OWNER_URL ??
+    process.env.DATABASE_URL ??
+    'postgresql://octopus:octopus@localhost:5432/octopus',
   REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379',
   JWT_SECRET: process.env.JWT_SECRET ?? 'local-migration-secret-with-at-least-32-characters',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? '15m',

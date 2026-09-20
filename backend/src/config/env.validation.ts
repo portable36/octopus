@@ -85,6 +85,11 @@ const baseEnvSchema = z.object({
   /** Canonical public application / storefront origin (alias for SEO_PUBLIC_SITE_URL). */
   APP_URL: z.string().url().optional(),
   DATABASE_URL: z.string().url(),
+  /**
+   * Owner / migrator connection (DDL). Prefer a privileged role; keep DATABASE_URL on
+   * a non-superuser app role (octopus_app) so RLS is enforced.
+   */
+  DATABASE_OWNER_URL: z.string().url().optional(),
   /** MikroORM / pg pool size (tune under load; do not guess beyond observed saturation). */
   DATABASE_POOL_MIN: z.coerce.number().int().min(0).max(100).default(1),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(10),
@@ -422,6 +427,34 @@ export const envSchema = baseEnvSchema.superRefine((env, ctx) => {
     ctx,
     'GEM_TRACKING_ENVIRONMENT',
     'Production requires GEM_TRACKING_ENVIRONMENT for GEM analytics routing.',
+  );
+
+  if (env.PAYMENT_GATEWAY_MODE === 'sandbox-mock') {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['PAYMENT_GATEWAY_MODE'],
+      message:
+        'Production forbids PAYMENT_GATEWAY_MODE=sandbox-mock (use live or sandbox with credentials).',
+    });
+  }
+
+  requireProductionIntegration(
+    env,
+    ctx,
+    'STEADFAST_WEBHOOK_SECRET',
+    'Production requires STEADFAST_WEBHOOK_SECRET so courier webhooks cannot forge COD.',
+  );
+  requireProductionIntegration(
+    env,
+    ctx,
+    'PATHAO_WEBHOOK_SECRET',
+    'Production requires PATHAO_WEBHOOK_SECRET so courier webhooks cannot forge COD.',
+  );
+  requireProductionIntegration(
+    env,
+    ctx,
+    'PAYMENT_IPN_HMAC_SECRET',
+    'Production requires PAYMENT_IPN_HMAC_SECRET (≥16 chars) for gateway IPN HMAC verification.',
   );
 });
 

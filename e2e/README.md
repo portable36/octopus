@@ -58,12 +58,23 @@ npx.cmd playwright show-report
 | `e2e/smoke.spec.ts`              | Storefront + admin shell smokes (Phase 26.1 page renders)        |
 | `e2e/martvill-browse.spec.ts`    | Quick view, vendor shop, store PLP (data-dependent skips)        |
 | `e2e/revenue-path.spec.ts`       | Authenticated register/login + COD checkout (API + offers)       |
+| `e2e/payment-path.spec.ts`       | Gateway checkout → sandbox redirect URL (mock mode; host stubbed)|
 | `e2e/vendor-fulfillment.spec.ts` | COD order → vendor process/fulfill → MANUAL shipment (env-gated) |
 | `e2e/refund-path.spec.ts`        | COD collect (API) → customer Request refund (env-gated)          |
 | `e2e/payout-path.spec.ts`        | Vendor finance Request payout when spendable (env-gated)         |
 | `e2e/helpers/`                   | API live check + auth helpers                                    |
 
 `PLAYWRIGHT_BASE_URL` overrides the default `http://127.0.0.1:3001`.
+
+### Payment gateway env
+
+`e2e/payment-path.spec.ts` needs Nest API + offers. Default method is bKash sandbox-mock redirect.
+
+| Variable             | Required | Notes                                      |
+| -------------------- | -------- | ------------------------------------------ |
+| `E2E_PAYMENT_METHOD` | no       | `BKASH` (default), `SSLCOMMERZ`, or `NAGAD` |
+
+Does not complete a live capture — asserts redirect to the provider sandbox host (response stubbed).
 
 ### Vendor-gated journeys
 

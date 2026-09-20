@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { PaymentIntent } from '../../domain/aggregates/payment-intent.aggregate';
 import { SslCommerzGatewayAdapter } from './sslcommerz-gateway.adapter';
 import { BkashGatewayAdapter } from './bkash-gateway.adapter';
@@ -187,5 +187,67 @@ describe('Payment Gateway Adapters (Dual-Mode Simulation)', () => {
       expect(res.success).toBe(true);
       expect(res.providerRefundId).toContain('REF_NAGAD_');
     });
+  });
+});
+
+describe('Payment Gateway Adapters (credentialed HTTP path, mocked fetch)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('SslCommerz posts to sandbox session API when credentials are set', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        status: 'SUCCESS',
+        GatewayPageURL: 'https://sandbox.sslcommerz.com/EasyCheckOut/testcheckout',
+        sessionkey: 'sess_live_path',
+      }),
+      text: async () => '',
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const adapter = new SslCommerzGatewayAdapter(createMockAppConfig('live'));
+    const intent = createTestIntent('SSLCOMMERZ', 150000);
+    const res = await adapter.initializeSession({ paymentIntent: intent });
+
+    expect(res.redirectUrl).toBe('https://sandbox.sslcommerz.com/EasyCheckOut/testcheckout');
+    expect(res.gatewayReferenceId).toBe('sess_live_path');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://sandbox.sslcommerz.com/gwprocess/v4/api.php');
+    expect(String(init.body)).toContain('store_id=store_live');
+    expect(String(init.body)).toContain('total_amount=1500.00');
+  });
+
+  it('bKash requests token then create checkout when credentials are set', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('/token/grant')) {
+        return {
+          ok: true,
+          json: async () => ({ id_token: 'bkash_token_test', expires_in: 3600 }),
+          text: async () => '',
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          bkashURL: 'https://tokenized.sandbox.bka.sh/v1.2.0-beta/checkout?paymentID=pid_live',
+          paymentID: 'pid_live',
+        }),
+        text: async () => '',
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const adapter = new BkashGatewayAdapter(createMockAppConfig('live'));
+    const intent = createTestIntent('BKASH', 9900);
+    const res = await adapter.initializeSession({ paymentIntent: intent });
+
+    expect(res.redirectUrl).toContain('paymentID=pid_live');
+    expect(res.gatewayReferenceId).toBe('pid_live');
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/token/grant');
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/tokenized/checkout/create');
   });
 });

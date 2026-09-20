@@ -1901,7 +1901,7 @@ Reach production-grade test coverage.
 - [x] Redis (`identity/.../redis.integration.spec` — login + API rate limiters when `REDIS_URL` is set; CI services Redis)
 - [x] BullMQ (default job options + search indexing processor)
 - [x] MikroORM (`user.orm.integration.spec` — EntityManager persist/load when `DATABASE_URL` is set)
-- [ ] Payment adapters (live gateway adapters later; COD/stub covered in handlers)
+- [x] Payment adapters (dual-mode unit + mocked credentialed HTTP path; optional sandbox network IT via env keys)
 
 ### API
 
@@ -1919,7 +1919,7 @@ Reach production-grade test coverage.
 - [x] Search (page smoke)
 - [x] Cart (page smoke)
 - [x] Multi-vendor checkout — COD path in `e2e/revenue-path.spec.ts` (skips without API/offers)
-- [ ] Payment (live gateway redirect journeys)
+- [x] Payment (live gateway redirect journeys) — `e2e/payment-path.spec.ts` (sandbox-mock redirect; optional `E2E_PAYMENT_METHOD`)
 - [x] Order tracking (tracking timeline API, courier milestones, SMS/Email notification event consumer)
 - [x] Vendor fulfillment — `e2e/vendor-fulfillment.spec.ts` (skips without API / `E2E_VENDOR_EMAIL` / offers)
 - [x] Refund — `e2e/refund-path.spec.ts` (COD collect via API → customer Request refund; skips without vendor creds)
@@ -1930,12 +1930,14 @@ Reach production-grade test coverage.
 - Slice **26.1** — checkbox sync against existing Vitest inventory (~98 specs); refresh Playwright smokes for current storefront; coverage map in [testing.md](./engineering/testing.md).
 - Slice **26.2** — Nest+Supertest API contracts (`backend/src/test/api/`) for JWT auth, permissions, MFA gate; helper uses `APP_GUARD` factories (Vitest lacks decorator metadata).
 - Slice **26.3** — Redis integration specs for login/API rate limiters (`describe.runIf(REDIS_URL)`).
-- Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** live payment adapter IT; SWC decorator metadata for ValidationPipe HTTP asserts; authenticated payment-gateway E2E.
+- Slice **26.4** — MikroORM `UserOrmEntity` persist/load IT (`describe.runIf(DATABASE_URL)`); explicit property types for Vitest/esbuild. **Still open:** SWC decorator metadata for ValidationPipe HTTP asserts.
 - Slice **26.5** — return pickup handler unit coverage; dual-mode payout simulation unit coverage; auth polish (email verify / OAuth / OTP) handler specs.
 - Slice **26.6** — Playwright authenticated revenue path (`e2e/revenue-path.spec.ts`); payment IPN HMAC/timestamp helpers wired on SSLCommerz IPN + bKash SNS Notification.
 - Slice **26.7** — Playwright vendor fulfillment (`e2e/vendor-fulfillment.spec.ts`): customer COD → process/fulfill → MANUAL shipment; env-gated on `E2E_VENDOR_*`.
 - Slice **26.8** — Playwright refund path (`e2e/refund-path.spec.ts`): vendor COD collect (API) → account Request refund → `REFUND_REQUESTED`.
 - Slice **26.9** — Playwright payout path (`e2e/payout-path.spec.ts`): vendor finance Request payout when spendable (COD seed + ledger poll if needed).
+- Slice **26.10** — Playwright payment gateway redirect (`e2e/payment-path.spec.ts`): bKash/SSLCommerz/Nagad sandbox-mock URL navigation (stubs host; not live capture).
+- Slice **26.11** — Payment gateway adapter credentialed path unit tests (mocked fetch) + optional `payment-gateways.sandbox.integration.spec.ts` (`describe.runIf` provider keys).
 - [x] commit push
 
 ---
@@ -2096,7 +2098,8 @@ Redis must not contain the only copy of financial/business truth.
 ### Notes
 
 - Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy.
-- Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`). **Still open:** enable automated prod backups; quarterly prod restore drill on host.
+- Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`).
+- Slice **29.3** — `deploy/backup-postgres.sh` + host cron enablement notes in backup-disaster-recovery.md. **Still open:** install cron on the live VPS; off-box sync; quarterly prod restore drill on host.
 - [x] commit push
 
 ---

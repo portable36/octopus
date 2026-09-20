@@ -24,6 +24,21 @@ Phase 29 policy for Hostinger + Cloudflare (see [infrastructure.md](./infrastruc
 
 Until production automation exists, treat this as the ops contract — not as “already running.”
 
+### Host enablement (prod VPS)
+
+Script: [`deploy/backup-postgres.sh`](../../deploy/backup-postgres.sh) — `pg_dump -Fc` via `docker compose` into `$DEPLOY_COMPOSE_DIR/backups/postgres/{daily,monthly}` (mode `700` dirs / `600` files; 30-day daily + 12 monthly retention).
+
+```bash
+# On the host (compose root, e.g. /opt/octopus):
+chmod +x deploy/backup-postgres.sh
+./deploy/backup-postgres.sh
+
+# Cron — daily 02:15 UTC:
+# 15 2 * * * DEPLOY_COMPOSE_DIR=/opt/octopus /opt/octopus/deploy/backup-postgres.sh >>/var/log/octopus-backup.log 2>&1
+```
+
+Confirm disk encryption or restricted host volume for backup media. Optional: sync `backups/postgres/` off-box (rsync/S3) for second copy. Quarterly: restore a daily dump into an isolated DB and record RTO (local proof remains `npm.cmd run restore:drill`).
+
 ## Redis (reconstructable vs not)
 
 Redis **must not** hold the only copy of financial or inventory state.

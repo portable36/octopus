@@ -139,6 +139,8 @@ build image (root Dockerfile → octopus:prod / GHCR sha tag)
 → monitor (errors, queue lag, payment/checkout)
 ```
 
+Postgres backups on the host: [`deploy/backup-postgres.sh`](../../deploy/backup-postgres.sh) (daily cron; see [backup-disaster-recovery.md](./backup-disaster-recovery.md)).
+
 Contract: new app versions must tolerate the current schema; breaking drops wait for a later contract phase after all runners are upgraded.
 
 Image push to GHCR and optional SSH pull-roll are in `.github/workflows/deploy.yml`. Host package visibility (GHCR read) and first-time compose checkout under `DEPLOY_COMPOSE_DIR` remain ops setup.

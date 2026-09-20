@@ -64,6 +64,7 @@ generated output, or a transcript of previous chats.
 - Ops alerts: `GET /health/alerts` evaluates dependency/heap/queue conditions;
   admin UI at `/admin/system/alerts` (rule catalog includes external burn-rate note).
 - Local drills: `npm.cmd run restore:drill` (Postgres dump→restore); `npm.cmd run deploy:drill`
+- Host Postgres backups: `deploy/backup-postgres.sh` (cron on VPS; 30d daily + 12 monthly).
   (API image build + A→B→A rollback with live/ready probes).
 - Prod host secrets: copy `deploy/host.secrets.env.example` → `/opt/octopus/.env` and/or
   `host.secrets.env` (`chmod 600`). Compose `${VAR}` + optional `env_file`. Uptime:
@@ -101,6 +102,8 @@ generated output, or a transcript of previous chats.
 - Playwright vendor fulfillment: `e2e/vendor-fulfillment.spec.ts` (COD → process/fulfill → MANUAL shipment; needs `E2E_VENDOR_EMAIL` + offer’s store).
 - Playwright refund path: `e2e/refund-path.spec.ts` (vendor COD collect via API → account Request refund → `REFUND_REQUESTED`).
 - Playwright payout path: `e2e/payout-path.spec.ts` (vendor finance Request payout when spendable; COD seed + ledger poll if needed).
+- Playwright payment gateway redirect: `e2e/payment-path.spec.ts` (sandbox-mock URL; stubs host; optional `E2E_PAYMENT_METHOD`).
+- Payment gateway adapters: mocked credentialed HTTP path in `payment-gateways.spec.ts`; optional sandbox network IT when SSLCommerz/bKash env keys set.
 - Payment IPN integrity: optional `PAYMENT_IPN_HMAC_SECRET` + timestamp guards on
   SSLCommerz IPN and bKash SNS Notification.
 - Tax/commission: checkout global config keys `tax_rate_bps` + `commission_rate_bps`;

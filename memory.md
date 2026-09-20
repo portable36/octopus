@@ -65,6 +65,8 @@ generated output, or a transcript of previous chats.
   admin UI at `/admin/system/alerts` (rule catalog includes external burn-rate note).
 - Local drills: `npm.cmd run restore:drill` (Postgres dump→restore); `npm.cmd run deploy:drill`
 - Host Postgres backups: `deploy/backup-postgres.sh` + `deploy/install-backup-cron.sh` (run on VPS; 30d daily + 12 monthly).
+- Host restore drill: `deploy/restore-drill-host.sh` (newest daily dump → `octopus_restore_drill`).
+- Host health pager: optional `PAGER_WEBHOOK_URL` on `deploy/check-health.sh`.
   (API image build + A→B→A rollback with live/ready probes).
 - Prod host secrets: copy `deploy/host.secrets.env.example` → `/opt/octopus/.env` and/or
   `host.secrets.env` (`chmod 600`). Compose `${VAR}` + optional `env_file`. Uptime:

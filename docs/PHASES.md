@@ -2055,7 +2055,7 @@ Never share production secrets with development.
 ### Notes
 
 - Slice **28.1** — IaC choice + environment/service map in `docs/architecture/infrastructure.md`.
-- Slice **28.2** — host secrets template + compose `${VAR}` / optional `host.secrets.env`; firewall + uptime probe contract (`deploy/check-health.sh`). **Still open:** fill host secrets on the live VPS; enable automated prod backups (Phase 29); external pager.
+- Slice **28.2** — host secrets template + compose `${VAR}` / optional `host.secrets.env`; firewall + uptime probe contract (`deploy/check-health.sh`). **Still open:** fill host secrets on the live VPS; wire external uptime monitor + `PAGER_WEBHOOK_URL` on host cron.
 - [x] commit push
 
 ---
@@ -2100,7 +2100,8 @@ Redis must not contain the only copy of financial/business truth.
 - Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy.
 - Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`).
 - Slice **29.3** — `deploy/backup-postgres.sh` + host cron enablement notes in backup-disaster-recovery.md.
-- Slice **29.4** — `deploy/install-backup-cron.sh` (smoke dump + idempotent crontab). **Still open:** run installer on the live VPS; off-box sync; quarterly prod restore drill on host.
+- Slice **29.4** — `deploy/install-backup-cron.sh` (smoke dump + idempotent crontab).
+- Slice **29.5** — `deploy/restore-drill-host.sh` + `PAGER_WEBHOOK_URL` on `check-health.sh` + uptime/pager checklist in infrastructure.md. **Still open:** run installer/cron/pager on the live VPS; off-box sync; quarterly prod restore using host drill script.
 - [x] commit push
 
 ---

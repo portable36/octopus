@@ -71,8 +71,17 @@ Compose substitutes `${JWT_SECRET:-…}` from the project `.env`. Optional `host
 | App diagnostics | `GET /api/v1/health/live`, `/ready`, `/alerts` + admin `/admin/system/alerts`                                                |
 | Host cron       | [`deploy/check-health.sh`](../../deploy/check-health.sh) every 5 minutes                                                     |
 | External uptime | Point Cloudflare Health Checks / UptimeRobot / Better Stack at public `/api/v1/health/ready` (and optionally storefront `/`) |
+| Pager webhook   | Optional `PAGER_WEBHOOK_URL` on `check-health.sh` (Slack/Discord/Better Stack incoming webhook on probe failure)             |
 
-OTel remains optional in-app; external pager / Prometheus burn-rate stay host ops.
+### External uptime + pager (host ops checklist)
+
+1. **Public ready URL** — `https://<api-host>/api/v1/health/ready` must return 2xx when Postgres + Redis are up.
+2. **Uptime monitor** (pick one OSS/free-first): Cloudflare Health Checks, [UptimeRobot](https://uptimerobot.com/), or Better Stack — interval ≤ 5m, alert on non-2xx / timeout.
+3. **Host cron** — `*/5 * * * * API_BASE=https://<api-host>/api/v1 STORE_BASE=https://<storefront> /opt/octopus/deploy/check-health.sh >>/var/log/octopus-health.log 2>&1`
+4. **Pager** — set `PAGER_WEBHOOK_URL` in the cron environment (or host `.env` exported for cron) so failures notify Slack/Discord/Better Stack.
+5. **Escalation** — on alert: check `GET /health/alerts`, compose `ps`, recent deploy digest; do not restart Postgres blindly during restore.
+
+OTel remains optional in-app; Prometheus burn-rate stays optional host ops.
 
 ## Related
 

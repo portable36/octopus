@@ -28,6 +28,12 @@ probe alerts "${API_BASE}/health/alerts"
 probe storefront "${STORE_BASE}/"
 
 if [[ "${FAIL}" -ne 0 ]]; then
+  if [[ -n "${PAGER_WEBHOOK_URL:-}" ]]; then
+    # Optional Slack/Discord/Better Stack incoming webhook (host ops pager).
+    payload="{\"text\":\"octopus health FAIL host=$(hostname -s 2>/dev/null || hostname) api=${API_BASE}\"}"
+    curl -fsS --max-time 10 -X POST -H 'Content-Type: application/json' \
+      -d "${payload}" "${PAGER_WEBHOOK_URL}" >/dev/null 2>&1 || true
+  fi
   exit 1
 fi
 echo "all probes ok"

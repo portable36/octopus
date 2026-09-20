@@ -139,7 +139,7 @@ build image (root Dockerfile → octopus:prod / GHCR sha tag)
 → monitor (errors, queue lag, payment/checkout)
 ```
 
-Postgres backups on the host: [`deploy/backup-postgres.sh`](../../deploy/backup-postgres.sh) (daily cron; see [backup-disaster-recovery.md](./backup-disaster-recovery.md)).
+Postgres backups on the host: [`deploy/backup-postgres.sh`](../../deploy/backup-postgres.sh) + [`deploy/install-backup-cron.sh`](../../deploy/install-backup-cron.sh) (see [backup-disaster-recovery.md](./backup-disaster-recovery.md)).
 
 Contract: new app versions must tolerate the current schema; breaking drops wait for a later contract phase after all runners are upgraded.
 

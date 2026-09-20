@@ -2099,7 +2099,8 @@ Redis must not contain the only copy of financial/business truth.
 
 - Slice **29.1** — RTO/RPO, Redis reconstructability, object-storage, and DR runbook policy.
 - Slice **29.2** — `scripts/restore-drill.mjs` + `npm.cmd run restore:drill`; Postgres 18 compose volume mount fixed (`/var/lib/postgresql`).
-- Slice **29.3** — `deploy/backup-postgres.sh` + host cron enablement notes in backup-disaster-recovery.md. **Still open:** install cron on the live VPS; off-box sync; quarterly prod restore drill on host.
+- Slice **29.3** — `deploy/backup-postgres.sh` + host cron enablement notes in backup-disaster-recovery.md.
+- Slice **29.4** — `deploy/install-backup-cron.sh` (smoke dump + idempotent crontab). **Still open:** run installer on the live VPS; off-box sync; quarterly prod restore drill on host.
 - [x] commit push
 
 ---
